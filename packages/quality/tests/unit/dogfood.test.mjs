@@ -13,6 +13,9 @@ function exportTargets() {
     if (typeof value === "string") out.push(value);
     else if (value && typeof value === "object") out.push(...Object.values(value));
   }
+  if (manifest.bin && typeof manifest.bin === "object") {
+    out.push(...Object.values(manifest.bin));
+  }
   return [...new Set(out.filter((t) => typeof t === "string"))];
 }
 

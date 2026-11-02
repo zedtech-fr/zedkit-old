@@ -1,8 +1,8 @@
 # Catalog — @zedtech/zedkit-quality
 
-- Keywords: eslint, eslint-config, tsconfig, typescript, strict, layers, architecture, a11y, tailwindcss, code-quality
+- Keywords: eslint, eslint-config, tsconfig, typescript, strict, layers, architecture, a11y, tailwindcss, code-quality, ci, hygiene
 - Audience: Teams keeping the same quality gates across repos.
-- Purpose: Shared quality setup: UI lint preset, route/view/data layer boundaries, and one strict TypeScript base — consume, do not copy.
+- Purpose: Shared quality setup: UI lint preset, route/view/data layer boundaries, one strict TypeScript base, and repo hygiene bins — consume, do not copy.
 
 
 ## Lint UI files for accessibility, Tailwind and tokens
@@ -90,5 +90,68 @@ export default [
   "extends": "@zedtech/zedkit-quality/tsconfig",
   "compilerOptions": { "outDir": "dist", "rootDir": "src" },
   "include": ["src"]
+}
+```
+
+## Keep .env complete without overwriting local values
+
+- Import: `@zedtech/zedkit-quality` — `zedkit-sync-env`
+- Wraps: `(none)`
+- Status: alpha
+- Short name: SyncEnv
+- Audience: Teams whose `.env.example` gains keys across pulls and whose local `.env` must stay complete.
+- Purpose: Copy `.env.example` on first run, then append missing keys only — existing values are never overwritten.
+- When to use: At the start of `dev` / `build` so a new example key cannot silently fall back to a default.
+- When not to use: When env files are generated another way (direnv, a secret manager, a deploy hook).
+- See also: `Fail CI when secrets are tracked`
+
+```ts
+// package.json
+{
+  "scripts": {
+    "dev": "zedkit-sync-env && next dev"
+  }
+}
+```
+
+## Fail CI when build artifacts are tracked
+
+- Import: `@zedtech/zedkit-quality` — `zedkit-check-no-artifacts`
+- Wraps: `(none)`
+- Status: alpha
+- Short name: CheckNoArtifacts
+- Audience: Teams that must never commit caches, build output, or oversized binaries.
+- Purpose: Fail if tracked files match a parameterized artifact list, match `.gitignore` (including ignored-but-tracked, via `--no-index`), or exceed a size cap.
+- When to use: As a CI hygiene step on every repo that already has a `.gitignore` for build output.
+- When not to use: For secret scanning — use `zedkit-check-no-secrets`.
+- See also: `Fail CI when secrets are tracked`
+
+```ts
+// package.json
+{
+  "scripts": {
+    "check:artifacts": "zedkit-check-no-artifacts --allow '^docs/catalog/catalog\\.json$'"
+  }
+}
+```
+
+## Fail CI when secrets are tracked
+
+- Import: `@zedtech/zedkit-quality` — `zedkit-check-no-secrets`
+- Wraps: `(none)`
+- Status: alpha
+- Short name: CheckNoSecrets
+- Audience: Teams that must never commit `.env` files or high-signal credentials.
+- Purpose: Fail if a tracked `.env` (other than `.env.example`) or a private key / token pattern is in git.
+- When to use: As a CI hygiene step next to the artifact check.
+- When not to use: As a substitute for a full secret scanner (GitHub secret scanning, gitleaks) on history.
+- See also: `Fail CI when build artifacts are tracked`, `Keep .env complete without overwriting local values`
+
+```ts
+// package.json
+{
+  "scripts": {
+    "check:secrets": "zedkit-check-no-secrets"
+  }
 }
 ```
