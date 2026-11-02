@@ -85,7 +85,8 @@ test("theme page shows a literal globals.css and names next-themes (#1068)", asy
   await expect(page.getByText("Globals CSS", { exact: true })).toBeVisible();
   const cssBlock = page.locator("pre").filter({ hasText: '@import "tailwindcss"' }).first();
   await expect(cssBlock).toContainText('@import "@zedtech/zedkit-ui/styles.css"');
-  await expect(page.locator("pre").filter({ hasText: "pnpm add next-themes" }).first()).toBeVisible();
+  // The install step names next-themes next to the kit; the layout example no longer carries it as a comment.
+  await expect(page.locator('#install-or-copy [data-adoption-step="install"]')).toContainText("pnpm add @zedtech/zedkit-ui next-themes");
 });
 
 test.describe("theme previews", () => {

@@ -1,126 +1,49 @@
+// POST /api/identity/suggest: a brief (and optional reference pages) in, a validated identity patch out.
+//
+// Order of the work is the point of this file. Everything that can refuse a request runs before anything that
+// costs money, and a refusal never reaches the provider:
+//   switched off or not configured -> kill switch -> same-origin -> burst limit -> body size and shape -> the
+//   current tokens -> ledger reservation (concurrency, per-visitor and global limits, daily and monthly budget,
+//   duplicate request id) -> references -> provider -> settle.
+// The reservation is made at the worst case the calls could cost and settled to what the provider reports. The
+// provider is called at most twice (the primary, then the fallback once, only after a transport failure or a
+// refusal), never again for invalid output.
+import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { createServer } from "node:http";
-import { resolve } from "node:path";
+import { resolve as resolvePath } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { mergePatch } from "./tokens.mjs";
+import { HARD, actualMicro, loadConfig, worstCaseMicro } from "./config.mjs";
+import { openLedgerSafely } from "./ledger.mjs";
+import { clientKey, networkOf, trustedList } from "./network.mjs";
+import { buildMessages, inputBytes, inputTokens, worstCaseReferences } from "./prompt.mjs";
+import { callProvider, parseJson } from "./provider.mjs";
+import { fetchReferences } from "./references.mjs";
+import { fontsAllowed, mergePatch, validateTokens } from "./tokens.mjs";
 
-const MAX_BODY = 8192;
-const MAX_PROMPT = 500;
-const RATE_PER_MIN = 10;
-const RATE_PER_DAY = 100;
-const GLOBAL_DAY = 500;
-// shortcut: reasoning origins often exceed 30s; drop when the origin streams
-const TIMEOUT_MS = 90_000;
-// Output budget covers reasoning plus the JSON answer. Cap is the usual 128k completion limit.
-const DEFAULT_MAX_TOKENS = 131_072;
-const SYSTEM = `Reply with a JSON object of identity tokens only, no markdown.
-Fields: spacing, borderWidth, radius, bodyLeading, headingLeading, headingTracking, labelTracking, fontSans, fontDisplay, light {background, foreground, primary, accent, border}, dark {same keys}, shadowSm, shadowMd.
-Colours are HSL channels like "240 10% 3.9%" with no hsl() wrapper. Leading is a number string. Tracking ends with em.
-Foreground vs background at least 4.5:1 in light and dark. Accent and border vs background at least 3:1.
-A partial object is fine; missing fields stay as the current tokens.`;
+const COOKIE = "zk_sid";
+const PATH = "/api/identity/suggest";
 
-function parseJson(text) {
-  return Promise.resolve(text)
-    .then((raw) => JSON.parse(raw))
-    .then((value) => ({ ok: true, value }))
-    .catch(() => ({ ok: false, value: null }));
-}
-
-function send(res, status, body) {
+function send(res, status, body, headers = {}) {
   const json = JSON.stringify(body);
   res.writeHead(status, {
     "content-type": "application/json; charset=utf-8",
     "content-length": Buffer.byteLength(json),
     "cache-control": "no-store",
+    ...headers,
   });
   res.end(json);
 }
 
-function parseMaxTokens(raw) {
-  const n = Number.parseInt(String(raw ?? ""), 10);
-  if (!Number.isInteger(n) || n < 1) return DEFAULT_MAX_TOKENS;
-  return Math.min(n, DEFAULT_MAX_TOKENS);
+function refuse(res, status, error, extra = {}, retryAfterSec, headers = {}) {
+  send(res, status, { error, ...extra, ...(retryAfterSec ? { retryAfterSec } : {}) }, { ...(retryAfterSec ? { "retry-after": String(retryAfterSec) } : {}), ...headers });
 }
 
-function reasoningEffort(raw) {
-  const effort = String(raw ?? "").trim();
-  if (!effort || effort === "minimal") return "";
-  return effort;
-}
-
-function chatConfig(env, prefix) {
-  const base = env[`${prefix}BASE_URL`];
-  const key = env[`${prefix}API_KEY`];
-  const model = env[`${prefix}MODEL`];
-  if (!base || !key || !model) return null;
-  return {
-    base: String(base).replace(/\/$/, ""),
-    key: String(key),
-    model: String(model),
-    maxTokens: parseMaxTokens(env[`${prefix}MAX_TOKENS`] || env.IDENTITY_AI_MAX_TOKENS),
-    effort: reasoningEffort(env[`${prefix}REASONING_EFFORT`]),
-  };
-}
-
-function chatUrl(base) {
-  return base.endsWith("/v1") ? `${base}/chat/completions` : `${base}/v1/chat/completions`;
-}
-
-function unwrapContent(content) {
-  const trimmed = content.trim();
-  const fence = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
-  return fence ? fence[1] : trimmed;
-}
-
-function messageText(content) {
-  if (typeof content === "string") return unwrapContent(content);
-  if (!Array.isArray(content)) return "";
-  return unwrapContent(
-    content
-      .map((part) => (typeof part === "string" ? part : part && typeof part.text === "string" ? part.text : ""))
-      .join(""),
-  );
-}
-
-function createLimit() {
-  return { perIp: new Map(), global: { day: "", n: 0 } };
-}
-
-function dayStamp() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function minuteStamp() {
-  return Math.floor(Date.now() / 60_000);
-}
-
-function allow(limit, ip) {
-  const day = dayStamp();
-  if (limit.global.day !== day) {
-    limit.global = { day, n: 0 };
-    limit.perIp.clear();
-  }
-  if (limit.global.n >= GLOBAL_DAY) return false;
-  let rec = limit.perIp.get(ip);
-  if (!rec) {
-    rec = { minute: 0, minuteN: 0, day, dayN: 0 };
-    limit.perIp.set(ip, rec);
-  }
-  if (rec.day !== day) {
-    rec.day = day;
-    rec.dayN = 0;
-  }
-  const minute = minuteStamp();
-  if (rec.minute !== minute) {
-    rec.minute = minute;
-    rec.minuteN = 0;
-  }
-  if (rec.minuteN >= RATE_PER_MIN || rec.dayN >= RATE_PER_DAY) return false;
-  rec.minuteN += 1;
-  rec.dayN += 1;
-  limit.global.n += 1;
-  return true;
+/** Refuses an oversized body and closes the connection once the refusal is out, without reading the rest. */
+function tooLarge(req, res) {
+  res.on("finish", () => req.destroy());
+  refuse(res, 413, "size", {}, undefined, { connection: "close" });
 }
 
 function releaseId(env) {
@@ -133,38 +56,31 @@ function releaseId(env) {
   return typeof fromEnv === "string" && fromEnv ? fromEnv : "unknown";
 }
 
-function versionPayload(env, id) {
-  const primary = chatConfig(env, "IDENTITY_AI_");
-  return {
-    id,
-    model: primary ? primary.model : "",
-    maxTokens: primary ? primary.maxTokens : parseMaxTokens(env.IDENTITY_AI_MAX_TOKENS),
-    effort: primary ? primary.effort : reasoningEffort(env.IDENTITY_AI_REASONING_EFFORT),
-  };
+/** Why paid generation is off, as a short code the page can word. Null when it can run. */
+function unavailableReason(config, ledger) {
+  if (config.problems.some((problem) => problem.startsWith("IDENTITY_AI_ENABLED"))) return "disabled";
+  if (config.problems.length > 0) return "not-configured";
+  // No ledger means no way to hold a budget: paid generation stays off, whatever else is configured.
+  if (!ledger) return "unavailable";
+  if (ledger.killed()) return "killed";
+  return null;
 }
 
-function clientIp(req) {
-  const forwarded = req.headers["x-forwarded-for"];
-  if (typeof forwarded === "string" && forwarded.length > 0) {
-    return forwarded.split(",")[0].trim() || "unknown";
-  }
-  return req.socket.remoteAddress ?? "unknown";
-}
-
-function readBody(req) {
-  return new Promise((resolveBody) => {
+function readBody(req, maxBytes) {
+  return new Promise((done) => {
     const chunks = [];
     let size = 0;
     let settled = false;
     const finish = (value) => {
       if (settled) return;
       settled = true;
-      resolveBody(value);
+      done(value);
     };
     req.on("data", (chunk) => {
       size += chunk.length;
-      if (size > MAX_BODY) {
-        req.destroy();
+      if (size > maxBytes) {
+        // Stop reading; the caller answers, then drops the connection, so the client can read the refusal.
+        req.pause();
         finish({ tooLarge: true });
         return;
       }
@@ -175,142 +91,325 @@ function readBody(req) {
   });
 }
 
-function complete(cfg, prompt, current, fetchImpl) {
-  return fetchImpl(chatUrl(cfg.base), {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${cfg.key}`,
+const isText = (value, max) => typeof value === "string" && value.trim().length > 0 && value.length <= max;
+
+/** The request, checked field by field. A bad field is named; the value never is. */
+export function parseRequest(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return { ok: false, field: "body" };
+  if (typeof value.requestId !== "string" || !/^[A-Za-z0-9_-]{8,64}$/.test(value.requestId)) return { ok: false, field: "requestId" };
+  if (!isText(value.prompt, HARD.maxPromptChars)) return { ok: false, field: "prompt" };
+  const history = value.history ?? [];
+  if (!Array.isArray(history) || history.length > HARD.maxHistoryTurns) return { ok: false, field: "history" };
+  for (const turn of history) {
+    if (!turn || (turn.role !== "user" && turn.role !== "assistant") || !isText(turn.text, HARD.maxTurnChars)) return { ok: false, field: "history" };
+  }
+  const references = value.references ?? [];
+  if (!Array.isArray(references) || references.length > HARD.maxReferences || references.some((url) => typeof url !== "string" || url.length > 2048)) {
+    return { ok: false, field: "references" };
+  }
+  const current = validateTokens(value.current);
+  if (!current) return { ok: false, field: "current" };
+  return {
+    ok: true,
+    value: {
+      requestId: value.requestId,
+      prompt: value.prompt.trim(),
+      history: history.map((turn) => ({ role: turn.role, text: turn.text.trim() })),
+      references: [...new Set(references.map((url) => url.trim()).filter(Boolean))],
+      current,
     },
-    body: JSON.stringify({
-      model: cfg.model,
-      max_tokens: cfg.maxTokens,
-      ...(cfg.effort ? { reasoning_effort: cfg.effort } : {}),
-      messages: [
-        { role: "system", content: SYSTEM },
-        { role: "user", content: JSON.stringify({ prompt, current }) },
-      ],
-    }),
-    signal: AbortSignal.timeout(TIMEOUT_MS),
-  })
-    .then((res) => res.text().then((text) => ({ ok: res.ok, status: res.status, text })))
-    .then((res) => {
-      if (!res.ok) {
-        console.error("suggest: upstream", res.status);
-        return { status: res.status };
-      }
-      return parseJson(res.text).then((outer) => {
-        if (!outer.ok) return { status: 502 };
-        const content = messageText(outer.value?.choices?.[0]?.message?.content);
-        if (!content) return { status: 502 };
-        return parseJson(content).then((inner) => (inner.ok ? { patch: inner.value } : { status: 502 }));
-      });
-    })
-    .catch((err) => {
-      console.error("suggest: upstream", err?.name === "TimeoutError" ? "timeout" : "fetch");
-      return { status: 502 };
-    });
+  };
 }
 
-function firstComplete(env, prompt, current, fetchImpl) {
-  const configs = [chatConfig(env, "IDENTITY_AI_"), chatConfig(env, "IDENTITY_AI_FALLBACK_")].filter(
-    Boolean,
-  );
-  return configs.reduce(
-    (chain, cfg) =>
-      chain.then((acc) => {
-        if (acc.tokens) return acc;
-        return complete(cfg, prompt, current, fetchImpl).then((result) => {
-          const tokens = result.patch ? mergePatch(current, result.patch) : null;
-          if (tokens) return { tokens };
-          const status = result.status === 429 || acc.status === 429 ? 429 : result.status;
-          return { status };
-        });
-      }),
-    Promise.resolve({}),
-  );
+function sessionCookie(req, secret) {
+  const header = String(req.headers.cookie ?? "");
+  const match = new RegExp(`(?:^|;\\s*)${COOKIE}=([A-Za-z0-9_-]{16,64})\\.([A-Za-z0-9_-]{20,64})`).exec(header);
+  const sign = (id) => createHmac("sha256", secret).update(id).digest("base64url");
+  if (match) {
+    const expected = Buffer.from(sign(match[1]));
+    const given = Buffer.from(match[2]);
+    if (expected.length === given.length && timingSafeEqual(expected, given)) return { id: match[1], fresh: false, sign };
+  }
+  const id = randomBytes(18).toString("base64url");
+  return { id, fresh: true, sign };
 }
 
-async function route(req, res, { env, fetchImpl, limit, release }) {
-  const url = new URL(req.url ?? "/", "http://suggest.local");
-  if (url.pathname === "/api/identity/suggest/version") {
-    if (req.method !== "GET" && req.method !== "HEAD") {
-      send(res, 405, { error: "method" });
-      return;
+function sameOrigin(req) {
+  const origin = req.headers.origin;
+  if (origin === undefined) return true;
+  const host = String(req.headers.host ?? "");
+  return URL.canParse(String(origin)) && new URL(String(origin)).host === host;
+}
+
+/** A fast, in-memory burst limiter. Not the authority (the ledger is): it only keeps a flood off the database. */
+function burstLimiter(perMinute, now) {
+  const seen = new Map();
+  return (key) => {
+    const minute = Math.floor(now() / 60_000);
+    if (seen.size > 10_000) seen.clear();
+    const entry = seen.get(key);
+    if (!entry || entry.minute !== minute) {
+      seen.set(key, { minute, n: 1 });
+      return true;
     }
-    send(res, 200, release);
-    return;
-  }
-  if (url.pathname !== "/api/identity/suggest" && url.pathname !== "/api/identity/suggest/") {
-    send(res, 404, { error: "not found" });
-    return;
-  }
-  if (req.method !== "POST") {
-    send(res, 405, { error: "method" });
-    return;
-  }
-  if (!chatConfig(env, "IDENTITY_AI_") && !chatConfig(env, "IDENTITY_AI_FALLBACK_")) {
-    send(res, 503, { disabled: true });
-    return;
-  }
-  if (!allow(limit, clientIp(req))) {
-    send(res, 429, { error: "rate" });
-    return;
-  }
-  const body = await readBody(req);
-  if (body.tooLarge) {
-    send(res, 413, { error: "size" });
-    return;
-  }
-  const parsed = await parseJson(body.text ?? "");
-  const prompt = parsed.ok && typeof parsed.value?.prompt === "string" ? parsed.value.prompt.trim() : "";
-  const current = parsed.ok ? parsed.value?.current : null;
-  if (!parsed.ok || prompt.length === 0 || prompt.length > MAX_PROMPT || !mergePatch(current, {})) {
-    send(res, 400, { error: "body" });
-    return;
-  }
-  const out = await firstComplete(env, prompt, mergePatch(current, {}), fetchImpl);
-  if (out.tokens) {
-    send(res, 200, { tokens: out.tokens });
-    return;
-  }
-  if (out.status === 429) {
-    send(res, 429, { error: "rate" });
-    return;
-  }
-  send(res, 502, { error: "upstream" });
+    entry.n += 1;
+    return entry.n <= perMinute;
+  };
 }
 
-function handleSuggest(req, res, deps) {
-  return Promise.resolve(route(req, res, deps)).catch(() => {
-    if (!res.headersSent) send(res, 500, { error: "internal" });
+function changedPaths(before, after) {
+  const paths = [];
+  for (const key of Object.keys(after)) {
+    if (key === "light" || key === "dark") {
+      for (const sub of Object.keys(after[key])) if (before[key][sub] !== after[key][sub]) paths.push(`${key}.${sub}`);
+    } else if (before[key] !== after[key]) paths.push(key);
+  }
+  return paths;
+}
+
+/** One provider call within the deadline, abortable by the client's disconnect. */
+function attempt(provider, args, { client, deadline, now, fetchImpl, limits }) {
+  const remaining = deadline - now();
+  if (remaining < 1_000) return Promise.resolve({ ok: false, kind: "timeout", billable: false });
+  const signal = AbortSignal.any([AbortSignal.timeout(remaining), client.signal]);
+  return callProvider(provider, { ...args, maxTokens: limits.maxOutputTokens, signal, fetchImpl, effort: provider.effort });
+}
+
+/** What the call cost. A reply is charged at its (believable) reported usage; a failure at the worst case only if it may have run. */
+function costOf(provider, result, worst, sizes) {
+  if (result.ok) return actualMicro(provider, result.usage, worst, { inputBytes: sizes.inputBytes, outputBytes: Buffer.byteLength(result.content) });
+  return result.billable ? worst : 0;
+}
+
+/** The primary, then the fallback if there is one: never more than the hard ceiling of calls. */
+const providersOf = (config) => [config.primary, ...(config.fallback ? [config.fallback] : [])].slice(0, HARD.maxProviderCalls);
+
+/** A refusal or a transport failure can try the fallback once. Invalid output, or the visitor leaving, cannot. */
+function mayFallBack(result) {
+  if (result.ok) return false;
+  if (result.kind === "aborted") return false;
+  if (result.kind === "http") return result.status === 429 || (result.status ?? 0) >= 500;
+  return result.kind === "network" || result.kind === "timeout" || result.kind === "shape";
+}
+
+async function generate(ctx, request, references) {
+  const { config, fetchImpl, now, client, deadline } = ctx;
+  const messages = buildMessages({ ...request, references: references.filter((item) => item.ok) });
+  const providers = providersOf(config);
+  const tokens = inputTokens(messages);
+  const sizes = { inputBytes: inputBytes(messages) };
+  let spent = 0;
+  let called = 0;
+  let last = null;
+  for (const provider of providers) {
+    const worst = worstCaseMicro(provider, tokens, config.limits.maxOutputTokens);
+    const result = await attempt(provider, { messages }, { client, deadline, now, fetchImpl, limits: config.limits });
+    called += 1;
+    spent += costOf(provider, result, worst, sizes);
+    last = { result, provider };
+    if (result.ok || !mayFallBack(result)) break;
+  }
+  return { ...last, spent, called };
+}
+
+/** The model's text to validated tokens, or a reason. One shot: there is no second ask for a better answer. */
+async function interpret(content, current) {
+  const outer = await parseJson(content);
+  const patch = outer.ok ? outer.value?.tokens : undefined;
+  if (!outer.ok || !patch || typeof patch !== "object" || Array.isArray(patch)) return { ok: false };
+  const merged = mergePatch(current, patch);
+  if (!merged || !fontsAllowed(merged, current)) return { ok: false };
+  const summary = typeof outer.value.summary === "string" ? outer.value.summary.trim().slice(0, 600) : "";
+  return { ok: true, tokens: merged, summary };
+}
+
+function referenceReport(items) {
+  return items.map((item) =>
+    item.ok
+      ? { url: item.url, status: "used", analysis: "text-only", host: item.host, title: item.title, chars: item.text.length, hints: { themeColor: item.themeColor, fonts: item.fonts } }
+      : { url: item.url, status: "failed", reason: item.reason },
+  );
+}
+
+async function suggest(ctx, req, res) {
+  const { config, ledger, trusted, burst, now, log, release } = ctx;
+  const started = now();
+  const reason = unavailableReason(config, ledger);
+  if (reason) return refuse(res, 503, "disabled", { reason });
+  if (!sameOrigin(req)) return refuse(res, 403, "origin");
+  const key = clientKey(req, trusted);
+  if (!burst(key)) return refuse(res, 429, "rate", {}, 30);
+  if (Number(req.headers["content-length"]) > HARD.maxBodyBytes) return tooLarge(req, res);
+  const body = await readBody(req, HARD.maxBodyBytes);
+  if (body.tooLarge) return tooLarge(req, res);
+  const json = await parseJson(body.text ?? "");
+  const parsed = json.ok ? parseRequest(json.value) : { ok: false, field: "body" };
+  if (!parsed.ok) return refuse(res, 400, "body", { field: parsed.field });
+  const request = parsed.value;
+
+  const session = sessionCookie(req, ctx.sessionSecret);
+  const setCookie = session.fresh
+    ? { "set-cookie": `${COOKIE}=${session.id}.${session.sign(session.id)}; Path=/api/identity; Max-Age=2592000; HttpOnly; SameSite=Lax${req.headers["x-forwarded-proto"] === "https" ? "; Secure" : ""}` }
+    : {};
+
+  const tokens = inputTokens(buildMessages({ ...request, references: worstCaseReferences(request.references) }));
+  const amountMicro = providersOf(config).reduce((sum, provider) => sum + worstCaseMicro(provider, tokens, config.limits.maxOutputTokens), 0);
+  const admitted = await ledger
+    .reserve({
+    requestId: request.requestId,
+    ip: key,
+    net: networkOf(key),
+    session: session.id,
+    amountMicro,
+    ttlMs: config.limits.timeoutMs + config.limits.referenceTimeoutMs + 15_000,
+    budget: config.budget,
+    limits: config.limits,
+  })
+    // A ledger that errors mid-request cannot hold the budget: refuse, before any provider call.
+    .catch(() => ({ ok: false, reason: "unavailable", retryAfterSec: 30 }));
+  if (!admitted.ok) {
+    const map = { duplicate: [409, "duplicate"], busy: [429, "busy"], rate: [429, "rate"], budget: [429, "quota"], unavailable: [503, "disabled"] }[admitted.reason];
+    log({ outcome: `refused-${admitted.reason}`, ms: now() - started });
+    return refuse(res, map[0], map[1], admitted.reason === "unavailable" ? { reason: "unavailable" } : {}, admitted.retryAfterSec, setCookie);
+  }
+
+  const client = new AbortController();
+  res.on("close", () => {
+    if (!res.writableFinished) client.abort();
   });
+  const deadline = started + config.limits.timeoutMs + config.limits.referenceTimeoutMs;
+  const references =
+    request.references.length === 0
+      ? []
+      : await fetchReferences(request.references, {
+          resolve: ctx.resolve,
+          transport: ctx.transport,
+          timeoutMs: config.limits.referenceTimeoutMs,
+          maxBytes: config.limits.referenceMaxBytes,
+          maxChars: HARD.maxReferenceChars,
+        });
+  let budgetLeft = HARD.maxReferencesTotalChars;
+  for (const item of references) {
+    if (!item.ok) continue;
+    item.text = item.text.slice(0, Math.max(0, budgetLeft));
+    budgetLeft -= item.text.length;
+  }
+
+  const outcome = await generate({ config, fetchImpl: ctx.fetchImpl, now, client, deadline: deadline + 1 }, request, references).then(
+    (value) => ({ ...value, crashed: false }),
+    () => ({ crashed: true, spent: amountMicro, called: 1, result: { ok: false, kind: "network" } }),
+  );
+  // Whatever happened, the reservation is settled: to the reported usage, or whole when the call may have run.
+  await ledger.settle(admitted.id, outcome.called === 0 ? 0 : outcome.spent).catch(() => {
+    // The reservation stays open and is charged in full when its time is up: never lost, never refunded.
+    log({ outcome: "settle-failed", costMicro: outcome.spent });
+  });
+
+  const base = { ms: now() - started, refs: references.length, costMicro: outcome.spent, calls: outcome.called };
+  if (!outcome.result.ok) {
+    log({ outcome: `upstream-${outcome.result.kind}`, ...base });
+    if (outcome.result.kind === "aborted") return;
+    return send(res, outcome.result.kind === "timeout" ? 504 : 502, { error: outcome.result.kind === "timeout" ? "timeout" : "upstream", references: referenceReport(references) }, setCookie);
+  }
+  const answer = await interpret(outcome.result.content, request.current);
+  if (!answer.ok) {
+    log({ outcome: "invalid-output", ...base });
+    return send(res, 502, { error: "invalid-output", references: referenceReport(references) }, setCookie);
+  }
+  log({ outcome: "ok", ...base, changed: changedPaths(request.current, answer.tokens).length });
+  return send(
+    res,
+    200,
+    { requestId: request.requestId, summary: answer.summary, tokens: answer.tokens, changed: changedPaths(request.current, answer.tokens), references: referenceReport(references), release: release.id },
+    setCookie,
+  );
 }
 
-function listenSuggest(options = {}) {
+/** Free, and safe to call from a page at any time: it never reaches the provider. */
+function statusPayload(config, ledger) {
+  const reason = unavailableReason(config, ledger);
+  return {
+    available: reason === null,
+    ...(reason ? { reason } : {}),
+    limits: {
+      maxPromptChars: HARD.maxPromptChars,
+      maxReferences: HARD.maxReferences,
+      maxHistoryTurns: HARD.maxHistoryTurns,
+    },
+  };
+}
+
+async function route(ctx, req, res) {
+  const url = new URL(req.url ?? "/", "http://suggest.local");
+  if (url.pathname === `${PATH}/version`) {
+    if (req.method !== "GET" && req.method !== "HEAD") return refuse(res, 405, "method");
+    return send(res, 200, ctx.release);
+  }
+  if (url.pathname === `${PATH}/status`) {
+    if (req.method !== "GET" && req.method !== "HEAD") return refuse(res, 405, "method");
+    return send(res, 200, statusPayload(ctx.config, ctx.ledger));
+  }
+  if (url.pathname !== PATH && url.pathname !== `${PATH}/`) return refuse(res, 404, "not-found");
+  if (req.method !== "POST") return refuse(res, 405, "method");
+  return suggest(ctx, req, res);
+}
+
+function versionPayload(config, id) {
+  return {
+    id,
+    model: config.primary ? config.primary.model : "",
+    maxTokens: config.limits.maxOutputTokens,
+    effort: config.primary ? config.primary.effort : "",
+    generation: config.problems.length === 0 ? "enabled" : "disabled",
+  };
+}
+
+export function listenSuggest(options = {}) {
   const env = options.env ?? process.env;
-  const fetchImpl = options.fetchImpl ?? globalThis.fetch;
-  const limit = options.limit ?? createLimit();
-  const host = options.host ?? "127.0.0.1";
-  const port = options.port ?? 0;
-  const release = versionPayload(env, releaseId(env));
-  const server = createServer((req, res) => {
-    void handleSuggest(req, res, { env, fetchImpl, limit, release });
-  });
-  return new Promise((resolveListen, reject) => {
-    server.once("error", reject);
-    server.listen(port, host, () => {
-      const address = server.address();
-      resolveListen({ server, port: address.port });
+  const config = loadConfig(env);
+  const now = options.now ?? (() => Date.now());
+  const opening = options.ledger ? Promise.resolve({ ledger: options.ledger }) : openLedgerSafely({ dir: config.stateDir, now });
+  return opening.then(({ ledger = null, error }) => {
+    const log = options.log ?? ((event) => console.log(JSON.stringify({ at: new Date(now()).toISOString(), event: "suggest", ...event })));
+    if (error) log({ outcome: "ledger-unavailable", error });
+    const ctx = {
+      config,
+      ledger,
+      now,
+      log,
+      fetchImpl: options.fetchImpl ?? globalThis.fetch,
+      trusted: trustedList(config.network.trustedProxies),
+      burst: burstLimiter(options.burstPerMinute ?? Math.max(6, config.limits.ipPerMinute * 2), now),
+      sessionSecret: config.network.sessionSecret || randomBytes(32).toString("hex"),
+      release: versionPayload(config, releaseId(env)),
+      ...(options.resolve ? { resolve: options.resolve } : {}),
+      ...(options.transport ? { transport: options.transport } : {}),
+    };
+    const server = createServer((req, res) => {
+      route(ctx, req, res).catch(() => {
+        if (!res.headersSent) refuse(res, 500, "internal");
+      });
+    });
+    // A request is at most a few kilobytes: whoever has not sent it within seconds is holding a socket, not asking.
+    // (Node's defaults are 60 s for headers and 300 s for the whole request, with no cap on connections.)
+    server.headersTimeout = 5_000;
+    server.requestTimeout = 10_000;
+    server.keepAliveTimeout = 5_000;
+    server.maxConnections = 256;
+    return new Promise((done, fail) => {
+      server.once("error", fail);
+      server.listen(options.port ?? 0, options.host ?? "127.0.0.1", () => {
+        const address = server.address();
+        done({ server, port: address.port, ledger, config });
+      });
     });
   });
 }
 
-const invoked = process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1]);
+const invoked = process.argv[1] && fileURLToPath(import.meta.url) === resolvePath(process.argv[1]);
 if (invoked) {
-  listenSuggest({ host: "0.0.0.0", port: Number(process.env.PORT || 3001) }).then(({ port }) => {
-    console.log(`suggest: listening on ${port}`);
+  listenSuggest({ host: "0.0.0.0", port: Number(process.env.PORT || 3001) }).then(({ port, config }) => {
+    console.log(`suggest: listening on ${port}; generation ${config.problems.length === 0 ? "on" : `off (${config.problems.join("; ")})`}`);
   });
 }
 
-export { createLimit, listenSuggest };

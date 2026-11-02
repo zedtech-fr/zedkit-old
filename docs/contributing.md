@@ -40,5 +40,6 @@ After adding, removing or renaming a public export:
 1. `pnpm exec turbo run build` (skip for `quality`, it ships source).
 2. `bash scripts/check-api-report.sh --write`
 3. Add a Changeset for that package. A removed or renamed export is
-   a `minor` bump on `0.x` (breaking before 1.0). Additions can be
+   a `minor` bump below 1.0 or for an `alpha`/`beta` need, a `major` for a
+   `stable` one (see Versioning in CONTRIBUTING.md). Additions can be
    `patch`.

@@ -71,8 +71,13 @@ describe("identity token schema", () => {
         "[a",
         '"Georgia, serif',
         "rgb(0 0 0 / 0.2",
+        "'a\nb'",
+        "Georgia\r\nserif",
+        "a\tb",
+        "a\u0000b",
+        "\u007f",
       ]) {
-        expect(parseIdentityTokens({ ...identityPresets.mist, [key]: value }).success, `${key}: ${value}`).toBe(false);
+        expect(parseIdentityTokens({ ...identityPresets.mist, [key]: value }).success, `${key}: ${JSON.stringify(value)}`).toBe(false);
       }
     }
   });

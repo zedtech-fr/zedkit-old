@@ -45,7 +45,8 @@
       "source": "label.tsx",
       "demo": "LabelDemo",
       "examples": {
-        "Required mark": "LabelRequiredDemo"
+        "Required mark": "LabelRequiredDemo",
+        "Label a native input": "LabelNativeDemo"
       }
     },
     "Collect text input with a label": {

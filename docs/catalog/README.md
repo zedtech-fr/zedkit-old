@@ -24,6 +24,11 @@ Each package PR adds its row here, following
 | `@zedtech/zedkit-payload-access` | Payload role grants compiled to access functions | [packages/payload-access/CATALOG.md](../../packages/payload-access/CATALOG.md) |
 | `@zedtech/zedkit-payload-seo` | Payload SEO group field | [packages/payload-seo/CATALOG.md](../../packages/payload-seo/CATALOG.md) |
 | `@zedtech/zedkit-quality` | UI lint preset, layer boundaries, strict tsconfig | [packages/quality/CATALOG.md](../../packages/quality/CATALOG.md) |
+| `@zedtech/zedkit-devtools` | dev-only drawer: identity, flag overrides, locale, build info | [packages/devtools/CATALOG.md](../../packages/devtools/CATALOG.md) |
+| `@zedtech/zedkit-flags` | typed feature flags, server evaluation, React hooks | [packages/flags/CATALOG.md](../../packages/flags/CATALOG.md) |
+| `@zedtech/zedkit-i18n` | message templates, typed React messages context | [packages/i18n/CATALOG.md](../../packages/i18n/CATALOG.md) |
+| `@zedtech/zedkit-observability` | logger and tracker ports, adapters, React hooks | [packages/observability/CATALOG.md](../../packages/observability/CATALOG.md) |
+| `@zedtech/zedkit-storage` | S3 config, safe object keys, presigned URLs | [packages/storage/CATALOG.md](../../packages/storage/CATALOG.md) |
 | `@zedtech/zedkit-brand` | zedkit logos: SVG files, string builder, React component, icon sources | [packages/brand/CATALOG.md](../../packages/brand/CATALOG.md) |
 
 ## Entry format
@@ -53,7 +58,15 @@ import { a } from "@zedtech/zedkit-core";
 
 - **Import** names the package (and subpath, if any) plus the symbols the
   need uses. Every public export of the package must appear here — CI
-  checks it (`pnpm catalog:check`).
+  checks it (`pnpm catalog:check`). It is for JavaScript only: several
+  modules are joined with `;`. A need that is a stylesheet or a config file
+  types itself with optional lines instead, and `catalog.json` carries the
+  result as `adoption` (`js`, `css` or `config`) so the install steps are
+  written in the right language and never guessed from prose. The lines are
+  `CSS import` (a specifier ending in `.css`), `CSS directive` (a full
+  at-rule such as `@source`), `Also install`, `Utilities`, `Attributes` and
+  `Extends`; each takes backticked values. `Example file` names the path when the first example is a whole file (for instance `src/app/layout.tsx`) rather than JSX the page wraps in a component. An Import line that is neither
+  JavaScript nor typed this way fails the check.
 - UI component exports also need a four-state entry in
   [`packages/ui/four-states.json`](../../packages/ui/four-states.json)
   (`none`, or loading/empty/error/success plus fixture, vitest and axe

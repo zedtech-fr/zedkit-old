@@ -2,8 +2,9 @@
 # Publish the static docs build to the web host.
 #
 # Usage: deploy.sh [--dev|--rollback] <ssh-target> [remote-dir]
-#   --dev       publish to the dev site directory and stamp the build;
-#               content only: no config upload, no service changes
+#   --dev       publish to the dev site directory and stamp the build, and (re)start the dev
+#               site's own suggest service (suggest-dev: its own code, env and ledger; production's
+#               service, release pointer and compose files are not touched)
 #   --rollback  restore the previous versioned release (site, suggest, config)
 #   ssh-target  user@host of a machine with Docker and Compose installed
 #   remote-dir  directory on the host (default: /srv/app)
@@ -25,12 +26,53 @@ target="${1:?usage: deploy.sh [--dev|--rollback] <ssh-target> [remote-dir]}"
 remote="${2:-/srv/app}"
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-out="$root/apps/docs/out"
+out="${DEPLOY_OUT:-$root/apps/docs/out}"
 
 github_out() {
   if [ -n "${GITHUB_OUTPUT:-}" ]; then
     printf '%s\n' "$1" >> "$GITHUB_OUTPUT"
   fi
+}
+
+# A secret file, created private (0600) from the first byte: `scp` would keep the sender's mode, which may be world-readable.
+put_secret() {
+  ssh "$target" "umask 077; cat > '$2'" < "$1"
+}
+
+# Release directories hold a provider key each. Keep the newest few, never the live one or the one rollback needs.
+keep_releases="${DEPLOY_KEEP_RELEASES:-5}"
+prune_releases() {
+  ssh "$target" "cd '$remote' && keep=\"\$(basename \"\$(readlink current)\") \$(cat .previous-release 2>/dev/null || true)\" && ls -1t releases | tail -n +$((keep_releases + 1)) | while read -r old; do case \" \$keep \" in *\" \$old \"*) ;; *) rm -rf \"releases/\$old\" ;; esac; done"
+}
+
+# Every file the service runs from, and its env: a change to any of them recreates the container.
+suggest_fingerprint() {
+  local dir="$1"
+  ssh "$target" "cd '$dir' && { find suggest -type f ! -name release.json | sort | xargs sha256sum; sha256sum suggest.env; } 2>/dev/null | sha256sum | awk '{print \$1}'"
+}
+
+# The dev site's suggest service: copied to its own directory and recreated only when its code or env changed.
+deploy_suggest_dev() {
+  local dev_dir="$remote/suggest-dev"
+  local sha="$1"
+  local compose="docker compose -f compose.yaml -f compose.override.yaml -f compose.dev.yaml"
+  ssh "$target" "mkdir -p '$dev_dir/code'"
+  rsync -a --delete --exclude '*.test.mjs' "$root/deploy/suggest/" "$target:$dev_dir/code/"
+  scp -q "$root/deploy/compose.dev.yaml" "$target:$remote/compose.dev.yaml"
+  local env_file="${DEPLOY_SUGGEST_DEV_ENV:-$root/deploy/suggest-dev.env}"
+  if [ -f "$env_file" ]; then
+    put_secret "$env_file" "$dev_dir/suggest.env"
+  else
+    ssh "$target" "umask 077; : > '$dev_dir/suggest.env'"
+  fi
+  local fp
+  fp="$(ssh "$target" "cd '$dev_dir' && { find code -type f ! -name release.json | sort | xargs sha256sum; sha256sum suggest.env; } 2>/dev/null | sha256sum | awk '{print \$1}'")"
+  local release_file
+  release_file="$(mktemp)"
+  printf '{"id":"%s","fingerprint":"%s"}\n' "$sha" "$fp" > "$release_file"
+  scp -q "$release_file" "$target:$dev_dir/code/release.json"
+  rm -f "$release_file"
+  ssh "$target" "cd '$remote' && prev=\$(cat .suggest-dev-fingerprint 2>/dev/null || true) && running=\$($compose ps --status running -q suggest-dev || true) && if [ \"\$prev\" != '$fp' ] || [ -z \"\$running\" ]; then $compose up -d --no-deps --force-recreate suggest-dev; fi && printf '%s\n' '$fp' > .suggest-dev-fingerprint"
 }
 
 reconcile_suggest() {
@@ -59,7 +101,7 @@ reload_caddy() {
 
 if [ "$mode" = "rollback" ]; then
   ssh "$target" "cd '$remote' && prev=\$(cat .previous-release 2>/dev/null || true) && if [ -n \"\$prev\" ] && [ -d \"releases/\$prev\" ]; then ln -sfn \"releases/\$prev\" current; fi"
-  fp="$(ssh "$target" "sha256sum '$remote/current/suggest/server.mjs' '$remote/current/suggest/tokens.mjs' '$remote/current/suggest.env' 2>/dev/null | sha256sum | awk '{print \$1}'")"
+  fp="$(suggest_fingerprint "$remote/current")"
   recreate_caddy
   reconcile_suggest "$fp"
   github_out "switched=false"
@@ -97,12 +139,12 @@ if [ "$mode" = "prod" ]; then
 
   suggest_env="${DEPLOY_SUGGEST_ENV:-$root/deploy/suggest.env}"
   if [ -f "$suggest_env" ]; then
-    scp -q "$suggest_env" "$target:$release_dir/suggest.env"
+    put_secret "$suggest_env" "$release_dir/suggest.env"
   else
     ssh "$target" "umask 077; : > '$release_dir/suggest.env'"
   fi
 
-  fp="$(ssh "$target" "sha256sum '$release_dir/suggest/server.mjs' '$release_dir/suggest/tokens.mjs' '$release_dir/suggest.env' | sha256sum | awk '{print \$1}'")"
+  fp="$(suggest_fingerprint "$release_dir")"
   release_file="$(mktemp)"
   printf '{"id":"%s","fingerprint":"%s"}\n' "$release_id" "$fp" > "$release_file"
   scp -q "$release_file" "$target:$release_dir/suggest/release.json"
@@ -121,6 +163,7 @@ if [ "$mode" = "prod" ]; then
   # mounts the new target.
   recreate_caddy
   reconcile_suggest "$fp"
+  prune_releases
   github_out "switched=true"
 else
   branch="${DEV_BRANCH:-}"
@@ -134,6 +177,8 @@ else
   printf 'branch=%s\ncommit=%s\nbuilt=%s\n' "$branch" "$sha" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$out/dev-build.txt"
   printf 'User-agent: *\nDisallow: /' > "$out/robots.txt"
   rsync -a --delete "$out/" "$target:$site/"
+  # The service the dev Caddyfile proxies to must exist before the config that names it goes live.
+  deploy_suggest_dev "$sha"
   scp -q "$root/deploy/Caddyfile" "$target:$remote/current/Caddyfile"
   if ! ssh "$target" "docker run --rm -v '$remote/current/Caddyfile:/etc/caddy/Caddyfile:ro' caddy:2 caddy validate --adapter caddyfile --config /etc/caddy/Caddyfile"; then
     echo "deploy: dev Caddyfile refused by caddy validate" >&2

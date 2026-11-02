@@ -2,6 +2,7 @@
 export const labelCopy = {
   project: "Project name",
   projectPlaceholder: "Website relaunch",
+  native: { city: "City", placeholder: "Lyon" },
   required: {
     email: "Work email",
     mark: "*",

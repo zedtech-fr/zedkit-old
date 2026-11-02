@@ -2,7 +2,7 @@ name: deploy-dev
 
 on:
   push:
-    branches: ["integration/visual"]
+    branches: ["integration/visual", "integration/visual-followup"]
   workflow_dispatch:
     inputs:
       ref:
@@ -36,6 +36,32 @@ jobs:
         run: |
           echo "DEV_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
           echo "DEV_BRANCH=${{ inputs.ref || github.ref_name }}" >> "$GITHUB_ENV"
+      - name: Write dev suggest env
+        # The dev site's own suggest service. The provider is shared with production; the switch, the budget
+        # and the prices are the dev environment's own, and generation stays off until they are set.
+        env:
+          IDENTITY_AI_BASE_URL: ${{ secrets.IDENTITY_AI_BASE_URL }}
+          IDENTITY_AI_API_KEY: ${{ secrets.IDENTITY_AI_API_KEY }}
+          IDENTITY_AI_MODEL: ${{ secrets.IDENTITY_AI_MODEL }}
+          IDENTITY_AI_REASONING_EFFORT: ${{ secrets.IDENTITY_AI_REASONING_EFFORT }}
+          IDENTITY_AI_DEV_ENABLED: ${{ secrets.IDENTITY_AI_DEV_ENABLED }}
+          IDENTITY_AI_DEV_BUDGET_DAILY_USD: ${{ secrets.IDENTITY_AI_DEV_BUDGET_DAILY_USD }}
+          IDENTITY_AI_DEV_BUDGET_MONTHLY_USD: ${{ secrets.IDENTITY_AI_DEV_BUDGET_MONTHLY_USD }}
+          IDENTITY_AI_DEV_PRICE_INPUT_USD_PER_MTOK: ${{ secrets.IDENTITY_AI_DEV_PRICE_INPUT_USD_PER_MTOK }}
+          IDENTITY_AI_DEV_PRICE_OUTPUT_USD_PER_MTOK: ${{ secrets.IDENTITY_AI_DEV_PRICE_OUTPUT_USD_PER_MTOK }}
+        run: |
+          umask 077
+          : > deploy/suggest-dev.env
+          printf '%s=%s\n' IDENTITY_AI_BASE_URL "$IDENTITY_AI_BASE_URL" >> deploy/suggest-dev.env
+          printf '%s=%s\n' IDENTITY_AI_API_KEY "$IDENTITY_AI_API_KEY" >> deploy/suggest-dev.env
+          printf '%s=%s\n' IDENTITY_AI_MODEL "$IDENTITY_AI_MODEL" >> deploy/suggest-dev.env
+          printf '%s=%s\n' IDENTITY_AI_REASONING_EFFORT "$IDENTITY_AI_REASONING_EFFORT" >> deploy/suggest-dev.env
+          printf '%s=%s\n' IDENTITY_AI_ENABLED "$IDENTITY_AI_DEV_ENABLED" >> deploy/suggest-dev.env
+          printf '%s=%s\n' IDENTITY_AI_BUDGET_DAILY_USD "$IDENTITY_AI_DEV_BUDGET_DAILY_USD" >> deploy/suggest-dev.env
+          printf '%s=%s\n' IDENTITY_AI_BUDGET_MONTHLY_USD "$IDENTITY_AI_DEV_BUDGET_MONTHLY_USD" >> deploy/suggest-dev.env
+          printf '%s=%s\n' IDENTITY_AI_PRICE_INPUT_USD_PER_MTOK "$IDENTITY_AI_DEV_PRICE_INPUT_USD_PER_MTOK" >> deploy/suggest-dev.env
+          printf '%s=%s\n' IDENTITY_AI_PRICE_OUTPUT_USD_PER_MTOK "$IDENTITY_AI_DEV_PRICE_OUTPUT_USD_PER_MTOK" >> deploy/suggest-dev.env
+          chmod 600 deploy/suggest-dev.env
       - name: Configure SSH
         env:
           DEPLOY_KEY: ${{ secrets.DOCS_DEPLOY_KEY }}
@@ -50,6 +76,13 @@ jobs:
         env:
           TARGET: ${{ secrets.DOCS_DEPLOY_USER }}@${{ secrets.DOCS_DEPLOY_HOST }}
         run: deploy/deploy.sh --dev "$TARGET"
+      - name: Make the dev suggest release stamp readable
+        # deploy.sh writes release.json from mktemp (0600, owned by the deploy user); suggest-dev runs as root with
+        # cap_drop ALL (no DAC override), so the server cannot read it and crash-loops. Make it 0644 and restart.
+        env:
+          TARGET: ${{ secrets.DOCS_DEPLOY_USER }}@${{ secrets.DOCS_DEPLOY_HOST }}
+        run: |
+          ssh "$TARGET" 'cd /srv/app && f=suggest-dev/code/release.json && if [ -f "$f" ]; then chmod 644 "$f" && docker compose -f compose.yaml -f compose.override.yaml -f compose.dev.yaml restart suggest-dev; fi'
       - name: Verify dev build stamp
         run: |
           for _ in $(seq 1 5); do
@@ -60,3 +93,11 @@ jobs:
           done
           echo "dev-build.txt does not show commit $DEV_SHA" >&2
           exit 1
+      - name: Dev suggest diagnostics
+        # Read-only: container state, its startup line (it names missing settings, never values) and what Caddy gets.
+        if: always()
+        env:
+          TARGET: ${{ secrets.DOCS_DEPLOY_USER }}@${{ secrets.DOCS_DEPLOY_HOST }}
+        run: |
+          ssh "$TARGET" 'cd /srv/app && docker compose -f compose.yaml -f compose.override.yaml -f compose.dev.yaml ps -a suggest-dev; docker compose -f compose.yaml -f compose.override.yaml -f compose.dev.yaml logs --no-color --tail 30 suggest-dev; docker inspect -f "{{json .NetworkSettings.Networks}}" $(docker compose ps -q caddy) | tr , "\n" | grep -E "NetworkID|Aliases" ; docker network inspect -f "{{range .Containers}}{{.Name}} {{end}}" app_default; docker compose exec -T caddy wget -qO- -S http://suggest-dev:3001/api/identity/suggest/status 2>&1 | head -5' || true
+          curl -s -w ' [%{http_code}]\n' https://dev.zedkit.app/api/identity/suggest/status || true

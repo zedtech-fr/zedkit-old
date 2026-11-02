@@ -128,146 +128,6 @@ test.describe("identity editor page", () => {
     for (const name of ["Choose and preview", "Save and apply"]) await expect(page.getByRole("group", { name })).toBeVisible();
   });
 
-  test("Suggest applies a service patch after Apply", async ({ page }) => {
-    await page.route("**/api/identity/suggest", async (route) => {
-      const posted = route.request().postDataJSON() as { current: Record<string, unknown> };
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        json: { tokens: { ...posted.current, spacing: "0.5rem" } },
-      });
-    });
-    await page.goto(PAGE, { waitUntil: "networkidle" });
-    await page.getByLabel("Request").fill("more space");
-    await page.getByRole("button", { name: "Suggest" }).click();
-    await expect(page.getByText("Review these token changes.")).toBeVisible();
-    await expect(page.getByText("Contrast check passed (body, primary, and muted text 4.5:1; accent and border 3:1).")).toBeVisible();
-    await expect(page.getByText("spacing: 0.25rem → 0.5rem")).toBeVisible();
-    await expect(page.locator('[data-slot="identity-editor-swatch"]')).toHaveCount(0);
-    await page.getByRole("button", { name: "Apply", exact: true }).click();
-    await expect.poll(() => spacingOnDraft(page)).toBe("0.5rem");
-    await expect.poll(() => spacingOnHtml(page)).toBe("0.5rem");
-  });
-
-  test("Suggest shows a status while the service is in flight", async ({ page }) => {
-    await page.route("**/api/identity/suggest", async (route) => {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      const posted = route.request().postDataJSON() as { current: Record<string, unknown> };
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        json: { tokens: { ...posted.current, spacing: "0.5rem" } },
-      });
-    });
-    await page.goto(PAGE, { waitUntil: "networkidle" });
-    await page.getByLabel("Request").fill("more space");
-    await page.getByRole("button", { name: "Suggest" }).click();
-    await expect(page.getByText("Suggesting…", { exact: true })).toBeVisible();
-    await expect(page.getByText("Review these token changes.")).toBeVisible();
-    await expect(page.getByText("Suggesting…", { exact: true })).toHaveCount(0);
-  });
-
-  test("Suggest Apply keeps a dark colour on the whole site", async ({ page }) => {
-    await page.addInitScript(() => localStorage.setItem("theme", "light"));
-    await page.route("**/api/identity/suggest", async (route) => {
-      const posted = route.request().postDataJSON() as {
-        current: { light: Record<string, string>; dark: Record<string, string> };
-      };
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        json: {
-          tokens: {
-            ...posted.current,
-            light: { ...posted.current.light, background: "0 0% 95%" },
-            dark: { ...posted.current.dark, background: "120 40% 20%" },
-          },
-        },
-      });
-    });
-    await page.goto(PAGE, { waitUntil: "networkidle" });
-    await page.getByLabel("Request").fill("dark forest");
-    await page.getByRole("button", { name: "Suggest" }).click();
-    await expect(page.getByText("dark.background:")).toBeVisible();
-    await page.getByRole("button", { name: "Apply", exact: true }).click();
-    await expect(page.getByText("Applied to the whole site.", { exact: true })).toBeVisible();
-    await siteDark(page);
-    await expect
-      .poll(() =>
-        page.locator("html").evaluate((node) => getComputedStyle(node).getPropertyValue("--background").trim()),
-      )
-      .toBe("120 40% 20%");
-  });
-
-  test("Suggest preview warns when the proposal misses AA", async ({ page }) => {
-    await page.route("**/api/identity/suggest", async (route) => {
-      const posted = route.request().postDataJSON() as { current: { light: Record<string, string> } };
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        json: {
-          tokens: {
-            ...posted.current,
-            light: { ...posted.current.light, foreground: posted.current.light.background },
-          },
-        },
-      });
-    });
-    await page.goto(PAGE, { waitUntil: "networkidle" });
-    await page.getByLabel("Request").fill("pale text");
-    await page.getByRole("button", { name: "Suggest" }).click();
-    await expect(page.getByText(/light text \d+(\.\d+)?:1 \(need 4\.5:1\)/)).toBeVisible();
-    await expect(page.getByRole("button", { name: "Fix light text" })).toHaveCount(0);
-  });
-
-  test("Suggest colour diffs show a swatch", async ({ page }) => {
-    await page.route("**/api/identity/suggest", async (route) => {
-      const posted = route.request().postDataJSON() as { current: { light: Record<string, string> } };
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        json: {
-          tokens: {
-            ...posted.current,
-            light: { ...posted.current.light, primary: "0 80% 45%" },
-          },
-        },
-      });
-    });
-    await page.goto(PAGE, { waitUntil: "networkidle" });
-    await page.getByLabel("Request").fill("red button");
-    await page.getByRole("button", { name: "Suggest" }).click();
-    await expect(page.getByText("light.primary: 240 5.9% 10% → 0 80% 45%")).toBeVisible();
-    await expect(page.locator('[data-slot="identity-editor-swatch"] rect')).toHaveAttribute(
-      "fill",
-      "hsl(0 80% 45%)",
-    );
-  });
-
-  test("Suggest falls back to a keyword match when the origin is rate-limited", async ({ page }) => {
-    await page.route("**/api/identity/suggest", async (route) => {
-      await route.fulfill({ status: 429, contentType: "application/json", json: { error: "rate" } });
-    });
-    await page.goto(PAGE, { waitUntil: "networkidle" });
-    await page.getByLabel("Request").fill("editorial serif ink");
-    await page.getByRole("button", { name: "Suggest" }).click();
-    await expect(page.getByText("Too many requests. Keyword match instead.")).toBeVisible();
-    await page.getByRole("button", { name: "Apply", exact: true }).click();
-    await expect.poll(() => spacingOnDraft(page)).toBe("0.2rem");
-  });
-
-  test("Suggest falls back to a keyword match when the service is off", async ({ page }) => {
-    await page.route("**/api/identity/suggest", async (route) => {
-      await route.fulfill({ status: 503, contentType: "application/json", json: { disabled: true } });
-    });
-    await page.goto(PAGE, { waitUntil: "networkidle" });
-    await page.getByLabel("Request").fill("editorial serif ink");
-    await page.getByRole("button", { name: "Suggest" }).click();
-    await expect(page.getByText("Suggest is offline. Keyword match instead.")).toBeVisible();
-    await page.getByRole("button", { name: "Apply", exact: true }).click();
-    await expect.poll(() => spacingOnDraft(page)).toBe("0.2rem");
-  });
-
   test("passes the a11y gate on the panel", async ({ page }) => {
     await page.goto(PAGE, { waitUntil: "networkidle" });
     await assertA11yGate(page, "[data-slot=identity-editor]");
@@ -329,12 +189,17 @@ test.describe("identity editor on a phone", () => {
 test.describe("identity editor apply to site", () => {
   test("paints sidebar and page on Apply, with before/after site captures", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
+    await page.route("**/api/identity/suggest/status", (route) => route.fulfill({ status: 200, contentType: "application/json", json: { available: true } }));
     await page.route("**/api/identity/suggest", async (route) => {
-      const posted = route.request().postDataJSON() as { current: Record<string, unknown> };
+      const posted = route.request().postDataJSON() as { requestId: string; current: Record<string, unknown> };
       await route.fulfill({
         status: 200,
         contentType: "application/json",
         json: {
+          requestId: posted.requestId,
+          summary: "A warm pink page.",
+          changed: ["light.background"],
+          references: [],
           tokens: {
             ...posted.current,
             light: {
@@ -353,11 +218,13 @@ test.describe("identity editor apply to site", () => {
     const beforeSidebar = await sidebarBg(page);
     const beforeBackground = await htmlVar(page, "--background");
     await page.screenshot({ path: "test-results/identity-editor-site-before.png", fullPage: true });
-    await page.goto(PAGE, { waitUntil: "networkidle" });
-    await page.getByLabel("Request").fill("warm ivory boutique");
-    await page.getByRole("button", { name: "Suggest" }).click();
-    await expect(page.getByText("light.background:")).toBeVisible();
-    await page.getByRole("button", { name: "Apply", exact: true }).click();
+    await page.goto(`${PAGE}#create`, { waitUntil: "networkidle" });
+    await page.getByLabel("Your product and brand").fill("warm ivory boutique");
+    await page.getByRole("button", { name: "Generate" }).click();
+    await page.getByRole("button", { name: "Use this look" }).click();
+    // Using a look changes the draft only: the site is untouched until the visitor says so.
+    await expect.poll(() => htmlVar(page, "--background")).toBe(beforeBackground);
+    await page.getByRole("button", { name: "Apply to the whole site" }).click();
     await expect(page.getByText("Applied to the whole site.", { exact: true })).toBeVisible();
     await expect.poll(() => htmlVar(page, "--background")).toBe("0 80% 70%");
     await expect.poll(() => htmlVar(page, "--sidebar")).toBe("0 80% 70%");

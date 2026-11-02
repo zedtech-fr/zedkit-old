@@ -11,9 +11,13 @@ import { ExceptionFilter } from '@nestjs/common';
 import { ExecutionContext } from '@nestjs/common';
 import type { FastifyBodyParser } from 'fastify';
 import type { FastifyServerOptions } from 'fastify';
+import type { IncomingMessage } from 'node:http';
 import { INestApplication } from '@nestjs/common';
+import type { LevelWithSilent } from 'pino';
+import type { LoggerOptions as LoggerOptions_2 } from 'pino';
 import { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { NestInterceptor } from '@nestjs/common';
+import type { ServerResponse } from 'node:http';
 import { ThrottlerStorage } from '@nestjs/throttler';
 import { Type } from '@nestjs/common';
 
@@ -21,10 +25,51 @@ import { Type } from '@nestjs/common';
 export class AllExceptionsFilter implements ExceptionFilter {
     // (undocumented)
     catch(exception: unknown, host: ArgumentsHost): void;
+    protected formatBody(body: ErrorBody): unknown;
+    protected sanitizeStringHttpExceptions: boolean;
+    protected toStatusBody(exception: unknown): {
+        status: number;
+        code: string;
+        message: string;
+    };
+    protected unknownBodyParseError(): {
+        status: number;
+        code: string;
+        message: string;
+    };
 }
 
 // @public
+export function compactRequestSerializers(): {
+    req: (req: {
+        id?: unknown;
+        method?: unknown;
+        url?: unknown;
+        [key: string]: unknown;
+    }) => {
+        id: unknown;
+        method: unknown;
+        url: unknown;
+    };
+    res: (res: {
+        statusCode?: unknown;
+        [key: string]: unknown;
+    }) => {
+        statusCode: unknown;
+    };
+};
+
+// @public
 export function createNestApp(options: NestBootstrapOptions): Promise<NestFastifyApplication>;
+
+// @public
+export function createRequestLogLevel(options?: {
+    quietPaths?: readonly string[] | undefined;
+}): (req: {
+    url?: unknown;
+}, res: {
+    statusCode?: unknown;
+}, err?: unknown) => LevelWithSilent;
 
 // @public (undocumented)
 export interface DocsOptions {
@@ -50,10 +95,13 @@ export interface ErrorBody {
 
 // @public
 export interface LoggerOptions {
+    customLogLevel?: ((req: IncomingMessage, res: ServerResponse, error?: Error) => LevelWithSilent) | undefined;
     // (undocumented)
     level?: string | undefined;
     redact?: string[] | undefined;
+    serializers?: LoggerOptions_2["serializers"] | undefined;
     stream?: DestinationStream | undefined;
+    transformLine?: ((obj: unknown) => unknown) | undefined;
 }
 
 // @public (undocumented)
