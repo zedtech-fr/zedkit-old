@@ -411,6 +411,8 @@ const invoked = process.argv[1] && fileURLToPath(import.meta.url) === resolvePat
 if (invoked) {
   listenSuggest({ host: "0.0.0.0", port: Number(process.env.PORT || 3001) }).then(({ port, config }) => {
     console.log(`suggest: listening on ${port}; generation ${config.problems.length === 0 ? "on" : `off (${config.problems.join("; ")})`}`);
+    // Where calls go, never the key: a 404 from the provider is a wrong URL or model, and this is how to see which.
+    for (const p of providersOf(config)) console.log(`suggest: provider ${JSON.stringify(p.base)} model ${JSON.stringify(p.model)} effort ${JSON.stringify(p.effort)}`);
   });
 }
 
