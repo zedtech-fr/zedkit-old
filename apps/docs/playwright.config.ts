@@ -33,15 +33,19 @@ export default defineConfig({
   ...(Number.isInteger(shardCurrent) && shardCurrent > 0 && Number.isInteger(shardTotal) && shardTotal > 0
     ? { shard: { current: shardCurrent, total: shardTotal } }
     : {}),
-  use: {
-    baseURL: process.env.DOCS_E2E_BASE_URL ?? "http://127.0.0.1:3100",
-    trace: ci ? "on-first-retry" : "off",
-  },
-  projects,
+  // Static export: a stuck `networkidle` navigation never times out by default.
+  timeout: 120_000,
   expect: {
+    timeout: 15_000,
     toHaveScreenshot: {
       animations: "disabled",
       maxDiffPixelRatio: 0.02,
     },
   },
+  use: {
+    baseURL: process.env.DOCS_E2E_BASE_URL ?? "http://127.0.0.1:3100",
+    navigationTimeout: 60_000,
+    trace: ci ? "on-first-retry" : "off",
+  },
+  projects,
 });
