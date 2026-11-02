@@ -61,44 +61,56 @@ export function AdminDashboardDemoApp({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const openerRef = useRef<HTMLElement | null>(null);
+  const openerNameRef = useRef<string | null>(null);
   const form = useAdminDashboardForm();
 
   const selectedApp = selectedId ? apps.find((row) => row.id === selectedId) : undefined;
 
-  function rememberOpener() {
+  /**
+   * Remember what opened the overlay so focus can go back to it. A press does not always focus its button (Safari,
+   * and any press that lands while the table re-renders), so when nothing usable has focus the control's name is kept.
+   */
+  function rememberOpener(name: string) {
     const active = document.activeElement;
-    openerRef.current = active instanceof HTMLElement ? active : null;
+    openerRef.current = active instanceof HTMLElement && active !== document.body ? active : null;
+    openerNameRef.current = name;
   }
 
   function restoreOpener() {
     const remembered = openerRef.current;
-    const aria = remembered?.getAttribute("aria-label");
-    const text = remembered?.textContent?.trim() ?? "";
+    const name = remembered?.getAttribute("aria-label") ?? openerNameRef.current;
+    const text = remembered?.textContent?.trim() || name || "";
     const find = () => {
       if (remembered && document.contains(remembered)) return remembered;
       const scope = document.querySelector(`[aria-label="${CSS.escape(label)}"]`);
       if (!scope) return null;
-      if (aria) return scope.querySelector<HTMLElement>(`button[aria-label="${CSS.escape(aria)}"]`);
-      return text
-        ? ([...scope.querySelectorAll("button")].find((el) => el.textContent?.trim() === text) ?? null)
-        : null;
+      const byName = name ? scope.querySelector<HTMLElement>(`button[aria-label="${CSS.escape(name)}"]`) : null;
+      return byName ?? [...scope.querySelectorAll("button")].find((el) => el.textContent?.trim() === text) ?? null;
     };
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        find()?.focus({ preventScroll: true });
-      });
-    });
+    // The opener can still be inert for a frame or two while the overlay's outside-content lock is released (a
+    // focus() on an inert element is silently ignored), and the table can re-render and replace it just after.
+    // So for one second, whenever focus has fallen to the page (or is still inside the closing overlay), put it
+    // back; as soon as the visitor has moved focus somewhere real, leave it alone.
+    const started = performance.now();
+    const attempt = () => {
+      const target = find();
+      const active = document.activeElement;
+      const adrift = !active || active === document.body || active.closest("[role='dialog']") !== null;
+      if (target && active !== target && adrift) target.focus({ preventScroll: true });
+      if (performance.now() - started < 1000) requestAnimationFrame(attempt);
+    };
+    requestAnimationFrame(() => requestAnimationFrame(attempt));
   }
 
   function openCreate() {
-    rememberOpener();
+    rememberOpener(adminDashboardDemoCopy.addApp);
     setEditingId(null);
     form.reset({ name: "", region: "eu" });
     setDrawerOpen(true);
   }
 
   function openEdit(row: AdminAppRow) {
-    rememberOpener();
+    rememberOpener(adminDashboardDemoCopy.columns.editAriaLabel(row.name));
     setEditingId(row.id);
     form.reset({ name: row.name, region: row.region });
     setDrawerOpen(true);

@@ -89,6 +89,22 @@ test("home dashboard: canceling edit restores focus to the edit trigger", async 
   await expect(edit).toBeFocused();
 });
 
+test("home dashboard: focus lost to the page right after the overlay closes is given back to the edit trigger", async ({ page }) => {
+  // The table can re-render and replace the button just after the overlay closes (focus falls to <body>): seen in
+  // about one run in twenty, and the trigger must still end up focused. Simulated by blurring it the moment it is back.
+  await page.goto(BASE, { waitUntil: "networkidle" });
+  await openHeroPage(page, "Apps");
+  const demo = page.locator("#demo").getByLabel("Interactive admin dashboard demo in the hero");
+  const edit = demo.getByRole("button", { name: "Edit console" });
+  await edit.click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(edit).toBeFocused();
+  await edit.evaluate((el) => (el as HTMLElement).blur());
+  await expect(edit).toBeFocused({ timeout: 2000 });
+});
+
 test("home dashboard: preview modes are keyboard reachable", async ({ page }) => {
   await page.goto(BASE, { waitUntil: "networkidle" });
   await openHeroPage(page, "Apps");
