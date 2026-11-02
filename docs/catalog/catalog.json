@@ -675,6 +675,41 @@
         }
       ]
     },
+    "@zedtech/zedkit-payload-access": {
+      "catalog": "packages/payload-access/CATALOG.md",
+      "keywords": [
+        "payloadcms",
+        "payload",
+        "access-control",
+        "rbac",
+        "permissions",
+        "roles",
+        "cms",
+        "typescript"
+      ],
+      "audience": "Payload CMS developers who want role permissions declared as data.",
+      "needs": [
+        {
+          "need": "Control who can read and write Payload collections and globals",
+          "import": "`@zedtech/zedkit-payload-access` — `granted`, `roleOfRequest`, `collectionAccess`, `globalAccess`, `withGeneratedAccess`, `withGeneratedGlobalAccess`, `Grant`, `AccessAction`, `ResourceTarget`, `RoleOptions`, `ACCESS_ACTIONS`, `GLOBAL_ACTIONS`, `ALL_NAMES`, `PUBLIC_ROLE`",
+          "wraps": "`payload` (peer, types only)",
+          "status": "alpha",
+          "shortName": "Role grants",
+          "audience": "Payload CMS developers who want role permissions declared as data.",
+          "purpose": "Turn a list of role grants into Payload access functions, default-deny, with no roles built in.",
+          "whenToUse": "When several roles share one Payload app and new collections must stay closed until someone grants them.",
+          "whenNotToUse": "For ownership, field-level or locale rules — write Payload access functions directly.",
+          "derivedFrom": null,
+          "example": "import { withGeneratedAccess, type Grant } from \"@zedtech/zedkit-payload-access\";\nconst grants: Grant[] = [{ role: \"editor\", resource: \"collection\", name: \"posts\", actions: [\"read\", \"update\"] }];\nconst posts = withGeneratedAccess({ slug: \"posts\", fields: [] }, grants);\n// posts.access: editors read/update, everyone else denied\nconst anonymous = { anonymousRole: \"guest\" }; // optional: rename the signed-out role",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "import { withGeneratedAccess, type Grant } from \"@zedtech/zedkit-payload-access\";\nconst grants: Grant[] = [{ role: \"editor\", resource: \"collection\", name: \"posts\", actions: [\"read\", \"update\"] }];\nconst posts = withGeneratedAccess({ slug: \"posts\", fields: [] }, grants);\n// posts.access: editors read/update, everyone else denied\nconst anonymous = { anonymousRole: \"guest\" }; // optional: rename the signed-out role"
+            }
+          ]
+        }
+      ]
+    },
     "@zedtech/zedkit-payload-seo": {
       "catalog": "packages/payload-seo/CATALOG.md",
       "keywords": [
