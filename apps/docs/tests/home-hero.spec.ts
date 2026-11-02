@@ -158,6 +158,41 @@ test("a toast raised in the example sits in the viewport corner and leaves the n
   expect(placed.editReachable).toBe(true);
 });
 
+test("the lead rises in one block at a time on load and settles fully visible and in place", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(BASE, { waitUntil: "domcontentloaded" });
+
+  // Three blocks (name and title, sentence, actions), each one beat after the one before.
+  const beats = await page.evaluate(() =>
+    [...document.querySelectorAll("[data-home-hero-lead] > *")].map((block) => {
+      const style = getComputedStyle(block);
+      return { name: style.animationName, delay: style.animationDelay };
+    }),
+  );
+  expect(beats.map((beat) => beat.name)).toEqual(Array(3).fill("zk-home-hero-rise"));
+  const delays = beats.map((beat) => Number.parseFloat(beat.delay));
+  expect(delays[0]).toBe(0);
+  expect(delays[1]).toBeGreaterThan(delays[0]!);
+  expect(delays[2]).toBeGreaterThan(delays[1]!);
+  expect(delays[2]).toBeLessThan(0.3);
+
+  await page.waitForLoadState("networkidle");
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        [...document.querySelectorAll("[data-home-hero-lead] > *")].map((block) => {
+          const style = getComputedStyle(block);
+          return `${style.opacity} ${style.transform}`;
+        }),
+      ),
+    )
+    .toEqual(Array(3).fill("1 none"));
+  // The example is not animated: its loading frame is swapped for the real one and would replay.
+  expect(await page.locator("[data-home-hero-preview]").evaluate((node) => getComputedStyle(node).animationName)).toBe(
+    "none",
+  );
+});
+
 test("reduced motion changes nothing about the hero: it never animated", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 1440, height: 900 });
