@@ -7,7 +7,11 @@
 
 ## Theme an admin app (dark/light included)
 
-- Import: `@zedtech/zedkit-ui/styles.css` (+ one `@source` line, see README)
+- Import: `@zedtech/zedkit-ui/styles.css` (stylesheet, not a JavaScript module)
+- CSS import: `@zedtech/zedkit-ui/styles.css`
+- CSS directive: `@source "../../node_modules/@zedtech/zedkit-ui/src/**/*.{ts,tsx}"`
+- Also install: `next-themes`
+- Example file: `src/app/layout.tsx`
 - Wraps: `tailwindcss` (v4 CSS-first) plus `next-themes` for the toggle
 - Status: stable
 - Derived from: shadcn/ui (theme)
@@ -22,7 +26,6 @@
 - Troubleshooting: Components render unstyled — the `@source` line is missing in `globals.css`, so Tailwind never scans the kit. Dark mode does nothing — the `dark` class must be on `<html>` (next-themes `attribute="class"`), not on `<body>`. A flash of the wrong theme on load — keep `suppressHydrationWarning` on `<html>` and let `ThemeProvider` set the class before paint. Utilities such as `bg-primary` have no effect — `globals.css` drifted from the Globals CSS snippet below; restore its three lines in order. A colour looks wrong in dark — a fixed colour (`text-gray-500`) was used; switch to a semantic token.
 
 ```ts
-// pnpm add next-themes
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 
@@ -127,7 +130,11 @@ cn("px-4", "px-2"); // "px-2" — last conflicting utility wins
 
 ## Animate entrances and hover feedback with CSS utilities
 
-- Import: `@zedtech/zedkit-ui/styles.css` (utilities `animate-fade-up`, `animate-fade-in`, `animate-pop-in`, `stagger-*`, `hover-lift`, `hover-press`, `button-press`, `hit-target`, `marquee-track`; attributes `data-reveal`, `data-stagger`)
+- Import: `@zedtech/zedkit-ui/styles.css` (stylesheet, not a JavaScript module)
+- CSS import: `@zedtech/zedkit-ui/styles.css`
+- CSS directive: `@source "../../node_modules/@zedtech/zedkit-ui/src/**/*.{ts,tsx}"`
+- Utilities: `animate-fade-up`, `animate-fade-in`, `animate-pop-in`, `stagger-*`, `hover-lift`, `hover-press`, `button-press`, `hit-target`, `marquee-track`
+- Attributes: `data-reveal`, `data-stagger`
 - Wraps: `tailwindcss` (v4 `@utility` and `@theme`)
 - Status: alpha
 - Short name: Motion
@@ -141,7 +148,8 @@ cn("px-4", "px-2"); // "px-2" — last conflicting utility wins
 - Troubleshooting: Nothing animates — check the OS reduced-motion setting first. Content stays hidden — `data-reveal="pending"` and `data-stagger="pending"` hide content until your code sets them to `"in"`. Stagger has no delay — `stagger-*` delays an animation class (`animate-fade-up stagger-2`), not a transition.
 
 ```ts
-import "@zedtech/zedkit-ui/styles.css"; // motion utilities ship with the theme
+import { Card } from "@zedtech/zedkit-ui";
+
 <Card className="animate-fade-up stagger-1">First</Card>
 <Card className="animate-fade-up stagger-2">Second</Card>
 ```
@@ -285,7 +293,7 @@ import { Badge } from "@zedtech/zedkit-ui";
 - When to use: For every visible input name.
 - When not to use: For placeholder-only inputs — use `aria-label` instead; for headings — use Heading.
 - See also: `Collect text input with a label`, `Build validated forms with labels, errors, and pending state`
-- Examples: Simple, Required mark
+- Examples: Simple, Required mark, Label a native input
 - A11y: Pairs with a control via `htmlFor` plus a matching `id`; clicking the label focuses the control (native behavior). A disabled peer dims the label via `peer-disabled`. Size is `text-sm`; identity `--zk-label-transform` stays on badges and table heads.
 - Registry: label
 - Troubleshooting: Clicking the label does nothing — the control needs a matching `id` for `htmlFor`. Label not dimming with a disabled control — `peer-disabled` needs the control as a preceding `peer` sibling.
@@ -300,6 +308,12 @@ import { Input, Label } from "@zedtech/zedkit-ui";
 import { Input, Label } from "@zedtech/zedkit-ui";
 <Label htmlFor="email">Email <span aria-hidden="true">*</span></Label>
 <Input id="email" required />
+```
+
+```ts
+import { Label } from "@zedtech/zedkit-ui";
+<Label htmlFor="city">City</Label>
+<input id="city" className="rounded-md border border-border px-3 py-2" />
 ```
 
 ## Collect text input with a label

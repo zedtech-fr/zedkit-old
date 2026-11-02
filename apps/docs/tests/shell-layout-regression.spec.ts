@@ -142,13 +142,11 @@ test("install code on a docs page scrolls horizontally with a focusable region",
 test("home get-started install commands scroll horizontally at 390px", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${BASE}/#get-started`, { waitUntil: "networkidle" });
-  const block = page.locator("#install-or-copy [data-install-command]").first();
-  const region = block.getByRole("region", { name: "Package install command", exact: true });
+  const block = page.locator("#install-or-copy [data-adoption-step='install'] figure").first();
+  const region = block.getByRole("region", { name: "Terminal", exact: true });
   await block.scrollIntoViewIfNeeded();
   await expect(region).toBeVisible();
   const metrics = await region.evaluate((scrollRegion) => {
-    const shell = scrollRegion.closest("[data-install-command]");
-    if (!shell) return { ok: false, reason: "missing shell" };
     const style = getComputedStyle(scrollRegion);
     const command = scrollRegion.textContent?.trim() ?? "";
     const canScroll = scrollRegion.scrollWidth > scrollRegion.clientWidth + 1;
@@ -157,7 +155,6 @@ test("home get-started install commands scroll horizontally at 390px", async ({ 
         command.length > 0 &&
         (style.overflowX === "auto" || style.overflowX === "scroll") &&
         scrollRegion.getAttribute("tabindex") === "0" &&
-        getComputedStyle(shell).display === "flex" &&
         (canScroll || command.length > 24),
       scrollWidth: scrollRegion.scrollWidth,
       regionClientWidth: scrollRegion.clientWidth,

@@ -1,0 +1,263 @@
+#!/usr/bin/env node
+// Follows the adoption instructions people are shown, and nothing else, in a clean Next.js project.
+//
+// The steps come from `buildAdoptionPlan` (apps/docs/lib/adoption-plan.mjs), the function the home page and
+// every component page render from. Each command runs as displayed and each file is written where the step
+// says. The only differences from a person at a terminal are listed here and printed in the log:
+//   - the kit package resolves to the tarball built from this checkout (a pnpm override), so a pull request is
+//     checked against its own code; set ADOPTION_PACKAGE=published to use what npm serves;
+//   - https://zedkit.app/r/ resolves to the registry JSON built from this checkout (apps/docs/public/r);
+//   - shadcn@latest is pinned (SHADCN_VERSION), and `add` answers its prompts (--yes --overwrite).
+//
+// Usage: node scripts/adoption-smoke.mjs [case ...]   (default: every case)
+//   cases: home-button-package, home-button-cli, home-button-manual, drawer-cli, drawer-manual,
+//          theme-package, motion-package, drawer-manual-incomplete
+//   `drawer-manual-incomplete` is the negative control: it replays the Drawer recipe as it was before the
+//   registry graph fed it (one file, no companions, no packages) and passes only if the build fails.
+// Needs network (create-next-app, npm) and Chromium (pnpm exec playwright install chromium).
+import { execFileSync, spawn } from "node:child_process";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, appendFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const SITE = "https://zedkit.app";
+const REGISTRY_DIR = join(ROOT, "apps/docs/public/r");
+const SHADCN = process.env.SHADCN_VERSION ?? "4.22.1";
+const NEXT_APP = process.env.CREATE_NEXT_APP_VERSION ?? "16.4.3";
+const PACKAGE_SOURCE = process.env.ADOPTION_PACKAGE ?? "local";
+
+const { buildAdoptionPlan, loadRegistry, FEATURED_EXAMPLE } = await import(join(ROOT, "apps/docs/lib/adoption-plan.mjs"));
+const catalog = JSON.parse(readFileSync(join(ROOT, "docs/catalog/catalog.json"), "utf8"));
+const registry = loadRegistry(ROOT);
+
+function findNeed(name) {
+  for (const [packageName, entry] of Object.entries(catalog.packages)) {
+    const need = entry.needs.find((item) => item.need === name);
+    if (need) return { need, packageName };
+  }
+  throw new Error(`catalog has no need "${name}"`);
+}
+
+function plan(name, example) {
+  const { need, packageName } = findNeed(name);
+  return buildAdoptionPlan({ need, packageName, siteUrl: SITE, ...(example ? { example } : {}) }, { registry });
+}
+
+/** Page checks run in Chromium against the built app. */
+const buttonChecks = async ({ page }) => {
+  const button = page.getByRole("button", { name: "Save" });
+  await button.waitFor();
+  const style = await button.evaluate((el) => {
+    const css = getComputedStyle(el);
+    return { background: css.backgroundColor, height: el.getBoundingClientRect().height, radius: css.borderTopLeftRadius };
+  });
+  assert(style.background !== "rgb(239, 239, 239)" && style.background !== "rgba(0, 0, 0, 0)", `Button is unstyled (${style.background})`);
+  assert(style.height >= 32, `Button is ${style.height}px tall`);
+};
+
+/** The old, incomplete Drawer recipe: the main file alone. A check that cannot fail proves nothing. */
+function incompleteDrawer() {
+  const built = plan("Slide in a drawer panel");
+  const manual = built.modes.find((mode) => mode.id === "manual");
+  const steps = manual.steps
+    .filter((step) => ["init", "files", "render"].includes(step.id))
+    .map((step) => (step.id === "files" ? { ...step, blocks: step.blocks.filter((block) => block.role === "main") } : step));
+  return { ...built, modes: [{ ...manual, steps }] };
+}
+
+const CASES = {
+  "home-button-package": { mode: "package", plan: () => plan("Trigger actions with buttons", FEATURED_EXAMPLE), check: buttonChecks },
+  "home-button-cli": { mode: "cli", plan: () => plan("Trigger actions with buttons", FEATURED_EXAMPLE), check: buttonChecks },
+  "home-button-manual": { mode: "manual", plan: () => plan("Trigger actions with buttons", FEATURED_EXAMPLE), check: buttonChecks },
+  "drawer-cli": { mode: "cli", plan: () => plan("Slide in a drawer panel"), check: drawerChecks },
+  "drawer-manual": { mode: "manual", plan: () => plan("Slide in a drawer panel"), check: drawerChecks },
+  "drawer-manual-incomplete": { mode: "manual", expectFailure: true, plan: incompleteDrawer, check: drawerChecks },
+  "theme-package": {
+    mode: "package",
+    plan: () => plan("Theme an admin app (dark/light included)"),
+    check: async ({ page, context, url }) => {
+      const read = () => page.evaluate(() => ({ background: getComputedStyle(document.documentElement).getPropertyValue("--background").trim(), cls: document.documentElement.className }));
+      const light = await read();
+      assert(light.background !== "", "the kit tokens did not load: --background is empty");
+      await page.emulateMedia({ colorScheme: "dark" });
+      await page.goto(url);
+      await page.waitForFunction(() => document.documentElement.classList.contains("dark"));
+      const dark = await read();
+      assert(dark.background !== light.background, `dark mode did not change --background (${dark.background})`);
+      void context;
+    },
+  },
+  "motion-package": {
+    mode: "package",
+    plan: () => plan("Animate entrances and hover feedback with CSS utilities"),
+    check: async ({ page }) => {
+      const card = page.getByText("First", { exact: true });
+      await card.waitFor();
+      const animation = await card.evaluate((el) => getComputedStyle(el).animationName);
+      assert(animation !== "none" && animation !== "", `animate-fade-up produced no animation (${animation})`);
+    },
+  },
+};
+
+async function drawerChecks({ page }) {
+  await page.getByRole("button", { name: "Open" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.waitFor();
+  assert((await dialog.innerText()).includes("Details"), "the drawer opened without its title");
+}
+
+function assert(condition, message) {
+  if (!condition) throw new Error(message);
+}
+
+function sh(command, cwd, env = {}) {
+  console.log(`\n$ ${command}`);
+  execFileSync("bash", ["-c", command], {
+    cwd,
+    stdio: "inherit",
+    env: { ...process.env, CI: "1", NEXT_TELEMETRY_DISABLED: "1", ...env },
+  });
+}
+
+/** What differs from a person's terminal, applied to a displayed command. */
+function localize(commandText) {
+  let out = commandText.replaceAll(`${SITE}/r/`, `${REGISTRY_DIR}/`).replaceAll("shadcn@latest", `shadcn@${SHADCN}`);
+  if (/shadcn@\S+ add /.test(out)) out += " --yes --overwrite";
+  return out;
+}
+
+/** The project's own pnpm decides: a packageManager field can switch the version inside it. */
+function pnpmMajor(project) {
+  return Number(execFileSync("pnpm", ["--version"], { cwd: project, encoding: "utf8" }).trim().split(".")[0]);
+}
+
+function overridePackage(project, tarball) {
+  const spec = `file:${tarball}`;
+  if (pnpmMajor(project) >= 10) {
+    appendFileSync(join(project, "pnpm-workspace.yaml"), `overrides:\n  "@zedtech/zedkit-ui": "${spec}"\n`);
+    return;
+  }
+  const pkgPath = join(project, "package.json");
+  const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
+  pkg.pnpm = { ...(pkg.pnpm ?? {}), overrides: { "@zedtech/zedkit-ui": spec } };
+  writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
+}
+
+function applyFile(project, block) {
+  const target = join(project, block.path);
+  mkdirSync(dirname(target), { recursive: true });
+  if (block.action === "append") appendFileSync(target, `\n${block.code}`);
+  else writeFileSync(target, block.code);
+  console.log(`\n# ${block.action} ${block.path} (${block.code.split("\n").length} lines)`);
+}
+
+function runMode(project, mode) {
+  for (const step of mode.steps) {
+    console.log(`\n== ${step.id}: ${step.title}`);
+    for (const block of step.blocks) {
+      if (block.kind === "command") sh(localize(block.commands.pnpm), project);
+      else if (block.kind === "file") applyFile(project, block);
+      else throw new Error(`step ${step.id} has a ${block.kind} block, which has no place to be run`);
+    }
+  }
+}
+
+async function serve(project) {
+  const port = 3400 + Math.floor(Math.random() * 400);
+  const child = spawn("pnpm", ["exec", "next", "start", "-p", String(port)], { cwd: project, stdio: "inherit" });
+  const url = `http://127.0.0.1:${port}/`;
+  for (let i = 0; i < 60; i += 1) {
+    const ready = await fetch(url).then((res) => res.ok, () => false);
+    if (ready) return { url, stop: () => child.kill() };
+    await new Promise((done) => setTimeout(done, 1000));
+  }
+  child.kill();
+  throw new Error("next start did not answer");
+}
+
+async function runCase(name, template, tarball, chromium) {
+  const spec = CASES[name];
+  if (spec.expectFailure) {
+    const failed = await runCaseOnce(name, spec, template, tarball, chromium).then(() => false, () => true);
+    assert(failed, `${name} was expected to fail and did not`);
+    console.log(`\nadoption-smoke: ${name} failed as expected`);
+    return;
+  }
+  await runCaseOnce(name, spec, template, tarball, chromium);
+  console.log(`\nadoption-smoke: ${name} ok`);
+}
+
+async function runCaseOnce(name, spec, template, tarball, chromium) {
+  const project = mkdtempSync(join(tmpdir(), `zedkit-adoption-${name}-`));
+  try {
+    cpSync(template, project, { recursive: true });
+    if (tarball) overridePackage(project, tarball);
+    sh("pnpm install", project);
+    const built = spec.plan();
+    const mode = built.modes.find((item) => item.id === spec.mode);
+    if (!mode) throw new Error(`${name}: the plan has no ${spec.mode} mode`);
+    runMode(project, mode);
+    if (tarball && mode.id === "package") {
+      const installed = JSON.parse(readFileSync(join(project, "node_modules/@zedtech/zedkit-ui/package.json"), "utf8")).version;
+      const local = JSON.parse(readFileSync(join(ROOT, "packages/ui/package.json"), "utf8")).version;
+      assert(installed === local, `the kit resolved to ${installed}, not this checkout's ${local}`);
+    }
+    sh("pnpm exec next build", project);
+    const server = await serve(project);
+    const browser = await chromium.launch();
+    try {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      const problems = [];
+      page.on("pageerror", (error) => problems.push(error.message));
+      page.on("console", (message) => message.type() === "error" && problems.push(message.text()));
+      await page.goto(server.url);
+      await spec.check({ page, context, url: server.url });
+      assert(problems.length === 0, `console errors: ${problems.join(" | ")}`);
+    } finally {
+      await browser.close();
+      server.stop();
+    }
+  } finally {
+    if (!process.env.ADOPTION_KEEP) rmSync(project, { recursive: true, force: true });
+    else console.log(`kept ${project}`);
+  }
+}
+
+async function main() {
+  const wanted = process.argv.slice(2);
+  const names = wanted.length > 0 ? wanted : Object.keys(CASES);
+  for (const name of names) assert(CASES[name], `unknown case ${name} (${Object.keys(CASES).join(", ")})`);
+  assert(existsSync(join(REGISTRY_DIR, "button.json")), `missing ${REGISTRY_DIR}/button.json (run pnpm registry:build)`);
+
+  const work = mkdtempSync(join(tmpdir(), "zedkit-adoption-base-"));
+  const template = join(work, "app");
+  let tarball = null;
+  if (PACKAGE_SOURCE === "local") {
+    sh("pnpm exec turbo run build --filter=@zedtech/zedkit-ui", ROOT);
+    sh(`pnpm pack --pack-destination ${work}`, join(ROOT, "packages/ui"));
+    tarball = execFileSync("bash", ["-c", `ls ${work}/*.tgz`], { encoding: "utf8" }).trim();
+  }
+  sh(`pnpm dlx create-next-app@${NEXT_APP} app --ts --tailwind --eslint --app --src-dir --import-alias "@/*" --use-pnpm --skip-install --yes`, work);
+
+  const { chromium } = await import("@playwright/test");
+  const failures = [];
+  for (const name of names) {
+    try {
+      await runCase(name, template, tarball, chromium);
+    } catch (error) {
+      failures.push(`${name}: ${error.message}`);
+      console.error(`\nadoption-smoke: ${name} FAILED: ${error.message}`);
+    }
+  }
+  rmSync(work, { recursive: true, force: true });
+  if (failures.length > 0) {
+    console.error(`\nadoption-smoke: ${failures.length} failed\n${failures.join("\n")}`);
+    process.exit(1);
+  }
+  console.log(`\nadoption-smoke: ok (${names.join(", ")})`);
+}
+
+await main();

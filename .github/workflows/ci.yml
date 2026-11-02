@@ -139,6 +139,28 @@ jobs:
       - run: pnpm registry:build
       - run: bash scripts/quickstart-smoke.sh
 
+  # Follows the adoption instructions the site shows (home page and component pages), and nothing else, in clean
+  # Next.js projects: install Button, copy Button and Drawer by CLI and by hand, Theme, Motion, plus a negative
+  # control that must fail. Not in ci-required until it has been stable on main for a while.
+  adoption-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm registry:build
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm adoption:smoke
+
   docs-e2e-shard:
     name: docs-e2e-shard (${{ matrix.shard }}/3)
     runs-on: ubuntu-latest
