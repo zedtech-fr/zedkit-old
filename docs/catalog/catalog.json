@@ -2286,7 +2286,7 @@
           "status": "stable",
           "shortName": "SecretField",
           "audience": "Developers displaying API keys and tokens shown only once.",
-          "purpose": "A read-only shown-once value with one-click copy; `multiline` wraps long values (install commands, short snippets) in a textarea that grows, so they read in full on narrow screens.",
+          "purpose": "A read-only shown-once value with one-click copy; `multiline` wraps long values (install commands, snippets) so they read in full on a phone.",
           "whenToUse": "Right after creating a credential the user must store.",
           "whenNotToUse": "For passwords the user typed — use a password Input instead.",
           "derivedFrom": null,

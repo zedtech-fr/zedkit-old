@@ -79,7 +79,7 @@ function IdentityEditorPreviewBar({
 }: PreviewBarProps) {
   const copy = identityEditorCopy.toolbar;
   return (
-    <div role="group" aria-label={copy.groups.preview} data-slot="identity-editor-toolbar" className={cn("min-w-0", className)}>
+    <Stack role="group" aria-label={copy.groups.preview} data-slot="identity-editor-toolbar" className={cn("min-w-0", className)}>
       <Row>
         <LookSelect identity={identity} looks={looks} onIdentity={onIdentity} />
         <Button type="button" variant="outline" aria-pressed={darkPreview} onClick={onDark}>
@@ -92,7 +92,7 @@ function IdentityEditorPreviewBar({
           {copy.reset}
         </Button>
       </Row>
-    </div>
+    </Stack>
   );
 }
 

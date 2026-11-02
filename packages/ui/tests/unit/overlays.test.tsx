@@ -407,8 +407,11 @@ describe("overlays", () => {
       expect(field.getAttribute("spellcheck")).toBe("false");
       expect(field.rows).toBe(1);
       expect(field.className).toContain("field-sizing-content");
-      expect(field.className).toContain("whitespace-nowrap");
-      expect(field.className).toContain("overflow-x-auto");
+      // Documented as wrapping: a long value reads in full on a phone instead of scrolling sideways in the box.
+      expect(field.className).toContain("whitespace-pre-wrap");
+      expect(field.className).toContain("wrap-anywhere");
+      expect(field.className).not.toContain("whitespace-nowrap");
+      expect(field.className).not.toContain("overflow-x-auto");
       expect(field.className).toContain("font-mono");
       expect(field.className).toContain("min-h-control-height");
       expect(field.className).not.toContain("min-h-textarea-min-height");
