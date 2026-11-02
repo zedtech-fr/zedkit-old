@@ -2,20 +2,22 @@ import { expect, test, type Page } from "@playwright/test";
 
 const BASE = "http://127.0.0.1:3100";
 
-const EXAMPLES = ["Data table", "Detail panel", "Date picker"] as const;
+const PAGES = ["Overview", "Apps", "Calendar", "Team", "Settings"] as const;
+type PageName = (typeof PAGES)[number];
 
-const tabs = (page: Page) => page.locator("#demo").getByRole("tablist", { name: "Kit examples" });
-const panel = (page: Page, id: "table" | "panel" | "calendar") => page.locator(`#demo [data-hero-example="${id}"]`);
+const windowOf = (page: Page) => page.locator("#demo [data-hero-window]");
+/** The sidebar entries (from md up) or the chips in the top bar (below md): whichever is on screen. */
+const nav = (page: Page) => page.locator("#demo").getByRole("navigation", { name: "Pages of the example app" });
+const go = (page: Page, name: PageName) => nav(page).getByRole("button", { name, exact: true }).click();
+const section = (page: Page, id: string) => page.locator(`#demo [data-hero-page="${id}"]`);
 
 test("desktop hero puts the proposition beside one working example and does not pin the page", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(BASE, { waitUntil: "networkidle" });
 
-  const lead = page.locator("[data-home-hero-lead]");
-  const preview = page.locator("[data-home-hero-preview]");
-  await expect(lead).toBeVisible();
-  await expect(preview).toBeVisible();
-  await expect(page.locator("#demo").getByRole("button", { name: "Add app" })).toBeVisible();
+  await expect(page.locator("[data-home-hero-lead]")).toBeVisible();
+  await expect(windowOf(page)).toBeVisible();
+  await expect(windowOf(page).getByRole("heading", { level: 2, name: "Website relaunch" })).toBeVisible();
 
   const geometry = await page.evaluate(() => {
     const leadBox = document.querySelector("[data-home-hero-lead]")!.getBoundingClientRect();
@@ -28,107 +30,118 @@ test("desktop hero puts the proposition beside one working example and does not 
       centreGap: Math.abs(leadBox.top + leadBox.height / 2 - (previewBox.top + previewBox.height / 2)),
       bandHeight: band.height,
       nextTop: next.top + scrollY,
-      previewBottom: previewBox.bottom,
+      previewBottom: previewBox.bottom + scrollY,
     };
   });
   // Side by side, centred on one another.
   expect(geometry.previewLeft).toBeGreaterThan(geometry.leadRight);
   expect(geometry.centreGap).toBeLessThan(24);
-  // The hero is one screen, not a scroll track: the next band begins right after it.
-  expect(geometry.bandHeight).toBeLessThan(760);
-  expect(geometry.nextTop - geometry.previewBottom).toBeLessThan(240);
+  // The hero is about one screen, not a scroll track: the next band begins right after it.
+  expect(geometry.bandHeight).toBeLessThan(800);
+  expect(geometry.nextTop - geometry.previewBottom).toBeLessThan(120);
 });
 
-test("the three examples are real tabs: named, selectable by pointer and keyboard, one panel at a time", async ({ page }) => {
+test("the example is a small app: five pages, one on show, chosen by the sidebar with pointer or keyboard", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(BASE, { waitUntil: "networkidle" });
 
-  const list = tabs(page);
-  await expect(list.getByRole("tab")).toHaveText([...EXAMPLES]);
-  await expect(list.getByRole("tab", { name: "Data table" })).toHaveAttribute("aria-selected", "true");
-  await expect(panel(page, "table")).toBeVisible();
-  await expect(panel(page, "panel")).toBeHidden();
-  await expect(panel(page, "calendar")).toBeHidden();
+  await expect(nav(page).getByRole("button")).toHaveText([...PAGES]);
+  await expect(nav(page).getByRole("button", { name: "Overview" })).toHaveAttribute("aria-current", "page");
+  await expect(section(page, "overview")).toBeVisible();
+  for (const id of ["apps", "calendar", "team", "settings"]) await expect(section(page, id)).toBeHidden();
 
-  // Pointer.
-  await list.getByRole("tab", { name: "Detail panel" }).click();
-  await expect(list.getByRole("tab", { name: "Detail panel" })).toHaveAttribute("aria-selected", "true");
-  await expect(page.locator("#demo").getByText("Task details")).toBeVisible();
-  await expect(panel(page, "table")).toBeHidden();
+  await go(page, "Calendar");
+  await expect(nav(page).getByRole("button", { name: "Calendar" })).toHaveAttribute("aria-current", "page");
+  await expect(section(page, "calendar")).toBeVisible();
+  await expect(section(page, "overview")).toBeHidden();
 
-  // Keyboard: arrows move and select, Home and End jump, and the selected tab labels its panel.
-  await list.getByRole("tab", { name: "Detail panel" }).focus();
-  await page.keyboard.press("ArrowRight");
-  await expect(list.getByRole("tab", { name: "Date picker" })).toHaveAttribute("aria-selected", "true");
-  await expect(panel(page, "calendar")).toBeVisible();
-  await page.keyboard.press("Home");
-  await expect(list.getByRole("tab", { name: "Data table" })).toHaveAttribute("aria-selected", "true");
-  await page.keyboard.press("End");
-  await expect(list.getByRole("tab", { name: "Date picker" })).toHaveAttribute("aria-selected", "true");
-  const labelled = await panel(page, "calendar").evaluate((node) => {
-    const label = document.getElementById(node.getAttribute("aria-labelledby") ?? "");
-    return { role: node.getAttribute("role"), label: label?.textContent };
-  });
-  expect(labelled).toEqual({ role: "tabpanel", label: "Date picker" });
+  // Keyboard: focus an entry, Enter opens it.
+  await nav(page).getByRole("button", { name: "Team" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(section(page, "team")).toBeVisible();
+  await expect(windowOf(page).getByRole("region", { name: "Interactive admin dashboard demo in the hero" })).toBeHidden();
 
-  // An example that is not on show cannot be tabbed into or clicked through.
-  await list.getByRole("tab", { name: "Data table" }).click();
+  // A page that is not on show cannot be tabbed into or clicked through.
   const hidden = await page.evaluate(() => {
-    const scene = document.querySelector<HTMLElement>("[data-hero-example='calendar']")!;
-    const control = scene.querySelector<HTMLElement>("button")!;
+    const scene = document.querySelector<HTMLElement>("[data-hero-page='settings']")!;
+    const control = scene.querySelector<HTMLElement>("input")!;
     return { visibility: getComputedStyle(scene).visibility, focusable: getComputedStyle(control).visibility !== "hidden" };
   });
   expect(hidden).toEqual({ visibility: "hidden", focusable: false });
 });
 
-test("switching examples does not move the page, and the table keeps what the visitor did", async ({ page }) => {
+test("switching pages does not move the page, and the Apps table keeps what the visitor did", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(BASE, { waitUntil: "networkidle" });
-  const list = tabs(page);
   const heights = new Set<number>();
-  const measure = async () =>
-    heights.add(Math.round((await page.locator("[data-home-hero-preview]").boundingBox())!.height));
+  const measure = async () => heights.add(Math.round((await page.locator("[data-home-hero-preview]").boundingBox())!.height));
 
   await measure();
+  await go(page, "Apps");
   await page.locator("#demo").getByRole("button", { name: "Add app" }).click();
   await page.getByRole("dialog").getByLabel("Name").fill("kept-row");
   await page.getByRole("button", { name: "Create app" }).click();
   await expect(page.locator("#demo").getByRole("cell", { name: "kept-row", exact: true })).toBeVisible();
   await measure();
-  for (const name of ["Detail panel", "Date picker", "Data table"]) {
-    await list.getByRole("tab", { name }).click();
+  for (const name of ["Calendar", "Team", "Settings", "Overview", "Apps"] as const) {
+    await go(page, name);
     await measure();
   }
-  // Same frame height for every example (±1px for rounding), and the added row is still there.
+  // Same frame height for every page (±1px for rounding), and the added row is still there.
   expect(Math.max(...heights) - Math.min(...heights)).toBeLessThanOrEqual(1);
   await expect(page.locator("#demo").getByRole("cell", { name: "kept-row", exact: true })).toBeVisible();
 });
 
-test("the table state select belongs to the table: it is there for the table and nowhere else", async ({ page }) => {
+test("the table state select belongs to the Apps page: it is there for the table and nowhere else", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(BASE, { waitUntil: "networkidle" });
-  const state = page.locator("[data-hero-demo-display]").getByRole("combobox", { name: "Table preview mode" });
-  await expect(state).toBeVisible();
-  await tabs(page).getByRole("tab", { name: "Date picker" }).click();
+  const display = page.locator("[data-hero-demo-display]");
+  const state = display.getByRole("combobox", { name: "Table preview mode" });
   await expect(state).toHaveCount(0);
-  // Identity and mode apply to every example.
-  await expect(page.locator("[data-hero-demo-display]").getByRole("combobox")).toHaveCount(2);
+  await go(page, "Apps");
+  await expect(state).toBeVisible();
+  await go(page, "Calendar");
+  await expect(state).toHaveCount(0);
+  // Identity and mode apply to every page.
+  await expect(display.getByRole("combobox")).toHaveCount(2);
 });
 
-test("choosing a day in the date picker example answers with that day", async ({ page }) => {
+test("choosing a day in the calendar page answers with what is due that day", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(BASE, { waitUntil: "networkidle" });
-  await tabs(page).getByRole("tab", { name: "Date picker" }).click();
-  await expect(panel(page, "calendar").getByText("Chosen: 15 October")).toBeVisible();
-  await panel(page, "calendar").getByRole("button", { name: /October 20th/ }).click();
-  await expect(panel(page, "calendar").getByText("Chosen: 20 October")).toBeVisible();
+  await go(page, "Calendar");
+  const calendar = section(page, "calendar");
+  await expect(calendar.getByText("Due on 4 November")).toBeVisible();
+  await expect(calendar.getByText("Redirect the old product URLs")).toBeVisible();
+  await calendar.getByRole("button", { name: /November 5th/ }).click();
+  await expect(calendar.getByText("Due on 5 November")).toBeVisible();
+  await expect(calendar.getByText("Connect the contact form to email")).toBeVisible();
+  await calendar.getByRole("button", { name: /November 8th/ }).click();
+  await expect(calendar.getByText("Nothing due this day.")).toBeVisible();
 });
 
-test("a toast raised in the example sits in the viewport corner and leaves the new row's actions reachable", async ({
-  page,
-}) => {
+test("the team page and the settings page answer the visitor", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(BASE, { waitUntil: "networkidle" });
+  await go(page, "Team");
+  const team = section(page, "team");
+  await team.getByRole("button", { name: /Luca Moretti/ }).click();
+  await expect(team.getByRole("button", { name: /Luca Moretti/ })).toHaveAttribute("aria-pressed", "true");
+  await expect(team.getByText("Engineering").last()).toBeVisible();
+  await expect(team.getByText("Redirect the old product URLs", { exact: false })).toBeVisible();
+
+  await go(page, "Settings");
+  const settings = section(page, "settings");
+  await settings.getByRole("button", { name: "Save changes" }).click();
+  await expect(settings.getByRole("status")).toHaveText("Saved");
+  await settings.getByRole("textbox", { name: "Workspace" }).fill("Harbor Staging");
+  await expect(settings.getByText("Saved", { exact: true })).toHaveCount(0);
+});
+
+test("a toast raised in the example sits in the viewport corner and leaves the new row's actions reachable", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto(BASE, { waitUntil: "networkidle" });
+  await go(page, "Apps");
   const demo = page.locator("#demo").getByLabel("Interactive admin dashboard demo in the hero");
 
   await demo.getByRole("button", { name: "Add app" }).click();
@@ -138,6 +151,7 @@ test("a toast raised in the example sits in the viewport corner and leaves the n
   // The drawer's own overlay has to be gone, or it would be what the pointer hits.
   await expect(page.getByRole("dialog")).toBeHidden();
   await expect(page.locator("[data-slot='drawer-overlay'], [data-slot='dialog-overlay']")).toHaveCount(0);
+  await page.locator("button[aria-label='Edit toast-corner']").evaluate((node) => node.scrollIntoView({ block: "center" }));
 
   const placed = await page.evaluate(() => {
     const toast = document.querySelector("[data-sonner-toast]")!.getBoundingClientRect();
@@ -158,7 +172,7 @@ test("a toast raised in the example sits in the viewport corner and leaves the n
   expect(placed.editReachable).toBe(true);
 });
 
-test("the lead rises in one block at a time on load and settles fully visible and in place", async ({ page }) => {
+test("on load the lead rises block by block and the window assembles, then everything settles in place", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(BASE, { waitUntil: "domcontentloaded" });
 
@@ -177,26 +191,91 @@ test("the lead rises in one block at a time on load and settles fully visible an
   expect(delays[2]).toBeLessThan(0.3);
 
   await page.waitForLoadState("networkidle");
+  await expect(windowOf(page)).toBeVisible();
+  // The window, its sidebar entries and the stat cards each have an entrance of their own...
+  const entrances = await page.evaluate(() => {
+    const name = (selector: string) => getComputedStyle(document.querySelector(selector)!).animationName;
+    return [
+      name("[data-hero-window]"),
+      name("[data-hero-nav-item]"),
+      name("[data-hero-page='overview'] [data-hero-block]"),
+      name("[data-hero-bar]"),
+    ];
+  });
+  expect(entrances).toEqual(["zk-home-window-in", "zk-home-slide", "zk-home-rise", "zk-home-grow"]);
+
+  // ...and when they are done nothing is left applied: no transform on the window (it would become the containing block of a toast).
   await expect
     .poll(() =>
-      page.evaluate(() =>
-        [...document.querySelectorAll("[data-home-hero-lead] > *")].map((block) => {
-          const style = getComputedStyle(block);
+      page.evaluate(() => {
+        const settled = (selector: string) => {
+          const style = getComputedStyle(document.querySelector(selector)!);
           return `${style.opacity} ${style.transform}`;
-        }),
-      ),
+        };
+        return [
+          ...[...document.querySelectorAll("[data-home-hero-lead] > *")].map((block) => {
+            const style = getComputedStyle(block);
+            return `${style.opacity} ${style.transform}`;
+          }),
+          settled("[data-hero-window]"),
+          settled("[data-hero-page='overview'] [data-hero-block]"),
+        ];
+      }),
     )
-    .toEqual(Array(3).fill("1 none"));
-  // The example is not animated: its loading frame is swapped for the real one and would replay.
-  expect(await page.locator("[data-home-hero-preview]").evaluate((node) => getComputedStyle(node).animationName)).toBe(
-    "none",
-  );
+    .toEqual(Array(5).fill("1 none"));
 });
 
-test("reduced motion changes nothing about the hero: it never animated", async ({ page }) => {
+test("a guided cursor tours the pages by itself, and stops for good the moment the visitor touches the example", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(BASE, { waitUntil: "networkidle" });
+  const current = () => nav(page).locator("[aria-current='page']").innerText();
+
+  await expect(windowOf(page)).toHaveAttribute("data-tour", "on", { timeout: 8000 });
+  await expect(page.locator("#demo [data-hero-cursor]")).toBeVisible();
+  // Nobody touched anything, and the example moves on to its second page by itself, using the real sidebar entry.
+  await expect.poll(current, { timeout: 12000 }).toBe("Apps");
+
+  // The visitor presses inside the frame: the tour ends and the page stays where they put it.
+  await go(page, "Settings");
+  await expect(windowOf(page)).toHaveAttribute("data-tour", "off");
+  await page.waitForTimeout(7000);
+  expect(await current()).toBe("Settings");
+  await expect(page.locator("#demo [data-hero-cursor]")).toHaveCSS("opacity", "0");
+});
+
+test("the guided tour waits while the example is off screen", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await page.waitForTimeout(5500);
+  await expect(windowOf(page)).not.toHaveAttribute("data-tour", /.+/);
+  await expect(nav(page).locator("[aria-current='page']")).toHaveText("Overview");
+});
+
+test("the cards over the window's edge follow the pointer, and are out of reach of keyboard and screen readers", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(BASE, { waitUntil: "networkidle" });
+  const satellite = page.locator("#demo [data-hero-satellite]").first();
+  await expect(page.locator("#demo [data-hero-satellite]")).toHaveCount(2);
+  await expect(satellite).toHaveAttribute("aria-hidden", "true");
+  expect(await satellite.evaluate((node) => node.hasAttribute("inert"))).toBe(true);
+  expect(await satellite.evaluate((node) => node.querySelectorAll("a, button, input, [tabindex]").length)).toBe(0);
+
+  const frame = (await page.locator("#demo").boundingBox())!;
+  const px = () => page.locator("#demo").evaluate((node) => Number.parseFloat(node.style.getPropertyValue("--zk-px") || "0"));
+  await page.mouse.move(frame.x + frame.width - 4, frame.y + 4, { steps: 4 });
+  await expect.poll(px).toBeGreaterThan(0.9);
+  await page.mouse.move(frame.x + 4, frame.y + frame.height - 4, { steps: 4 });
+  await expect.poll(px).toBeLessThan(-0.9);
+  await page.mouse.move(0, 0);
+  await expect.poll(px).toBe(0);
+});
+
+test("reduced motion: nothing in the hero animates, nothing tours, and the numbers are the final ones", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.waitForTimeout(3500);
   const animated = await page.evaluate(() =>
     document
       .getAnimations()
@@ -204,30 +283,38 @@ test("reduced motion changes nothing about the hero: it never animated", async (
       .map((animation) => animation.constructor.name),
   );
   expect(animated).toEqual([]);
-  await expect(tabs(page).getByRole("tab")).toHaveCount(3);
+  await expect(windowOf(page)).not.toHaveAttribute("data-tour", /.+/);
+  await expect(section(page, "overview").locator("[data-beat='1'] span[aria-hidden='true']")).toHaveText("10");
+  await expect(nav(page).locator("[aria-current='page']")).toHaveText("Overview");
+  await expect(nav(page).getByRole("button")).toHaveCount(5);
 });
 
 for (const width of [320, 360, 390]) {
-  test(`${width}px: the three tabs and the example fit the screen, nothing scrolls sideways`, async ({ page }) => {
+  test(`${width}px: the pages and the example fit the screen, nothing scrolls sideways`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 });
     await page.goto(BASE, { waitUntil: "networkidle" });
     const fit = await page.evaluate(() => {
-      const list = document.querySelector("[data-home-hero-examples]")!;
-      const triggers = [...list.querySelectorAll<HTMLElement>("[role='tab']")];
+      const bar = document.querySelector<HTMLElement>("#demo nav.md\\:hidden")!;
+      const chips = [...bar.querySelectorAll<HTMLElement>("button")];
+      const frame = document.querySelector("[data-home-hero-preview]")!.getBoundingClientRect();
       return {
-        inside: triggers.every((tab) => {
-          const box = tab.getBoundingClientRect();
-          return box.left >= 0 && box.right <= document.documentElement.clientWidth;
-        }),
-        clipped: triggers.some((tab) => tab.scrollWidth > tab.clientWidth + 1),
-        targets: Math.min(...triggers.map((tab) => tab.getBoundingClientRect().height)),
+        chipHeight: Math.min(...chips.map((chip) => chip.getBoundingClientRect().height)),
+        frameInside: frame.left >= 0 && frame.right <= document.documentElement.clientWidth,
         overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        satellites: [...document.querySelectorAll("[data-hero-satellite]")].every((node) => getComputedStyle(node).display === "none"),
       };
     });
-    expect(fit.inside, "every tab is on screen").toBe(true);
-    expect(fit.clipped, "no tab label is cut").toBe(false);
-    expect(fit.targets, "tab height (px) reaches a comfortable target").toBeGreaterThanOrEqual(36);
+    expect(fit.chipHeight, "page chip height (px) reaches a comfortable target").toBeGreaterThanOrEqual(44);
+    expect(fit.frameInside).toBe(true);
     expect(fit.overflow).toBeLessThanOrEqual(1);
+    expect(fit.satellites, "the decorative cards stay off the phone").toBe(true);
+
+    for (const name of PAGES) {
+      await go(page, name);
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      expect(overflow, `${width}px ${name}`).toBeLessThanOrEqual(1);
+    }
+    await go(page, "Apps");
     await expect(page.locator("#demo").getByRole("button", { name: "Add app" })).toBeVisible();
 
     const select = page.getByRole("combobox", { name: /identity/i }).first();

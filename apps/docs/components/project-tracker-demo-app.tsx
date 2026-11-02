@@ -48,75 +48,11 @@ import {
   cn,
   createDataTableColumns,
   toast,
-  type BadgeProps,
 } from "@zedtech/zedkit-ui";
 
 import { projectTrackerDemoCopy } from "@/components/i18n/project-tracker-demo-copy";
+import { SEED_TASKS, STATUS_VARIANT, type TaskRow } from "./project-tracker-demo-data";
 import { usePreviewMobile } from "./preview-viewport";
-
-type TaskStatus = (typeof projectTrackerDemoCopy.status)[keyof typeof projectTrackerDemoCopy.status];
-
-interface TaskRow {
-  id: string;
-  title: string;
-  owner: string;
-  status: TaskStatus;
-  /** ISO date (UTC), formatted on render so the output never depends on the viewer locale. */
-  due: string;
-}
-
-const STATUS_VARIANT: Record<TaskStatus, BadgeProps["variant"]> = {
-  [projectTrackerDemoCopy.status.todo]: "outline",
-  [projectTrackerDemoCopy.status.inProgress]: "secondary",
-  [projectTrackerDemoCopy.status.inReview]: "warning",
-  [projectTrackerDemoCopy.status.blocked]: "destructive",
-  [projectTrackerDemoCopy.status.done]: "success",
-};
-
-const SEED_TASKS: TaskRow[] = [
-  { id: "t-101", title: projectTrackerDemoCopy.tasks.homepageCopy, owner: projectTrackerDemoCopy.people.priya, status: projectTrackerDemoCopy.status.inReview, due: "2026-11-03" },
-  {
-    id: "t-102",
-    title: projectTrackerDemoCopy.tasks.redirectUrls,
-    owner: projectTrackerDemoCopy.people.luca,
-    status: projectTrackerDemoCopy.status.inProgress,
-    due: "2026-11-04",
-  },
-  { id: "t-103", title: projectTrackerDemoCopy.tasks.heroImages, owner: projectTrackerDemoCopy.people.tom, status: projectTrackerDemoCopy.status.done, due: "2026-10-28" },
-  { id: "t-104", title: projectTrackerDemoCopy.tasks.typeface, owner: projectTrackerDemoCopy.people.aiko, status: projectTrackerDemoCopy.status.done, due: "2026-10-26" },
-  {
-    id: "t-105",
-    title: projectTrackerDemoCopy.tasks.contactForm,
-    owner: projectTrackerDemoCopy.people.luca,
-    status: projectTrackerDemoCopy.status.blocked,
-    due: "2026-11-05",
-  },
-  {
-    id: "t-106",
-    title: projectTrackerDemoCopy.tasks.checkout,
-    owner: projectTrackerDemoCopy.people.maya,
-    status: projectTrackerDemoCopy.status.inProgress,
-    due: "2026-11-06",
-  },
-  {
-    id: "t-107",
-    title: projectTrackerDemoCopy.tasks.pricingFrench,
-    owner: projectTrackerDemoCopy.people.priya,
-    status: projectTrackerDemoCopy.status.todo,
-    due: "2026-11-10",
-  },
-  { id: "t-108", title: projectTrackerDemoCopy.tasks.analytics, owner: projectTrackerDemoCopy.people.tom, status: projectTrackerDemoCopy.status.todo, due: "2026-11-12" },
-  {
-    id: "t-109",
-    title: projectTrackerDemoCopy.tasks.keyboard,
-    owner: projectTrackerDemoCopy.people.aiko,
-    status: projectTrackerDemoCopy.status.inReview,
-    due: "2026-11-07",
-  },
-  { id: "t-110", title: projectTrackerDemoCopy.tasks.archiveBlog, owner: projectTrackerDemoCopy.people.maya, status: projectTrackerDemoCopy.status.todo, due: "2026-11-18" },
-  { id: "t-111", title: projectTrackerDemoCopy.tasks.launchAnnouncement, owner: projectTrackerDemoCopy.people.priya, status: projectTrackerDemoCopy.status.todo, due: "2026-11-20" },
-  { id: "t-112", title: projectTrackerDemoCopy.tasks.a11yCheck, owner: projectTrackerDemoCopy.people.aiko, status: projectTrackerDemoCopy.status.todo, due: "2026-11-24" },
-];
 
 const dueFormat = new Intl.DateTimeFormat("en", { month: "short", day: "numeric", timeZone: "UTC" });
 

@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { assertFocusUnclipped, assertFocusVisibleRing, focusWithKeyboard, readFocusIndicator } from "./a11y-helpers";
+import { openHeroPage } from "./hero-helpers";
 
 /**
  * The focus assertion reads what the browser paints. Each case is a plain page
@@ -112,6 +113,7 @@ test.describe("controls whose own styles used to hide the ring", () => {
   test("home identity tabs, docs Preview/Code tabs and the hero selects paint a real indicator", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto("/", { waitUntil: "networkidle" });
+    await openHeroPage(page, "Apps");
     const tab = page.locator("[data-home-identity-looks]").getByRole("tab", { name: "Dev console" });
     await tab.scrollIntoViewIfNeeded();
     await focusWithKeyboard(tab);

@@ -14,4 +14,6 @@ export type AdminDashboardFormValues = z.infer<typeof adminDashboardFormSchema>;
 export const adminDashboardSeedApps: AdminAppRow[] = [
   { id: "seed-console", name: "console", region: "eu" },
   { id: "seed-worker", name: "worker", region: "us" },
+  { id: "seed-gateway", name: "gateway", region: "eu" },
+  { id: "seed-billing", name: "billing", region: "us" },
 ];

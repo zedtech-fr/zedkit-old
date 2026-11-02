@@ -7,7 +7,7 @@ import test from "node:test";
 const app = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 test("home hero dashboard loads the admin demo through next/dynamic", () => {
-  const src = readFileSync(join(app, "ui/home/home-hero-preview.tsx"), "utf8");
+  const src = readFileSync(join(app, "ui/home/home-hero-app.tsx"), "utf8");
   assert.match(src, /from "next\/dynamic"/);
   assert.match(src, /home-admin-dashboard-demo/);
   assert.doesNotMatch(src, /from ["']@\/components\/demos\/home-admin-dashboard-demo["']/);

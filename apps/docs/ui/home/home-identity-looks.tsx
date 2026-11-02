@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useSyncExternalStore, type ComponentType } from "react";
+import { useCallback, useState, useSyncExternalStore, type ComponentType } from "react";
 import { useTheme } from "next-themes";
 import { Button, Stack, TabsContent, Text, ThemeScope } from "@zedtech/zedkit-ui";
 import { IDENTITY_EDITOR_HREF } from "@/lib/site-links.mjs";
-import { HOME_IDENTITY_FACTS, isIdentityId, type IdentityId } from "@/ui/home/home-identity-facts";
+import { HOME_IDENTITY_FACTS, IDENTITY_IDS, isIdentityId, type IdentityId } from "@/ui/home/home-identity-facts";
 import { homeIdentityLooksCopy } from "@/ui/home/home-identity-looks-copy";
 import { HomeIdentityExampleGlass } from "@/ui/home/home-identity-example-glass";
 import { HomeIdentityExampleMaison } from "@/ui/home/home-identity-example-maison";
@@ -16,6 +16,8 @@ import { HomeIdentityExampleVolt } from "@/ui/home/home-identity-example-volt";
 import { HomeIdentityLooksFacts } from "@/ui/home/home-identity-looks-facts";
 import { HomeIdentityLooksTabs } from "@/ui/home/home-identity-looks-tabs";
 import { HOME_METADATA_TEXT_CLASS } from "@/ui/home/home-rhythm";
+import { useClippedStage } from "@/ui/home/use-clipped-stage";
+import { usePinnedSteps } from "@/ui/home/use-pinned-steps";
 
 const noop = () => () => {};
 
@@ -35,23 +37,33 @@ export function HomeIdentityLooks() {
   const mounted = useSyncExternalStore(noop, () => true, () => false);
   const mode = mounted && resolvedTheme === "dark" ? "dark" : "light";
   const facts = HOME_IDENTITY_FACTS[identity];
+  const onStep = useCallback((step: number) => setIdentity(IDENTITY_IDS[step]!), []);
+  const { track, pin, goTo } = usePinnedSteps({ count: IDENTITY_IDS.length, onStep });
 
   return (
     <Stack gap={3} className="min-w-0 scroll-mt-24" data-home-identity-looks="">
       <Text variant="muted" className={HOME_METADATA_TEXT_CLASS}>
-        {homeIdentityLooksCopy.liveNote}
+        {homeIdentityLooksCopy.liveNote}{" "}
+        <span data-identity-pinned-hint="">{homeIdentityLooksCopy.scrollHint}</span>
       </Text>
-      <HomeIdentityLooksTabs
-        value={identity}
-        mode={mode}
-        onValueChange={(next) => {
-          if (isIdentityId(next)) setIdentity(next);
-        }}
-      >
-        <TabsContent value={identity} className="mt-0">
-          <HomeIdentityLooksFrame identity={identity} mode={mode} facts={facts} />
-        </TabsContent>
-      </HomeIdentityLooksTabs>
+      {/* The track is as tall as the pin plus one stretch of scroll per example; see home-identity-scroll.css. */}
+      <div ref={track} data-identity-track="" data-count={IDENTITY_IDS.length}>
+        <div ref={pin} data-identity-pin="">
+          <HomeIdentityLooksTabs
+            value={identity}
+            mode={mode}
+            onValueChange={(next) => {
+              if (!isIdentityId(next)) return;
+              setIdentity(next);
+              goTo(IDENTITY_IDS.indexOf(next));
+            }}
+          >
+            <TabsContent value={identity} className="mt-0">
+              <HomeIdentityLooksFrame identity={identity} mode={mode} facts={facts} />
+            </TabsContent>
+          </HomeIdentityLooksTabs>
+        </div>
+      </div>
       <HomeIdentityLooksLinks />
     </Stack>
   );
@@ -67,21 +79,31 @@ function HomeIdentityLooksFrame({
   facts: (typeof HOME_IDENTITY_FACTS)[IdentityId];
 }) {
   const Example = EXAMPLES[identity];
+  const stage = useClippedStage(identity);
+
   return (
-    <Stack gap={3} className="min-w-0">
-      <div className="grid min-w-0 gap-4 lg:grid-cols-3">
-        <div className="min-w-0 rounded-xl border border-border lg:col-span-2">
+    <Stack gap={3} className="min-w-0" data-identity-frame="">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-3" data-identity-frame-grid="">
+        <div className="min-w-0 rounded-xl border border-border lg:col-span-2" data-identity-frame-stage="">
           <ThemeScope
+            ref={stage}
             identity={identity}
             mode={mode}
             data-home-identity-stage=""
             className="min-w-0 rounded-xl bg-background p-2 sm:p-4"
           >
-            <Example />
+            <div data-identity-example="" key={identity}>
+              <Example />
+            </div>
+            <span
+              aria-hidden="true"
+              data-identity-fade=""
+              className="pointer-events-none sticky bottom-0 -mt-12 block h-12 bg-linear-to-b from-transparent to-background"
+            />
           </ThemeScope>
         </div>
         <aside className="hidden min-w-0 lg:block">
-          <HomeIdentityLooksFacts facts={facts} mode={mode} />
+          <HomeIdentityLooksFacts key={identity} facts={facts} mode={mode} />
         </aside>
       </div>
       <details className="min-w-0 lg:hidden">
