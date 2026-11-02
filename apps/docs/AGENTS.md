@@ -61,6 +61,10 @@ reject dead `/r/<name>.json` links.
   are necessary, not sufficient. A self-assigned score is not done.
   Playwright `toHaveScreenshot` baselines in git are the linux files
   (`*-chromium-linux.png`). Darwin captures stay local (gitignored).
+  Reproduce CI exactly with the Playwright image of the lockfile version
+  (`docker run --ipc=host -v $PWD:/work -w /work/apps/docs mcr.microsoft.com/playwright:v<version>-noble`
+  serving `out/`), read every failing diff, classify it (defect, unstable
+  test, intended change) and only then regenerate, there.
 
 ## ZedKit art direction (Product Atelier)
 
@@ -71,7 +75,8 @@ Scope: this docs site and its specimens. Exception: a specimen that
 must match a kit primitive's own look.
 
 - Stable, readable site frame around well-composed working specimens.
-- Site styling stays distinct from specimen identities.
+- Site styling stays distinct from specimen identities. Each styling
+  decision has one owner layer (contract table); fix at the shared layer.
 - One surface role per job.
 - Color from tokens; no decorative gradients.
 - One focal specimen per section, not a uniform rounded-card grid.
