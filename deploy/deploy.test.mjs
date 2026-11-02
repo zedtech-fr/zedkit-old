@@ -61,16 +61,26 @@ function listenUpstream() {
     const chunks = [];
     req.on("data", (chunk) => chunks.push(chunk));
     req.on("end", () => {
-      hits.push(JSON.parse(Buffer.concat(chunks).toString("utf8")));
-      const body = JSON.stringify({
-        choices: [{ message: { content: JSON.stringify({ summary: "More air.", tokens: { spacing: "0.4rem" } }) } }],
-        usage: { prompt_tokens: 100, completion_tokens: 50 },
-      });
-      res.writeHead(200, {
-        "content-type": "application/json",
-        "content-length": Buffer.byteLength(body),
-      });
-      res.end(body);
+      const raw = Buffer.concat(chunks).toString("utf8");
+      const sendJson = (body) => {
+        res.writeHead(200, {
+          "content-type": "application/json",
+          "content-length": Buffer.byteLength(body),
+        });
+        res.end(body);
+      };
+      // Suggest logs provider models at startup (GET, no body); only chat POSTs count as hits.
+      if (String(req.url ?? "").includes("/models")) {
+        sendJson(JSON.stringify({ data: [{ id: "model-a" }, { id: "model-b" }] }));
+        return;
+      }
+      if (raw) hits.push(JSON.parse(raw));
+      sendJson(
+        JSON.stringify({
+          choices: [{ message: { content: JSON.stringify({ summary: "More air.", tokens: { spacing: "0.4rem" } }) } }],
+          usage: { prompt_tokens: 100, completion_tokens: 50 },
+        }),
+      );
     });
   });
   return new Promise((resolve) => {
