@@ -76,6 +76,13 @@ describe("isPrivateHostname", () => {
     }
   });
 
+  it("stays fast on very long dotted input", () => {
+    const start = Date.now();
+    expect(isPrivateHostname(`a${".".repeat(200_000)}b`)).toBe(false);
+    expect(isPrivateHostname(`${".".repeat(200_000)}x`)).toBe(false);
+    expect(Date.now() - start).toBeLessThan(1_000);
+  });
+
   it("strips trailing dots before judging", () => {
     expect(isPrivateHostname("localhost.")).toBe(true);
     expect(isPrivateHostname("localhost..")).toBe(true);

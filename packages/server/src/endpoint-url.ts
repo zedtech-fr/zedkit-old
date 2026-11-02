@@ -149,10 +149,7 @@ function isPrivateIPv6(host: string): boolean {
  * compatible, NAT64, 6to4).
  */
 export function isPrivateHostname(hostname: string): boolean {
-  const host = hostname
-    .toLowerCase()
-    .replace(/^\[(.*)\]$/, "$1")
-    .replace(/\.+$/, "");
+  const host = trimTrailingDots(unbracket(hostname.toLowerCase()));
   if (
     host === "localhost" ||
     host.endsWith(".localhost") ||
@@ -208,4 +205,15 @@ export function checkEndpointUrl(
 
 function fail(message: string): EndpointCheckResult {
   return { ok: false, error: new Error(message) };
+}
+
+// Linear scans instead of `/\.+$/`, which backtracks quadratically on long dotted input.
+function trimTrailingDots(host: string): string {
+  let end = host.length;
+  while (end > 0 && host.charCodeAt(end - 1) === 46) end -= 1;
+  return host.slice(0, end);
+}
+
+function unbracket(host: string): string {
+  return host.startsWith("[") && host.endsWith("]") ? host.slice(1, -1) : host;
 }
