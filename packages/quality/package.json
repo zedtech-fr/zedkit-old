@@ -71,12 +71,14 @@
     "lint": "eslint src tests"
   },
   "peerDependencies": {
+    "@eslint/js": "catalog:",
     "eslint": "catalog:",
     "eslint-plugin-better-tailwindcss": "catalog:",
     "eslint-plugin-jsx-a11y": "catalog:",
     "typescript-eslint": "catalog:"
   },
   "devDependencies": {
+    "@eslint/js": "catalog:",
     "eslint": "catalog:",
     "eslint-plugin-better-tailwindcss": "catalog:",
     "eslint-plugin-jsx-a11y": "catalog:",

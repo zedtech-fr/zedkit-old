@@ -14,9 +14,49 @@
 // Consumer setup (no copy: install the package, pass your Tailwind entry):
 //   `import { uiPreset } from "@zedtech/zedkit-quality"` then
 //   `export default [...uiPreset({ entryPoint: "./app/globals.css" })]`.
+import js from "@eslint/js";
 import jsxA11y from "eslint-plugin-jsx-a11y";
 import betterTailwindcss from "eslint-plugin-better-tailwindcss";
-import { plugin as tsPlugin } from "typescript-eslint";
+import tseslint, { plugin as tsPlugin } from "typescript-eslint";
+
+const DEEP_RELATIVE_IMPORT = {
+  group: ["../..", "../../*", "../../../*"],
+  message: "Deep relative imports are banned. Use the `#*` subpath import for this package.",
+};
+
+const DEFAULT_TRY_CATCH_SOURCE = "@zedtech/zedkit-core";
+
+/**
+ * Flat config for Node/TS packages: `@eslint/js` + `typescript-eslint`
+ * recommended, raw try/catch ban, deep relative import ban. Spread first;
+ * add `ignores` and a `try-catch.ts` override in the consumer.
+ *
+ * @param {{ tryCatchSource?: string }} [options]
+ * @returns {import("eslint").Linter.Config[]}
+ */
+export function nodePreset(options = {}) {
+  const tryCatchSource =
+    typeof options.tryCatchSource === "string" && options.tryCatchSource !== ""
+      ? options.tryCatchSource
+      : DEFAULT_TRY_CATCH_SOURCE;
+  return [
+    js.configs.recommended,
+    ...tseslint.configs.recommended,
+    {
+      name: "zedkit/node-base",
+      rules: {
+        "no-restricted-syntax": [
+          "error",
+          {
+            selector: "TryStatement",
+            message: `try-catch: raw try/catch is banned. Use tryCatch/tryCatchAsync from ${tryCatchSource} so thrown values become Error with cause.`,
+          },
+        ],
+        "no-restricted-imports": ["error", { patterns: [DEEP_RELATIVE_IMPORT] }],
+      },
+    },
+  ];
+}
 
 const PALETTE =
   "slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|fuchsia|pink|rose";

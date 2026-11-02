@@ -63,6 +63,11 @@ commands) see `@zedtech/zedkit-ai` instead.
 
 ## API
 
+- `nodePreset({ tryCatchSource? })` — flat-config blocks for Node/TS
+  packages: eslint + typescript-eslint recommended, raw try/catch ban,
+  deep relative import ban. Default message points at
+  `@zedtech/zedkit-core`; override `tryCatchSource` when the consumer
+  re-exports the helpers under another name.
 - `uiPreset({ entryPoint })` — flat-config blocks for `.tsx`/`.jsx`:
   jsx-a11y recommended, Tailwind hygiene, tokens-only classes (no)
   `w-[13px]` / `gap-[0.75rem]`; Radix `w-[var(--radix-*)]` stays; no

@@ -35,6 +35,11 @@ export type DefineLayersOptions =
     };
 };
 
+// Warning: (ae-forgotten-export) The symbol "NodePresetOptions" needs to be exported by the entry point index.d.mts
+//
+// @public (undocumented)
+export function nodePreset(options?: NodePresetOptions): Linter.Config[];
+
 // @public (undocumented)
 export function uiPreset(options: UiPresetOptions): Linter.Config[];
 
@@ -45,7 +50,7 @@ export interface UiPresetOptions {
 
 // Warnings were encountered during analysis:
 //
-// src/eslint.d.mts:35:9 - (ae-forgotten-export) The symbol "RestrictedImportPattern" needs to be exported by the entry point index.d.mts
+// src/eslint.d.mts:42:9 - (ae-forgotten-export) The symbol "RestrictedImportPattern" needs to be exported by the entry point index.d.mts
 
 // (No @packageDocumentation comment for this package)
 

@@ -762,6 +762,9 @@ importers:
 
   packages/quality:
     devDependencies:
+      '@eslint/js':
+        specifier: 'catalog:'
+        version: 9.39.5
       eslint:
         specifier: 'catalog:'
         version: 9.39.5(jiti@2.7.0)
