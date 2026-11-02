@@ -117,7 +117,7 @@ describe("zedkit-check-no-secrets", () => {
     expect(result.stdout).toContain(".env");
   });
 
-  it("fails on a high-signal AWS key", () => {
+  it("fails on a high-signal access-key pattern", () => {
     const dir = gitRepo({ "leak.txt": `${["AKIA", "IOSFODNN7EXAMPLE"].join("")}\n` });
     const result = runBin(secretsBin, dir);
     expect(result.status).toBe(1);
