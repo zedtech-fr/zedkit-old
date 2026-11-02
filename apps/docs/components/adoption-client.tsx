@@ -10,7 +10,7 @@ import { isPackageManager, usePackageManager } from "@/lib/use-package-manager";
 const { adoption, copyMethods } = componentPageCopy;
 
 /** Compact, flat select that lives in a code header: same mono face as the code it switches. */
-const HEADER_SELECT_CLASS = "h-control-height-sm w-auto gap-2 bg-background px-3 font-mono text-sm shadow-none";
+const HEADER_SELECT_CLASS = "h-control-height-sm w-auto gap-2 bg-background px-3 font-mono text-control shadow-none";
 
 /**
  * One terminal command with a package-manager select next to its copy button.
