@@ -42,8 +42,8 @@ Public TypeScript monorepo (pnpm workspaces): small generic packages. See
 - `apps/docs` — docs site: [AGENTS.md](apps/docs/AGENTS.md), looks and CSS:
   [VISUAL-CONTRACT.md](apps/docs/VISUAL-CONTRACT.md).
 - `deploy/` — hosting and the identity suggest service
-  ([AGENTS.md](deploy/suggest/AGENTS.md)); maintainer switches:
-  [deploy/README.md](deploy/README.md).
+  ([AGENTS.md](deploy/AGENTS.md)); maintainer switches:
+  [README.md](deploy/README.md).
 - `registry/`, `scripts/` — shadcn copy-source payloads; repo checks.
 
 ## How to work
@@ -69,7 +69,7 @@ Public TypeScript monorepo (pnpm workspaces): small generic packages. See
   docs go under `docs/` or inside the package they concern.
 - Review with the `review` skill (`code-review` + `ponytail-review` + the
   lenses the diff triggers); merge on green CI and **MERGE-OK**. PR tables
-  and 0.x versioning: [CONTRIBUTING.md](CONTRIBUTING.md).
+  and versioning: [CONTRIBUTING.md](CONTRIBUTING.md).
 - New modules ship with vitest unit tests; deterministic, no network.
   Repo scripts and `deploy/` use `node:test`.
 
