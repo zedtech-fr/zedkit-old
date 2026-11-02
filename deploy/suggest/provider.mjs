@@ -53,7 +53,7 @@ export function callProvider(provider, { messages, maxTokens, signal, fetchImpl,
     .then(({ res, text }) => {
       // A gateway can time out after the work was done: a server error (5xx) or a 408 may have been charged. A
       // refusal (4xx, 429) did no work.
-      if (!res.ok) return { ok: false, kind: "http", status: res.status, billable: res.status >= 500 || res.status === 408 };
+      if (!res.ok) return { ok: false, kind: "http", status: res.status, detail: text.slice(0, 200), billable: res.status >= 500 || res.status === 408 };
       return parseJson(text).then((outer) => {
         const content = outer.ok ? contentText(outer.value?.choices?.[0]?.message?.content) : "";
         if (!content) return { ok: false, kind: "shape", billable: true };
