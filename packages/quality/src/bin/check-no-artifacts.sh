@@ -99,7 +99,10 @@ allowlisted=$(join_regex \
 
 fail=0
 
-artifacts=$(git ls-files | grep -E "(^|/)${artifact_dirs}/|${artifact_files}" || true)
+# Group the dir alternation: without parens, `(^|/)${dirs}/` binds
+# `(^|/)` only to the first name and `/` only to the last, so `build`
+# matches `tsconfig.build.json` instead of a `build/` directory.
+artifacts=$(git ls-files | grep -E "(^|/)(${artifact_dirs})/|${artifact_files}" || true)
 if [ -n "$artifacts" ]; then
   echo "tracked build artifacts (see .gitignore):"
   echo "$artifacts"
