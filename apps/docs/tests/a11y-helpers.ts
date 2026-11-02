@@ -200,7 +200,8 @@ export async function assertFocusUnclipped(control: Locator): Promise<void> {
     const style = getComputedStyle(el);
     const outline =
       !["none", "hidden"].includes(style.outlineStyle) && Number.parseFloat(style.outlineWidth) > 0
-        ? Math.max(0, Number.parseFloat(style.outlineOffset) || 0) + Number.parseFloat(style.outlineWidth)
+        ? // How far the stroke ends beyond the box: a negative offset pulls it back inside (offset + width can be <= 0).
+          Math.max(0, (Number.parseFloat(style.outlineOffset) || 0) + Number.parseFloat(style.outlineWidth))
         : 0;
     const spread = style.boxShadow
       .split(/,(?![^(]*\))/)

@@ -329,19 +329,22 @@ for (const width of [320, 360, 390]) {
   });
 }
 
-test("390px: the three Display controls share one row, none stranded alone", async ({ page }) => {
+test("390px: the Display controls share one row, none stranded alone, on every page", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(BASE, { waitUntil: "networkidle" });
-  const rects = await page.locator("[data-hero-demo-display] [role='combobox']").evaluateAll((nodes) =>
-    nodes.map((node) => {
-      const box = node.getBoundingClientRect();
-      return { top: Math.round(box.top), width: Math.round(box.width), right: Math.round(box.right) };
-    }),
-  );
-  expect(rects).toHaveLength(3);
-  expect(new Set(rects.map((rect) => rect.top)).size, "one row").toBe(1);
-  for (const rect of rects) {
-    expect(rect.width).toBeGreaterThanOrEqual(100);
-    expect(rect.right).toBeLessThanOrEqual(390);
+  for (const name of ["Overview", "Apps"] as const) {
+    await go(page, name);
+    const rects = await page.locator("[data-hero-demo-display] [role='combobox']").evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const box = node.getBoundingClientRect();
+        return { top: Math.round(box.top), width: Math.round(box.width), right: Math.round(box.right) };
+      }),
+    );
+    expect(rects.length, `${name}: identity and mode, plus the table state on Apps`).toBe(name === "Apps" ? 3 : 2);
+    expect(new Set(rects.map((rect) => rect.top)).size, `${name}: one row`).toBe(1);
+    for (const rect of rects) {
+      expect(rect.width).toBeGreaterThanOrEqual(100);
+      expect(rect.right).toBeLessThanOrEqual(390);
+    }
   }
 });

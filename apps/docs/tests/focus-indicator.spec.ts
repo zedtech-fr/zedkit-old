@@ -58,6 +58,19 @@ test("an indicator that an ancestor clips is reported as clipped", async ({ page
   await expect(assertFocusUnclipped(button)).rejects.toThrow(/clipped/);
 });
 
+test("a ring drawn inside the control is not reported as clipped, one only partly inside is", async ({ page }) => {
+  const css = (offset: string) =>
+    `<style>body{background:#fff;margin:24px}.clip{overflow:hidden;display:inline-block}button{all:unset;padding:8px 16px;background:#eee}button:focus-visible{outline:3px solid #1d4ed8;outline-offset:${offset}}</style><div class="clip"><button>Save</button></div>`;
+  await page.setContent(css("-3px"));
+  const inside = page.getByRole("button", { name: "Save" });
+  await focusWithKeyboard(inside);
+  await assertFocusUnclipped(inside);
+  await page.setContent(css("-1px"));
+  const partly = page.getByRole("button", { name: "Save" });
+  await focusWithKeyboard(partly);
+  await expect(assertFocusUnclipped(partly)).rejects.toThrow(/clipped/);
+});
+
 test("an indicator with room around it is not clipped", async ({ page }) => {
   await page.setContent(
     `<style>body{background:#fff;margin:24px}.room{overflow:hidden;padding:8px;display:inline-block}button{all:unset;padding:8px 16px;background:#eee}button:focus-visible{outline:2px solid #1d4ed8;outline-offset:2px}</style><div class="room"><button>Save</button></div>`,
@@ -132,12 +145,12 @@ test.describe("controls whose own styles used to hide the ring", () => {
 
   // Each one is a control inside a container that scrolls or clips: the ring must be drawn, and drawn whole.
   const UNCLIPPED: { name: string; path: string; viewport?: number; find: (page: Page) => Locator }[] = [
-    { name: "hero example tab", path: "/", find: (page) => page.locator("[data-home-hero-examples]").getByRole("tab", { name: "Detail panel" }) },
+    { name: "hero page entry", path: "/", find: (page) => page.locator("#demo").getByRole("navigation", { name: "Pages of the example app" }).getByRole("button", { name: "Calendar", exact: true }) },
     { name: "identity example tab", path: "/", find: (page) => page.locator("[data-home-identity-looks]").getByRole("tab", { name: /Dev console/ }) },
     { name: "docs Preview tab", path: "/docs/ui/trigger-actions-with-buttons", find: (page) => page.getByRole("tab", { name: "Preview" }).first() },
     { name: "editor Look select", path: "/features/identity-editor", find: (page) => page.getByLabel("Look", { exact: true }) },
     { name: "editor Preview dark", path: "/features/identity-editor", find: (page) => page.getByRole("button", { name: "Preview dark" }) },
-    { name: "hero example tab on a phone", path: "/", viewport: 390, find: (page) => page.locator("[data-home-hero-examples]").getByRole("tab", { name: "Date picker" }) },
+    { name: "hero page chip on a phone", path: "/", viewport: 390, find: (page) => page.locator("#demo").getByRole("navigation", { name: "Pages of the example app" }).getByRole("button", { name: "Team", exact: true }) },
   ];
   for (const target of UNCLIPPED) {
     test(`${target.name}: focus shows and nothing clips it`, async ({ page }) => {
