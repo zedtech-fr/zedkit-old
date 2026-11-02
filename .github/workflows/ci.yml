@@ -164,7 +164,7 @@ jobs:
   docs-e2e-shard:
     name: docs-e2e-shard (${{ matrix.shard }}/3)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     strategy:
       fail-fast: false
       matrix:
@@ -198,15 +198,49 @@ jobs:
           DOCS_E2E_SHARD: ${{ matrix.shard }}
           DOCS_E2E_SHARD_TOTAL: "3"
 
+  # Sitemap sweep (100+ routes × axe views) lives outside the shards: it alone
+  # can exceed a 20-minute job since #1203 grew the route list and e2e count.
+  docs-e2e-routes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec turbo run build --filter=@zedtech/zedkit-docs
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: |
+          pnpm dlx serve@14.2.6 apps/docs/out -l 3100 >/tmp/docs-e2e.log 2>&1 &
+          echo $! > /tmp/docs-e2e.pid
+          for _ in $(seq 1 24); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 http://127.0.0.1:3100/ || true)
+            [ "$code" = "200" ] && break
+            sleep 5
+          done
+          pnpm --filter @zedtech/zedkit-docs run e2e:routes
+          kill "$(cat /tmp/docs-e2e.pid)"
+        env:
+          DOCS_E2E_PROJECT: chromium
+
   # Required check name stays `docs-e2e`: one gate over the three shards.
   docs-e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: docs-e2e-shard
+    needs: [docs-e2e-shard, docs-e2e-routes]
     if: always()
     steps:
       - name: All shards passed
-        run: test "${{ needs.docs-e2e-shard.result }}" = "success"
+        run: |
+          test "${{ needs.docs-e2e-shard.result }}" = "success"
+          test "${{ needs.docs-e2e-routes.result }}" = "success"
 
   docs-smoke:
     runs-on: ubuntu-latest

@@ -25,6 +25,7 @@ concurrency:
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     steps:
       - name: Detect App credentials
         id: app
@@ -76,10 +77,13 @@ jobs:
           # One env for every package (smaller than publishConfig.provenance
           # on each package.json). Needs id-token: write, already set above.
           NPM_CONFIG_PROVENANCE: "true"
-      # Tags + GitHub releases for published versions (GITHUB_TOKEN is
-      # enough: contents: write). Runs after the action so a fresh
-      # publish is covered; a no-op when everything is already tagged.
+      # Tags + GitHub releases only for packages npm publish just shipped.
+      # Without publishedPackages, release-tags.sh used to poll npm for every
+      # public package version on disk (~5m each) and blocked the release group.
       - name: Push tags and create GitHub releases
-        run: scripts/release-tags.sh
+        if: steps.changesets.outputs.published == 'true'
+        continue-on-error: true
+        run: timeout 25m scripts/release-tags.sh
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
+          RELEASE_TAGS_PUBLISHED: ${{ steps.changesets.outputs.publishedPackages }}

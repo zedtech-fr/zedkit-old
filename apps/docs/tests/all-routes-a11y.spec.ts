@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 import { A11Y_AXE_EXCLUDES } from "./a11y-exceptions.mjs";
+import { gotoStaticRoute } from "./goto-static-route.js";
 
 /**
  * Axe on every published route, phone and desktop, light and dark. The route
@@ -28,7 +29,7 @@ test("every route passes axe at phone and desktop width, light and dark", async 
     await page.setViewportSize({ width: view.width, height: view.height });
     await page.addInitScript((theme) => localStorage.setItem("theme", theme), view.theme);
     for (const path of routes) {
-      await page.goto(path, { waitUntil: "networkidle" });
+      await gotoStaticRoute(page, path);
       // The docs header label cross-fades when scroll-spy settles; let every transition end before reading colours.
       await page.evaluate(() => Promise.all(document.getAnimations().map((animation) => animation.finished.catch(() => undefined))));
       const { violations } = await new AxeBuilder({ page })

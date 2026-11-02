@@ -6,7 +6,7 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 specs=$(ls apps/docs/tests/*.spec.ts)
-blob=$(node -e "const p=require('./apps/docs/package.json'); console.log(p.scripts.smoke+' '+p.scripts.e2e)")
+blob=$(node -e "const p=require('./apps/docs/package.json'); console.log([p.scripts.smoke,p.scripts.e2e,p.scripts['e2e:routes']].join(' '))")
 fail=0
 for spec in $specs; do
   name=$(basename "$spec")
