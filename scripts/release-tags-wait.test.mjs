@@ -75,3 +75,29 @@ test("release-tags.sh --dry-run accepts flag", () => {
   });
   assert.match(out, /skip @zedtech\//);
 });
+
+test("release-tags.sh exits when publishedPackages is empty (CI no-op)", () => {
+  const out = execFileSync("bash", [join(root, "scripts/release-tags.sh")], {
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      RELEASE_TAGS_PUBLISHED: "[]",
+    },
+  });
+  assert.match(out, /nothing to do/);
+});
+
+test("release-tags.sh dry-run honors publishedPackages list only", () => {
+  const out = execFileSync("bash", [join(root, "scripts/release-tags.sh"), "--dry-run"], {
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      RELEASE_TAGS_PUBLISHED: '[{"name":"@zedtech/zedkit-core","version":"9.9.9"}]',
+      RELEASE_TAGS_NPM_VIEW: "false",
+      RELEASE_TAGS_NPM_MAX_ATTEMPTS: "1",
+      RELEASE_TAGS_NPM_SLEEP_SEC: "0",
+    },
+  });
+  assert.match(out, /skip @zedtech\/zedkit-core@9\.9\.9/);
+  assert.doesNotMatch(out, /skip @zedtech\/zedkit-server@/);
+});
