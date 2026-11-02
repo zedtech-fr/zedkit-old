@@ -10,9 +10,28 @@ Observed in `.turbo/evidence/before/`: heavy tan border + shadow + radius on sea
 
 ## Who owns what
 
-- **Site shell** (stable, pinned in `app/docs-shell-tokens.css` and `docs-typography.css`): type sizes and weights below, reading widths, section rhythm, gutters, nav density, the contrast overrides for chrome.
-- **Selected identity** (default Tide, or the visitor's opt-in choice): font family, palette, spacing unit, radius scale, shadows, motion personality. The shell follows it for those; it never changes a size in the table below.
-- **Specimens** (`ThemeScope`, the nearest scope wins, also for a nested dark section): their own identity and mode in full. Nothing in the shell restyles them, and they never restyle the shell.
+One decision, one owner. Fix a repeated problem at the lowest layer that shares it, never in the layer where you noticed it.
+
+| Layer | Owns | Lives in | Fix here when |
+|---|---|---|---|
+| Token | A value every consumer reads: sizes, spacing, radii, colours, shadows, motion | `packages/ui/src/identities*.css`, `shared-type-scale.css`, `styles.css` | Two components or two looks disagree on a value |
+| Primitive | One component's states and structure (focus ring, hit area, containment) | `packages/ui/src/*.tsx` | The same control misbehaves on two pages |
+| Composed component | A recurring arrangement of primitives | `apps/docs/components`, `apps/docs/ui` | The arrangement repeats and has its own states |
+| Docs shell | The site's own chrome: header, nav, prose, tables, code, gutters | `app/docs-*.css`, `app/home-*.css` | It is the site's presentation, on every page |
+| Identity scope | The look a specimen wears, resolved on its own `ThemeScope` node | `packages/ui/src/identities/*.css` | A look's token or the boundary between looks is wrong |
+| Page | Order, spacing and content of one composition | the route and its view | Nothing else shares it |
+
+Choosing the shared fix: (1) name the owner of the *value* that is wrong; (2) look for a second place that has the same problem (another identity, viewport, page); (3) if there is one, fix the token or primitive and delete the local patch; (4) a selector that mentions a page id, an element class of another layer, or `!important` to beat a token is a symptom, not a fix. `tide-fit.css` was one: a phone rule that restyled every Tide specimen to make one hero fit. The cure was recomposing the hero, not compressing tokens.
+
+**Invariant across identities** (the shell and the tests pin these): the type size table below, the 13px floor for anything a person reads to act, 44px touch targets on phones, a focus indicator of at least 2px and 3:1 added by focus itself, AA text contrast in both modes, motion caps, the DOM and its semantics, the placement of the destructive action, and the content of a shared comparison task.
+
+**Free to vary per identity**: font family and weight flavour, tracking, spacing unit, radius scale, border width, shadow and depth, the paired light/dark palette, motion personality, texture. "In full" for a specimen means these, not a different size table.
+
+The three owners of a render, in order of precedence:
+
+- **Specimens** (`ThemeScope`, the nearest scope wins, also for a nested dark section): their own identity and mode. Nothing in the shell restyles them (headings, spacing and text sizes included), and they never restyle the shell. A site rule that must not reach a specimen says so: `:not([data-identity-scope] *)`.
+- **Selected identity** (default Tide, or the visitor's opt-in choice): what the site's own chrome wears for the variables above. It never changes a size in the table below.
+- **Site shell** (pinned in `app/docs-shell-tokens.css` and `docs-typography.css`): sizes and weights below, reading widths, section rhythm, gutters, nav density, the contrast overrides for chrome.
 
 ## Roles
 
@@ -24,8 +43,9 @@ Sizes are the implemented tokens (`packages/ui/src/shared-type-scale.css`, appli
 | Docs H1 | Same token as marketing H1 (one page title scale). H2 `--zk-type-h2-size` 22-26px, H3 18px, weight 600. Linked headings inherit size and weight. |
 | Prose | 15/1.6 (`--zk-type-prose-size`), 64-72ch. Lead paragraph `--zk-type-lead-size` 16-18px, once. |
 | Body and dense UI | Body 14/1.55. Dense UI (controls, tabs, example links, table cells, nav) is the kit's `--text-sm`: 13px. Nothing a person must read to act is below 13px. |
-| Metadata | 12/1.4 (`--zk-type-label-size`). Counts, captions, eyebrow labels. Never essential copy or a link people need. |
+| Metadata | 12/1.4 (`--zk-type-label-size`). Counts, captions, eyebrow labels, timestamps. Never essential copy or a link people need. |
 | Code | Mono family of the identity, 13/21 in blocks, inline code follows its sentence. |
+| Dense looks | Density is rhythm (row height, gaps, rules), not smaller type. Volt's activity rows are 13px: the event is what a person reads to act. Only the timestamp column may be metadata. Decision, 2 Nov 2026: the 13px floor wins over a 12px mono row. |
 | Widths | Marketing 1200 max. Docs shell 1440 max, nav 240, article 720-800, TOC 180 only if it fits. |
 | Spacing | 4px base, steps 4/8/12/16/24/32/48/64. Between groups 32-48, between marketing sections 64-96. No blank band without a job. |
 | Gutters | 16 mobile, 24 tablet, 32 desktop. |
@@ -45,13 +65,18 @@ Sizes are the implemented tokens (`packages/ui/src/shared-type-scale.css`, appli
 - Preview frame: one stage, one quiet toolbar. Stage height follows content. Appearance choices (identity, mode, width) sit in one row under "Display", current values visible, subordinate to the example.
 - Touch targets 44px on mobile, separate from the visible control size.
 
+## States and overflow
+
+- A specimen shows the states its task has. A data table has loading, empty, error and ready; a form has invalid and pending; a reading page, a code block or a static example has none of them, and nothing is added to say so. When a state is omitted, the example's own sentence says why.
+- Code blocks and data tables may scroll sideways inside their own region. That region is keyboard-reachable and named; the page itself never scrolls sideways. Anything else that overflows is a layout bug: wrap, recompose or truncate with the full text one tap away.
+
 ## Motion
 
 Only to explain a change or keep context (overlay in/out, panel following focus, row insert). 120-160ms feedback, 180-220ms panels, transform/opacity. Small state feedback may be instant. Reduced motion removes displacement.
 
 ## Home
 
-Proposition + one working fragment (a compact record list the visitor can use), one adoption choice (npm or copy source) with one command, then family discovery. Other packages, agents and identities follow as a short, distinct section each. No repeated card grids; every section has one focal point and a different shape from its neighbors.
+Promise and one working example (hero: the proposition beside a tablist of three examples, no scroll pinning), then the same task in six looks (one fair form, plus a second specimen in its own frame for the looks that have something the form cannot show), then adoption (npm or copy source, one command), then finding a component by family, then the rest of the kit. Each band has one focal point, one next action and a different shape from its neighbours. A band that repeats another (two blocks about coding agents) is removed.
 
 ## Component page
 
@@ -61,6 +86,8 @@ Title, one purpose sentence, status, example, install (npm or source, both when 
 
 Compose by priority, not by stacking desktop. The first screen reaches the example or its start. Secondary tools are disclosed. Wide data scrolls in its own region, never clipped.
 
+Recompose (change the order or the arrangement, not the tokens) when any of these holds at 390px: the first action sits below the first screen; a control group wraps onto a second row of equal weight; two columns become two unreadable ones. Order with one DOM and CSS `order`, or with a slot (the editor's `afterShape`); never render a control twice and hide one. Compressing a look's spacing or type to make a phone fit changes the specimen and is not recomposition.
+
 ## Traps (31 Oct–1 Nov 2026)
 
 These broke real previews. Check them before changing home, chrome, specimens or overlays.
@@ -68,26 +95,43 @@ These broke real previews. Check them before changing home, chrome, specimens or
 - **Frame vs content height.** `min-h-svh` / `min-h-screen` inside a bounded preview (hero card, 40rem stage) leaves empty chrome. The frame owns height; the specimen is `h-full min-h-0`.
 - **Identity `--spacing` scales `w-*` / `p-*` / `gap-*`.** A `w-48` sidebar in Tide is not 12rem. Pin chrome that must stay compact, and look at Tide before calling a layout done.
 - **Calendar is `role="grid"`.** Do not paint `tbody tr:hover` on it; hover `.rdp-day`.
-- **Scroll pin.** `overflow-hidden` on an ancestor kills sticky / scroll-driven scenes. Use `overflow-clip` or do not clip the track. Stage height follows the specimen; a `100svh` centered stage adds empty landing air and clips the card.
+- **Fixed containing blocks.** A running animation of `transform`, `translate`, `scale`, `rotate` (even to `none`), a `filter` or `will-change` on an ancestor makes it the containing block of its `position: fixed` descendants: a toast or a floating bar inside is laid out against that ancestor, not the viewport, and can sit on the controls it reports on. Animate opacity, or keep fixed content out of the animated subtree. Check with a real toast at 1280x720.
+- **Scroll pinning loses the example in use.** A scroll-driven fade ends the example it is fading when a click scrolls the page by a few hundred pixels. The hero is a tablist for that reason. If a scene must pin, `overflow-clip` (never `overflow-hidden`), stage height follows content, and a test scrolls while interacting.
 - **Overlay is a sibling.** Vaul/Radix scrim sits next to the panel. `backdrop-filter` on the overlay becomes the backdrop root, so the panel blurs the scrim, not the page. Frost with a lighter overlay (`bg-overlay/50` + blur) or put blur on the panel and set the overlay filter to `none` (Glass). `prefers-reduced-transparency`: solid scrim, no filter.
-- **Hero scroll.** Keep the proposition outside fading scenes. Phones show one example. Do not `overflow-hidden` a card that must show a full table row. After kit source changes: `pnpm --filter @zedtech/zedkit-ui build` before judging localhost:3100.
+- **Hero.** The proposition stays outside the examples. Examples share one grid cell so the frame keeps one height; inactive ones are `invisible`, not unmounted (state survives), and not `display: none` (they would resize the frame). After kit source changes: `pnpm --filter @zedtech/zedkit-ui build` before judging localhost:3100.
 - **Fumadocs CSS.** Import the preset as source. A precompiled `style.css` duplicates utilities and can hide responsive variants.
 - **Class merging and custom tokens.** `cn()`/tailwind-merge does not know the kit's token utilities (`h-tabs-list-height`): a later `h-auto` leaves both. Use `h-auto!` or fix the primitive, then read the computed height.
-- **Nearest scope wins.** Root-identity dark rules skip nodes inside a scope. A nested dark section needs the identity on its own node (`ThemeScope mode="dark"` carries it); verify root Tide to local Press to nested dark.
+- **Nearest scope wins.** A look's dark rule for plain `.dark` sections skips anything inside a deeper scope of another look (root Tide to local Press to nested dark; scope Tide to scope Press to nested dark). Load order must never decide: `identity-nested-dark.spec.ts` compares all outer/inner pairs against the inner look pinned dark. Alternating chains deeper than one look change need `ThemeScope mode="dark"`, which carries the identity on its own node.
 - **Identity `--spacing` also sizes dots, icons and swatches.** Pin fixed-size marks (`[data-palette-dots]`).
-- **Page-specific shell patches** (`tide-fit.css`) are debt: fix the token or primitive instead, and delete the patch when it lands.
+- **Page-specific shell patches** (`tide-fit.css`) are debt: they made a Tide specimen differ with the site's identity. Fix the token, primitive or composition, then delete the patch.
+- **Site rules reach specimens.** `#home-page h3` set every heading in every look to 18px and -0.02em. A site selector that targets elements (headings, text, controls) excludes scopes: `:not([data-identity-scope] *)`. Probe a heading inside a specimen, not only one in the page.
+- **The pointer is part of a screenshot.** The click that opens an overlay leaves the pointer where the trigger was; the overlay opens under it and whichever button lands there is painted hovered. Park the pointer before capturing a surface; test hover on its own.
+- **Dates and the reader's zone.** A `Date` built in a server component is a UTC instant fixed on the build host. Build dates where they are shown (a client component), or format with an explicit time zone. Hydration error #418 is the symptom, and CI (UTC to UTC) cannot show it: the test reads the page from other zones.
 - **Identity probes.** Site chrome pins radii/shadows on `:root`. A probe in `main` does not prove a look. Resolve tokens on `[data-identity-scope]`.
 
 ## Verifying the render
 
 1. Confirm the stylesheet and fonts loaded before judging a capture: rule count above zero, `document.fonts.ready`, the expected family on the page text. An unstyled capture is a collection failure; diagnose it separately and do not count it as evidence.
-2. Compare like with like: same content, viewport, identity, mode and state, before and after.
+2. Compare like with like: same content, viewport, identity, mode and state, before and after. A captured baseline is only a reference once someone has opened it and judged it right; one that shows a defect (a chip overlapping a toggle) is not.
 3. When geometry surprises you, read the computed style of the element, not the class list.
 4. Wait for transitions to settle before reading computed colours or shadows.
 5. Test provenance and behavior (where a value is declared, what an action changes), not that a name or text appears.
-6. Keyboard focus is checked on a keyboard-focused control: a script or pointer focus does not match `:focus-visible`.
-7. Every iteration ends with a critique of the strongest remaining visual weakness.
+6. A failing screenshot diff is read, not accepted: open expected, actual and diff, then classify it as a product defect, an unstable test (pointer, timing, content behind a translucent surface), or an intended change. Only the last two justify touching the baseline, and the commit says which. Regenerate baselines in the CI environment (Linux, same Playwright), never from a local capture on another OS.
+7. **Cascade boundaries**: resolve tokens on the specimen's own node, in light and dark, inside every nesting that is supported (look in look, dark in look, portalled overlay), against the same look pinned alone.
+8. **Focus**: focus the control with the keyboard (a script or pointer focus does not match `:focus-visible`). The indicator must be added by focus (an outline that never changes is decoration), at least 2px, 3:1 against what is behind it, unclipped by an ancestor, and still drawn under `forced-colors`. Also check where focus goes after an overlay closes.
+9. **Contrast**: computed colours on the settled state, both modes, every look the page can wear; large text 3:1, other text 4.5:1.
+10. **Overflow**: `documentElement.scrollWidth` at 320, 360, 390, 768, 1024, 1440 and 1920, then 200% zoom; long labels and dense data; the only regions allowed to scroll sideways are code and data tables.
+11. **Motion**: with and without `prefers-reduced-motion`; look at an intermediate state, not only the ends; an animated ancestor must not change where fixed content lands.
+12. Every iteration ends with a critique of the strongest remaining visual weakness.
 
 ## Honest finish
 
 Every iteration records: what changed, matching before/after screenshots (same content, viewport, identity, mode, state), what still looks weak. Tests passing and a self-assigned score are not evidence of design quality.
+
+Sufficient visual evidence for a change:
+
+- Each distinct template and each changed shared component, rendered and opened at 390 and 1440; the home, the editor and one table page also at the other widths of step 10.
+- A shared component or token change: every look in both modes, including a specimen whose mode differs from the site's.
+- Before and after under the same conditions, with the interaction exercised (pointer and keyboard) and its failure case.
+- A test that is red on the base and green on the change. A test that cannot fail proves nothing.
+- Anything not covered is listed as untested, never implied.

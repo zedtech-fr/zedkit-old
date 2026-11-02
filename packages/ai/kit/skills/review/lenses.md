@@ -36,7 +36,9 @@ exists IS a blocker.
 3. Doc pages stay thin: load content + doc layout only. No direct
    imports of dozens of components.
 4. Zero raw structural HTML and zero ad-hoc styles in demos and doc
-   pages: `Stack`/`Section`/`Heading`/`Text` from the kit, tokens only.
+   pages: structure comes from `Stack`/`Section`/`Heading`/`Text` from the
+   kit (visually hidden text is `Text as="span"` with `sr-only`), utilities
+   are tokens only.
 5. A lint rule or test bans bulk imports in doc pages (it fails on the
    grab-bag it replaces, passes after).
 6. Motion that explains a transition or preserves context (overlay
@@ -44,7 +46,8 @@ exists IS a blocker.
    respected (fade or instant, never displacement). Not required on every
    state change; instant is fine for small feedback. Example refusal: a
    modal that appears with no fade and hides what changed.
-7. Loading and feedback named, never naked: zero naked spinners, zero
-   generic 'loading' — every wait names what loads, skeletons match the
-   real content shape, retry keeps state.
+7. Loading and feedback named, never naked: where a wait exists, there are
+   zero naked spinners and zero generic 'loading' — it names what loads,
+   skeletons match the real content shape, retry keeps state. A page or
+   example with no wait has no loading state.
    Example refusal: a spinner with no label on a slow save.
