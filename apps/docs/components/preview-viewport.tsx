@@ -153,7 +153,7 @@ export function PreviewFrame({
             mode={dark ? "dark" : "light"}
             className={cn(
               // not-prose is a fumadocs escape hatch, not a Tailwind utility.
-               
+              // eslint-disable-next-line better-tailwindcss/no-unknown-classes
               "not-prose w-full min-w-0 bg-background p-4 md:p-6",
               !pinned && "overflow-x-auto",
               mobile && "mx-auto max-w-[390px]",
