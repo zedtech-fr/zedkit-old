@@ -22,7 +22,7 @@ Each package PR adds its row here, following
 | `@zedtech/zedkit-ui` | UI kit: tokens, theme, components | [packages/ui/CATALOG.md](../../packages/ui/CATALOG.md) |
 | `@zedtech/zedkit-seo` | robots, sitemaps, JSON-LD, metadata, llms.txt, slugs | [packages/seo/CATALOG.md](../../packages/seo/CATALOG.md) |
 | `@zedtech/zedkit-payload-seo` | Payload SEO group field | [packages/payload-seo/CATALOG.md](../../packages/payload-seo/CATALOG.md) |
-| `@zedtech/zedkit-quality` | UI lint preset, layer boundaries, strict tsconfig | [packages/quality/CATALOG.md](../../packages/quality/CATALOG.md) |
+| `@zedtech/zedkit-quality` | UI lint preset, layer boundaries, strict tsconfig, hygiene bins | [packages/quality/CATALOG.md](../../packages/quality/CATALOG.md) |
 | `@zedtech/zedkit-devtools` | dev-only drawer: identity, flag overrides, locale, build info | [packages/devtools/CATALOG.md](../../packages/devtools/CATALOG.md) |
 | `@zedtech/zedkit-flags` | typed feature flags, server evaluation, React hooks | [packages/flags/CATALOG.md](../../packages/flags/CATALOG.md) |
 | `@zedtech/zedkit-i18n` | message templates, typed React messages context | [packages/i18n/CATALOG.md](../../packages/i18n/CATALOG.md) |

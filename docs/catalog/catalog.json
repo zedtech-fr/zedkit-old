@@ -863,6 +863,19 @@
               "code": "import { compactRequestSerializers, createNestApp, createRequestLogLevel } from \"@zedtech/zedkit-nest\";\nconst app = await createNestApp({\n  module: AppModule,\n  logger: {\n    serializers: compactRequestSerializers(),\n    customLogLevel: createRequestLogLevel({ quietPaths: [\"/health\"] }),\n  },\n});"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-nest",
+                "exports": [
+                  "compactRequestSerializers",
+                  "createRequestLogLevel",
+                  "LoggerOptions"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Ship request logs without leaking credentials",
             "Bootstrap a Nest app"
@@ -1337,7 +1350,9 @@
         "architecture",
         "a11y",
         "tailwindcss",
-        "code-quality"
+        "code-quality",
+        "ci",
+        "hygiene"
       ],
       "audience": "Teams keeping the same quality gates across repos.",
       "needs": [
@@ -1465,6 +1480,91 @@
           },
           "seeAlso": [
             "Lint UI files for accessibility, Tailwind and tokens"
+          ]
+        },
+        {
+          "need": "Keep .env complete without overwriting local values",
+          "import": "`@zedtech/zedkit-quality` (CLI bin, not a JavaScript module)",
+          "wraps": "`(none)`",
+          "status": "alpha",
+          "shortName": "SyncEnv",
+          "audience": "Teams whose `.env.example` gains keys across pulls and whose local `.env` must stay complete.",
+          "purpose": "Copy `.env.example` on first run, then append missing keys only — existing values are never overwritten.",
+          "whenToUse": "At the start of `dev` / `build` so a new example key cannot silently fall back to a default.",
+          "whenNotToUse": "When env files are generated another way (direnv, a secret manager, a deploy hook).",
+          "derivedFrom": null,
+          "example": "// package.json\n{\n  \"scripts\": {\n    \"dev\": \"zedkit-sync-env && next dev\"\n  }\n}",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "// package.json\n{\n  \"scripts\": {\n    \"dev\": \"zedkit-sync-env && next dev\"\n  }\n}"
+            }
+          ],
+          "adoption": {
+            "kind": "bin",
+            "commands": [
+              "zedkit-sync-env"
+            ]
+          },
+          "seeAlso": [
+            "Fail CI when secrets are tracked"
+          ]
+        },
+        {
+          "need": "Fail CI when build artifacts are tracked",
+          "import": "`@zedtech/zedkit-quality` (CLI bin, not a JavaScript module)",
+          "wraps": "`(none)`",
+          "status": "alpha",
+          "shortName": "CheckNoArtifacts",
+          "audience": "Teams that must never commit caches, build output, or oversized binaries.",
+          "purpose": "Fail if tracked files match a parameterized artifact list, match `.gitignore` (including ignored-but-tracked, via `--no-index`), or exceed a size cap.",
+          "whenToUse": "As a CI hygiene step on every repo that already has a `.gitignore` for build output.",
+          "whenNotToUse": "For secret scanning — use `zedkit-check-no-secrets`.",
+          "derivedFrom": null,
+          "example": "// package.json\n{\n  \"scripts\": {\n    \"check:artifacts\": \"zedkit-check-no-artifacts --allow '^docs/catalog/catalog\\\\.json$'\"\n  }\n}",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "// package.json\n{\n  \"scripts\": {\n    \"check:artifacts\": \"zedkit-check-no-artifacts --allow '^docs/catalog/catalog\\\\.json$'\"\n  }\n}"
+            }
+          ],
+          "adoption": {
+            "kind": "bin",
+            "commands": [
+              "zedkit-check-no-artifacts"
+            ]
+          },
+          "seeAlso": [
+            "Fail CI when secrets are tracked"
+          ]
+        },
+        {
+          "need": "Fail CI when secrets are tracked",
+          "import": "`@zedtech/zedkit-quality` (CLI bin, not a JavaScript module)",
+          "wraps": "`(none)`",
+          "status": "alpha",
+          "shortName": "CheckNoSecrets",
+          "audience": "Teams that must never commit `.env` files or high-signal credentials.",
+          "purpose": "Fail if a tracked `.env` (other than `.env.example`) or a private key / token pattern is in git.",
+          "whenToUse": "As a CI hygiene step next to the artifact check.",
+          "whenNotToUse": "As a substitute for a full secret scanner (GitHub secret scanning, gitleaks) on history.",
+          "derivedFrom": null,
+          "example": "// package.json\n{\n  \"scripts\": {\n    \"check:secrets\": \"zedkit-check-no-secrets\"\n  }\n}",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "// package.json\n{\n  \"scripts\": {\n    \"check:secrets\": \"zedkit-check-no-secrets\"\n  }\n}"
+            }
+          ],
+          "adoption": {
+            "kind": "bin",
+            "commands": [
+              "zedkit-check-no-secrets"
+            ]
+          },
+          "seeAlso": [
+            "Fail CI when build artifacts are tracked",
+            "Keep .env complete without overwriting local values"
           ]
         }
       ]

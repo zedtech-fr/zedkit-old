@@ -5,7 +5,7 @@
     "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
-  "description": "Shared quality setup: UI lint preset, route/view/data layer boundaries, and one strict TypeScript base — consume, do not copy.",
+  "description": "Shared quality setup: UI lint preset, route/view/data layer boundaries, one strict TypeScript base, and repo hygiene bins — consume, do not copy.",
   "keywords": [
     "eslint",
     "eslint-config",
@@ -16,7 +16,9 @@
     "architecture",
     "a11y",
     "tailwindcss",
-    "code-quality"
+    "code-quality",
+    "ci",
+    "hygiene"
   ],
   "homepage": "https://github.com/zedtech-fr/zedkit/tree/main/packages/quality",
   "bugs": {
@@ -35,6 +37,11 @@
   },
   "main": "./src/index.mjs",
   "types": "./src/index.d.mts",
+  "bin": {
+    "zedkit-sync-env": "./src/bin/sync-env.mjs",
+    "zedkit-check-no-artifacts": "./src/bin/check-no-artifacts.sh",
+    "zedkit-check-no-secrets": "./src/bin/check-no-secrets.sh"
+  },
   "exports": {
     ".": {
       "types": "./src/index.d.mts",
@@ -52,6 +59,7 @@
     "src/index.d.mts",
     "src/eslint.mjs",
     "src/eslint.d.mts",
+    "src/bin",
     "tsconfig.base.json"
   ],
   "zedkit": {
