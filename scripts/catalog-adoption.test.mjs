@@ -66,6 +66,14 @@ test("utilities and attributes are classes and markup, not imports", () => {
   assert.deepEqual(adoption.attributes, ["data-reveal", "data-stagger"]);
 });
 
+test("a package bin is a command, not a JavaScript export", () => {
+  const { adoption, errors } = parse("`@zedtech/zedkit-quality` (CLI bin, not a JavaScript module)", {
+    Bin: "`zedkit-sync-env`",
+  });
+  assert.deepEqual(errors, []);
+  assert.deepEqual(adoption, { kind: "bin", commands: ["zedkit-sync-env"] });
+});
+
 test("a config file is extended, not imported", () => {
   const { adoption, errors } = parse("`@zedtech/zedkit-quality/tsconfig` (tsconfig preset)", {
     Extends: "`@zedtech/zedkit-quality/tsconfig`",

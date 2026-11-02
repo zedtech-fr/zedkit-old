@@ -215,3 +215,21 @@ const limiter = new MemoryRateLimiter();
 const key = clientKeyFromForwardedFor(request.headers.get("x-forwarded-for"));
 if (!limiter.allow(key, 30)) return tooManyRequests();
 ```
+
+## Refuse private targets before calling a customer URL
+
+- Import: `@zedtech/zedkit-server` — `checkEndpointUrl`, `isPrivateHostname`, `EndpointCheckOptions`, `EndpointCheckResult`
+- Wraps: `(none)`
+- Status: alpha
+- Short name: SSRF guard
+- Audience: Developers whose server sends requests to URLs that users or customers supply (webhooks, callbacks).
+- Purpose: Reject non-http(s) URLs and loopback, private, link-local, cloud-metadata and special-use hosts before any request is made.
+- When to use: When saving or sending to a user-supplied URL; keep `allowPrivate` for local development only.
+- When not to use: As your only defense. It does not resolve DNS, so DNS rebinding is not covered; also pin the resolved address, or send through an egress proxy.
+- See also: `Sign and verify webhook deliveries`
+
+```ts
+import { checkEndpointUrl } from "@zedtech/zedkit-server";
+const check = checkEndpointUrl(input, { allowPrivate: process.env.NODE_ENV !== "production" });
+if (!check.ok) return badRequest(check.error.message);
+```
