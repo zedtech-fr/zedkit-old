@@ -6,6 +6,7 @@ import {
   Button,
   ConfirmDialog,
   Stack,
+  Text,
   createDataTableColumns,
 } from "@zedtech/zedkit-ui";
 
@@ -67,7 +68,11 @@ export function buildAdminDashboardColumns({
     tableHelper.display({
       id: "actions",
       // Icons say it; the name stays for assistive tech and frees ~40px on a phone.
-      header: () => <span className="sr-only">{adminDashboardDemoCopy.columns.actions}</span>,
+      header: () => (
+        <Text as="span" className="sr-only">
+          {adminDashboardDemoCopy.columns.actions}
+        </Text>
+      ),
       cell: ({ row }) => (
         <Stack direction="horizontal" gap={1} className="flex-nowrap justify-end" data-demo-row-actions>
           <Button

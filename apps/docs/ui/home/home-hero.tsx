@@ -1,7 +1,6 @@
 import dynamic from "next/dynamic";
 import { Container, Stack } from "@zedtech/zedkit-ui";
 import { HomeHeroLead } from "@/ui/home/home-hero-lead";
-import { homeCopy } from "@/ui/home/i18n/home-copy";
 import { HOME_HERO_PREVIEW_SHELL_CLASS, HOME_SECTION_CONTENT_GAP } from "@/ui/home/home-rhythm";
 
 const HomeHeroPreview = dynamic(
@@ -13,28 +12,21 @@ const HomeHeroPreview = dynamic(
         className={`${HOME_HERO_PREVIEW_SHELL_CLASS} rounded-xl border border-border bg-card`}
         data-home-hero-preview
       >
-        <Stack className="min-h-32 border-b border-border" />
-        <Stack className="min-h-40" />
+        <Stack className="min-h-14 border-b border-border" />
+        <Stack className="min-h-72" />
       </Stack>
     ),
   },
 );
 
-/** Hero band: proposition + pinned examples that crossfade as the page scrolls. */
+/** Hero band: the proposition, and one working example the visitor can switch and try beside it. */
 export function HomeHero() {
   return (
     <Container width="wide" data-home-hero-band="">
-      <div data-scroll-scenes="" data-scene-count="3" data-home-hero-scenes="">
-        <Stack data-scroll-scenes-stage="" className="min-w-0" gap={HOME_SECTION_CONTENT_GAP}>
-          <HomeHeroLead className="min-w-0" />
-          <HomeHeroPreview />
-          <ol data-scroll-scenes-progress="" aria-hidden="true">
-            {homeCopy.heroSteps.map((step) => (
-              <li key={step}>{step}</li>
-            ))}
-          </ol>
-        </Stack>
-      </div>
+      <Stack gap={HOME_SECTION_CONTENT_GAP} className="min-w-0" data-home-hero="">
+        <HomeHeroLead className="min-w-0" />
+        <HomeHeroPreview />
+      </Stack>
     </Container>
   );
 }

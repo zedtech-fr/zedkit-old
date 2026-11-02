@@ -11,11 +11,12 @@ import {
 } from "@/components/hero-demo-style-fields";
 import { heroDemoStyleCopy } from "@/components/i18n/hero-demo-style-copy";
 
-/** Bounded demo chrome: identity, mode, and table state for the hero specimen only. */
+/** Bounded demo chrome: identity, mode, and (with the table) table state, for the hero specimen only. */
 export function HeroDemoStyleControl({
   look,
   modePin,
   preview,
+  showPreview = true,
   onLook,
   onModePin,
   onPreview,
@@ -23,6 +24,8 @@ export function HeroDemoStyleControl({
   look: string;
   modePin: HeroDemoModePin;
   preview: string;
+  /** Table state only means something while the table is on show. */
+  showPreview?: boolean;
   onLook: (id: string) => void;
   onModePin: (pin: HeroDemoModePin) => void;
   onPreview: (mode: string) => void;
@@ -43,7 +46,7 @@ export function HeroDemoStyleControl({
       </Text>
       <HeroDemoIdentitySelect look={look} onLook={onLook} />
       <HeroDemoModeSelect modePin={modePin} onModePin={onModePin} />
-      <HeroDemoPreviewSelect preview={preview} onPreview={onPreview} className="shrink-0" />
+      {showPreview ? <HeroDemoPreviewSelect preview={preview} onPreview={onPreview} className="shrink-0" /> : null}
     </Stack>
   );
 }

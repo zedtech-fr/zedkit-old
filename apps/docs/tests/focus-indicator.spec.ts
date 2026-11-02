@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { assertFocusVisibleRing, focusWithKeyboard, readFocusIndicator } from "./a11y-helpers";
+import { assertFocusUnclipped, assertFocusVisibleRing, focusWithKeyboard, readFocusIndicator } from "./a11y-helpers";
 
 /**
  * The focus assertion reads what the browser paints. Each case is a plain page
@@ -29,6 +29,41 @@ test("removing the focus indicator fails", async ({ page }) => {
   const button = await pageWith(page, "button:focus-visible{outline:none}");
   expect((await readFocusIndicator(button)).kind).toBe("none");
   await expect(assertFocusVisibleRing(button)).rejects.toThrow();
+});
+
+test("a permanent outline is not a focus state", async ({ page }) => {
+  // Same contrasted 2px outline on every state: focus changes nothing, so nothing shows where focus is.
+  const button = await pageWith(page, "button{outline:2px solid #1d4ed8;outline-offset:2px}");
+  expect((await readFocusIndicator(button)).kind).toBe("none");
+  await expect(assertFocusVisibleRing(button)).rejects.toThrow();
+});
+
+test("an outline that focus thickens or recolours still counts", async ({ page }) => {
+  const thicker = await pageWith(page, "button{outline:1px solid #888}button:focus-visible{outline:3px solid #1d4ed8}");
+  expect((await readFocusIndicator(thicker)).kind).toBe("outline");
+  await assertFocusVisibleRing(thicker);
+  const recoloured = await pageWith(page, "button{outline:2px solid #888}button:focus-visible{outline-color:#1d4ed8}");
+  expect((await readFocusIndicator(recoloured)).kind).toBe("outline");
+  await assertFocusVisibleRing(recoloured);
+});
+
+test("an indicator that an ancestor clips is reported as clipped", async ({ page }) => {
+  await page.setContent(
+    `<style>body{background:#fff;margin:24px}.clip{overflow:hidden;display:inline-block}button{all:unset;padding:8px 16px;background:#eee}button:focus-visible{outline:2px solid #1d4ed8;outline-offset:2px}</style><div class="clip"><button>Save</button></div>`,
+  );
+  const button = page.getByRole("button", { name: "Save" });
+  await focusWithKeyboard(button);
+  await assertFocusVisibleRing(button);
+  await expect(assertFocusUnclipped(button)).rejects.toThrow(/clipped/);
+});
+
+test("an indicator with room around it is not clipped", async ({ page }) => {
+  await page.setContent(
+    `<style>body{background:#fff;margin:24px}.room{overflow:hidden;padding:8px;display:inline-block}button{all:unset;padding:8px 16px;background:#eee}button:focus-visible{outline:2px solid #1d4ed8;outline-offset:2px}</style><div class="room"><button>Save</button></div>`,
+  );
+  const button = page.getByRole("button", { name: "Save" });
+  await focusWithKeyboard(button);
+  await assertFocusUnclipped(button);
 });
 
 test("a resting drop shadow is not a focus state", async ({ page }) => {
@@ -77,7 +112,7 @@ test.describe("controls whose own styles used to hide the ring", () => {
   test("home identity tabs, docs Preview/Code tabs and the hero selects paint a real indicator", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto("/", { waitUntil: "networkidle" });
-    const tab = page.locator("[data-home-identity-looks]").getByRole("tab", { name: "Mist" });
+    const tab = page.locator("[data-home-identity-looks]").getByRole("tab", { name: "Dev console" });
     await tab.scrollIntoViewIfNeeded();
     await focusWithKeyboard(tab);
     await assertFocusVisibleRing(tab);

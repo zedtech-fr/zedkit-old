@@ -17,7 +17,7 @@ import "./globals.css";
 import "./code-syntax.css";
 import "./docs-typography.css";
 import "./docs-shell-tokens.css";
-import "./home-hero-scenes.css";
+import "./home-hero.css";
 import "./catalog-shell.css";
 import "./tide-fit.css";
 import "./docs-tables.css";

@@ -1,14 +1,7 @@
 "use client";
 
-import {
-  Badge,
-  Button,
-  Calendar,
-  DetailPanel,
-  Heading,
-  Stack,
-  Text,
-} from "@zedtech/zedkit-ui";
+import { useState } from "react";
+import { Badge, Calendar, DetailPanel, Heading, Stack, Text } from "@zedtech/zedkit-ui";
 import { DOCS_TYPE_H3_CLASS, DOCS_TYPE_LABEL_CLASS } from "@/lib/docs-type-roles";
 import { HOME_CARD_CONTENT_GAP } from "@/ui/home/home-rhythm";
 import { homeCopy } from "@/ui/home/i18n/home-copy";
@@ -18,7 +11,9 @@ const DAY = new Date(2026, 9, 15);
 
 const copy = homeCopy.heroScenes;
 
-/** Compact drawer and calendar specimens for the hero scroll stage. */
+const DAY_LABEL = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long" });
+
+/** Detail panel example: the record a row opens. Read-only on purpose; nothing here pretends to save. */
 export function HomeHeroDrawerScene() {
   return (
     <Stack gap={HOME_CARD_CONTENT_GAP} className="min-w-0 p-3 sm:p-4">
@@ -35,28 +30,22 @@ export function HomeHeroDrawerScene() {
         items={[
           { label: copy.assignee, value: copy.assigneeValue },
           { label: copy.due, value: copy.dueValue },
-          {
-            label: copy.status,
-            value: <Badge>{copy.statusValue}</Badge>,
-          },
+          { label: copy.status, value: <Badge>{copy.statusValue}</Badge> },
         ]}
       />
-      <Stack direction="horizontal" className="justify-end">
-        <Button size="sm" tabIndex={-1}>
-          {copy.save}
-        </Button>
-      </Stack>
     </Stack>
   );
 }
 
+/** Date picker example: a real calendar, so choosing a day shows what a choice looks like. */
 export function HomeHeroCalendarScene() {
+  const [day, setDay] = useState<Date | undefined>(DAY);
   return (
     <Stack gap={HOME_CARD_CONTENT_GAP} className="min-w-0 items-center p-3 sm:p-4">
       <Text variant="muted" className={DOCS_TYPE_LABEL_CLASS}>
-        {copy.calendarCaption}
+        {day ? copy.calendarChosen(DAY_LABEL.format(day)) : copy.calendarCaption}
       </Text>
-      <Calendar mode="single" defaultMonth={MONTH} today={DAY} />
+      <Calendar mode="single" defaultMonth={MONTH} today={DAY} selected={day} onSelect={setDay} />
     </Stack>
   );
 }

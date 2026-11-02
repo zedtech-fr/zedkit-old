@@ -65,6 +65,68 @@ test.describe("identity editor export", () => {
     await expect(page.getByLabel("Spacing", { exact: true })).toHaveValue("0.25rem");
   });
 
+  test("a loaded recipe reopens identically after a reload and in a fresh tab, and Undo still steps back", async ({
+    page,
+    context,
+  }) => {
+    await page.goto(PAGE, { waitUntil: "networkidle" });
+    const base = JSON.parse(await page.getByLabel("JSON", { exact: true }).inputValue()) as {
+      fontSans: string;
+      fontDisplay: string;
+      light: Record<string, string>;
+      dark: Record<string, string>;
+    };
+    const recipe = {
+      ...base,
+      fontSans: 'Georgia, "Times New Roman", serif',
+      fontDisplay: '"Courier New", Courier, monospace',
+      light: { ...base.light, primary: "10 60% 30%" },
+      dark: { ...base.dark, primary: "200 70% 72%" },
+    };
+    await page.getByLabel("Pasted recipe").fill(JSON.stringify(recipe));
+    await page.getByRole("button", { name: "Load recipe" }).click();
+    await expect(page.getByText("Recipe loaded into the draft.")).toBeVisible();
+
+    const specimen = (p: typeof page) =>
+      p.locator('[data-slot="identity-editor-preview"]').evaluate((el) => {
+        const style = getComputedStyle(el);
+        return {
+          sans: style.getPropertyValue("--zk-font-sans").trim(),
+          display: style.getPropertyValue("--zk-font-display").trim(),
+          primary: style.getPropertyValue("--primary").trim(),
+        };
+      });
+    const exportedJson = async (p: typeof page) => JSON.parse(await p.getByLabel("JSON", { exact: true }).inputValue()) as typeof recipe;
+    const expected = { sans: recipe.fontSans, display: recipe.fontDisplay, primary: recipe.light.primary };
+
+    expect(await specimen(page)).toEqual(expected);
+    expect(await exportedJson(page)).toEqual(recipe);
+
+    const link = page.url();
+    expect(new URL(link).searchParams.get("fontSans")).toBe(recipe.fontSans);
+    expect(new URL(link).searchParams.get("fontDisplay")).toBe(recipe.fontDisplay);
+
+    await page.reload({ waitUntil: "networkidle" });
+    expect(await specimen(page)).toEqual(expected);
+    expect(await exportedJson(page)).toEqual(recipe);
+
+    const fresh = await context.newPage();
+    await fresh.goto(link, { waitUntil: "networkidle" });
+    expect(await specimen(fresh)).toEqual(expected);
+    expect(await exportedJson(fresh)).toEqual(recipe);
+    await fresh.close();
+
+    // Undo steps back from the loaded recipe to the look it replaced, fonts included.
+    await page.getByRole("button", { name: "Reset" }).click();
+    await page.getByLabel("Pasted recipe").fill(JSON.stringify(recipe));
+    await page.getByRole("button", { name: "Load recipe" }).click();
+    await page.getByRole("button", { name: "Undo" }).click();
+    const undone = await exportedJson(page);
+    expect(undone.fontSans).toBe(base.fontSans);
+    expect(undone.fontDisplay).toBe(base.fontDisplay);
+    expect(new URL(page.url()).searchParams.has("fontSans")).toBe(false);
+  });
+
   test("a recipe that cannot be loaded says why and leaves the draft alone", async ({ page }) => {
     await page.goto(PAGE, { waitUntil: "networkidle" });
     await page.getByLabel("Pasted recipe").fill("{ nope");
