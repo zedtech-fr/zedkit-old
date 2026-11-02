@@ -15,9 +15,8 @@ import { PropsTable } from "./props-table";
 import {
   adoptionTabsList,
   highlightedTs,
-  importSnippet,
-  packageManagerTabs,
-  registryCopyTabs,
+  packageInstallFrame,
+  registryCopyPanels,
 } from "./component-page-install";
 import { componentPageCopy } from "@/components/i18n/component-page-copy";
 
@@ -96,7 +95,7 @@ export async function ComponentPage({
   const copyable =
     registry.length > 0 && registryBrickNames.includes(registry) && source !== null;
   const npmInstall = (
-    <Stack gap={3}>
+    <Stack gap={4}>
       <Text variant="muted" className="text-sm">
         {copyable ? (
           <>
@@ -110,8 +109,7 @@ export async function ComponentPage({
           componentPageCopy.npmOnlyLead
         )}
       </Text>
-      {await packageManagerTabs((pm) => packageAddCommand(pm, packageName))}
-      {await highlightedTs(importSnippet(importLine))}
+      {await packageInstallFrame({ command: (pm) => packageAddCommand(pm, packageName), importLine })}
       <Text variant="muted" className="text-xs">
         {componentPageCopy.packageVersionLine(version)}
       </Text>
@@ -139,21 +137,19 @@ export async function ComponentPage({
       </dl>
 
       <Section title={componentPageCopy.sections.installOrCopy} id="install-or-copy" className="space-y-3">
-        <Stack gap={3}>
-          {copyable ? (
-            <KitTabs defaultValue="package" className="flex flex-col gap-3">
-              {adoptionTabsList(componentPageCopy.adoptionTabs)}
-              <TabsContent value="package" className="mt-0">
-                {npmInstall}
-              </TabsContent>
-              <TabsContent value="registry" className="mt-0">
-                {await registryCopyTabs({ site, registry, importLine, source })}
-              </TabsContent>
-            </KitTabs>
-          ) : (
-            npmInstall
-          )}
-        </Stack>
+        {copyable ? (
+          <KitTabs defaultValue="package" className="flex flex-col gap-4">
+            {adoptionTabsList(componentPageCopy.adoptionTabs)}
+            <TabsContent value="package" className="mt-0">
+              {npmInstall}
+            </TabsContent>
+            <TabsContent value="registry" className="mt-0">
+              {await registryCopyPanels({ site, registry, importLine, source })}
+            </TabsContent>
+          </KitTabs>
+        ) : (
+          npmInstall
+        )}
       </Section>
 
       <Section title={componentPageCopy.sections.usageAndStates} id="usage-and-states" className="space-y-3">

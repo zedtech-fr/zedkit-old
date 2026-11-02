@@ -1,7 +1,17 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+import { assertA11yGate, assertFocusUnclipped, assertFocusVisibleRing, focusWithKeyboard } from "./a11y-helpers";
 
 const CONFIRM_DIALOG_DOC = "/docs/ui/confirm-destructive-actions";
 const BUTTON_DOC = "/docs/ui/trigger-actions-with-buttons";
+
+/** Secondary choices in "Install or copy" are selects, not rows of buttons. */
+async function chooseOption(page: Page, selectName: string, option: string) {
+  await page.locator("#install-or-copy").getByRole("combobox", { name: selectName }).click();
+  await page.getByRole("option", { name: option, exact: true }).click();
+}
+const choosePackageManager = (page: Page, name: string) => chooseOption(page, "Package manager", name);
+const chooseCopyMethod = (page: Page, name: string) => chooseOption(page, "Copy method", name);
 
 test("confirm-dialog component page exposes catalog a11y and troubleshooting in the DOM", async ({
   page,
@@ -31,7 +41,7 @@ test("registry brick label has no decorative icon", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(CONFIRM_DIALOG_DOC, { waitUntil: "networkidle" });
   await page.getByRole("tab", { name: "Copy", exact: true }).click();
-  await page.getByRole("tab", { name: "Copy manually" }).click();
+  await chooseCopyMethod(page, "Copy manually");
   const brick = page.locator("[data-registry-brick]");
   await brick.scrollIntoViewIfNeeded();
   await expect(brick.getByText("confirm-dialog", { exact: true })).toBeVisible();
@@ -90,8 +100,11 @@ test("dialog page offers a package, or a registry copy by CLI or by hand, on the
   await expect(page.locator("[data-component-preview]").first()).toBeVisible();
   await expect(page.locator("#usage-and-states")).toContainText("DialogClose");
   await adoption.getByRole("tab", { name: "Copy", exact: true }).click();
-  await expect(adoption.getByRole("tab", { name: "Add with CLI (like shadcn)" })).toBeVisible();
-  await expect(adoption.getByRole("tab", { name: "Copy manually" })).toBeVisible();
+  const method = adoption.getByRole("combobox", { name: "Copy method" });
+  await expect(method).toContainText("Add with CLI (like shadcn)");
+  await method.click();
+  await expect(page.getByRole("option", { name: "Add with CLI (like shadcn)" })).toBeVisible();
+  await expect(page.getByRole("option", { name: "Copy manually" })).toBeVisible();
 });
 
 test("button registry copy adds it with the CLI: local import and a command per package manager", async ({ page }) => {
@@ -100,7 +113,7 @@ test("button registry copy adds it with the CLI: local import and a command per 
   await adoption.getByRole("tab", { name: "Copy", exact: true }).click();
   await expect(page.getByText('import { Button } from "@/components/ui/button"')).toBeVisible();
   await expect(adoption.getByText("pnpm dlx shadcn@latest add")).toBeVisible();
-  await adoption.getByRole("tab", { name: "npm", exact: true }).click();
+  await choosePackageManager(page, "npm");
   await expect(adoption.getByText("npx shadcn@latest add")).toBeVisible();
   await expect(page.locator("#example")).not.toContainText("saveRef");
 });
@@ -109,11 +122,126 @@ test("button registry copy by hand shows the file the CLI writes", async ({ page
   await page.goto(BUTTON_DOC, { waitUntil: "networkidle" });
   const adoption = page.locator("#install-or-copy");
   await adoption.getByRole("tab", { name: "Copy", exact: true }).click();
-  await adoption.getByRole("tab", { name: "Copy manually" }).click();
+  await chooseCopyMethod(page, "Copy manually");
   await expect(adoption).toContainText("components/ui/button.tsx");
   await expect(adoption).toContainText("const buttonVariants = cva(");
   await expect(adoption).not.toContainText("shadcn@latest add");
 });
+
+test("install or copy keeps two tabs; the package manager is a select that follows you", async ({ page }) => {
+  await page.goto(BUTTON_DOC, { waitUntil: "networkidle" });
+  const adoption = page.locator("#install-or-copy");
+  await expect(adoption.getByRole("tab")).toHaveText(["Install", "Copy"]);
+  await expect(adoption.getByRole("combobox", { name: "Package manager" })).toHaveText("pnpm");
+  await expect(adoption.getByText("pnpm add @zedtech/zedkit-ui")).toBeVisible();
+  await choosePackageManager(page, "yarn");
+  await expect(adoption.getByText("yarn add @zedtech/zedkit-ui")).toBeVisible();
+  await adoption.getByRole("tab", { name: "Copy", exact: true }).click();
+  await expect(adoption.getByRole("combobox", { name: "Package manager" })).toHaveText("yarn");
+  await expect(adoption.getByText("yarn dlx shadcn@latest add")).toBeVisible();
+  await page.reload({ waitUntil: "networkidle" });
+  await expect(adoption.getByRole("combobox", { name: "Package manager" })).toHaveText("yarn");
+});
+
+test("install or copy sections copy their own text and read as one frame", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(BUTTON_DOC, { waitUntil: "networkidle" });
+  const adoption = page.locator("#install-or-copy");
+  const frame = adoption.locator("[data-code-frame]");
+  await expect(frame).toHaveCount(1);
+  const sections = frame.locator("figure.shiki");
+  await expect(sections).toHaveCount(2);
+  await expect(sections.nth(0).locator("figcaption")).toHaveText("Terminal");
+  await expect(sections.nth(1).locator("figcaption")).toHaveText("Import");
+  await sections.nth(0).getByRole("button").click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("pnpm add @zedtech/zedkit-ui");
+  await sections.nth(1).getByRole("button").click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('from "@zedtech/zedkit-ui"');
+  const borders = await frame.evaluate((root) => ({
+    frame: parseFloat(getComputedStyle(root).borderTopWidth),
+    sections: [...root.querySelectorAll("figure.shiki")].map((figure) => parseFloat(getComputedStyle(figure).borderTopWidth)),
+    shadow: getComputedStyle(root).boxShadow,
+  }));
+  expect(borders.frame).toBeGreaterThan(0);
+  expect(borders.sections).toEqual([0, 0]);
+  expect(borders.shadow).toBe("none");
+});
+
+test("install or copy fits a phone and keeps 44px touch targets", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(BUTTON_DOC, { waitUntil: "networkidle" });
+  const adoption = page.locator("#install-or-copy");
+  await adoption.scrollIntoViewIfNeeded();
+  const measure = async () =>
+    adoption.evaluate((root) => {
+      const controls = [...root.querySelectorAll('[role="tab"], [role="combobox"], button')];
+      return {
+        small: controls
+          .map((el) => ({ name: el.getAttribute("aria-label") ?? el.textContent?.trim() ?? el.tagName, rect: el.getBoundingClientRect() }))
+          .filter(({ rect }) => rect.height > 0 && (rect.height < 43.5 || rect.width < 43.5))
+          .map(({ name, rect }) => `${name} ${Math.round(rect.width)}x${Math.round(rect.height)}`),
+        right: Math.max(...[...root.querySelectorAll("[data-code-frame]")].map((el) => el.getBoundingClientRect().right)),
+        docOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      };
+    });
+  const install = await measure();
+  expect(install.small).toEqual([]);
+  expect(install.right).toBeLessThanOrEqual(390);
+  expect(install.docOverflow).toBeLessThanOrEqual(0);
+  await adoption.getByRole("tab", { name: "Copy", exact: true }).click();
+  const copy = await measure();
+  expect(copy.small).toEqual([]);
+  expect(copy.docOverflow).toBeLessThanOrEqual(0);
+  await chooseCopyMethod(page, "Copy manually");
+  const manual = await measure();
+  expect(manual.small).toEqual([]);
+  expect(manual.right).toBeLessThanOrEqual(390);
+  expect(manual.docOverflow).toBeLessThanOrEqual(0);
+});
+
+for (const width of [390, 1280] as const) {
+  test(`install or copy works from the keyboard and its focus ring is not clipped (${width}px)`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(BUTTON_DOC, { waitUntil: "networkidle" });
+    const adoption = page.locator("#install-or-copy");
+    const tab = adoption.getByRole("tab", { name: "Install", exact: true });
+    await tab.scrollIntoViewIfNeeded();
+    await focusWithKeyboard(tab);
+    await assertFocusVisibleRing(tab);
+    await assertFocusUnclipped(tab);
+    const pm = adoption.getByRole("combobox", { name: "Package manager" });
+    await focusWithKeyboard(pm);
+    await assertFocusVisibleRing(pm);
+    await assertFocusUnclipped(pm);
+    await page.keyboard.press("ArrowDown");
+    await expect(page.getByRole("option", { name: "pnpm", exact: true })).toBeFocused();
+    await page.keyboard.press("ArrowDown");
+    await expect(page.getByRole("option", { name: "npm", exact: true })).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(pm).toHaveText("npm");
+    await expect(adoption.getByText("npm install @zedtech/zedkit-ui")).toBeVisible();
+    await expect(pm).toBeFocused();
+    const copy = adoption.locator("figure.shiki").first().getByRole("button");
+    await focusWithKeyboard(copy);
+    await assertFocusVisibleRing(copy);
+    await assertFocusUnclipped(copy);
+  });
+}
+
+for (const mode of ["light", "dark"] as const) {
+  test(`install or copy passes the a11y gate on every path (${mode})`, async ({ page }) => {
+    await page.addInitScript((theme) => localStorage.setItem("theme", theme), mode);
+    await page.goto(BUTTON_DOC, { waitUntil: "networkidle" });
+    const adoption = page.locator("#install-or-copy");
+    await adoption.scrollIntoViewIfNeeded();
+    await assertA11yGate(page, "#install-or-copy");
+    await adoption.getByRole("tab", { name: "Copy", exact: true }).click();
+    await assertA11yGate(page, "#install-or-copy");
+    await chooseCopyMethod(page, "Copy manually");
+    await assertA11yGate(page, "#install-or-copy");
+  });
+}
 
 test.describe("registry brick name light/dark (#769)", () => {
   for (const mode of ["light", "dark"] as const) {
@@ -126,7 +254,7 @@ test.describe("registry brick name light/dark (#769)", () => {
       }, mode);
       await page.goto(CONFIRM_DIALOG_DOC, { waitUntil: "networkidle" });
       await page.getByRole("tab", { name: "Copy", exact: true }).click();
-      await page.getByRole("tab", { name: "Copy manually" }).click();
+      await chooseCopyMethod(page, "Copy manually");
       const brick = page.locator("[data-registry-brick]");
       await brick.scrollIntoViewIfNeeded();
       await expect(brick).toBeVisible();
