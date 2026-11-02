@@ -7,7 +7,7 @@ skills and subagents in `packages/ai/kit/` are the single source of truth.
 - `.claude/` and `.cursor/` link to `.agents/` (skills and agents); `CLAUDE.md`
   links to `AGENTS.md`.
 - Instructions: root `AGENTS.md`, plus a nested `AGENTS.md` in each package,
-  `apps/docs` and `deploy/suggest`. `.cursor/rules/*.mdc` only points at them.
+  `apps/docs` and `deploy`. `.cursor/rules/*.mdc` only points at them.
 - `personas.md`: the audiences `persona-review` picks from. A PR body fills
   the Personas table of `.github/pull_request_template.md` instead (its rows
   differ; CI counts the verdicts).

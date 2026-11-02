@@ -5,11 +5,16 @@
    `yaml`.
 2. `kit/` is the single source of truth for this repo's own skills and
    subagents too (`.agents/skills` and `.agents/agents` are symlinks into
-   it). Edit there.
+   it). Edit there; `tests/unit/repo-wiring.test.ts` fails when a provider
+   link stops resolving to it.
 3. Agent-agnostic: no tool-specific paths or model ids inside skills or
    subagents. Subagent `model` is omitted or `inherit`; descriptions are
    one line; names equal the folder or file name. `validateKit` enforces
    it and the tests run it on the whole kit.
+   The kit ships to other repos: it carries general lessons only (validate
+   generated output at both ends, no hand-written install snippets). This
+   repo's folders, commands and traps belong in `AGENTS.md` files, not here.
+   A change to shipped `kit/` content needs a patch changeset for this package.
 4. Never name a private project, customer, vendor or internal URL in the
    kit (CI denylist: `scripts/check-no-private-refs.sh`). Examples use
    generic names.
@@ -23,4 +28,5 @@
    `tests/unit/install.test.ts`.
 8. Explicit named exports in `src/index.ts`, each in `CATALOG.md`.
 9. Definition of done: `pnpm --filter @zedtech/zedkit-ai typecheck && pnpm --filter @zedtech/zedkit-ai lint && pnpm --filter @zedtech/zedkit-ai build && pnpm --filter @zedtech/zedkit-ai test`
-   green (each separately), `pnpm catalog:check` green.
+   green (each separately), `pnpm catalog:check` green. On a fresh clone build
+   the sibling packages first (see Commands in the root `AGENTS.md`).
