@@ -14,6 +14,14 @@ zedkit.app {
 		reverse_proxy suggest:3001
 	}
 
+	handle /docs/ui/design-your-identity {
+		redir * /features/identity-editor permanent
+	}
+
+	handle /docs/ui/switch-the-visual-identity-with-one-attribute {
+		redir * / permanent
+	}
+
 	handle {
 		# Renamed page: "Show the zedkit logo" is now "Show your brand logo".
 		redir /docs/ui/show-the-zedkit-logo /docs/ui/show-your-brand-logo permanent
@@ -46,6 +54,14 @@ dev.zedkit.app {
 	encode zstd gzip
 
 	header X-Robots-Tag "noindex, nofollow"
+
+	handle /docs/ui/design-your-identity {
+		redir * /features/identity-editor permanent
+	}
+
+	handle /docs/ui/switch-the-visual-identity-with-one-attribute {
+		redir * / permanent
+	}
 
 	handle {
 		@search path /api/search

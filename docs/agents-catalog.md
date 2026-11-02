@@ -15,7 +15,7 @@ When to call which agent, and the chains they form. Agents live in
 | `improver` | after a review returned findings; applies the smallest diff in risk order | yes |
 | `verifier` | before calling work done or merging; runs gates + definition of done + two review passes | no |
 | `security-reviewer` | the change touches auth, tenancy, secrets, user data, logging, input parsing or external calls | no |
-| `ui-designer` | the change touches components, pages, styles or previews | no |
+| `ui-designer` | the change touches components, pages, styles or previews; critiques composition, not only kit reuse | no |
 | `copywriter` | user-visible strings changed (microcopy, errors, empty states, CTAs); i18n-first | no |
 | `a11y-auditor` | components, forms, tables or pages changed; WCAG basics | no |
 | `seo-auditor` | pages, metadata, sitemap, redirects or the seo package changed | no |

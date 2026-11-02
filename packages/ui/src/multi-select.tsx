@@ -18,6 +18,8 @@ function MultiSelect(props: MultiSelectProps) {
   const { inputProps, openOnFocus } = useMultiSelectInputProps(combobox, selection);
   const emptyMessage = props.emptyMessage ?? messages.empty;
   const loading = props.loading ?? false;
+  // Called every render, not only when the popover is open: downshift needs the call, and the ref attaches when the list mounts.
+  const menuProps = combobox.getMenuProps({}, { suppressRefError: true });
 
   const removeItem = (item: (typeof selectedItems)[number]) => {
     if (props.disabled) return;
@@ -60,7 +62,7 @@ function MultiSelect(props: MultiSelectProps) {
         <MultiSelectMenu
           emptyMessage={emptyMessage}
           getItemProps={combobox.getItemProps}
-          getMenuProps={combobox.getMenuProps}
+          menuProps={menuProps}
           highlightedIndex={combobox.highlightedIndex}
           items={filteredItems}
           loading={loading}

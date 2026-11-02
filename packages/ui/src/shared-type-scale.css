@@ -62,6 +62,9 @@
   --zk-type-nav-size: 0.8125rem;
   --zk-type-nav-weight: 500;
   --zk-type-nav-leading: 1;
+
+  /* Tinted label/meta tier (identities may override). */
+  --zk-subtle-foreground: var(--muted-foreground);
 }
 
 @media (max-width: 390px) {

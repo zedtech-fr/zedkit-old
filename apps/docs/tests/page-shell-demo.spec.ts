@@ -10,7 +10,8 @@ test.describe("page shell preview is a complete screen", () => {
         await page.setViewportSize({ width: 1280, height: 1000 });
         await page.addInitScript(
           ([i, m]) => {
-            localStorage.setItem("zk-identity", i!);
+            localStorage.setItem("zk-docs-site-identity", i!);
+            localStorage.setItem("zk-docs-site-identity-opt-in", "1");
             localStorage.setItem("theme", m!);
           },
           [identity, mode],
@@ -28,7 +29,8 @@ test.describe("page shell preview is a complete screen", () => {
         await page.setViewportSize({ width: 390, height: 844 });
         await page.addInitScript(
           ([i, m]) => {
-            localStorage.setItem("zk-identity", i!);
+            localStorage.setItem("zk-docs-site-identity", i!);
+            localStorage.setItem("zk-docs-site-identity-opt-in", "1");
             localStorage.setItem("theme", m!);
           },
           [identity, mode],

@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { catalogIndex } from "../content/catalog-index";
+
 const BASE = "http://127.0.0.1:3100";
 const MOBILE = { width: 390, height: 844 };
 
@@ -39,11 +41,13 @@ test("catalog intro bleeds full width and the filters sit in a narrower column",
   expect(introBox).not.toBeNull();
   expect(columnBox).not.toBeNull();
   expect(introBox!.width).toBeGreaterThan(columnBox!.width + 40);
-  const results = page.locator("[data-slot='container']").filter({
-    has: page.getByRole("heading", { name: "Results", level: 2 }),
-  });
-  await expect(results).toHaveClass(/max-w-wide/);
-  const resultsBox = await results.boundingBox();
+  await page.waitForFunction(() => document.querySelector("[data-catalog-toolbar]"));
+  await expect(page.locator("[data-catalog-toolbar]")).toBeVisible();
+  const resultsWide = page
+    .locator("main [data-slot='container'].max-w-wide")
+    .filter({ has: page.locator("[data-catalog-results-root]") });
+  await expect(resultsWide).toBeVisible();
+  const resultsBox = await resultsWide.boundingBox();
   expect(resultsBox!.width).toBeGreaterThan(columnBox!.width);
 });
 
@@ -52,8 +56,8 @@ test("catalog runs wide with two alphabetical columns per group at 2560 (#1063)"
   await gotoCatalogQuiet(page);
   await expect(page.locator('[data-catalog-group="ui"]').first()).toBeVisible();
   const container = await page
-    .locator("main [data-slot='container']")
-    .filter({ has: page.getByRole("heading", { name: "Results", level: 2 }) })
+    .locator("main [data-slot='container'].max-w-wide")
+    .filter({ has: page.locator("[data-catalog-results-root]") })
     .boundingBox();
   expect(container).not.toBeNull();
   expect(container!.width).toBeGreaterThanOrEqual(1400);
@@ -100,11 +104,11 @@ test("catalog has no console errors with a filter in the URL", async ({ page }) 
 test("catalog area filters keep a decorative icon", async ({ page }) => {
   await page.setViewportSize(MOBILE);
   await page.goto(`${BASE}/catalog`, { waitUntil: "networkidle" });
-  const areas = page.getByRole("group", { name: "Area" });
-  await expect(areas.getByRole("button", { name: "All areas" }).locator("svg")).toHaveCount(0);
+  await page.getByLabel("Area").click();
   for (const name of ["UI", "Core & server", "SEO", "Agents"] as const) {
-    await expect(areas.getByRole("button", { name, exact: true }).locator("svg[aria-hidden='true']")).toHaveCount(1);
+    await expect(page.getByRole("option", { name, exact: true }).locator("svg[aria-hidden='true']")).toHaveCount(1);
   }
+  await page.keyboard.press("Escape");
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,
   );
@@ -114,8 +118,8 @@ test("catalog area filters keep a decorative icon", async ({ page }) => {
 test("catalog results group by category without per-row area chips", async ({ page }) => {
   await page.setViewportSize(MOBILE);
   await page.goto(`${BASE}/catalog`, { waitUntil: "networkidle" });
-  await expect(page.getByRole("heading", { name: /^UI · \d+$/, level: 3 })).toBeVisible();
-  await expect(page.getByRole("heading", { name: /^Backend · \d+$/, level: 3 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /^UI · \d+$/, level: 2 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /^Core & server · \d+$/, level: 2 })).toBeVisible();
   await expect(page.locator("[data-catalog-area]")).toHaveCount(0);
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,
@@ -125,8 +129,8 @@ test("catalog results group by category without per-row area chips", async ({ pa
 
 test("catalog area filter shows one category group", async ({ page }) => {
   await page.goto(`${BASE}/catalog?area=seo`, { waitUntil: "networkidle" });
-  await expect(page.getByRole("heading", { name: /^SEO · \d+$/, level: 3 })).toHaveCount(1);
-  await expect(page.getByRole("heading", { name: /^UI · /, level: 3 })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: /^SEO · \d+$/, level: 2 })).toHaveCount(1);
+  await expect(page.getByRole("heading", { name: /^UI · /, level: 2 })).toHaveCount(0);
   await expect(page.getByRole("navigation", { name: "Jump to category" })).toHaveCount(0);
 });
 
@@ -135,7 +139,8 @@ test("catalog result maturity chips keep a decorative icon", async ({ page }) =>
   await page.goto(`${BASE}/catalog`, { waitUntil: "networkidle" });
   const badges = page.locator("a[data-badge-link]");
   const badgeCount = await badges.count();
-  expect(badgeCount).toBeGreaterThan(0);
+  const expectedBadges = catalogIndex.filter((entry) => entry.status.toLowerCase() !== "stable").length;
+  expect(badgeCount).toBe(expectedBadges);
   await expect(badges.locator("svg[aria-hidden='true']")).toHaveCount(badgeCount);
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,
@@ -147,14 +152,15 @@ test.describe("catalog grouped results mobile visual", () => {
   test("390px mist", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.addInitScript(() => {
-      localStorage.setItem("zk-identity", "mist");
+      localStorage.setItem("zk-docs-site-identity", "mist");
+      localStorage.setItem("zk-docs-site-identity-opt-in", "1");
       localStorage.setItem("theme", "light");
     });
     await page.goto(`${BASE}/catalog`, { waitUntil: "networkidle" });
     const results = page.locator("[data-catalog-results]");
-    await results.scrollIntoViewIfNeeded();
-    await expect(page.getByRole("heading", { name: /^Results$/, level: 2 })).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: /^\d+ entries$/ })).toBeVisible();
     await expect(page.getByRole("link", { name: /UI \(\d+\)/ })).toBeVisible();
+    await expect(results.locator("a:not([data-badge-link])").first()).toBeInViewport();
     await results.screenshot({ path: "test-results/catalog-grouped-mobile-390.png" });
   });
 });
@@ -164,7 +170,8 @@ test.describe("catalog result maturity chips light/dark", () => {
     test(`mist ${mode}`, async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 900 });
       await page.addInitScript((theme) => {
-        localStorage.setItem("zk-identity", "mist");
+        localStorage.setItem("zk-docs-site-identity", "mist");
+        localStorage.setItem("zk-docs-site-identity-opt-in", "1");
         localStorage.setItem("theme", theme);
       }, mode);
       await page.goto(`${BASE}/catalog`, { waitUntil: "networkidle" });
@@ -178,30 +185,92 @@ test.describe("catalog result maturity chips light/dark", () => {
   }
 });
 
+test("catalog search keeps every letter while typing", async ({ page }) => {
+  await page.setViewportSize(MOBILE);
+  await page.goto(`${BASE}/catalog`, { waitUntil: "networkidle" });
+  const search = page.getByRole("searchbox", { name: "Catalog search" });
+  await search.click();
+  await page.keyboard.type("dialog", { delay: 50 });
+  await expect(search).toHaveValue("dialog");
+  await expect(page).toHaveURL(/q=dialog/, { timeout: 5000 });
+});
+
 test("catalog filters persist in the URL and show empty state", async ({ page }) => {
   await page.goto(`${BASE}/catalog`, { waitUntil: "networkidle" });
   await expect(page.getByRole("heading", { name: "Catalog", level: 1 })).toBeVisible();
-  await page.getByRole("button", { name: "UI", exact: true }).click();
+  await page.getByLabel("Area").click();
+  await page.getByRole("option", { name: "UI", exact: true }).click();
   await expect(page).toHaveURL(/area=ui/);
   await page.getByRole("searchbox", { name: "Catalog search" }).fill("zzzz-no-match-zzzz");
   await expect(page).toHaveURL(/q=zzzz/);
   await expect(page.getByText("No catalog entries match")).toBeVisible();
+  await page.getByRole("link", { name: "Clear filters" }).click();
+  await expect(page).toHaveURL(/\/catalog\/?$/);
+  await expect(page.getByRole("heading", { name: /^UI · \d+$/, level: 2 })).toBeVisible();
 });
 
-test("home links to catalog with curated grid", async ({ page }) => {
+async function visibleResultLinks(page: Page) {
+  return page.evaluate(() => {
+    const root = document.querySelector("[data-catalog-results-root]");
+    if (!root) return 0;
+    const vh = window.innerHeight;
+    return [...root.querySelectorAll("a:not([data-badge-link])")].filter((a) => {
+      const r = a.getBoundingClientRect();
+      return r.top >= 0 && r.bottom <= vh && r.height > 0;
+    }).length;
+  });
+}
+
+test("catalog first viewport shows several result rows at 1440", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await gotoCatalogQuiet(page);
+  await expect(page.locator('[data-catalog-group="ui"]').first()).toBeVisible();
+  const visible = await visibleResultLinks(page);
+  expect(visible).toBeGreaterThanOrEqual(6);
+});
+
+test("catalog first viewport shows result rows at 390", async ({ page }) => {
+  await page.setViewportSize(MOBILE);
+  await gotoCatalogQuiet(page);
+  await expect(page.locator('[data-catalog-group="ui"]').first()).toBeVisible();
+  const visible = await visibleResultLinks(page);
+  expect(visible).toBeGreaterThanOrEqual(2);
+});
+
+test("catalog filter chips use quiet fill not primary accent", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("theme", "dark"));
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(`${BASE}/catalog?area=ui`, { waitUntil: "networkidle" });
+  const chip = page.getByRole("button", { name: "UI", exact: true }).first();
+  await expect(chip).toBeVisible();
+  const usesPrimaryBg = await chip.evaluate((el) => {
+    const bg = getComputedStyle(el).backgroundColor;
+    const probe = document.createElement("div");
+    probe.style.backgroundColor = "hsl(var(--primary) / 1)";
+    probe.style.position = "fixed";
+    probe.style.left = "-9999px";
+    document.body.appendChild(probe);
+    const primaryBg = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    return bg === primaryBg;
+  });
+  expect(usesPrimaryBg).toBe(false);
+});
+
+test("home links to catalog with component families", async ({ page }) => {
   await page.goto(BASE, { waitUntil: "networkidle" });
-  const catalog = page.getByRole("link", { name: "Browse full catalog" });
+  const catalog = page.getByRole("link", { name: /Browse all UI in the catalog/ });
   await expect(catalog).toBeVisible();
   await expect(catalog.locator("svg[aria-hidden='true']")).toHaveCount(1);
-  const count = await page.locator("#components .grid > *").count();
-  expect(count).toBeGreaterThanOrEqual(4);
-  expect(count).toBeLessThanOrEqual(8);
+  const rows = page.locator("[data-home-component-families] [data-family-title]");
+  expect(await rows.count()).toBeGreaterThanOrEqual(4);
 });
 
 test("catalog CTA keeps a decorative icon at phone width", async ({ page }) => {
   await page.setViewportSize(MOBILE);
   await page.goto(BASE, { waitUntil: "networkidle" });
-  const catalog = page.getByRole("link", { name: "Browse full catalog" });
+  const catalog = page.getByRole("link", { name: /Browse all UI in the catalog/ });
+  await catalog.scrollIntoViewIfNeeded();
   await expect(catalog.locator("svg[aria-hidden='true']")).toHaveCount(1);
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,
@@ -214,11 +283,13 @@ test.describe("catalog CTA light/dark", () => {
     test(`mist ${mode}`, async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 900 });
       await page.addInitScript((theme) => {
-        localStorage.setItem("zk-identity", "mist");
+        localStorage.setItem("zk-docs-site-identity", "mist");
+        localStorage.setItem("zk-docs-site-identity-opt-in", "1");
         localStorage.setItem("theme", theme);
       }, mode);
       await page.goto(BASE, { waitUntil: "networkidle" });
-      const catalog = page.getByRole("link", { name: "Browse full catalog" });
+      const catalog = page.getByRole("link", { name: /Browse all UI in the catalog/ });
+  await catalog.scrollIntoViewIfNeeded();
       await catalog.scrollIntoViewIfNeeded();
       await expect(catalog).toBeVisible();
       await catalog.screenshot({ path: `test-results/home-catalog-cta-${mode}.png` });

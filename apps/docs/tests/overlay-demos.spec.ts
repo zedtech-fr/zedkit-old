@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
-const BASE = "http://127.0.0.1:3100";
+import { pinDemoLook } from "./a11y-helpers";
 
 const DOC_PAGES = {
   badge: "/docs/ui/show-a-status-or-count-badge",
@@ -18,8 +18,9 @@ test.describe("docs live overlay demos", () => {
   test("badge preview passes axe", async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", (event) => errors.push(String(event)));
-    await page.goto(`${BASE}${DOC_PAGES.badge}`, { waitUntil: "networkidle" });
+    await page.goto(DOC_PAGES.badge, { waitUntil: "networkidle" });
     const preview = page.locator("[data-component-preview]").first();
+    await pinDemoLook(preview, "tide", "light");
     await expect(preview).toBeVisible();
     await expect(page.getByRole("tab", { name: "Preview" }).first()).toBeVisible();
     await expectNoAxeViolations(page, "[data-component-preview]");
@@ -33,7 +34,9 @@ test.describe("docs live overlay demos", () => {
     test(`${name}: open → axe → Escape closes`, async ({ page }) => {
       const errors: string[] = [];
       page.on("pageerror", (event) => errors.push(String(event)));
-      await page.goto(`${BASE}${path}`, { waitUntil: "networkidle" });
+      await page.goto(path, { waitUntil: "networkidle" });
+      const preview = page.locator("[data-component-preview]").first();
+      await pinDemoLook(preview, "press", "dark");
       await page.getByRole("button", { name: trigger }).click();
       const overlay = page.getByRole("dialog");
       await expect(overlay).toBeVisible({ timeout: 10_000 });

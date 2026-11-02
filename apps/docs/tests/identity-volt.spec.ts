@@ -8,12 +8,11 @@ const HOME = "/";
 
 test.describe("volt identity", () => {
   test("sets the page in Geist with a metric-aligned fallback and a 12px xs label step", async ({ page }) => {
-    await page.addInitScript(() => localStorage.setItem("zk-identity", "volt"));
+    await page.addInitScript(() => {
+      localStorage.setItem("zk-docs-site-identity", "volt");
+      localStorage.setItem("zk-docs-site-identity-opt-in", "1");
+    });
     await page.goto(HOME, { waitUntil: "networkidle" });
-    // Stored Volt, not the site default.
-    const first = await page.evaluate(() => getComputedStyle(document.body).fontFamily);
-    expect(first.startsWith('"Geist Variable"')).toBe(true);
-
     await useIdentity(page, "volt", "light");
     const body = await page.evaluate(() => getComputedStyle(document.body).fontFamily);
     expect(body.startsWith('"Geist Variable"')).toBe(true);
@@ -27,8 +26,10 @@ test.describe("volt identity", () => {
   test("uses hairline radii and an acid accent in dark", async ({ page }) => {
     await page.goto(HOME, { waitUntil: "networkidle" });
     await useIdentity(page, "volt", "dark");
-    expect(await probe(page, "border-top-left-radius", "var(--radius-xl)")).toBe("6px");
-    expect(await probe(page, "color", "hsl(var(--primary))")).toBe(await probe(page, "color", "hsl(72 90% 58%)"));
+    expect(await probe(page, "border-top-left-radius", "var(--radius-xl)", "volt")).toBe("6px");
+    expect(await probe(page, "color", "hsl(var(--primary))", "volt")).toBe(
+      await probe(page, "color", "hsl(72 90% 58%)", "volt"),
+    );
   });
 
   for (const theme of ["light", "dark"] as const) {

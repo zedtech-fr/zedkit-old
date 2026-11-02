@@ -49,6 +49,24 @@ export function checkGeneratedPage(rel, text, { seoMax, descriptionsSeen, a11yBy
       descriptionsSeen.set(description, rel);
     }
   }
+  if (text.includes("<ComponentPage")) {
+    for (const label of GUIDANCE_BULLETS) {
+      const prop =
+        label === "- **Who:**"
+          ? "audience={"
+          : label === "- **Use when:**"
+            ? "whenToUse={"
+            : label === "- **Avoid when:**"
+              ? "whenNotToUse={"
+              : label === "- **What:**"
+                ? "purpose={"
+                : null;
+      if (prop && !text.includes(prop)) {
+        errors.push(`generator: ${rel} lacks ComponentPage guidance prop for "${label}".`);
+      }
+    }
+    return;
+  }
   if (!text.includes("## At a glance")) {
     errors.push(`generator: ${rel} lacks the At-a-glance guidance block.`);
   }
@@ -57,7 +75,6 @@ export function checkGeneratedPage(rel, text, { seoMax, descriptionsSeen, a11yBy
       errors.push(`generator: ${rel} lacks guidance bullet "${label}".`);
     }
   }
-  if (text.includes("<ComponentPage")) return;
   if (!text.includes('<Tabs groupId="package-manager"')) {
     errors.push(`generator: ${rel} lacks install tabs.`);
   }

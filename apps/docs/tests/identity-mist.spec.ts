@@ -88,6 +88,7 @@ async function readScopedMist(page: Page) {
     const scope = document.createElement("div");
     scope.setAttribute("data-identity-scope", "");
     scope.setAttribute("data-identity", "mist");
+    if (document.documentElement.classList.contains("dark")) scope.classList.add("dark");
     const probe = document.createElement("div");
     Object.assign(probe.style, style, { borderStyle: "solid" });
     const heading = document.createElement("h2");

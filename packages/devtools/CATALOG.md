@@ -9,7 +9,7 @@
 
 - Import: `@zedtech/zedkit-devtools` — `devtoolsEnabled`, `DevtoolsEnabledOptions`
 - Wraps: `(none)`
-- Status: alpha
+- Status: beta
 - Short name: devtoolsEnabled
 - Audience: App roots that should tree-shake the panel out of production bundles.
 - Purpose: Return false when `NODE_ENV` is `production` unless `force` is set for demos.
@@ -28,7 +28,7 @@ if (devtoolsEnabled()) {
 
 - Import: `@zedtech/zedkit-devtools/react` — `ZedkitDevtools`, `ZedkitDevtoolsPanel`, `DevtoolsBuildInfoRow`, `DevtoolsLocaleOption`
 - Wraps: `@zedtech/zedkit-ui`, `@zedtech/zedkit-flags` (peers)
-- Status: alpha
+- Status: beta
 - Short name: ZedkitDevtools
 - Audience: Local development and preview environments wrapped in `ZedkitUiProvider`.
 - Purpose: Floating drawer with Look (identity), Flags, Locale, Info, and optional query slot tabs.

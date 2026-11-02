@@ -27,18 +27,18 @@ export function PageHeaderSkeleton({
       data-slot="page-header-skeleton"
       role="status"
       aria-label={label ?? messages.loading}
-      className={cn("mb-page-header-offset flex flex-wrap items-start justify-between gap-4", className)}
+      className={cn("mb-page-header-offset flex flex-col gap-page-header-title-gap", className)}
     >
-      <div className="space-y-1">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <Skeleton className="h-7 w-48" />
-        {description ? <Skeleton className="h-4 w-64" /> : null}
+        {actions ? (
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-9 w-24" />
+            <Skeleton className="h-9 w-24" />
+          </div>
+        ) : null}
       </div>
-      {actions ? (
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-9 w-24" />
-          <Skeleton className="h-9 w-24" />
-        </div>
-      ) : null}
+      {description ? <Skeleton className="h-4 w-64" /> : null}
     </div>
   );
 }

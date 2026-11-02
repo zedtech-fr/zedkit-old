@@ -55,8 +55,59 @@ describe("identity token schema", () => {
     expect(result.success).toBe(false);
   });
 
+  it("keeps a value inside its declaration: nothing that ends it, opens a comment or fetches", () => {
+    for (const key of ["spacing", "radius", "shadowSm", "fontSans", "fontDisplay"] as const) {
+      for (const value of [
+        "x; } body { display: none",
+        "Georgia } @import 'x.css'",
+        "Georgia /* open",
+        "url(https://evil.test/a.woff2)",
+        "URL (x)",
+        "<style>",
+        "a\\3b b",
+        "x".repeat(401),
+        "calc(",
+        "x)",
+        "[a",
+        '"Georgia, serif',
+        "rgb(0 0 0 / 0.2",
+      ]) {
+        expect(parseIdentityTokens({ ...identityPresets.mist, [key]: value }).success, `${key}: ${value}`).toBe(false);
+      }
+    }
+  });
+
+  it("still takes real font stacks and shadows, quoted names, commas and slashes included", () => {
+    const result = parseIdentityTokens({
+      ...identityPresets.mist,
+      fontSans: '"Test Sans", ui-sans-serif, sans-serif',
+      shadowSm: "0 1px 2px 0 rgb(0 0 0 / 0.2), 0 0 8px -2px hsl(10 70% 50% / 0.18)",
+      radius: "calc(var(--spacing) * 2)",
+    });
+    expect(result.success).toBe(true);
+  });
+
   it("rejects a preset with no dark pair", () => {
     expect(parseIdentityTokens({ ...identityPresets.press, dark: undefined }).success).toBe(false);
+  });
+
+  it("defaults missing foreground-on-surface pairs to foreground", () => {
+    const legacyLight = {
+      background: identityPresets.mist.light.background,
+      foreground: identityPresets.mist.light.foreground,
+      primary: identityPresets.mist.light.primary,
+      accent: identityPresets.mist.light.accent,
+      border: identityPresets.mist.light.border,
+    };
+    const result = parseIdentityTokens({
+      ...identityPresets.mist,
+      light: legacyLight,
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.light.primaryForeground).toBe(legacyLight.foreground);
+      expect(result.data.light.mutedForeground).toBe(legacyLight.foreground);
+    }
   });
 
   it("keeps compact fields in step with shipped identity CSS", () => {
@@ -80,6 +131,10 @@ describe("identity token schema", () => {
       ["headingLeading", "--zk-heading-leading"],
     ] as const;
     const colours = ["background", "foreground", "primary", "accent", "border"] as const;
+    const foregroundPairs = [
+      ["primaryForeground", "--primary-foreground"],
+      ["mutedForeground", "--muted-foreground"],
+    ] as const;
     for (const [id, css] of Object.entries(looks) as [IdentityId, string][]) {
       const preset = identityPresets[id];
       for (const [field, name] of fields) {
@@ -105,6 +160,11 @@ describe("identity token schema", () => {
         expect(preset.light[colour]).toBe(pair[0]);
         expect(preset.dark[colour]).toBe(pair[1]);
       }
+      for (const [field, name] of foregroundPairs) {
+        const pair = cssTokens(css, name);
+        expect(preset.light[field]).toBe(pair[0]);
+        expect(preset.dark[field]).toBe(pair[1]);
+      }
     }
   });
 });
@@ -119,13 +179,15 @@ describe("token to CSS var writer", () => {
     expect(css).toContain("--zk-body-leading: 1.55");
     expect(css).toContain("--zk-heading-tracking: -0.015em");
     expect(css).toContain("--background: 45 35% 94%");
+    expect(css).toContain("--primary-foreground: 45 35% 94%");
+    expect(css).toContain("--muted-foreground: 0 0% 25%");
     expect(css).toContain("--zk-shadow-sm: 0 1px 2px hsl(0 0% 5% / 0.06)");
     expect(css).toContain("--zk-font-display:");
   });
 
   it("writes dark colour channels under .dark", () => {
     const css = tokensToCss(identityPresets.press, DRAFT);
-    expect(css).toContain(`.dark ${DRAFT}`);
+    expect(css).not.toContain(`.dark ${DRAFT}`);
     expect(css).toContain(`${DRAFT}.dark`);
     expect(css).toContain("--background: 0 0% 6%");
     expect(css).toContain("--primary: 164 62% 56%");

@@ -14,7 +14,7 @@ describe("WizardSteps", () => {
 
   it("styles list and steps from design tokens", () => {
     const { container } = render(<WizardSteps steps={["One", "Two"]} current={0} />);
-    const list = container.querySelector("ol");
+    const list = container.querySelector('[data-slot="wizard"]');
     expect(list?.classList.contains("gap-x-3")).toBe(true);
     expect(list?.className).not.toContain("gap-x-wizard-steps-gap");
     expect(list?.classList.contains("gap-y-2")).toBe(true);
@@ -25,6 +25,20 @@ describe("WizardSteps", () => {
     const badge = item?.querySelector("span[aria-hidden]");
     expect(badge?.classList.contains("size-wizard-step-badge")).toBe(true);
     expect(badge?.className).not.toMatch(/(^|\s)size-6(\s|$)/);
+  });
+
+  it("shows a compact step summary for narrow viewports", () => {
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      matches: query === "(max-width: 639px)",
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 390 });
+    render(<WizardSteps steps={["One", "Two", "Three"]} current={1} />);
+    expect(screen.getByText("Step 2 of 3 · Two")).toBeTruthy();
+    expect(screen.getByRole("progressbar", { name: "Progress" }).getAttribute("aria-valuenow")).toBe("2");
   });
 });
 

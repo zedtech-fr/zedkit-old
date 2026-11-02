@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
 
-import { waitForAppliedLook } from "./identity-helpers";
+import { DEFAULT_IDENTITY } from "../lib/default-identity";
+import { openHeroPage } from "./hero-helpers";
 
 /**
- * Home: calm hero; use-cases section uses explicit identity tabs instead of a
- * long pinned scroll gallery (audit L2c).
+ * Home: hero Display row scopes the specimen; identities are linked from the secondary band.
  */
 
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -19,8 +19,9 @@ test("the hero keeps the page identity: nothing cycles, nothing is written", asy
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });
 
-test("the use cases section follows the demo, before the AI setup section", async ({ page }) => {
+test("the hero demo follows get started, before component families", async ({ page }) => {
   await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   const order = await page.evaluate(() => {
     const top = (selector: string) => document.querySelector(selector)?.getBoundingClientRect().top ?? Number.NaN;
     const precedes = (earlier: string, later: string) => {
@@ -32,54 +33,36 @@ test("the use cases section follows the demo, before the AI setup section", asyn
     return {
       h1BeforeDemo: precedes("#home-page h1", "#demo"),
       demo: top("#demo"),
-      cases: top("#use-cases"),
-      ai: top("#ai-setup"),
+      getStarted: top("#get-started"),
+      components: top("#components"),
     };
   });
   expect(order.h1BeforeDemo).toBe(true);
-  expect(order.demo).toBeLessThan(order.cases);
-  expect(order.cases).toBeLessThan(order.ai);
+  expect(order.getStarted).toBeLessThan(order.components);
+  expect(order.demo).toBeLessThan(order.getStarted);
 });
 
-const ORDER = ["mist", "press", "tide", "volt", "maison", "glass"] as const;
-const LABELS = ["Mist", "Press", "Tide", "Volt", "Maison", "Glass"] as const;
-
-test("the section offers six identity tabs, a preview panel, and See all six identities", async ({ page }) => {
+test("Display scopes identity without touching the site shell", async ({ page }) => {
   await page.goto("/");
-  const section = page.locator("#use-cases");
-  await expect(section.getByRole("tablist", { name: "Identity previews" })).toBeVisible();
-  await expect(section.getByRole("tab")).toHaveCount(6);
-  await expect(section.getByRole("link", { name: "See all six identities" })).toHaveAttribute(
+  const shellBefore = await page.locator("html").getAttribute("data-identity");
+  const proof = page.locator("[data-home-hero-proof]");
+  await expect(proof.getByText("Display", { exact: true })).toBeVisible();
+  await proof.getByRole("combobox", { name: "Identity for this demo" }).click();
+  await page.getByRole("option", { name: "Glass" }).click();
+  await expect(proof.locator("[data-identity-scope]")).toHaveAttribute("data-identity", "glass");
+  expect(await page.locator("html").getAttribute("data-identity")).toBe(shellBefore ?? DEFAULT_IDENTITY);
+});
+
+test("the identities band links to the demo editor and no-code route (#1092)", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/");
+  const section = page.locator("#identities");
+  await section.scrollIntoViewIfNeeded();
+  const identities = section.locator("#use-cases");
+  await identities.scrollIntoViewIfNeeded();
+  await expect(section.getByRole("link", { name: "Try the demo editor" })).toHaveAttribute(
     "href",
-    "/docs/ui/design-your-identity",
-  );
-  await expect(section.locator("[data-scroll-scenes]")).toHaveCount(0);
-});
-
-test("choosing each tab shows that identity's scoped preview and copy", async ({ page }) => {
-  await page.goto("/");
-  const section = page.locator("#use-cases");
-  for (let index = 0; index < LABELS.length; index++) {
-    await section.getByRole("tab", { name: LABELS[index] }).click();
-    const scene = section.locator("[data-use-case-scene]");
-    await expect(scene).toHaveCount(1);
-    await expect(scene).toHaveAttribute("data-identity", ORDER[index]);
-    await expect(scene).toHaveAttribute("data-use-case-scene", /.+/);
-    const heading = section.getByRole("heading", { level: 3 });
-    await expect(heading).toBeVisible();
-    expect((await heading.textContent())?.length ?? 0).toBeGreaterThan(5);
-    expect(await scene.textContent()).toMatch(/\S/);
-    expect(await scene.getAttribute("aria-hidden")).toBe("true");
-    expect(await scene.evaluate((el) => el.hasAttribute("inert"))).toBe(true);
-  }
-});
-
-test("the stage ends with actions into the editor and the no-code route (#1092)", async ({ page }) => {
-  await page.goto("/");
-  const section = page.locator("#use-cases");
-  await expect(section.getByRole("link", { name: "Design your identity" })).toHaveAttribute(
-    "href",
-    "/docs/ui/design-your-identity",
+    "/features/identity-editor",
   );
   await expect(section.getByRole("link", { name: "Start without writing code" })).toHaveAttribute(
     "href",
@@ -87,83 +70,21 @@ test("the stage ends with actions into the editor and the no-code route (#1092)"
   );
 });
 
-test("switching tabs keeps the page identity and shows distinct looks", async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 800 });
+test("Display preview mode reaches the table without a toolbar select", async ({ page }) => {
   await page.goto("/");
-  const pageIdentity = await page.locator("html").getAttribute("data-identity");
-  const section = page.locator("#use-cases");
-  const seen: { identity: string; font: string; radius: string }[] = [];
-  for (const label of LABELS) {
-    await section.getByRole("tab", { name: label }).click();
-    const scene = section.locator("[data-use-case-scene]");
-    seen.push(
-      await scene.evaluate((el) => {
-        const title = el.querySelector("[class*='font-semibold']");
-        const button = el.querySelector("button");
-        return {
-          identity: el.getAttribute("data-identity") ?? "",
-          font: title ? getComputedStyle(title).fontFamily : "",
-          radius: button ? getComputedStyle(button).borderTopLeftRadius : "",
-        };
-      }),
-    );
-    expect(await page.locator("html").getAttribute("data-identity")).toBe(pageIdentity);
-  }
-  expect(seen.map((entry) => entry.identity)).toEqual([...ORDER]);
-  expect(new Set(seen.map((entry) => entry.font)).size).toBeGreaterThanOrEqual(4);
-  expect(new Set(seen.map((entry) => entry.radius)).size).toBeGreaterThanOrEqual(3);
-  expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
+  await openHeroPage(page, "Apps");
+  const card = page.locator("[data-home-dashboard-card]");
+  await card.scrollIntoViewIfNeeded();
+  await expect(card.locator("[data-demo-toolbar] [role=combobox]")).toHaveCount(0);
+  await page.locator("[data-hero-demo-display]").getByRole("combobox", { name: "Table preview mode" }).click();
+  await page.getByRole("option", { name: "Empty" }).click();
+  await expect(card.getByText(/No apps yet/)).toBeVisible();
 });
 
-test("a scene keeps its own look under any page identity", async ({ page }) => {
-  const signatures: Record<string, string>[] = [];
-  for (const identity of ["mist", "press", "volt"] as const) {
-    await page.addInitScript((id) => localStorage.setItem("zk-identity", id), identity);
-    await page.goto("/");
-    await expect(page.locator("html")).toHaveAttribute("data-identity", identity);
-    await page.locator("#use-cases").getByRole("tab", { name: "Tide" }).click();
-    signatures.push(
-      await page.locator("[data-use-case-scene]").evaluate((el) => {
-        const button = el.querySelector("button");
-        const badge = el.querySelector("[class*='rounded']");
-        return {
-          [el.getAttribute("data-use-case-scene") ?? ""]: [
-            getComputedStyle(el).backgroundColor,
-            getComputedStyle(el).fontFamily,
-            button ? getComputedStyle(button).borderTopLeftRadius : "",
-            badge ? getComputedStyle(badge).borderTopLeftRadius : "",
-          ].join("|"),
-        };
-      }),
-    );
-  }
-  expect(signatures[1]).toEqual(signatures[0]);
-  expect(signatures[2]).toEqual(signatures[0]);
+test("identity looks has one example tab per identity", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/");
+  const looks = page.locator("[data-home-identity-looks]");
+  await looks.scrollIntoViewIfNeeded();
+  await expect(looks.getByRole("tab")).toHaveCount(6);
 });
-
-for (const identity of ORDER) {
-  for (const theme of ["light", "dark"] as const) {
-    test(`phone, page identity ${identity} (${theme}): use-cases fits the viewport width`, async ({ page }) => {
-      await page.setViewportSize({ width: 360, height: 740 });
-      await page.addInitScript(
-        ([id, mode]) => {
-          localStorage.setItem("zk-identity", id);
-          localStorage.setItem("theme", mode);
-        },
-        [identity, theme],
-      );
-      await page.goto("/");
-      await waitForAppliedLook(page, identity, theme);
-      await page.locator("#home-page #use-cases").scrollIntoViewIfNeeded();
-      await page.locator("#home-page #use-cases").getByRole("tab", { name: "Glass" }).click();
-      const fits = await page.locator("[data-use-case-scene]").evaluate((el) => {
-        const box = el.getBoundingClientRect();
-        return box.left >= 0 && box.right <= document.documentElement.clientWidth;
-      });
-      expect(fits).toBe(true);
-      expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(
-        true,
-      );
-    });
-  }
-}

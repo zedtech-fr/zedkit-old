@@ -9,32 +9,39 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  Stack,
+  Text,
 } from "@zedtech/zedkit-ui";
+import { dialogCopy } from "@/components/demos/i18n/dialog-copy";
 
 export function DialogDemo() {
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline">Open dialog</Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Order details</DialogTitle>
-          <DialogDescription>Order #1042, placed on 26 October by Camille Rousseau.</DialogDescription>
-        </DialogHeader>
-        <DetailPanel
-          items={[
-            { label: "Items", value: "3 (Linen shirt, Canvas tote, Wool socks)" },
-            { label: "Shipping", value: "Express, 2 working days" },
-            { label: "Total", value: "€101.50" },
-            { label: "Status", value: <Badge variant="warning">Awaiting shipment</Badge> },
-          ]}
-        />
-        <DialogFooter>
-          <Button variant="outline">Download invoice</Button>
-          <Button>Mark as shipped</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <Stack gap={3} className="w-full max-w-md">
+      <Text variant="muted" className="text-sm">
+        {dialogCopy.demo.triggerContext}
+      </Text>
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="outline">{dialogCopy.demo.open}</Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{dialogCopy.demo.title}</DialogTitle>
+            <DialogDescription>{dialogCopy.demo.description}</DialogDescription>
+          </DialogHeader>
+          <DetailPanel
+            items={dialogCopy.demo.items.map((item) =>
+              "badge" in item
+                ? { label: item.label, value: <Badge variant={item.badge}>{item.value}</Badge> }
+                : { label: item.label, value: item.value },
+            )}
+          />
+          <DialogFooter>
+            <Button variant="outline">{dialogCopy.demo.downloadInvoice}</Button>
+            <Button>{dialogCopy.demo.markShipped}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </Stack>
   );
 }

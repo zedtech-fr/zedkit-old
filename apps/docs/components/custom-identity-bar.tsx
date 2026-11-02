@@ -3,11 +3,11 @@
 import { useSyncExternalStore } from "react";
 import {
   applyIdentity,
+  Badge,
   Button,
   discardCustomIdentity,
   CUSTOM_IDENTITY_ID,
   IDENTITY_CHANGE_EVENT,
-  IDENTITY_CUSTOM_STORAGE_KEY,
   isNamedIdentityId,
   Stack,
   Text,
@@ -15,6 +15,13 @@ import {
 } from "@zedtech/zedkit-ui";
 
 import { DEFAULT_IDENTITY } from "@/lib/default-identity";
+import {
+  clearDocsSiteIdentity,
+  docsSiteCustomStorageKey,
+  DOCS_SITE_IDENTITY_STORAGE_KEY,
+  isDocsSiteIdentityOptIn,
+} from "@/lib/site-identity-storage";
+import { customIdentityBarCopy } from "@/components/i18n/custom-identity-bar-copy";
 
 function subscribe(onStoreChange: () => void) {
   window.addEventListener("storage", onStoreChange);
@@ -25,13 +32,19 @@ function subscribe(onStoreChange: () => void) {
   };
 }
 
+function readOptIn(): boolean {
+  return isDocsSiteIdentityOptIn();
+}
+
+function readHasSheet(): boolean {
+  return Boolean(window.localStorage.getItem(docsSiteCustomStorageKey()));
+}
+
 function CustomIdentityBar() {
+  const optedIn = useSyncExternalStore(subscribe, readOptIn, () => false);
   const current = useIdentity();
-  const hasSheet = useSyncExternalStore(
-    subscribe,
-    () => Boolean(window.localStorage.getItem(IDENTITY_CUSTOM_STORAGE_KEY)),
-    () => false,
-  );
+  const hasSheet = useSyncExternalStore(subscribe, readHasSheet, () => false);
+  if (!optedIn) return null;
   if (isNamedIdentityId(current) || (current !== CUSTOM_IDENTITY_ID && !hasSheet)) return null;
   return (
     <Stack
@@ -39,19 +52,22 @@ function CustomIdentityBar() {
       direction="horizontal"
       gap={2}
       role="status"
-      className="fixed bottom-4 left-4 z-overlay rounded-md border border-border bg-background px-3 py-2 text-foreground shadow-md"
+      className="items-center border-b border-border bg-muted/40 px-4 py-2"
     >
-      <Text>Custom identity active</Text>
+      <Badge variant="secondary">{customIdentityBarCopy.badge}</Badge>
+      <Text className="text-muted-foreground">{customIdentityBarCopy.status}</Text>
       <Button
         type="button"
         size="sm"
         variant="outline"
+        className="ms-auto shrink-0"
         onClick={() => {
-          discardCustomIdentity();
-          applyIdentity(DEFAULT_IDENTITY);
+          discardCustomIdentity(DOCS_SITE_IDENTITY_STORAGE_KEY);
+          clearDocsSiteIdentity();
+          applyIdentity(DEFAULT_IDENTITY, DOCS_SITE_IDENTITY_STORAGE_KEY);
         }}
       >
-        Reset to default
+        {customIdentityBarCopy.backToDefault}
       </Button>
     </Stack>
   );

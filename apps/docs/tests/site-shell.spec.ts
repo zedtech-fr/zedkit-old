@@ -20,7 +20,7 @@ test.describe("site shell", () => {
     await page.goto(`${BASE}/docs/start-without-writing-code`, { waitUntil: "networkidle" });
     await expect(page.getByRole("heading", { name: "Start without writing code" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "What zedkit is not" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Design your identity" }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "Try the demo editor" }).first()).toBeVisible();
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );

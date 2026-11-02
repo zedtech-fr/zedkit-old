@@ -1,0 +1,3 @@
+@import "tailwindcss";
+@import "@zedtech/zedkit-ui/styles.css";
+@source "../node_modules/@zedtech/zedkit-ui/src/**/*.{ts,tsx}";

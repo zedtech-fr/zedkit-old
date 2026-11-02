@@ -12,8 +12,7 @@ test.describe("site header navigation (#1034)", () => {
       header.getByRole("link", { name: "Catalog", exact: true }),
     ).toHaveAttribute("href", "/catalog");
     await expect(header.getByRole("link", { name: "UI changelog" })).toBeVisible();
-    // The identity control explains itself instead of showing a bare name.
-    await expect(page.getByLabel("Try another identity")).toBeVisible();
+    await expect(page.getByLabel("Try another identity")).toHaveCount(0);
   });
 
   test("a deep docs page reaches the catalog from its chrome", async ({ page }) => {
@@ -61,5 +60,7 @@ test.describe("site header navigation (#1034)", () => {
       menu.getByRole("link", { name: "Catalog", exact: true }),
     ).toHaveAttribute("href", "/catalog");
     await expect(menu.getByRole("link", { name: "UI changelog" })).toBeVisible();
+    await expect(menu.getByText("Guides", { exact: true })).toBeVisible();
+    await expect(menu.getByRole("link", { name: "Getting started", exact: true })).toBeVisible();
   });
 });

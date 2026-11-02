@@ -20,6 +20,8 @@ import {
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 
 import { Button } from "./button.js";
+import { EmptyState } from "./empty-state.js";
+import { ErrorState } from "./error-state.js";
 import { Input } from "./input.js";
 import { Skeleton } from "./skeleton.js";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./table.js";
@@ -27,6 +29,7 @@ import { cn } from "./utils.js";
 import { formatMessage } from "@zedtech/zedkit-i18n";
 
 import { useUiMessages } from "./ui-provider.js";
+import { resolveDataTableSurfaceState } from "./data-table-state.js";
 
 const features = tableFeatures({
   rowSortingFeature,
@@ -57,6 +60,10 @@ export interface DataTableProps<TData extends RowData> {
   loading?: boolean;
   error?: string | null;
   emptyMessage?: string;
+  /** Shown below the filter when the dataset is empty (not a filter miss). */
+  emptyAction?: React.ReactNode;
+  /** Override for filter-with-no-rows; defaults to kit `empty` message. */
+  noResultsMessage?: string;
   filterPlaceholder?: string;
   pageSize?: number;
 }
@@ -66,6 +73,23 @@ function SortIcon({ direction }: { direction: SortDirection | false }) {
   if (direction === "asc") return <ArrowUp className={className} aria-hidden />;
   if (direction === "desc") return <ArrowDown className={className} aria-hidden />;
   return <ArrowUpDown className={className} aria-hidden />;
+}
+
+function sortableHeaderLabel(header: { column: { columnDef: { header?: unknown }; id: string } }): string {
+  const label = header.column.columnDef.header;
+  return typeof label === "string" ? label : header.column.id;
+}
+
+function headerAriaSort(direction: SortDirection | false): "ascending" | "descending" | undefined {
+  if (direction === "asc") return "ascending";
+  if (direction === "desc") return "descending";
+  return undefined;
+}
+
+function sortButtonLabel(label: string, direction: SortDirection | false): string {
+  if (direction === "asc") return `${label}, sorted ascending`;
+  if (direction === "desc") return `${label}, sorted descending`;
+  return `${label}, sort`;
 }
 
 export interface DataTablePaginationProps {
@@ -160,6 +184,8 @@ export function DataTable<TData extends RowData>({
   loading = false,
   error = null,
   emptyMessage,
+  emptyAction,
+  noResultsMessage,
   filterPlaceholder,
   pageSize = 10,
 }: DataTableProps<TData>) {
@@ -167,6 +193,14 @@ export function DataTable<TData extends RowData>({
   const table = useTable({ features, columns, data });
   const rows = table.getRowModel().rows;
   const { pageIndex } = table.state.pagination;
+  const globalFilter = table.state.globalFilter ?? "";
+  const surface = resolveDataTableSurfaceState({
+    loading,
+    error,
+    filteredRowCount: rows.length,
+    dataRowCount: data.length,
+    globalFilter,
+  });
 
   React.useEffect(() => {
     table.setPageSize(pageSize);
@@ -175,69 +209,90 @@ export function DataTable<TData extends RowData>({
   return (
     <div data-slot="data-table" className="space-y-4">
       <DataTableToolbar
-        value={table.state.globalFilter ?? ""}
+        value={globalFilter}
         onChange={(value) => {
           table.setGlobalFilter(value);
           table.setPageIndex(0);
         }}
         placeholder={filterPlaceholder ?? messages.filter}
       />
+      {surface === "error" ? <ErrorState description={error ?? ""} /> : null}
+      {surface === "loading" ? (
+        <div data-slot="data-table-loading" role="status" aria-label={messages.loading} className="space-y-3 py-2">
+          <p className="text-sm text-muted-foreground">{messages.loadingEllipsis}</p>
+          <div className="space-y-2" aria-hidden>
+            {[0, 1, 2].map((row) => (
+              <Skeleton key={row} className="h-4 w-full max-w-data-table-filter-width" />
+            ))}
+          </div>
+        </div>
+      ) : null}
+      {surface === "no-results" ? (
+        <EmptyState
+          description={noResultsMessage ?? messages.empty}
+          actions={
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                table.setGlobalFilter("");
+                table.setPageIndex(0);
+              }}
+            >
+              {messages.clearFilters}
+            </Button>
+          }
+        />
+      ) : null}
+      {surface === "empty-dataset" ? (
+        <EmptyState description={emptyMessage ?? messages.empty} actions={emptyAction} />
+      ) : null}
       <Table aria-busy={loading || undefined} aria-label={loading ? messages.loading : undefined}>
       <TableHeader>
         {table.getHeaderGroups().map((group) => (
           <TableRow key={group.id}>
-            {group.headers.map((header) => (
-              <TableHead key={header.id}>
-                {header.isPlaceholder || !header.column.getCanSort() ? (
-                  <table.FlexRender header={header} />
-                ) : (
-                  <button
-                    type="button"
-                    onClick={header.column.getToggleSortingHandler()}
-                    className={cn("inline-flex min-h-(--zk-tap-min) items-center gap-data-table-sort-gap hover:text-foreground")}
-                  >
+            {group.headers.map((header) => {
+              const canSort = !header.isPlaceholder && header.column.getCanSort();
+              const sorted = canSort ? header.column.getIsSorted() : false;
+              const label = canSort ? sortableHeaderLabel(header) : "";
+              return (
+                <TableHead key={header.id} aria-sort={canSort ? headerAriaSort(sorted) : undefined}>
+                  {canSort ? (
+                    <button
+                      type="button"
+                      onClick={header.column.getToggleSortingHandler()}
+                      className={cn(
+                        "inline-flex min-h-(--zk-tap-min) items-center gap-data-table-sort-gap hover:text-foreground",
+                      )}
+                      aria-label={sortButtonLabel(label, sorted)}
+                    >
+                      <table.FlexRender header={header} />
+                      <SortIcon direction={sorted} />
+                    </button>
+                  ) : (
                     <table.FlexRender header={header} />
-                    <SortIcon direction={header.column.getIsSorted()} />
-                  </button>
-                )}
-              </TableHead>
-            ))}
+                  )}
+                </TableHead>
+              );
+            })}
           </TableRow>
         ))}
       </TableHeader>
       <TableBody>
-        {error !== null ? (
-          <TableRow>
-            <TableCell colSpan={columns.length} role="alert" className="text-destructive">
-              {error}
-            </TableCell>
-          </TableRow>
-        ) : loading ? (
-          [0, 1, 2].map((row) => (
-            <TableRow key={row}>
-              {columns.map((_column, index) => (
-                <TableCell key={index}>
-                  <Skeleton className="h-4 w-full" />
-                </TableCell>
-              ))}
-            </TableRow>
-          ))
-        ) : rows.length === 0 ? (
-          <DataTableEmpty colSpan={columns.length} message={emptyMessage ?? messages.empty} />
-        ) : (
-          rows.map((row) => (
-            <TableRow key={row.id}>
-              {row.getAllCells().map((cell) => (
-                <TableCell key={cell.id}>
-                  <table.FlexRender cell={cell} />
-                </TableCell>
-              ))}
-            </TableRow>
-          ))
-        )}
+        {surface === "rows"
+          ? rows.map((row) => (
+              <TableRow key={row.id}>
+                {row.getAllCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    <table.FlexRender cell={cell} />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          : null}
       </TableBody>
       </Table>
-      {rows.length > 0 && table.getPageCount() > 1 ? (
+      {surface === "rows" && table.getPageCount() > 1 ? (
         <DataTablePagination
           page={pageIndex + 1}
           pageCount={table.getPageCount()}

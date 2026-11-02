@@ -10,7 +10,7 @@ import type { ComboboxOption } from "./combobox-shared.js";
 export function MultiSelectMenu({
   emptyMessage,
   getItemProps,
-  getMenuProps,
+  menuProps,
   highlightedIndex,
   items,
   loading,
@@ -18,7 +18,7 @@ export function MultiSelectMenu({
 }: {
   emptyMessage: string;
   getItemProps: ReturnType<typeof useCombobox<ComboboxOption>>["getItemProps"];
-  getMenuProps: ReturnType<typeof useCombobox<ComboboxOption>>["getMenuProps"];
+  menuProps: ReturnType<ReturnType<typeof useCombobox<ComboboxOption>>["getMenuProps"]>;
   highlightedIndex: number;
   items: ComboboxOption[];
   loading: boolean;
@@ -27,7 +27,7 @@ export function MultiSelectMenu({
   const messages = useUiMessages();
   return (
     <ul
-      {...getMenuProps()}
+      {...menuProps}
       className="max-h-[--radix-select-content-available-height] overflow-y-auto p-1 outline-none"
       data-slot="multi-select-list"
     >

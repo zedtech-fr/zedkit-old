@@ -65,7 +65,8 @@
   --tracking-tight: -0.02em;
   --tracking-wide: 0.04em;
   --zk-heading-weight: 600;
-  --zk-heading-tracking: -0.03em;
+  --zk-heading-tracking: -0.02em;
+  --zk-subtle-foreground: 222 16% 40%;
   --zk-heading-transform: none;
   --zk-label-transform: none;
   --zk-label-tracking: 0.01em;
@@ -143,7 +144,13 @@
 }
 
 :root[data-identity="glass"].dark,
-.dark [data-identity-scope][data-identity="glass"] {
+[data-identity-scope][data-identity="glass"].dark,
+/* A plain `.dark` section inside this look keeps the look and only adds the dark tokens. The nearer scope owns a section: the root rule skips anything inside a scope, a scope rule skips anything inside a deeper scope of another look. */
+:root[data-identity="glass"] .dark:not([data-identity-scope], [data-identity-scope] *),
+[data-identity-scope][data-identity="glass"] .dark:not(
+  [data-identity-scope],
+  [data-identity-scope][data-identity="glass"] [data-identity-scope]:not([data-identity="glass"]) *
+) {
   --background: 232 38% 8%;
   --foreground: 220 40% 94%;
   --card: 232 30% 14%;
@@ -243,14 +250,17 @@
 [data-identity-scope][data-identity="glass"] :where([data-slot="drawer-content"]) {
   box-shadow: var(--zk-glass-shadow-sheet);
 }
-:root[data-identity="glass"] :where([data-slot="drawer-header"], [data-slot="drawer-footer"]):where(:not([data-identity-scope] *)),
-[data-identity-scope][data-identity="glass"] :where([data-slot="drawer-header"], [data-slot="drawer-footer"]) {
+:root[data-identity="glass"] :where([data-slot="drawer-header"], [data-slot="drawer-footer"], [data-slot="dialog-header"], [data-slot="dialog-footer"]):where(:not([data-identity-scope] *)),
+[data-identity-scope][data-identity="glass"] :where([data-slot="drawer-header"], [data-slot="drawer-footer"], [data-slot="dialog-header"], [data-slot="dialog-footer"]) {
   background-color: transparent;
   border-color: hsl(var(--zk-glass-edge) / var(--zk-glass-edge-alpha));
 }
 :root[data-identity="glass"] :where([data-slot="drawer-overlay"], [data-slot="dialog-overlay"]):where(:not([data-identity-scope] *)),
 [data-identity-scope][data-identity="glass"] :where([data-slot="drawer-overlay"], [data-slot="dialog-overlay"]) {
   background-color: hsl(var(--overlay) / var(--zk-glass-scrim-alpha));
+  /* Blur lives on the panel; a filtered scrim would become the backdrop root. */
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 /* Phones: a smaller blur radius keeps scrolling smooth. */
@@ -271,7 +281,7 @@
   :root[data-identity="glass"],
   :root[data-identity="glass"].dark,
   [data-identity-scope][data-identity="glass"],
-  .dark [data-identity-scope][data-identity="glass"] {
+  [data-identity-scope][data-identity="glass"].dark {
     --zk-glass-alpha: 0.97;
     --zk-glass-blur: 0px;
     --zk-glass-saturate: 1;
@@ -286,7 +296,7 @@
   :root[data-identity="glass"],
   :root[data-identity="glass"].dark,
   [data-identity-scope][data-identity="glass"],
-  .dark [data-identity-scope][data-identity="glass"] {
+  [data-identity-scope][data-identity="glass"].dark {
     --zk-glass-alpha: 0.97;
     --zk-glass-overlay-alpha: 0.98;
     --zk-glass-overlay-tint: none;

@@ -26,6 +26,7 @@
   --secondary-foreground: 30 10% 12%;
   --muted: 40 22% 95%;
   --muted-foreground: 30 7% 33%;
+  --zk-subtle-foreground: 30 6% 40%;
   --accent: 38 45% 48%;
   --accent-foreground: 30 10% 12%;
   --destructive: 4 55% 40%;
@@ -116,7 +117,13 @@
 }
 
 :root[data-identity="maison"].dark,
-.dark [data-identity-scope][data-identity="maison"] {
+[data-identity-scope][data-identity="maison"].dark,
+/* A plain `.dark` section inside this look keeps the look and only adds the dark tokens. The nearer scope owns a section: the root rule skips anything inside a scope, a scope rule skips anything inside a deeper scope of another look. */
+:root[data-identity="maison"] .dark:not([data-identity-scope], [data-identity-scope] *),
+[data-identity-scope][data-identity="maison"] .dark:not(
+  [data-identity-scope],
+  [data-identity-scope][data-identity="maison"] [data-identity-scope]:not([data-identity="maison"]) *
+) {
   --background: 30 12% 7%;
   --foreground: 40 30% 92%;
   --card: 30 10% 10%;

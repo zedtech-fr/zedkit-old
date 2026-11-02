@@ -17,6 +17,13 @@
   --rdp-range_middle-color: hsl(var(--accent-foreground));
 }
 
+/* Identity table hover is scoped off role=grid. Put the wash on the day. */
+.rdp-day:hover:not(.rdp-selected):not(.rdp-disabled) {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+  border-radius: var(--rdp-day_button-border-radius);
+}
+
 .rdp-day_button:focus-visible,
 .rdp-button_next:focus-visible,
 .rdp-button_previous:focus-visible {

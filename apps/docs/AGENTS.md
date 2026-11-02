@@ -55,8 +55,32 @@ reject dead `/r/<name>.json` links.
 - `pnpm --filter @zedtech/zedkit-docs dev` (or root `pnpm dev`, :3100).
 - Gates: `typecheck`, `lint`, `build` on the filter; docs check runs
   in CI (`docs: ok (N pages cover N needs)`).
-- Done = gates green + manifest/check in sync + screenshots for
-  visual changes + demo rules respected (lint proves it).
+- Done = gates green + manifest/check in sync + examined screenshots
+  for visual changes + a rendered-page critique (strongest remaining
+  weaknesses) + demo rules respected. Lint/types/axe/screenshot diffs
+  are necessary, not sufficient. A self-assigned score is not done.
+  Playwright `toHaveScreenshot` baselines in git are the linux files
+  (`*-chromium-linux.png`). Darwin captures stay local (gitignored).
+  Reproduce CI exactly with the Playwright image of the lockfile version
+  (`docker run --ipc=host -v $PWD:/work -w /work/apps/docs mcr.microsoft.com/playwright:v<version>-noble`
+  serving `out/`), read every failing diff, classify it (defect, unstable
+  test, intended change) and only then regenerate, there.
+
+## ZedKit art direction (Product Atelier)
+
+Read [VISUAL-CONTRACT.md](./VISUAL-CONTRACT.md) before changing home,
+chrome, previews or specimens (traps included).
+
+Scope: this docs site and its specimens. Exception: a specimen that
+must match a kit primitive's own look.
+
+- Stable, readable site frame around well-composed working specimens.
+- Site styling stays distinct from specimen identities. Each styling
+  decision has one owner layer (contract table); fix at the shared layer.
+- One surface role per job.
+- Color from tokens; no decorative gradients.
+- One focal specimen per section, not a uniform rounded-card grid.
+- Mobile composes by priority, not by stacking.
 
 ## Boundaries
 
@@ -68,5 +92,16 @@ reject dead `/r/<name>.json` links.
 ## Related
 
 - Root [AGENTS.md](../../AGENTS.md), kit [CATALOG.md](../../packages/ui/CATALOG.md).
+- Visual contract: [VISUAL-CONTRACT.md](./VISUAL-CONTRACT.md).
 - Lens registry: `packages/ai/kit/skills/review/lenses.md`
   (Frontend rules section — same text, reviewer side).
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

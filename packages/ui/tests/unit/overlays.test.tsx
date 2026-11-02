@@ -158,21 +158,22 @@ describe("overlays", () => {
     expect(dialog.className).toContain("max-h-dialog-max-height");
     expect(dialog.className).toContain("overflow-y-auto");
     expect(dialog.className).toContain("overscroll-y-contain");
-    expect(screen.getByText("Details").parentElement?.className).toContain("space-y-dialog-header-stack");
+    expect(screen.getByText("Details").parentElement?.className).toContain("gap-dialog-header-stack");
+    expect(screen.getByText("Details").parentElement?.className).toContain("text-left");
+    expect(screen.getByText("Details").parentElement?.className).not.toContain("bg-background");
     expect(screen.getByText("Details").parentElement?.className).toContain("sticky");
     expect(screen.getByText("Details").parentElement?.className).toContain("pr-dialog-header-end");
-    expect(screen.getByRole("button", { name: "Save" }).parentElement?.className).toContain("sm:space-x-2");
-    expect(screen.getByRole("button", { name: "Save" }).parentElement?.className).not.toContain(
-      "sm:space-x-dialog-footer-gap",
-    );
+    expect(screen.getByRole("button", { name: "Save" }).parentElement?.className).toContain("gap-2");
+    expect(screen.getByRole("button", { name: "Save" }).parentElement?.className).not.toContain("bg-background");
     expect(screen.getByRole("button", { name: "Save" }).parentElement?.className).toContain("sticky");
     expect(screen.getByRole("button", { name: "Save" }).parentElement?.className).toContain("pb-dialog-footer-safe");
     const close = screen.getByRole("button", { name: "Close" });
-    expect(close.className).toContain("top-4");
+    expect(close.className).toContain("top-0");
+    expect(close.className).toContain("right-0");
     expect(close.className).toContain("z-20");
     expect(close.className).toContain("size-overlay-touch-target");
-    expect(close.className).toContain("focus-ring");
-    expect(close.className).toContain("opacity-50");
+    expect(close.className).toContain("focus-ring-control");
+    expect(close.className).toContain("opacity-70");
     expect(close.innerHTML).toContain("size-4");
     expect(close.innerHTML).not.toContain("size-icon-control");
   });
@@ -288,7 +289,7 @@ describe("overlays", () => {
     const { container } = render(<Toaster />);
     toast("Saved");
     await screen.findByText("Saved");
-    for (const token of ["bg-background", "text-foreground", "border-border"]) {
+    for (const token of ["bg-card", "text-card-foreground", "border-border"]) {
       expect(container.innerHTML).toContain(token);
     }
     expect(container.innerHTML).not.toMatch(/bg-(red|blue|green|amber)-/);
@@ -406,7 +407,11 @@ describe("overlays", () => {
       expect(field.getAttribute("spellcheck")).toBe("false");
       expect(field.rows).toBe(1);
       expect(field.className).toContain("field-sizing-content");
+      // Documented as wrapping: a long value reads in full on a phone instead of scrolling sideways in the box.
+      expect(field.className).toContain("whitespace-pre-wrap");
       expect(field.className).toContain("wrap-anywhere");
+      expect(field.className).not.toContain("whitespace-nowrap");
+      expect(field.className).not.toContain("overflow-x-auto");
       expect(field.className).toContain("font-mono");
       expect(field.className).toContain("min-h-control-height");
       expect(field.className).not.toContain("min-h-textarea-min-height");

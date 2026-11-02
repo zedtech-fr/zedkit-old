@@ -2,6 +2,7 @@
 
 import type { MouseEvent } from "react";
 import { BrandLogo, Stack, Text } from "@zedtech/zedkit-ui";
+import { brandLogoCopy } from "@/components/demos/i18n/brand-logo-copy";
 
 /** Harbor Studio's own mark: a sail over a wave. Replace the shapes and the viewBox with yours. */
 function HarborMark({ className, title = "" }: { className?: string; title?: string }) {
@@ -20,7 +21,7 @@ export function BrandLogoHeaderDemo() {
     <a href="/" onClick={stay} className="flex min-w-0 items-center gap-2 text-foreground">
       <HarborMark className="h-6 text-primary" />
       <Text as="span" className="truncate font-semibold">
-        Harbor Studio
+        {brandLogoCopy.brandName}
       </Text>
     </a>
   );
@@ -35,47 +36,47 @@ export function BrandLogoDemo() {
           <a href="/" onClick={stay} className="flex min-w-0 items-center gap-2 text-foreground">
             <HarborMark className="h-6 text-primary" />
             <Text as="span" className="truncate font-semibold">
-              Harbor Studio
+              {brandLogoCopy.brandName}
             </Text>
           </a>
-          <nav aria-label="Site" className="flex shrink-0 gap-3 text-sm text-muted-foreground">
+          <nav aria-label={brandLogoCopy.navAriaLabel} className="flex shrink-0 gap-3 text-sm text-muted-foreground">
             <a href="/work" onClick={stay}>
-              Work
+              {brandLogoCopy.work}
             </a>
             <a href="/about" onClick={stay}>
-              About
+              {brandLogoCopy.about}
             </a>
           </nav>
         </header>
         <Stack gap={2} className="p-4">
           <Text variant="muted" className="text-xs">
-            Same mark, four sizes and three text colours. It inherits the colour from the text around it.
+            {brandLogoCopy.sizesHint}
           </Text>
           <Stack direction="horizontal" gap={4} className="flex-wrap items-end">
-            <HarborMark className="h-5 text-foreground" title="Harbor Studio" />
-            <HarborMark className="h-8 text-primary" title="Harbor Studio" />
-            <HarborMark className="h-12 text-muted-foreground" title="Harbor Studio" />
-            <HarborMark className="h-16 text-foreground" title="Harbor Studio" />
+            <HarborMark className="h-5 text-foreground" title={brandLogoCopy.logoTitle} />
+            <HarborMark className="h-8 text-primary" title={brandLogoCopy.logoTitle} />
+            <HarborMark className="h-12 text-muted-foreground" title={brandLogoCopy.logoTitle} />
+            <HarborMark className="h-16 text-foreground" title={brandLogoCopy.logoTitle} />
           </Stack>
         </Stack>
         <footer className="flex items-center gap-2 border-t border-border px-4 py-3 text-muted-foreground">
           <HarborMark className="h-4" />
           <Text variant="muted" className="text-xs">
-            © 2026 Harbor Studio. All rights reserved.
+            {brandLogoCopy.copyright}
           </Text>
         </footer>
       </Stack>
       <Stack
         role="img"
-        aria-label="Share image preview: Harbor Studio, product design for small teams"
+        aria-label={brandLogoCopy.sharePreviewAriaLabel}
         className="aspect-[1200/630] w-full items-center justify-center gap-3 rounded-lg bg-primary text-primary-foreground"
       >
         <HarborMark className="h-1/4 min-h-10" />
         <Text as="span" className="text-xl font-semibold" aria-hidden="true">
-          Harbor Studio
+          {brandLogoCopy.brandName}
         </Text>
         <Text as="span" className="text-sm opacity-80" aria-hidden="true">
-          Product design for small teams
+          {brandLogoCopy.tagline}
         </Text>
       </Stack>
     </Stack>

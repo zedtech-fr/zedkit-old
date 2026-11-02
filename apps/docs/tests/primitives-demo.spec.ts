@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-const BASE = "http://127.0.0.1:3100/docs/ui/";
-const IDENTITIES = ["mist", "press", "tide", "volt", "maison", "glass"] as const;
+import { DOCS_SHIPPED_IDENTITIES, pinDemoLook } from "./a11y-helpers";
+
+const BASE = "/docs/ui/";
 
 // page slug, expected preview count, then per-preview visible text checks.
 const PAGES: Array<{ slug: string; previews: number; checks: Array<[number, string | RegExp | { status: string }]> }> = [
@@ -48,21 +49,15 @@ const PAGES: Array<{ slug: string; previews: number; checks: Array<[number, stri
 ];
 
 test.describe("primitive pages show a live preview for each example", () => {
-  for (const identity of IDENTITIES) {
+  for (const identity of DOCS_SHIPPED_IDENTITIES) {
     for (const mode of ["light", "dark"] as const) {
       test(`${identity} ${mode}`, async ({ page }) => {
-        await page.addInitScript(
-          ([i, m]) => {
-            localStorage.setItem("zk-identity", i!);
-            localStorage.setItem("theme", m!);
-          },
-          [identity, mode],
-        );
         for (const spec of PAGES) {
           await page.goto(BASE + spec.slug, { waitUntil: "networkidle" });
           const previews = page.locator("[data-component-preview]");
           await expect(previews, spec.slug).toHaveCount(spec.previews);
           for (const [index, text] of spec.checks) {
+            await pinDemoLook(previews.nth(index), identity, mode);
             await previews.nth(index).scrollIntoViewIfNeeded();
             const target =
               typeof text === "object" && "status" in text

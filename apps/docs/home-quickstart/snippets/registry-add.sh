@@ -1,1 +1,1 @@
-npx shadcn@latest add https://zedkit.app/r/badge.json
+npx shadcn@latest add https://zedkit.app/r/button.json

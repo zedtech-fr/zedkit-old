@@ -15,9 +15,10 @@ import {
   Text,
   Textarea,
 } from "@zedtech/zedkit-ui";
+import { fieldCopy } from "@/components/demos/i18n/field-copy";
 
 export function FieldDemo() {
-  const [name, setName] = React.useState("Ho");
+  const [name, setName] = React.useState<string>(fieldCopy.initialName);
   const [summary, setSummary] = React.useState("");
   const [submitted, setSubmitted] = React.useState(false);
   const [created, setCreated] = React.useState(false);
@@ -35,10 +36,10 @@ export function FieldDemo() {
       }}
     >
       <FieldSet>
-        <FieldLegend>New project</FieldLegend>
+        <FieldLegend>{fieldCopy.legend}</FieldLegend>
         <FieldGroup>
           <Field data-invalid={showError}>
-            <FieldLabel htmlFor="field-project-name">Project name</FieldLabel>
+            <FieldLabel htmlFor="field-project-name">{fieldCopy.projectNameLabel}</FieldLabel>
             <Input
               id="field-project-name"
               value={name}
@@ -49,24 +50,24 @@ export function FieldDemo() {
                 setCreated(false);
               }}
             />
-            <FieldDescription id="field-project-name-help">Public, shown to the whole team.</FieldDescription>
-            {showError ? <FieldError errors={[{ message: "Use at least 3 characters." }]} /> : null}
+            <FieldDescription id="field-project-name-help">{fieldCopy.projectNameHelp}</FieldDescription>
+            {showError ? <FieldError errors={[{ message: fieldCopy.nameTooShort }]} /> : null}
           </Field>
           <Field>
-            <FieldLabel htmlFor="field-project-summary">Summary (optional)</FieldLabel>
+            <FieldLabel htmlFor="field-project-summary">{fieldCopy.summaryLabel}</FieldLabel>
             <Textarea
               id="field-project-summary"
               value={summary}
-              placeholder="What is this project for?"
+              placeholder={fieldCopy.summaryPlaceholder}
               onChange={(event) => setSummary(event.target.value)}
             />
           </Field>
         </FieldGroup>
         <Stack direction="horizontal" gap={3} className="items-center">
-          <Button type="submit">Create project</Button>
+          <Button type="submit">{fieldCopy.submit}</Button>
           {created ? (
             <Text role="status" variant="muted">
-              Project “{name.trim()}” created.
+              {fieldCopy.created(name.trim())}
             </Text>
           ) : null}
         </Stack>

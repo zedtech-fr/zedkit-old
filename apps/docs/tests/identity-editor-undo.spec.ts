@@ -1,6 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const PAGE = "/docs/ui/design-your-identity";
+const PAGE = "/features/identity-editor";
+/** The site's own light/dark switch (header), which is separate from the editor's Preview dark. */
+async function siteDark(page: Page) {
+  await page.getByRole("button", { name: /toggle theme/i }).first().click();
+  await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+}
+
 
 async function spacingOnDraft(page: Page) {
   return page.locator('[data-slot="identity-editor-preview"]').evaluate((node) =>
@@ -23,13 +29,13 @@ test.describe("identity editor undo and apply confirmation", () => {
   test("undo of a dark colour lets a later light edit rewrite it", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("theme", "light"));
     await page.goto(PAGE, { waitUntil: "networkidle" });
-    await page.getByRole("button", { name: "Dark", exact: true }).click();
+    await page.getByRole("button", { name: "Preview dark", exact: true }).click();
     await page.getByLabel("Background").fill("120 40% 20%");
     await page.getByRole("button", { name: "Undo" }).click();
-    await page.getByRole("button", { name: "Dark", exact: true }).click();
+    await page.getByRole("button", { name: "Preview dark", exact: true }).click();
     await page.getByLabel("Background").fill("0 0% 95%");
     await page.getByRole("button", { name: "Apply to the whole site" }).click();
-    await page.getByRole("button", { name: "Dark", exact: true }).click();
+    await siteDark(page);
     await expect
       .poll(() =>
         page.locator("html").evaluate((node) => getComputedStyle(node).getPropertyValue("--background").trim()),
@@ -40,14 +46,14 @@ test.describe("identity editor undo and apply confirmation", () => {
   test("undo of a light edit keeps an earlier dark override", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("theme", "light"));
     await page.goto(PAGE, { waitUntil: "networkidle" });
-    await page.getByRole("button", { name: "Dark", exact: true }).click();
+    await page.getByRole("button", { name: "Preview dark", exact: true }).click();
     await page.getByLabel("Background").fill("120 40% 20%");
-    await page.getByRole("button", { name: "Dark", exact: true }).click();
+    await page.getByRole("button", { name: "Preview dark", exact: true }).click();
     await page.getByLabel("Background").fill("0 0% 95%");
     await page.getByRole("button", { name: "Undo" }).click();
     await page.getByLabel("Background").fill("0 0% 90%");
     await page.getByRole("button", { name: "Apply to the whole site" }).click();
-    await page.getByRole("button", { name: "Dark", exact: true }).click();
+    await siteDark(page);
     await expect
       .poll(() =>
         page.locator("html").evaluate((node) => getComputedStyle(node).getPropertyValue("--background").trim()),

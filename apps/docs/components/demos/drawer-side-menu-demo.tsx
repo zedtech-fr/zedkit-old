@@ -9,19 +9,20 @@ import {
   DrawerTrigger,
   Stack,
 } from "@zedtech/zedkit-ui";
+import { drawerCopy } from "@/components/demos/i18n/drawer-copy";
 
-const LINKS = ["Dashboard", "Projects", "Team", "Billing", "Settings"] as const;
+const LINKS = drawerCopy.sideMenu.links;
 
 export function DrawerSideMenuDemo() {
   return (
     <Drawer direction="left" mobile="side">
       <DrawerTrigger asChild>
-        <Button variant="outline">Menu</Button>
+        <Button variant="outline">{drawerCopy.sideMenu.menu}</Button>
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader>
           <Stack direction="horizontal" gap={2} className="items-center justify-between">
-            <DrawerTitle>Menu</DrawerTitle>
+            <DrawerTitle>{drawerCopy.sideMenu.menu}</DrawerTitle>
             <DrawerCloseButton />
           </Stack>
         </DrawerHeader>

@@ -4,9 +4,7 @@ import {
   type IdentityTokens,
 } from "@zedtech/zedkit-ui";
 
-import { LIGHT_KEYS, SCALAR_KEYS } from "@/lib/identity-editor-search";
-
-const FONT_KEYS = ["fontSans", "fontDisplay"] as const;
+import { LIGHT_KEYS, VALUE_KEYS } from "@/lib/identity-editor-search";
 
 type TokenDiff = { path: string; from: string; to: string };
 
@@ -17,7 +15,7 @@ type SuggestProposal = {
 
 function tokenDiff(before: IdentityTokens, after: IdentityTokens): TokenDiff[] {
   const rows: TokenDiff[] = [];
-  for (const key of [...SCALAR_KEYS, ...FONT_KEYS]) {
+  for (const key of VALUE_KEYS) {
     if (before[key] !== after[key]) rows.push({ path: key, from: before[key], to: after[key] });
   }
   for (const scheme of ["light", "dark"] as const) {

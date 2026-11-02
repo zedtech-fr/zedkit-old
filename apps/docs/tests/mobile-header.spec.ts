@@ -37,16 +37,22 @@ for (const path of PAGES) {
       expect(box?.height ?? 0).toBeGreaterThan(0);
     });
 
-    test("the search button floats bottom-right and opens search with focus", async ({ page }) => {
+    test("search lives in the header and opens the dialog without a floating button", async ({ page }) => {
       await page.goto(path);
-      const fab = page.getByRole("button", { name: "Search the documentation" });
-      await expect(fab).toBeVisible();
-      const box = await fab.boundingBox();
-      expect(box?.height ?? 0).toBeGreaterThanOrEqual(43.5);
-      expect((box?.x ?? 0) + (box?.width ?? 0)).toBeGreaterThan(390 - 40);
-      expect((box?.y ?? 0) + (box?.height ?? 0)).toBeGreaterThan(844 - 40);
-      await fab.click();
-      await expect(page.getByRole("searchbox")).toBeFocused();
+      const header = page.locator("#nd-mobile-nav");
+      const headerSearch = header.getByRole("button", { name: "Search the documentation" });
+      await expect(headerSearch).toBeVisible();
+      const headerBox = await headerSearch.boundingBox();
+      expect(headerBox?.height ?? 0).toBeGreaterThanOrEqual(43.5);
+      expect((headerBox?.y ?? 0) + (headerBox?.height ?? 0)).toBeLessThan(80);
+      await expect(page.locator("[data-search-pill]")).toHaveCount(0);
+      await headerSearch.click();
+      const dialog = page.getByRole("dialog");
+      await expect(dialog).toBeVisible();
+      await expect(dialog.locator("input")).toBeFocused();
+      await page.keyboard.press("Escape");
+      await expect(dialog).toBeHidden();
+      await expect(headerSearch).toBeFocused();
     });
   });
 }

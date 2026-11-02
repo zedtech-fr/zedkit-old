@@ -54,6 +54,7 @@ describe("drawer", () => {
     await user.click(screen.getByRole("button", { name: "Open drawer" }));
     const overlay = document.querySelector("[data-vaul-overlay]");
     expect(overlay).not.toBeNull();
+    expect(overlay?.className).toContain("backdrop-blur-sm");
     await user.click(overlay as HTMLElement);
     expect(screen.queryByRole("dialog")).toBeNull();
   });

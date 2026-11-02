@@ -46,17 +46,15 @@ describe("toggles", () => {
     expect(toggle.getAttribute("data-state")).toBe("checked");
   });
 
-  it("styles the switch from design tokens", () => {
+  it("styles the switch from spacing-derived geometry", () => {
     render(<Switch aria-label="Notify me" defaultChecked />);
     const toggle = screen.getByRole("switch", { name: "Notify me" });
-    expect(toggle.classList.contains("h-5")).toBe(true);
-    expect(toggle.classList.contains("w-switch-track-width")).toBe(true);
+    expect(toggle.className).toContain("calc(var(--spacing)");
+    expect(toggle.classList.contains("hit-target")).toBe(true);
     expect(toggle.classList.contains("focus-ring")).toBe(true);
-    expect(toggle.className).not.toContain("h-switch-track-height");
-    expect(toggle.className).not.toMatch(/(^|\s)(w-9|ring-2)(\s|$)/);
+    expect(toggle.className).not.toContain("w-switch-track-width");
     const thumb = toggle.querySelector("span");
-    expect(thumb?.classList.contains("size-4")).toBe(true);
-    expect(thumb?.className).toContain("data-[state=checked]:translate-x-4");
-    expect(thumb?.className).not.toContain("translate-x-switch-travel");
+    expect(thumb?.className).toContain("calc(var(--spacing)");
+    expect(thumb?.className).not.toContain("translate-x-4");
   });
 });

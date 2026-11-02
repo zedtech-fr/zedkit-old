@@ -2,25 +2,26 @@
 
 import { useState } from "react";
 import { Button, Card, CardContent, CardDescription, CardHeader, CardSkeleton, CardTitle, Stack } from "@zedtech/zedkit-ui";
+import { cardCopy } from "@/components/demos/i18n/card-copy";
 
 export function CardSkeletonStandaloneDemo() {
   const [loading, setLoading] = useState(true);
   return (
     <Stack gap={3} className="min-w-0">
       {loading ? (
-        <CardSkeleton label="Loading report" />
+        <CardSkeleton label={cardCopy.skeleton.loadingLabel} />
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>October report</CardTitle>
-            <CardDescription>148 orders, €12,430 revenue</CardDescription>
+            <CardTitle>{cardCopy.skeleton.title}</CardTitle>
+            <CardDescription>{cardCopy.skeleton.description}</CardDescription>
           </CardHeader>
-          <CardContent>Best week: 14 to 20 October.</CardContent>
+          <CardContent>{cardCopy.skeleton.content}</CardContent>
         </Card>
       )}
       <Stack direction="horizontal">
         <Button variant="outline" onClick={() => setLoading(!loading)}>
-          {loading ? "Show the report" : "Show the skeleton"}
+          {loading ? cardCopy.skeleton.showReport : cardCopy.skeleton.showSkeleton}
         </Button>
       </Stack>
     </Stack>

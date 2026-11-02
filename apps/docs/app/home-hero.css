@@ -1,0 +1,348 @@
+/*
+ * Home hero: the proposition beside one working example.
+ *
+ * The example is a small product (sidebar, pages, a table, a calendar, a form). The page scrolls normally: nothing
+ * is pinned, faded or clipped, so overlays raised inside the example (toasts, menus, dialogs) land where they say.
+ * Below `lg` the lead comes first and the example follows at the full measure.
+ *
+ * Motion has four parts, and every one of them is off under `prefers-reduced-motion`:
+ *   1. load: the lead rises block by block, then the window assembles (frame, sidebar, page blocks, cards);
+ *   2. pages: each page rebuilds the same way when it is shown;
+ *   3. pointer: the two cards over the window's edges drift toward the cursor (see `use-pointer-parallax.ts`);
+ *   4. scroll: the same cards drift a little as the page scrolls (scroll-driven, where the browser supports it).
+ * A guided cursor tours the pages until the visitor touches the window (see `use-hero-tour.ts`).
+ *
+ * Rules the motion keeps, because the window holds toasts and portaled menus that are positioned against the
+ * viewport: the window and its pages only ever run finite entrance animations (a transform that is still running
+ * would become the containing block of a toast), and everything that loops or follows the page lives on the
+ * decorative cards, which wrap nothing interactive.
+ */
+#home-page [data-home-hero] {
+  min-width: 0;
+}
+
+#home-page [data-home-hero] [data-home-hero-lead],
+#home-page [data-home-hero] [data-home-hero-preview] {
+  min-width: 0;
+}
+
+#home-page [data-home-hero] {
+  --zk-home-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/*
+ * Sizes and positions the window needs but a look must not rescale (identity `--spacing` scales `w-*`, `size-*` and
+ * `gap-*`, so fixed marks are pinned here), and the position of each item in the build sequence. The sequence is
+ * written as data (`data-beat`, `:nth-child`) instead of inline styles.
+ */
+#home-page [data-hero-window] [data-hero-sidebar] {
+  width: 10.5rem;
+}
+
+#home-page [data-hero-window] [data-hero-main] {
+  padding: 1rem;
+}
+
+#home-page [data-hero-avatar] {
+  width: 2rem;
+  height: 2rem;
+}
+
+#home-page [data-hero-faces] [data-hero-avatar] {
+  width: 1.875rem;
+  height: 1.875rem;
+}
+
+#home-page [data-hero-bars] {
+  height: 3.5rem;
+}
+
+#home-page [data-hero-bar] {
+  max-width: 1.75rem;
+}
+
+/* Bar heights: levels 1 to 6 of a six-step scale. */
+#home-page [data-hero-bar][data-level="1"] { height: 16.667%; }
+#home-page [data-hero-bar][data-level="2"] { height: 33.333%; }
+#home-page [data-hero-bar][data-level="3"] { height: 50%; }
+#home-page [data-hero-bar][data-level="4"] { height: 66.667%; }
+#home-page [data-hero-bar][data-level="5"] { height: 83.333%; }
+#home-page [data-hero-bar][data-level="6"] { height: 100%; }
+
+#home-page [data-hero-bars] > :nth-child(1) [data-hero-bar] { --i: 0; }
+#home-page [data-hero-bars] > :nth-child(2) [data-hero-bar] { --i: 1; }
+#home-page [data-hero-bars] > :nth-child(3) [data-hero-bar] { --i: 2; }
+#home-page [data-hero-bars] > :nth-child(4) [data-hero-bar] { --i: 3; }
+#home-page [data-hero-bars] > :nth-child(5) [data-hero-bar] { --i: 4; }
+#home-page [data-hero-bars] > :nth-child(6) [data-hero-bar] { --i: 5; }
+#home-page [data-hero-bars] > :nth-child(7) [data-hero-bar] { --i: 6; }
+
+#home-page [data-beat="1"] { --b: 1; }
+#home-page [data-beat="2"] { --b: 2; }
+#home-page [data-beat="3"] { --b: 3; }
+#home-page [data-beat="4"] { --b: 4; }
+#home-page [data-beat="5"] { --b: 5; }
+
+#home-page [data-hero-nav-item]:nth-child(2) { --b: 1; }
+#home-page [data-hero-nav-item]:nth-child(3) { --b: 2; }
+#home-page [data-hero-nav-item]:nth-child(4) { --b: 3; }
+#home-page [data-hero-nav-item]:nth-child(5) { --b: 4; }
+
+/* The calendar's cells are smaller than the kit's touch size: this is a pointer-first example, and it must fit the window. */
+#home-page [data-hero-calendar] .rdp-root {
+  --rdp-day-height: 2.25rem;
+  --rdp-day-width: 2.25rem;
+  --rdp-day_button-height: 2.25rem;
+  --rdp-day_button-width: 2.25rem;
+}
+
+/* The two cards over the window's edges: where they sit, and how far they travel (signed: some lean away). */
+#home-page [data-hero-satellite="notice"] {
+  --depth: 12;
+  --drift: -30;
+  --b: 0;
+  top: -3.1rem;
+  right: 5.5rem;
+  width: 15rem;
+}
+
+#home-page [data-hero-satellite="online"] {
+  --depth: 10;
+  --drift: -14;
+  --b: 1;
+  right: 1rem;
+  bottom: -3.4rem;
+}
+
+/* From lg to xl the window is narrow: the sidebar becomes a rail of icons. */
+@media (min-width: 64rem) and (max-width: 79.999rem) {
+  #home-page [data-hero-window] [data-hero-sidebar] {
+    width: 3.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* 1. Load: the lead, one block at a time. Opacity and a short rise; `backwards`, so nothing is left applied. */
+  #home-page [data-home-hero] [data-home-hero-lead] > * {
+    animation: zk-home-hero-rise 360ms var(--zk-home-ease) backwards;
+    animation-delay: calc(var(--zk-lead-beat, 0) * 70ms);
+  }
+
+  #home-page [data-home-hero] [data-home-hero-lead] > :nth-child(2) {
+    --zk-lead-beat: 1;
+  }
+
+  #home-page [data-home-hero] [data-home-hero-lead] > :nth-child(3) {
+    --zk-lead-beat: 2;
+  }
+
+  /* 1. Load: the window rises in, then its parts follow. */
+  #home-page [data-hero-window] {
+    animation: zk-home-window-in 640ms var(--zk-home-ease) 140ms backwards;
+  }
+
+  #home-page [data-hero-nav-item] {
+    animation: zk-home-slide 420ms var(--zk-home-ease) backwards;
+    animation-delay: calc(420ms + var(--b, 0) * 60ms);
+  }
+
+  /* 2. Pages: the blocks of the page that is on show rise one after another. Leaves only: a block never wraps another. */
+  #home-page [data-hero-page][data-state="active"] :is([data-hero-block], [data-demo-toolbar], tbody tr) {
+    animation: zk-home-rise 460ms var(--zk-home-ease) backwards;
+    animation-delay: calc(40ms + var(--b, 0) * 70ms);
+  }
+
+  /* The crumb in the top bar is rebuilt (keyed) each time the page changes. */
+  #home-page [data-hero-crumb] > :last-child {
+    animation: zk-home-rise 320ms var(--zk-home-ease) backwards;
+  }
+
+  #home-page [data-hero-page="apps"][data-state="active"] tbody tr:nth-child(1) {
+    --b: 1;
+  }
+  #home-page [data-hero-page="apps"][data-state="active"] tbody tr:nth-child(2) {
+    --b: 2;
+  }
+  #home-page [data-hero-page="apps"][data-state="active"] tbody tr:nth-child(3) {
+    --b: 3;
+  }
+  #home-page [data-hero-page="apps"][data-state="active"] tbody tr:nth-child(4) {
+    --b: 4;
+  }
+  #home-page [data-hero-page="apps"][data-state="active"] tbody tr:nth-child(5) {
+    --b: 5;
+  }
+
+  #home-page [data-hero-page][data-state="active"] [data-hero-bar] {
+    transform-origin: bottom;
+    animation: zk-home-grow 640ms var(--zk-home-ease) backwards;
+    animation-delay: calc(260ms + var(--i, 0) * 55ms);
+  }
+
+  /* The first assembly waits for the window to be in place. */
+  #home-page [data-hero-window][data-intro] [data-hero-page][data-state="active"] :is([data-hero-block], [data-demo-toolbar], tbody tr) {
+    animation-delay: calc(480ms + var(--b, 0) * 70ms);
+  }
+
+  #home-page [data-hero-window][data-intro] [data-hero-page][data-state="active"] [data-hero-bar] {
+    animation-delay: calc(740ms + var(--i, 0) * 55ms);
+  }
+
+  /* The guided cursor: a glide between controls, a ring when it presses. */
+  #home-page [data-hero-cursor] {
+    z-index: 30;
+    opacity: 0;
+    transition:
+      translate 560ms cubic-bezier(0.4, 0.05, 0.2, 1),
+      opacity 280ms ease-out;
+  }
+
+  #home-page [data-hero-window][data-tour="on"] [data-hero-cursor] {
+    opacity: 1;
+  }
+
+  #home-page [data-hero-cursor] svg {
+    position: relative;
+    transition: scale 140ms ease-out;
+    filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.28));
+  }
+
+  #home-page [data-hero-cursor]::after {
+    content: "";
+    position: absolute;
+    top: -0.25rem;
+    left: -0.25rem;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 2px solid currentColor;
+    border-radius: 9999px;
+    opacity: 0;
+  }
+
+  #home-page [data-hero-cursor][data-press] svg {
+    scale: 0.82;
+  }
+
+  #home-page [data-hero-cursor][data-press]::after {
+    animation: zk-home-ring 460ms ease-out;
+  }
+
+  /* The arrow after "Play with it yourself." leans toward the example, a few times, then rests. */
+  #home-page [data-hero-play-arrow] {
+    --nudge-x: 0;
+    --nudge-y: 0.25rem;
+    animation: zk-home-nudge 1.4s ease-in-out 1.2s 4;
+  }
+
+  @media (min-width: 64rem) {
+    #home-page [data-hero-play-arrow] {
+      --nudge-x: 0.25rem;
+      --nudge-y: 0;
+    }
+  }
+
+  /* 3. Pointer: the outer layer follows the pointer a few pixels (depth is signed: some cards lean away). */
+  #home-page [data-hero-satellite] {
+    translate: calc(var(--zk-px, 0) * var(--depth, 0) * 1px) calc(var(--zk-py, 0) * var(--depth, 0) * 1px);
+    transition: translate 360ms var(--zk-home-ease);
+  }
+
+  /* The inner layer enters, then floats. Two animations, two properties (scale and opacity, then translate). */
+  #home-page [data-hero-float] {
+    animation:
+      zk-home-pop 560ms var(--zk-home-ease) backwards,
+      zk-home-float 7s ease-in-out infinite;
+    animation-delay: calc(1100ms + var(--b, 0) * 180ms), calc(1700ms + var(--b, 0) * 900ms);
+  }
+}
+
+/* 4. Scroll: the middle layer drifts as the page leaves the top. */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    #home-page [data-hero-drift] {
+      animation: zk-home-drift linear both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 70vh;
+    }
+  }
+}
+
+@keyframes zk-home-hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+
+@keyframes zk-home-window-in {
+  from {
+    opacity: 0;
+    transform: translateY(1rem) scale(0.985);
+  }
+}
+
+@keyframes zk-home-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+
+@keyframes zk-home-slide {
+  from {
+    opacity: 0;
+    transform: translateX(-0.5rem);
+  }
+}
+
+@keyframes zk-home-grow {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes zk-home-ring {
+  from {
+    opacity: 0.7;
+    scale: 0.3;
+  }
+  to {
+    opacity: 0;
+    scale: 1.5;
+  }
+}
+
+@keyframes zk-home-pop {
+  from {
+    opacity: 0;
+    scale: 0.9;
+  }
+}
+
+@keyframes zk-home-nudge {
+  50% {
+    translate: var(--nudge-x) var(--nudge-y);
+  }
+}
+
+@keyframes zk-home-float {
+  50% {
+    translate: 0 -0.35rem;
+  }
+}
+
+@keyframes zk-home-drift {
+  to {
+    translate: 0 calc(var(--drift, 0) * 1px);
+  }
+}
+
+@media (min-width: 64rem) {
+  #home-page [data-home-hero] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.45fr);
+    align-items: center;
+    column-gap: 2.5rem;
+    padding-block: 1.5rem 2rem;
+  }
+}

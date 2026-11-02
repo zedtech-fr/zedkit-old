@@ -208,6 +208,7 @@ export {
   useIdentity,
   type IdentityOption,
 } from "./identity.js";
+export { ThemeScope, usePortalContainer, type ThemeScopeProps } from "./theme-scope.js";
 export { applyCustomIdentity } from "./identity-apply-custom.js";
 export { IdentitySwitcher, type IdentitySwitcherProps } from "./identity-switcher.js";
 export { IdentityPicker, type IdentityPickerProps } from "./identity-picker.js";
@@ -224,6 +225,7 @@ export {
   type IdentityTokens,
 } from "./identity-tokens.js";
 export {
+  identityContrastTokenLabel,
   identityContrastWarnings,
   keepIdentityDarkKeys,
   withIdentityDarkPair,

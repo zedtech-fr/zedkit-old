@@ -105,7 +105,7 @@ describe("kit chrome messages", () => {
     expect(screen.getByText("Vous êtes hors ligne.")).not.toBeNull();
     expect(screen.getByText("Les changements se synchroniseront à la reconnexion.")).not.toBeNull();
     expect(screen.getByText("Mis à jour il y a 3 minutes")).not.toBeNull();
-    expect(screen.getByLabelText("Progression")).not.toBeNull();
+    expect(screen.getAllByLabelText("Progression").length).toBeGreaterThan(0);
     expect(screen.getByLabelText("Choix")).not.toBeNull();
     expect(screen.getByLabelText("Copier dans le presse-papiers")).not.toBeNull();
     expect(screen.queryByLabelText("Filter…")).toBeNull();

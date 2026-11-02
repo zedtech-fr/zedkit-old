@@ -3,7 +3,7 @@
  * Desktop: the primary nav item "UI changelog" wraps at 1280px.
  * Phone: the home hero preview card sits below the first screen without Tide
  * fit tokens. Section padding and the title scale tighten under 40rem. The
- * hero preview keeps a fixed height so the card stays on the first screen.
+ * hero admin specimen sizes to its content (no clipped overflow).
  */
 :root[data-identity="tide"] #nd-nav nav > ul a,
 :root[data-identity="tide"] #nd-nav nav > ul button,
@@ -20,25 +20,36 @@
   max-width: 8rem;
 }
 
+/* 1280–1440: tighten the search pill so it clears the theme toggle (nav nowrap). */
+@media (min-width: 64rem) and (max-width: 90rem) {
+  :root[data-identity="tide"] #nd-nav button[class*="max-w-"] {
+    max-width: 6.25rem;
+    margin-inline-end: 0.125rem;
+    overflow: hidden;
+  }
+  /* Shortcut chips sit in ms-auto and paint past the pill when the pill is capped. */
+  :root[data-identity="tide"] #nd-nav button[class*="max-w-"] .ms-auto {
+    display: none;
+  }
+  :root[data-identity="tide"] #nd-nav > div:last-child {
+    gap: 0.5rem;
+  }
+}
+
 @media (max-width: 40rem) {
   :root[data-identity="tide"] {
     --spacing: 0.22rem;
     --zk-section-lg: 0.75rem;
     --zk-section-md: 0.5rem;
-    --text-sm: 1rem;
     --zk-body-leading: 1.3;
     --zk-heading-leading: 1;
+  }
+
+  :root[data-identity="tide"] [data-home-hero-lead] {
     --text-xl: 1.6rem;
     --text-2xl: 1.75rem;
     --text-3xl: 1.9rem;
     --text-4xl: 2rem;
   }
 
-  :root[data-identity="tide"] [data-identity-scope][data-identity="tide"] {
-    --spacing: 0.2rem;
-    --text-xs: 0.75rem;
-    --text-sm: 0.875rem;
-    --text-xl: 1.25rem;
-    --text-2xl: 1.375rem;
-  }
 }

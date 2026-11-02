@@ -35,7 +35,7 @@ function block(css: string, selector: string, from = 0): string {
 const resetStart = identitiesCss.indexOf("Scoped mist resets the stock tokens.");
 const MIST = '[data-identity-scope][data-identity="mist"]';
 const resetLight = declarations(block(identitiesCss, MIST, resetStart));
-const resetDark = declarations(block(identitiesCss, `.dark ${MIST}`, resetStart));
+const resetDark = declarations(block(identitiesCss, `${MIST}.dark`, resetStart));
 
 /** Tokens the reset leaves to someone else: the mist family block, and glass.css for glass tokens. */
 const handledElsewhere = (name: string): boolean =>
@@ -46,6 +46,16 @@ describe("scoped mist resets the stock tokens", () => {
     expect(resetStart).toBeGreaterThan(0);
     expect(resetLight.size).toBeGreaterThan(50);
     expect(resetDark.size).toBeGreaterThan(20);
+  });
+
+  it("applies scoped dark tokens on the scope node, not an ancestor .dark", () => {
+    expect(identitiesCss).toContain(`${MIST}.dark`);
+    expect(identitiesCss).not.toContain(`.dark ${MIST}`);
+    for (const file of identityFiles) {
+      const css = read(join("identities", file));
+      expect(css).not.toMatch(/\.dark\s+\[data-identity-scope\]/);
+      expect(css).toMatch(/\[data-identity-scope\]\[data-identity="[a-z]+"\]\.dark/);
+    }
   });
 
   it.each(identityFiles)("re-declares every token %s overrides", (file: string) => {

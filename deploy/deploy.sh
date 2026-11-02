@@ -134,5 +134,11 @@ else
   printf 'branch=%s\ncommit=%s\nbuilt=%s\n' "$branch" "$sha" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$out/dev-build.txt"
   printf 'User-agent: *\nDisallow: /' > "$out/robots.txt"
   rsync -a --delete "$out/" "$target:$site/"
+  scp -q "$root/deploy/Caddyfile" "$target:$remote/current/Caddyfile"
+  if ! ssh "$target" "docker run --rm -v '$remote/current/Caddyfile:/etc/caddy/Caddyfile:ro' caddy:2 caddy validate --adapter caddyfile --config /etc/caddy/Caddyfile"; then
+    echo "deploy: dev Caddyfile refused by caddy validate" >&2
+    exit 1
+  fi
+  reload_caddy
 fi
 echo "deploy: done"

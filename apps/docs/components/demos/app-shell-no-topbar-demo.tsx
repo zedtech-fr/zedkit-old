@@ -1,6 +1,7 @@
 import { AppShell, PageHeader, Stack, Text } from "@zedtech/zedkit-ui";
+import { appShellNoTopbarCopy } from "@/components/demos/i18n/app-shell-no-topbar-copy";
 
-const NAV = ["Projects", "Tasks", "Team", "Settings"];
+const NAV = appShellNoTopbarCopy.nav;
 
 export function AppShellNoTopbarDemo() {
   return (
@@ -8,8 +9,8 @@ export function AppShellNoTopbarDemo() {
       className="h-72 min-h-0 overflow-hidden rounded-lg border"
       sidebar={
         <Stack gap={1} className="p-3">
-          <Text className="px-2 pb-2 font-semibold">Harbor Studio</Text>
-          <nav aria-label="Main">
+          <Text className="px-2 pb-2 font-semibold">{appShellNoTopbarCopy.brand}</Text>
+          <nav aria-label={appShellNoTopbarCopy.navAriaLabel}>
             <Stack gap={1}>
               {NAV.map((item, index) => (
                 <a
@@ -26,7 +27,7 @@ export function AppShellNoTopbarDemo() {
         </Stack>
       }
     >
-      <PageHeader title="Projects" description="Four active projects, two due this week." />
+      <PageHeader titleAs="h2" title={appShellNoTopbarCopy.pageTitle} description={appShellNoTopbarCopy.pageDescription} />
     </AppShell>
   );
 }

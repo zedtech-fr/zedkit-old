@@ -2,8 +2,7 @@
 
 import { useEffect, useId, useState } from "react";
 import { Stack, Text } from "@zedtech/zedkit-ui";
-
-const TASKS = ["Write the launch email", "Review the product photos", "Publish the sale banner"];
+import { revealOnScrollCopy } from "@/components/demos/i18n/reveal-on-scroll-copy";
 
 export function RevealOnScrollDemo() {
   const id = useId();
@@ -22,7 +21,7 @@ export function RevealOnScrollDemo() {
   }, [id]);
   return (
     <Stack id={id} data-stagger={state} className="min-w-0">
-      {TASKS.map((task) => (
+      {revealOnScrollCopy.tasks.map((task) => (
         <Text key={task}>{task}</Text>
       ))}
     </Stack>

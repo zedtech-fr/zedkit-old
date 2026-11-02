@@ -1,10 +1,13 @@
 "use client";
 
-import type * as React from "react";
+import * as React from "react";
 
 import { CheckIcon } from "lucide-react";
 
+import { formatMessage } from "@zedtech/zedkit-i18n";
+
 import { cn } from "./utils.js";
+import { useNarrowViewport } from "./use-narrow-viewport.js";
 import { useUiMessages } from "./ui-provider.js";
 
 export interface WizardStepsProps {
@@ -86,18 +89,61 @@ function stepState(index: number, current: number): WizardStepState {
   return "todo";
 }
 
+function clampStepIndex(current: number, stepCount: number): number {
+  if (stepCount <= 0) return 0;
+  return Math.min(Math.max(current, 0), stepCount - 1);
+}
+
 export function WizardSteps({ steps, current, className }: WizardStepsProps) {
+  const messages = useUiMessages();
+  const isMobile = useNarrowViewport(true);
+  const active = clampStepIndex(current, steps.length);
+  const title = steps[active] ?? "";
+
   return (
-    <Wizard data-slot="wizard-steps" {...(className === undefined ? {} : { className })}>
-      {steps.map((step, index) => (
-        <WizardStep
-          key={step}
-          step={step}
-          index={index}
-          state={stepState(index, current)}
-          showConnector={index < steps.length - 1}
-        />
-      ))}
-    </Wizard>
+    <div data-slot="wizard-steps" className={cn("min-w-0 space-y-3", className)}>
+      {isMobile ? (
+        <div className="space-y-2">
+          <p className="truncate text-sm text-muted-foreground">
+            {formatMessage(messages.wizardStepOf, {
+              step: active + 1,
+              stepCount: steps.length,
+              title,
+            })}
+          </p>
+          <div
+            role="progressbar"
+            aria-label={messages.progress}
+            aria-valuemin={1}
+            aria-valuemax={steps.length}
+            aria-valuenow={active + 1}
+            className="flex w-full gap-progress-bar-gap"
+          >
+            {steps.map((step, index) => (
+              <span
+                key={step}
+                aria-hidden
+                className={cn(
+                  "h-progress-bar-height flex-1 rounded-full motion-safe:transition-colors",
+                  index <= active ? "bg-primary" : "bg-muted",
+                )}
+              />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <Wizard>
+          {steps.map((step, index) => (
+            <WizardStep
+              key={step}
+              step={step}
+              index={index}
+              state={stepState(index, current)}
+              showConnector={index < steps.length - 1}
+            />
+          ))}
+        </Wizard>
+      )}
+    </div>
   );
 }

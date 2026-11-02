@@ -10,7 +10,7 @@
 
 - Import: `@zedtech/zedkit-nest` — `createNestApp`, `NestBootstrapOptions`, `ThrottleOptions`, `DocsOptions`, `LoggerOptions`, `ValidationOptions`, `REQUEST_ID_HEADER`, `RequestIdInterceptor`
 - Wraps: `@nestjs/platform-fastify`, `@nestjs/config`, `@nestjs/swagger`, `@nestjs/throttler`, `nestjs-pino`, `class-validator`
-- Status: beta
+- Status: stable
 - Short name: Bootstrap
 - Audience: Teams starting a production NestJS API with secure defaults.
 - Purpose: Boot a hardened Nest app (validation, logging, docs, throttling, errors, shutdown) from one factory call.
@@ -28,7 +28,7 @@ await app.listen(3000);
 
 - Import: `@zedtech/zedkit-nest` — `LoggerOptions`
 - Wraps: `nestjs-pino`
-- Status: beta
+- Status: stable
 - Short name: Safe logs
 - Audience: API developers who log requests but must never leak auth headers or cookies.
 - Purpose: Request logging with auth headers and cookies redacted by default.
@@ -48,7 +48,7 @@ const app = await createNestApp({
 
 - Import: `@zedtech/zedkit-nest` — `AllExceptionsFilter`, `ErrorBody`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Short name: Error bodies
 - Audience: API developers who want one error shape for every failure.
 - Purpose: A global exception filter that returns the same error body for all failures.
@@ -66,7 +66,7 @@ app.useGlobalFilters(new AllExceptionsFilter());
 
 - Import: `@zedtech/zedkit-nest` — `createNestApp`, `ErrorBody`; `@zedtech/zedkit-core` — `newPrefixedId`
 - Wraps: `@nestjs/platform-fastify`, `nestjs-pino`, `@nestjs/throttler`, `class-validator`
-- Status: beta
+- Status: stable
 - Short name: Safe API tutorial
 - Audience: Backend developers shipping a first HTTP API with validation, logging, rate limits, and stable error JSON.
 - Purpose: End-to-end tutorial: boot with `createNestApp`, validate DTOs, return prefixed ids, and exercise the documented error shape with `curl`.

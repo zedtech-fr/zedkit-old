@@ -9,17 +9,17 @@ hand-written props or export lists.
 
 | # | Section | Source |
 | --- | --- | --- |
-| 0 | At a glance (Who / What / Use when / Avoid when / See also) | Shared generated block, same as non-registry pages |
-| 1 | Install | Package manager tabs + `npx shadcn add <site>/r/<registry>.json` |
-| 2 | Import | Catalog `- Import:` line (exact symbols) |
-| 3 | Registry source | `registry/ui/<registry>.tsx` (rewritten imports), Copy on each block |
-| 4 | Exports | Symbols from Import + role heuristic |
-| 5 | Preview | `ComponentPreview` / demo registry |
-| 6 | Examples | Catalog `examples[]` (2–3 fenced `ts` blocks; titles from `- Examples:`) |
-| 7 | Props | `AutoTypeTable` when manifest lists `props` + `source` |
-| 8 | Accessibility | Catalog `- A11y:` |
-| 9 | Related | Catalog `seeAlso` → doc links |
-| 10 | Troubleshooting | Catalog `- Troubleshooting:` |
+| 0 | Maturity badge + purpose line | Generated props on `ComponentPage` |
+| 1 | Preview / Code | `ComponentPreview` / demo registry (before any install copy) |
+| 2 | Who / Use / Avoid | Catalog guidance once, after the specimen |
+| 3 | Install or copy | Two quiet tabs, Install and Copy. Install: the package command, then the import, in one frame. Copy: a "Copy method" select ("Add with CLI (like shadcn)" or "Copy manually"), then the CLI command or the registry file, then the local import. The package manager is a select in the terminal header, shared by every command on the page and remembered across pages (same `package-manager` storage key as the generated pages). npm-only needs show the Install frame only |
+| 4 | Usage and states | Catalog `examples[]` + collapsed exports |
+| 5 | Props | Kit props first from source types; inherited HTML attrs folded |
+| 6 | Accessibility | Catalog `- A11y:` |
+| 7 | Related | Catalog `seeAlso` → doc links |
+| 8 | Troubleshooting | Catalog `- Troubleshooting:` |
+
+Page title uses catalog `Short name` (for example **Button**), not the need heading.
 
 ## Catalog fields (UI component needs with registry)
 
@@ -34,4 +34,6 @@ Run `pnpm catalog:build` after edits.
 
 ## Rollout
 
-Badge, Drawer, and ConfirmDialog use this template when `registry` is set in the manifest. Enable other `registry` bricks in `public/r/` one PR at a time.
+**Button** is the reference page. **Badge** and other registry bricks reuse the same
+template with no page-specific code. Enable additional `registry` bricks in
+`public/r/` one PR at a time.

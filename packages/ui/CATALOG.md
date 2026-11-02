@@ -9,7 +9,7 @@
 
 - Import: `@zedtech/zedkit-ui/styles.css` (+ one `@source` line, see README)
 - Wraps: `tailwindcss` (v4 CSS-first) plus `next-themes` for the toggle
-- Status: beta
+- Status: stable
 - Derived from: shadcn/ui (theme)
 - Short name: Theme
 - Audience: Teams starting a React 19 + Tailwind v4 admin app who want dark/light design tokens without setup.
@@ -83,7 +83,7 @@ export function DarkThemeButton() {
 
 - Import: `@zedtech/zedkit-ui` — `ZedkitUiProvider`, `useUiMessages`, `zedkitUiMessagesEn`, `zedkitUiMessagesFr`, `ZedkitUiMessages`
 - Wraps: `(none)`
-- Status: alpha
+- Status: beta
 - Short name: ZedkitUiProvider
 - Audience: Apps that ship the kit in English or French and need Close, Filter, empty, and loading labels to follow the page language.
 - Purpose: One provider plus typed en/fr bundles for kit chrome; backed by `createMessagesContext` from `@zedtech/zedkit-i18n/react`. A per-host label prop still wins.
@@ -111,7 +111,7 @@ import { ConfirmDialog } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `cn`
 - Wraps: `clsx`, `tailwind-merge`
-- Status: beta
+- Status: stable
 - Derived from: shadcn/ui (utils)
 - Short name: cn
 - Audience: Developers composing conditional Tailwind classes.
@@ -164,18 +164,21 @@ import "@zedtech/zedkit-ui/styles.css"; // motion utilities ship with the theme
 
 - Import: `@zedtech/zedkit-ui` — `Button`, `buttonVariants`, `ButtonProps`
 - Wraps: `@radix-ui/react-slot`, `class-variance-authority`
-- Status: beta
+- Status: stable
 - Short name: Button
+- Registry: button
 - Audience: Anyone placing actions in an admin UI.
-- Purpose: Accessible buttons with variants (primary, destructive, outline, ghost) and sizes.
+- Purpose: Accessible buttons with variants (default, destructive, outline, ghost) and sizes.
 - When to use: For every clickable action, including links styled as buttons.
 - When not to use: For navigation menus — use links or tabs instead.
 - See also: `Confirm destructive actions`
+- Examples: Usage, Variants and sizes
 - A11y: Native `button` (or `asChild` onto a link). Sizes `sm` / default / `lg` use Tailwind `px-3` / `px-4` / `px-8`; `--spacing-button-inline-lg` remains as a deprecated alias. Height still follows `--spacing` control tokens.
+- Troubleshooting: Wrong variant colours in dark mode — ensure `.dark` is on the document root. Link styled as a button — use `asChild` with an anchor and keep visible link text. Icon-only control — pass `aria-label` (or use `IconButton` when the label should not appear as text).
 
 ```ts
 import { Button } from "@zedtech/zedkit-ui";
-<Button ref={saveRef}>Save</Button>
+<Button>Save</Button>
 <Button variant="destructive" size="sm">Delete</Button>
 <Button variant="outline" size="icon" aria-label="Close">×</Button>
 <Button asChild variant="secondary">
@@ -183,11 +186,19 @@ import { Button } from "@zedtech/zedkit-ui";
 </Button>
 ```
 
+```ts
+import { Button } from "@zedtech/zedkit-ui";
+<Button size="sm">Small</Button>
+<Button>Default</Button>
+<Button size="lg">Large</Button>
+<Button disabled>Saving…</Button>
+```
+
 ## Icon-only actions with a visible name
 
 - Import: `@zedtech/zedkit-ui` — `IconButton`, `IconButtonProps`
 - Wraps: `Button` (same variants and sizes; `size` defaults to `icon`)
-- Status: beta
+- Status: stable
 - Short name: IconButton
 - Audience: Developers adding icon-only header or toolbar controls in an admin UI.
 - Purpose: Icon-only controls with matching `aria-label` and `title` from one `label` prop.
@@ -225,7 +236,7 @@ import { IconButton } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `Badge`, `badgeVariants`, `BadgeProps`
 - Wraps: `class-variance-authority`
-- Status: beta
+- Status: stable
 - Registry: badge
 - Short name: Badge
 - Audience: Developers flagging state or counts inline (lists, headers, tables).
@@ -267,7 +278,7 @@ import { Badge } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `Label`, `LabelProps`
 - Wraps: `@radix-ui/react-label`
-- Status: beta
+- Status: stable
 - Short name: Label
 - Audience: Developers naming inputs accessibly.
 - Purpose: Accessible labels that pair with any control via `htmlFor`.
@@ -295,7 +306,7 @@ import { Input, Label } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `Input`, `InputProps`, `Label`
 - Wraps: `@radix-ui/react-label`
-- Status: beta
+- Status: stable
 - Short name: Input
 - Audience: Form builders collecting single-line text.
 - Purpose: Labelled text input with consistent styling and focus states.
@@ -314,7 +325,7 @@ import { Input, Label } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `Separator`, `SeparatorProps`
 - Wraps: `@radix-ui/react-separator`
-- Status: beta
+- Status: stable
 - Short name: Separator
 - Audience: Developers dividing stacked or inline content.
 - Purpose: Accessible horizontal/vertical divider lines.
@@ -340,7 +351,7 @@ import { Separator } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `Skeleton`, `SkeletonProps`
 - Wraps: `(none)`
-- Status: alpha
+- Status: beta
 - Short name: Skeleton
 - Audience: Developers covering loading states without layout shift.
 - Purpose: Animated placeholder blocks that hold layout while data loads.
@@ -366,7 +377,7 @@ import { Skeleton } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `StatusDot`, `StatusDotProps`, `StatusDotTone`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Registry: status-dot
 - Short name: StatusDot
 - Audience: Developers showing compact live state (lists, headers, realtime panels).
@@ -399,7 +410,7 @@ import { StatusDot } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `ProgressBar`, `ProgressBarProps`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Short name: ProgressBar
 - Audience: Developers reporting measurable progress (uploads, jobs, wizards).
 - Purpose: An accessible progressbar with clamped value and label.
@@ -425,7 +436,7 @@ import { ProgressBar } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `IconLabel`, `IconLabelProps`
 - Wraps: `lucide-react` (icon slot)
-- Status: beta
+- Status: stable
 - Short name: IconLabel
 - Audience: Developers pairing a small decorative icon with a text label (chips, table cells).
 - Purpose: Fixed-size muted icon + label row; icon is `aria-hidden`, label stays readable.
@@ -470,7 +481,7 @@ import { IconLabel } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `Checkmark`, `CheckmarkProps`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Short name: Checkmark
 - Audience: Developers confirming a completed action (saved, sent, done).
 - Purpose: An animated checkmark that draws once (static under reduced motion).
@@ -496,7 +507,7 @@ import { Checkmark } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `CardSkeleton`, `CardSkeletonProps`, `DataTableSkeleton`, `DataTableSkeletonProps`, `DetailPanelSkeleton`, `DetailPanelSkeletonProps`, `PageHeaderSkeleton`, `PageHeaderSkeletonProps`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Short name: Skeletons
 - Audience: Developers loading async zones without layout shift (pages, cards, tables, panels).
 - Purpose: One faithful loading skeleton per kit component shape, each a named live zone.
@@ -525,7 +536,7 @@ import { CardSkeleton } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `StatusLabel`, `StatusLabelProps`, `StatusLabelTone`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Short name: StatusLabel
 - Audience: Developers naming a background or foreground operation for the user.
 - Purpose: A named live-region label for the current operation state (loading, saved, error…).
@@ -557,7 +568,7 @@ import { StatusLabel } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `UpdatedAgo`, `UpdatedAgoProps`
 - Wraps: `(none)`
-- Status: alpha
+- Status: beta
 - Short name: UpdatedAgo
 - Audience: Developers stamping cached or polled data with its freshness.
 - Purpose: A relative "Updated N minutes ago" stamp via `Intl.RelativeTimeFormat`, no date library.
@@ -583,7 +594,7 @@ import { UpdatedAgo } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `OfflineNote`, `OfflineNoteProps`, `useOnlineStatus`
 - Wraps: `(none)`
-- Status: alpha
+- Status: beta
 - Short name: OfflineNote
 - Audience: Developers telling the user the app lost connectivity.
 - Purpose: A hook reporting browser online state plus an alert-style note with overridable wording.
@@ -631,7 +642,7 @@ import { Button, OfflineNote } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `EmptyState`, `EmptyStateProps`
 - Wraps: `(none)`
-- Status: alpha
+- Status: beta
 - Short name: EmptyState
 - Audience: Developers filling a list or panel when there is nothing to show.
 - Purpose: Name what is missing and put the next step in `actions`.
@@ -661,7 +672,7 @@ import { Button, EmptyState } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `ErrorState`, `ErrorStateProps`
 - Wraps: `(none)`
-- Status: alpha
+- Status: beta
 - Short name: ErrorState
 - Audience: Developers showing a failed load or save on the page.
 - Purpose: Say what broke and put retry or back in `actions`.
@@ -694,7 +705,7 @@ import { Button, ErrorState } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `Spinner`, `SpinnerProps`
 - Wraps: `lucide-react`
-- Status: alpha
+- Status: beta
 - Short name: Spinner
 - Audience: Developers naming a short wait next to a label.
 - Purpose: A spinning icon with an accessible name from the kit messages (`loading`).
@@ -721,7 +732,7 @@ import { Spinner, Text } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `Spinner`, `EmptyState`, `ErrorState`, `DataTable`, `Button`, `Text`, `createDataTableColumns`
 - Wraps: `(none)`
-- Status: alpha
+- Status: beta
 - Short name: FourStates
 - Audience: Developers swapping a list between wait, nothing, failure, and rows.
 - Purpose: One host per state: Spinner, EmptyState, ErrorState, then the filled list.
@@ -767,15 +778,17 @@ const columns = [helper.accessor("name", { header: "Name" })];
 
 - Import: `@zedtech/zedkit-ui` — `Dialog`, `DialogProps`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `DialogClose`, `DialogOverlay`, `DialogPortal`
 - Wraps: `@radix-ui/react-dialog`
-- Status: beta
+- Status: stable
 - Derived from: shadcn/ui (dialog)
 - Short name: Dialog
 - Audience: Developers interrupting the flow for focused input or decisions.
 - Purpose: Accessible modal dialogs (trigger, content, title, footer) with focus trap and Escape.
 - When to use: For short tasks that need full attention (confirm, edit one thing).
 - When not to use: For destructive one-click confirms — use ConfirmDialog instead; for long forms use a page.
+- Registry: dialog
 - Examples: Order details, Tall content
-- A11y: Focus trap and Escape come from Radix; content centers via the `dialog-center` utility (`--spacing-dialog-center`) and elevates with `--shadow-overlay`. Slots, close offset, and overlay stacking come from `--spacing-dialog-*` / `--z-index-overlay`; the close button is a 44px (`size-overlay-touch-target`) hit area with `focus-ring` and sits above the sticky title (`z-20`). Tall content scrolls inside `max-h-dialog-max-height`, further capped to the visual viewport when the software keyboard is open, with `overscroll-behavior: contain`. Header and footer stay sticky; footer actions clear `env(safe-area-inset-bottom)`.
+- A11y: Focus trap and Escape come from Radix; opening moves focus to the panel (no heavy ring) before tabbing to actions. Header and footer share the content surface (transparent chrome on glass and solid identities). Content centers via the `dialog-center` utility (`--spacing-dialog-center`) and elevates with `--shadow-overlay`. Slots, close offset, and overlay stacking come from `--spacing-dialog-*` / `--z-index-overlay`; the close control is a 44px (`size-overlay-touch-target`) hit area with `focus-ring-control`, aligned to the title row. Tall content scrolls inside `max-h-dialog-max-height`, further capped to the visual viewport when the software keyboard is open, with `overscroll-behavior: contain`. Header copy is left-aligned; footer actions are right-aligned with token gaps; footer clears `env(safe-area-inset-bottom)`.
+- Troubleshooting: A footer button does not close the dialog unless it is `DialogClose`. Nested overlays need their own `Dialog` root. Tall content scrolls inside the panel (`max-h-dialog-max-height`), not the page behind it.
 - See also: `Confirm destructive actions`, `Slide in a drawer panel`, `Float extra content next to a control`, `Open a menu of actions from a button`
 
 ```ts
@@ -787,13 +800,13 @@ import { Button, Dialog, DialogContent, DialogTitle, DialogTrigger } from "@zedt
 ```
 
 ```ts
-import { Button, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, Text } from "@zedtech/zedkit-ui";
+import { Button, Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, Text } from "@zedtech/zedkit-ui";
 <Dialog>
   <DialogTrigger asChild><Button>Activity</Button></DialogTrigger>
   <DialogContent>
     <DialogHeader><DialogTitle>Order activity</DialogTitle></DialogHeader>
-    {events.map((line) => <Text key={line}>{line}</Text>)}
-    <DialogFooter><Button>Done</Button></DialogFooter>
+    {["Packed", "Shipped", "Out for delivery"].map((line) => <Text key={line}>{line}</Text>)}
+    <DialogFooter><DialogClose asChild><Button>Done</Button></DialogClose></DialogFooter>
   </DialogContent>
 </Dialog>
 ```
@@ -802,7 +815,7 @@ import { Button, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 
 - Import: `@zedtech/zedkit-ui` — `ConfirmDialog`, `ConfirmDialogProps`
 - Wraps: `@radix-ui/react-dialog` (via Dialog)
-- Status: beta
+- Status: stable
 - Registry: confirm-dialog
 - Short name: ConfirmDialog
 - Audience: Developers guarding delete/revoke/remove actions.
@@ -836,7 +849,7 @@ import { Button, ConfirmDialog } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `Drawer`, `DrawerProps`, `DrawerTrigger`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerBody`, `DrawerFooter`, `DrawerHandle`, `DrawerClose`, `DrawerCloseButton`, `DrawerOverlay`, `DrawerPortal`
 - Wraps: `vaul`
-- Status: alpha
+- Status: beta
 - Derived from: shadcn/ui (drawer)
 - Registry: drawer
 - Short name: Drawer
@@ -889,7 +902,7 @@ import { Button, Drawer, DrawerBody, DrawerCloseButton, DrawerContent, DrawerHea
 
 - Import: `@zedtech/zedkit-ui` — `Popover`, `PopoverProps`, `PopoverTrigger`, `PopoverContent`, `PopoverAnchor`
 - Wraps: `@radix-ui/react-popover`
-- Status: alpha
+- Status: beta
 - Derived from: shadcn/ui (popover)
 - Short name: Popover
 - Audience: Developers showing a small panel next to a button without leaving the page.
@@ -914,7 +927,7 @@ import { Button, Heading, Popover, PopoverContent, PopoverTrigger, Text } from "
 
 - Import: `@zedtech/zedkit-ui` — `Tooltip`, `TooltipProps`, `TooltipTrigger`, `TooltipContent`, `TooltipProvider`
 - Wraps: `@radix-ui/react-tooltip`
-- Status: alpha
+- Status: beta
 - Derived from: shadcn/ui (tooltip)
 - Short name: Tooltip
 - Audience: Developers adding a short extra name that appears on hover or focus.
@@ -936,7 +949,7 @@ import { Button, Tooltip, TooltipContent, TooltipTrigger } from "@zedtech/zedkit
 
 - Import: `@zedtech/zedkit-ui` — `DropdownMenu`, `DropdownMenuProps`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuSeparator`
 - Wraps: `@radix-ui/react-dropdown-menu`
-- Status: alpha
+- Status: beta
 - Derived from: shadcn/ui (dropdown-menu)
 - Short name: DropdownMenu
 - Audience: Developers grouping a few actions behind one button.
@@ -962,7 +975,7 @@ import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMe
 
 - Import: `@zedtech/zedkit-ui` — `Calendar`, `CalendarProps`
 - Wraps: `react-day-picker`
-- Status: alpha
+- Status: beta
 - Short name: Calendar
 - Audience: Developers showing a month grid the reader can pick from.
 - Purpose: Token-styled month grid. Locale and prev/next names follow the kit messages.
@@ -980,7 +993,7 @@ import { Calendar } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `DatePicker`, `DatePickerProps`
 - Wraps: `react-day-picker`, `@radix-ui/react-popover`
-- Status: alpha
+- Status: beta
 - Short name: DatePicker
 - Audience: Developers collecting one day in a form field.
 - Purpose: Button that opens a calendar in a popover. `id` pairs with `FieldLabel`.
@@ -1002,7 +1015,7 @@ const [due, setDue] = useState<Date | undefined>();
 
 - Import: `@zedtech/zedkit-ui` — `DateRangePicker`, `DateRangePickerProps`
 - Wraps: `react-day-picker`, `@radix-ui/react-popover`
-- Status: alpha
+- Status: beta
 - Short name: DateRangePicker
 - Audience: Developers collecting a from/to span in a form field.
 - Purpose: Button that opens a range calendar in a popover. Closes when both days are set.
@@ -1024,7 +1037,7 @@ const [span, setSpan] = useState<DateRangePickerProps["value"]>();
 
 - Import: `@zedtech/zedkit-ui` — `RouteModal`, `RouteModalProps`, `RouteModalDirection`, `RouteModalSize`, `RouteModalVariant`, `closeRoute`, `CloseRouteOptions`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Short name: RouteModal
 - Audience: Developers opening list details in an overlay with a shareable URL (Next.js parallel/intercepting routes).
 - Purpose: A route-driven modal (right drawer or centered dialog) that plays its exit before navigating back, with a list fallback.
@@ -1055,7 +1068,7 @@ import { RouteModal, closeRoute } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `Toaster`, `ToasterProps`, `toast`
 - Wraps: `sonner`
-- Status: beta
+- Status: stable
 - Derived from: shadcn/ui (sonner)
 - Short name: Toaster
 - Audience: Developers confirming background outcomes (saved, failed, copied).
@@ -1082,13 +1095,14 @@ toast.error("Upload failed"); // typed variants: success | error | info | warnin
 
 - Import: `@zedtech/zedkit-ui` — `SecretField`, `SecretFieldProps`
 - Wraps: `lucide-react`
-- Status: beta
+- Status: stable
 - Short name: SecretField
 - Audience: Developers displaying API keys and tokens shown only once.
-- Purpose: A read-only shown-once value with one-click copy; `multiline` wraps long values (install commands, short snippets) so they read in full on narrow screens.
+- Purpose: A read-only shown-once value with one-click copy; `multiline` wraps long values (install commands, snippets) so they read in full on a phone.
 - When to use: Right after creating a credential the user must store.
 - When not to use: For passwords the user typed — use a password Input instead.
 - See also: `Collect text input with a label`
+- A11y: The value is a read-only input (a read-only textarea with `multiline`), so it can be focused and selected with the keyboard. Name it: point a `Label` at `id`, or pass `aria-label`; the kit does not add one. The copy button is a real button named by `copyLabel` (a localized default otherwise). The copied state is a 2-second icon swap only and is not announced, and where the browser has no clipboard API the button does nothing and says nothing, so pair it with your own `aria-live` message for both outcomes.
 
 ```ts
 import { Label, SecretField } from "@zedtech/zedkit-ui";
@@ -1100,12 +1114,13 @@ import { Label, SecretField } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `DataTable`, `DataTableProps`, `DataTableColumn`, `createDataTableColumns`, `DataTablePagination`, `DataTablePaginationProps`, `DataTableEmpty`, `DataTableEmptyProps`, `DataTableToolbar`, `DataTableToolbarProps`, `Table`, `TableHeader`, `TableBody`, `TableFooter`, `TableRow`, `TableHead`, `TableCell`, `TableCaption`
 - Wraps: `@tanstack/react-table`
-- Status: beta
+- Status: stable
 - Short name: DataTable
 - Audience: Developers listing queryable records (deliveries, users, orders).
 - Purpose: Tables with sorting, filtering, pagination plus loading/error/empty states.
 - When to use: For record lists over ~20 rows or needing search.
 - When not to use: For a handful of static rows — map a simple table instead.
+- Props: `emptyMessage` + optional `emptyAction` when `data` is empty; `noResultsMessage` overrides the filter-miss copy (default kit `empty`). Filter miss shows **Clear filters** automatically. Error, loading, and empty zones render outside the horizontal table scroller; `DataTableEmpty` remains for custom table bodies.
 - A11y: Native table semantics (column headers associate by position); head/cell/caption spacing comes from `--spacing-table-*` theme tokens.
 - See also: `Show key-value details and a live indicator`
 - Examples: Simple, Standalone pagination, Standalone empty row, Standalone toolbar
@@ -1115,7 +1130,8 @@ import { DataTable, createDataTableColumns } from "@zedtech/zedkit-ui";
 const helper = createDataTableColumns<Item>();
 const columns = [helper.accessor("name", { header: "Name" })];
 <DataTable columns={columns} data={items} loading={isLoading}
-  error={error} pageSize={20} />
+  error={error} emptyMessage="No orders yet." emptyAction={<Button>Add order</Button>}
+  pageSize={20} />
 ```
 
 ```ts
@@ -1143,7 +1159,7 @@ const [query, setQuery] = useState("");
 
 - Import: `@zedtech/zedkit-ui` — `AppShell`, `AppShellProps`, `PageHeader`, `PageHeaderProps`
 - Wraps: none (theme tokens only)
-- Status: beta
+- Status: stable
 - Short name: AppShell
 - Audience: Teams scaffolding a consistent admin layout.
 - Purpose: Sidebar + topbar shell with page header (title, description, actions).
@@ -1173,7 +1189,7 @@ import { AppShell } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `WizardSteps`, `WizardStepsProps`, `Wizard`, `WizardProps`, `WizardStep`, `WizardStepProps`, `WizardStepState`, `OptionCards`, `OptionCardsProps`, `OptionCard`, `OptionCardProps`, `OptionCardData`
 - Wraps: none (native inputs + theme tokens)
-- Status: beta
+- Status: stable
 - Short name: WizardSteps
 - Audience: Developers building onboarding, setup, or checkout flows.
 - Purpose: Step indicator plus selectable option cards with state.
@@ -1182,6 +1198,7 @@ import { AppShell } from "@zedtech/zedkit-ui";
 - See also: `Build validated forms with labels, errors, and pending state`
 - Examples: Simple, Composed steps, Solo card
 - A11y: List carries `aria-label="Progress"`; current step gets `aria-current="step"`. Cards are native checkboxes in labels.
+- Mobile: Below `sm`, `WizardSteps` shows `Step {n} of {count} · {title}` plus a progress bar; the horizontal step list stays visible from `sm` up.
 - Registry: wizard-steps
 - Troubleshooting: Steps stuck done/todo — `current` is a 0-based index; past the last step everything reads done. Missing connector — composed `WizardStep` rows show one only with `showConnector` (automatic in `WizardSteps`).
 
@@ -1210,7 +1227,7 @@ const [solo, setSolo] = useState(false);
 
 - Import: `@zedtech/zedkit-ui` — `DetailPanel`, `DetailPanelProps`, `DetailItem`, `DetailPanelRow`, `DetailPanelRowProps`, `LivePulse`, `LivePulseProps`
 - Wraps: none (theme tokens only)
-- Status: beta
+- Status: stable
 - Short name: DetailPanel
 - Audience: Developers rendering record details (drawers, side panels, headers).
 - Purpose: Key-value detail lists plus an optional live pulse.
@@ -1247,6 +1264,7 @@ import { DetailPanelRow } from "@zedtech/zedkit-ui";
 - When to use: For any form needing validation or async submit.
 - When not to use: For a single search box — use Input directly instead.
 - See also: `Lay out fieldsets, fields, and error lists`, `Collect text input with a label`
+- A11y: `FormLabel` targets the control through `htmlFor`; `FormControl` sets `aria-invalid` and links the description and the error message with `aria-describedby`. `FormMessage` is plain text and is not a live region: after a failed submit react-hook-form moves focus to the first invalid field (`shouldFocusError`, on by default), which is what makes the error reach screen-reader users. `FormSubmit` is disabled while submitting, so do not rely on it for the only error path.
 
 ```ts
 import { Form, FormField, FormSubmit, Input, useValidatedForm } from "@zedtech/zedkit-ui";
@@ -1260,7 +1278,7 @@ const form = useValidatedForm<Values>(schemaFromContracts, { defaultValues });
 
 - Import: `@zedtech/zedkit-ui` — `FieldSet`, `FieldSetProps`, `FieldLegend`, `FieldGroup`, `Field`, `FieldLabel`, `FieldDescription`, `FieldError`, `FieldSeparator`, `FieldContent`, `FieldTitle`
 - Wraps: none (presentational over `Label`, `Separator`)
-- Status: beta
+- Status: stable
 - Derived from: shadcn/ui (field)
 - Short name: FieldSet
 - Audience: Developers structuring long or grouped forms.
@@ -1281,7 +1299,7 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldSet }
 
 - Import: `@zedtech/zedkit-ui` — `Card`, `CardProps`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`
 - Wraps: none (presentational, theme tokens only)
-- Status: beta
+- Status: stable
 - Short name: Card
 - Audience: Developers grouping related content in bordered sections.
 - Purpose: Cards with header/title/description/content/footer slots.
@@ -1310,13 +1328,14 @@ import { Card, CardContent, CardFooter } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `Stack`, `stackVariants`, `StackProps`, `Section`, `SectionProps`
 - Wraps: none (flex/gap utilities over `Heading`, `Text`)
-- Status: beta
+- Status: stable
 - Short name: Stack
 - Audience: Developers laying out kit pages without raw divs.
 - Purpose: Gap-based vertical/horizontal stacks plus titled sections.
 - When to use: For all kit-page layout instead of hand-written flex.
 - When not to use: For complex grids — use CSS grid directly instead.
 - See also: `Render headings and body text without raw tags`, `Group content in a card section`, `Constrain page width and run sections edge to edge`
+- A11y: `Stack` renders a plain `div` with no role. `Section` renders a `section` landmark named by its string `title`, with that title as a level-2 heading: use one `title` per region, keep heading levels in order, and do not repeat a title that a nearby landmark already uses.
 
 ```ts
 import { Section, Stack } from "@zedtech/zedkit-ui";
@@ -1347,7 +1366,7 @@ import { Container, Section } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `Heading`, `HeadingProps`, `headingVariants`, `Text`, `TextProps`, `textVariants`
 - Wraps: `class-variance-authority` (styles follow the documented shadcn typography recipes; no registry item exists)
-- Status: beta
+- Status: stable
 - Short name: Typography
 - Audience: Developers writing kit pages with consistent type.
 - Purpose: Heading levels and Text variants with theme-aware styles.
@@ -1378,7 +1397,7 @@ import { Heading } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `Alert`, `AlertTitle`, `AlertDescription`, `alertVariants`, `AlertProps`
 - Wraps: `class-variance-authority`
-- Status: beta
+- Status: stable
 - Short name: Alert
 - Audience: Developers surfacing notices, warnings and errors inline.
 - Purpose: Notice/error callouts with title and description.
@@ -1412,7 +1431,7 @@ import { Alert, AlertDescription, AlertTitle } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `BrandLogo`, `BrandLogoProps`, `Logo`, `LogoProps`
 - Wraps: none (inline SVG)
-- Status: alpha
+- Status: beta
 - Short name: BrandLogo
 - Audience: Teams building a header, a footer or a share image for their own site.
 - Purpose: Render your own logo as an inline SVG that paints with `currentColor`, so it follows the text colour in light, dark and every visual identity.
@@ -1444,7 +1463,7 @@ import { BrandLogo } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `Select`, `SelectProps`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectGroup`, `SelectLabel`, `SelectItem`, `SelectSeparator`, `SelectScrollUpButton`, `SelectScrollDownButton`
 - Wraps: `@radix-ui/react-select`
-- Status: beta
+- Status: stable
 - Derived from: shadcn/ui (select)
 - Short name: Select
 - Audience: Form builders offering 4+ exclusive options in little space.
@@ -1452,6 +1471,7 @@ import { BrandLogo } from "@zedtech/zedkit-ui";
 - When to use: For long option lists where radio groups would sprawl.
 - When not to use: For 2–3 visible options — use radio inputs or OptionCards instead.
 - See also: `Toggle a checkbox or a switch`, `Guide a multi-step flow with selectable option cards`
+- A11y: Built on Radix Select: the trigger has `role="combobox"`, opens with Enter, Space, ArrowUp or ArrowDown, and options are chosen with the arrows, typeahead and Enter; Escape closes it and returns focus to the trigger. Typing a letter on the closed trigger changes the value without opening it. The trigger needs a name: pair it with a `Label` whose `htmlFor` matches the trigger `id`, or pass `aria-label`. The list renders in a portal, so inside a scoped theme wrap it in `ThemeScope` to keep its tokens.
 
 ```ts
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@zedtech/zedkit-ui";
@@ -1465,7 +1485,7 @@ const items = regions.map((r) => <SelectItem key={r.id} value={r.id}>{r.name}</S
 
 - Import: `@zedtech/zedkit-ui` — `Combobox`, `ComboboxOption`, `ComboboxProps`
 - Wraps: `downshift`, `@radix-ui/react-popover`
-- Status: alpha
+- Status: beta
 - Short name: Combobox
 - Audience: Form builders with long lists where typing to filter beats scrolling a select.
 - Purpose: Searchable single-select combobox with popover list, empty and loading rows, keyboard navigation.
@@ -1485,7 +1505,7 @@ const options: ComboboxOption[] = [{ value: "eu", label: "Europe" }];
 
 - Import: `@zedtech/zedkit-ui` — `MultiSelect`, `MultiSelectProps`, `ComboboxOption`
 - Wraps: `downshift`, `@radix-ui/react-popover`
-- Status: alpha
+- Status: beta
 - Short name: MultiSelect
 - Audience: Filters and tag pickers where several values apply.
 - Purpose: Searchable multi-select with removable chips, shared empty/loading states, keyboard support.
@@ -1505,7 +1525,7 @@ const tags: ComboboxOption[] = [{ value: "docs", label: "Docs" }];
 
 - Import: `@zedtech/zedkit-ui` — `Textarea`, `TextareaProps`
 - Wraps: none (styled native `textarea`)
-- Status: beta
+- Status: stable
 - Derived from: shadcn/ui (textarea)
 - Short name: Textarea
 - Audience: Form builders collecting paragraphs (bios, notes, messages).
@@ -1525,7 +1545,7 @@ import { Label, Textarea } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `Checkbox`, `CheckboxProps`, `Switch`
 - Wraps: `@radix-ui/react-checkbox`, `@radix-ui/react-switch`
-- Status: beta
+- Status: stable
 - Derived from: shadcn/ui (checkbox, switch)
 - Short name: Checkbox
 - Audience: Form builders collecting booleans and on/off settings.
@@ -1533,6 +1553,7 @@ import { Label, Textarea } from "@zedtech/zedkit-ui";
 - When to use: Checkbox for agreements and multi-picks, switch for instant on/off settings.
 - When not to use: For exclusive choices — use Select or radio inputs instead.
 - See also: `Pick one option from a dropdown`
+- A11y: Built on Radix: `Checkbox` has `role="checkbox"` and `Switch` has `role="switch"`, both toggled with Space (Enter also toggles a `Switch`, not a `Checkbox`) and exposing their state through `aria-checked`. Neither has a visible name of its own: pair each with a `Label` using `htmlFor`/`id`, or pass `aria-label`. Use `Switch` only for settings that apply immediately.
 
 ```ts
 import { Checkbox, Label, Switch } from "@zedtech/zedkit-ui";
@@ -1545,7 +1566,7 @@ import { Checkbox, Label, Switch } from "@zedtech/zedkit-ui";
 
 - Import: `@zedtech/zedkit-ui` — `Tabs`, `TabsProps`, `TabsList`, `TabsTrigger`, `TabsContent`
 - Wraps: `@radix-ui/react-tabs`
-- Status: beta
+- Status: stable
 - Derived from: shadcn/ui (tabs)
 - Short name: Tabs
 - Audience: Developers grouping related panels under one heading.
@@ -1577,11 +1598,11 @@ import { Tabs } from "@zedtech/zedkit-ui";
 - Status: alpha
 - Short name: ScrollScenes
 - Audience: Developers telling a story in a few steps (one product shown in several looks, a feature tour, before/after) on a marketing or docs page.
-- Purpose: One stage stays under the header while the page scrolls; each scene fades in, holds, then fades out before the next. Pure CSS scroll-driven animation: no script, no scroll hijacking, native scrolling only.
+- Purpose: Pin one stage under the header while the page scrolls; scenes fade in and out in turn. Pure CSS, native scrolling.
 - When to use: Two to eight (`SCROLL_SCENES_MAX`) short scenes that read well one at a time and where scrolling is the natural way to move on.
 - When not to use: Long content, forms or anything focusable inside a scene — invisible scenes stay in the accessibility tree, so keep scene visuals non-interactive (`aria-hidden` and `inert`); steps the user must pick themselves — use `Tabs` or `WizardSteps`.
 - See also: `Switch between tabbed panels`
-- Examples: Pinned feature tour, Before and after
+- Examples: Pinned feature tour, Before and after, Same product in three looks, Pricing walkthrough
 - A11y: Captions are real text in a fixed order and are never hidden (opacity only), so put the message in the caption and treat the visual as decoration: mark it `aria-hidden="true"` and `inert` so it adds no tab stop and no duplicate announcement. Under `prefers-reduced-motion: reduce`, in browsers without scroll timelines (Firefox, Safari before 26) and in very short windows, the scenes are plain blocks one under the other with the same content. A decorative progress rail is `aria-hidden`. Give each caption a heading one level under the section title so screen reader users can jump scene by scene.
 - Troubleshooting: Nothing is pinned — you need two to eight scenes, the browser needs `animation-timeline: view()` and the window at least 34rem tall; otherwise you get the stacked layout by design. Stage hides under a fixed header — set `--zk-scenes-top` to the header height. Scenes change too fast or slowly — set `--zk-scenes-step` (scroll distance per scene, default 60svh). Content cut at the bottom — the stage is one screen tall; shorten the scene or hide secondary parts on small screens. Pinning stops inside a box — a parent with `overflow: hidden` or `auto` becomes the scroll container; keep the component in the normal page flow. The scenes stack in your own preview — `prefers-reduced-motion: reduce` is on in the OS or the browser; this is the intended fallback.
 
@@ -1646,11 +1667,69 @@ import { Heading, ProgressBar, ScrollScenes, Stack, Text } from "@zedtech/zedkit
 />
 ```
 
+```ts
+import { Heading, ScrollScenes, Stack, Text, ThemeScope } from "@zedtech/zedkit-ui";
+
+const looks = [
+  { id: "mist", title: "Mist", text: "The stock look: quiet chrome, Inter." },
+  { id: "press", title: "Press", text: "Editorial type for a reading product." },
+  { id: "tide", title: "Tide", text: "Warm colour and a bit more space." },
+];
+
+<ScrollScenes
+  className="[--zk-scenes-top:4.5rem]"
+  scenes={looks.map((look) => ({
+    id: look.id,
+    caption: (
+      <Stack gap={2}>
+        <Heading level={3}>{look.title}</Heading>
+        <Text variant="muted">{look.text}</Text>
+      </Stack>
+    ),
+    children: (
+      <ThemeScope identity={look.id} aria-hidden="true" inert>
+        <Text className="font-semibold">Harbor Studio</Text>
+        <Text variant="muted">Project tracker</Text>
+      </ThemeScope>
+    ),
+  }))}
+/>
+```
+
+```ts
+import { Heading, ScrollScenes, Stack, Text } from "@zedtech/zedkit-ui";
+
+const plans = [
+  { id: "solo", title: "Solo", text: "One person, one project.", price: "$0" },
+  { id: "crew", title: "Crew", text: "A small team, one workspace.", price: "$29" },
+  { id: "studio", title: "Studio", text: "Every workspace, with SSO.", price: "$99" },
+];
+
+<ScrollScenes
+  className="[--zk-scenes-top:4.5rem]"
+  scenes={plans.map((plan) => ({
+    id: plan.id,
+    caption: (
+      <Stack gap={2}>
+        <Heading level={3}>{plan.title}</Heading>
+        <Text variant="muted">{plan.text}</Text>
+      </Stack>
+    ),
+    children: (
+      <Stack aria-hidden="true" inert>
+        <Text className="text-3xl font-semibold">{plan.price}</Text>
+        <Text variant="muted">per month</Text>
+      </Stack>
+    ),
+  }))}
+/>
+```
+
 ## Switch the visual identity with one attribute
 
-- Import: `@zedtech/zedkit-ui` — `IdentityScript`, `IdentityScriptProps`, `IdentitySwitcher`, `IdentitySwitcherProps`, `IdentityPicker`, `IdentityPickerProps`, `IdentityOption`, `identities`, `applyIdentity`, `discardCustomIdentity`, `applyCustomIdentity`, `useIdentity`, `CUSTOM_IDENTITY_ID`, `IDENTITY_STORAGE_KEY`, `IDENTITY_CUSTOM_STORAGE_KEY`, `IDENTITY_CHANGE_EVENT`, `NAMED_IDENTITY_PREFIX`, `isNamedIdentityId`, `identityTokenSchema`, `IdentityTokens`, `IdentityId`, `identityPresets`, `isPresetId`, `tokensToCss`, `tokensToCssVars`, `parseIdentityTokens`, `suggestIdentityTokens`, `applyIdentityTokenSheet`, `identityContrastWarnings`, `withIdentityDarkPair`, `keepIdentityDarkKeys`, `IdentityContrastWarning`
+- Import: `@zedtech/zedkit-ui` — `IdentityScript`, `IdentityScriptProps`, `IdentitySwitcher`, `IdentitySwitcherProps`, `IdentityPicker`, `IdentityPickerProps`, `IdentityOption`, `identities`, `applyIdentity`, `discardCustomIdentity`, `applyCustomIdentity`, `useIdentity`, `ThemeScope`, `ThemeScopeProps`, `usePortalContainer`, `CUSTOM_IDENTITY_ID`, `IDENTITY_STORAGE_KEY`, `IDENTITY_CUSTOM_STORAGE_KEY`, `IDENTITY_CHANGE_EVENT`, `NAMED_IDENTITY_PREFIX`, `isNamedIdentityId`, `identityTokenSchema`, `IdentityTokens`, `IdentityId`, `identityPresets`, `isPresetId`, `tokensToCss`, `tokensToCssVars`, `parseIdentityTokens`, `suggestIdentityTokens`, `applyIdentityTokenSheet`, `identityContrastWarnings`, `identityContrastTokenLabel`, `withIdentityDarkPair`, `keepIdentityDarkKeys`, `IdentityContrastWarning`
 - Wraps: `zod` (token schema); CSS variables in `identities.css`
-- Status: alpha
+- Status: beta
 - Short name: Identities
 - Audience: Teams that want to change the whole look of an app, or offer a choice, without touching components.
 - Purpose: `data-identity` on the root swaps the identity tokens next to light and dark (type size, tracking, shadow, spacing unit, body line-height, border width, colour-transition duration, radius, motion); a head script applies the stored choice before first paint and a labelled switcher or touch picker lets people choose. `applyCustomIdentity` writes compact tokens onto `:root` (id `custom`, CSS in `IDENTITY_CUSTOM_STORAGE_KEY`) or onto a preset/named look id (`n-…` via `isNamedIdentityId`) and the same script reapplies that sheet before paint, keeping the stored id even when it is not in the built-in list. Mist keeps the kit defaults; no two looks share the same type size, tracking, shadow, or spacing unit.
@@ -1659,7 +1738,7 @@ import { Heading, ProgressBar, ScrollScenes, Stack, Text } from "@zedtech/zedkit
 - See also: `Theme an admin app (dark/light included)`
 - Examples: Header switcher, Same card in each look, Touch picker, Live token sheet
 - A11y: `IdentitySwitcher` is a native labelled `select` (visible label with `showLabel`, otherwise screen-reader only); `IdentityPicker` is a 44px trigger opening a sheet with a labelled radio group. Both render nothing when there is no identity to choose. While a custom sheet is active they show `Custom` (`CUSTOM_IDENTITY_ID`); a named look (`n-acme`) that is not in `identities` still appears as a selected option (label is the slug after `n-`) so the control never has a value missing from the list. Pass saved looks in `identities` to show their real labels. Picking a built-in look parks the custom sheet — it stays stored, scoped to its look, until `discardCustomIdentity` drops it. A choice applies at once and the new look keeps the kit's contrast pairs in light and dark; announce the change in your own status line (`role="status"`) if you show one. Keep the trigger name stable (`label`), because the current identity is read from the value.
-- Troubleshooting: The look flashes on load — render `<IdentityScript />` inside `<head>` with the same ids and storage key as the switcher, and `suppressHydrationWarning` on `<html>`. A stored id is ignored — it must be in `ids`. A stored custom sheet (`IDENTITY_CUSTOM_STORAGE_KEY`) wins over a built-in id. Built-in ids: `mist`, `press`, `tide`, `volt`, `maison`, `glass`; pass your own list to the script and the switcher to offer other looks. The whole page changed but you wanted one card — put `data-identity-scope` and `data-identity="…"` on that element instead of changing `<html>`; the scope sets tokens, fonts and radii for its subtree only. Two switchers disagree — give them the same `storageKey`; they follow each other through `IDENTITY_CHANGE_EVENT`. Switching looks parks a custom sheet (it is scoped to one look); call `discardCustomIdentity` to drop it for good.
+- Troubleshooting: The look flashes on load — render `<IdentityScript />` inside `<head>` with the same ids and storage key as the switcher, and `suppressHydrationWarning` on `<html>`. A stored id is ignored — it must be in `ids`. A stored custom sheet (`IDENTITY_CUSTOM_STORAGE_KEY`) wins over a built-in id. Built-in ids: `mist`, `press`, `tide`, `volt`, `maison`, `glass`; pass your own list to the script and the switcher to offer other looks. The whole page changed but you wanted one card — wrap it in `<ThemeScope identity="…" className="dark">` (or put `data-identity-scope` and `data-identity` on that node and add `.dark` on the same node). Dark tokens apply only when `.dark` is on the identity node, not on an ancestor. Overlays (dialog, select, menu, popover, tooltip, toast) portal into the nearest ThemeScope so they keep that identity and mode; without a scope they still mount on `document.body`. Two switchers disagree — give them the same `storageKey`; they follow each other through `IDENTITY_CHANGE_EVENT`. Switching looks parks a custom sheet (it is scoped to one look); call `discardCustomIdentity` to drop it for good.
 
 ```ts
 import { IdentityScript, IdentitySwitcher } from "@zedtech/zedkit-ui";
@@ -1680,21 +1759,20 @@ import { IdentityScript, IdentitySwitcher } from "@zedtech/zedkit-ui";
 ```
 
 ```ts
-import { Badge, Button, Heading, Stack, Text, identities } from "@zedtech/zedkit-ui";
+import { Badge, Button, Heading, Text, ThemeScope, identities } from "@zedtech/zedkit-ui";
 
 // Preview every look at once: the scope changes this subtree only, never <html>.
 {identities.map((look) => (
-  <Stack
+  <ThemeScope
     key={look.id}
-    data-identity-scope=""
-    data-identity={look.id}
-    className="rounded-xl border border-border bg-background p-4 font-sans text-foreground shadow-md"
+    identity={look.id}
+    className="rounded-xl border border-border bg-background p-4 shadow-md"
   >
     <Heading level={3}>{look.label}</Heading>
     <Badge variant="secondary">New</Badge>
     <Text variant="muted">{look.description}</Text>
     <Button size="sm">Save</Button>
-  </Stack>
+  </ThemeScope>
 ))}
 ```
 
@@ -1729,9 +1807,9 @@ void css;
 
 ## Design your identity
 
-- Import: `@zedtech/zedkit-ui` — `applyIdentityTokenSheet`, `applyCustomIdentity`, `identityPresets`, `parseIdentityTokens`, `suggestIdentityTokens`, `IdentityTokens`, `IdentityId`, `isPresetId`, `isNamedIdentityId`, `NAMED_IDENTITY_PREFIX`, `identityContrastWarnings`, `withIdentityDarkPair`, `keepIdentityDarkKeys`, `IdentityContrastWarning`
+- Import: `@zedtech/zedkit-ui` — `applyIdentityTokenSheet`, `applyCustomIdentity`, `identityPresets`, `parseIdentityTokens`, `suggestIdentityTokens`, `IdentityTokens`, `IdentityId`, `isPresetId`, `isNamedIdentityId`, `NAMED_IDENTITY_PREFIX`, `identityContrastWarnings`, `identityContrastTokenLabel`, `withIdentityDarkPair`, `keepIdentityDarkKeys`, `IdentityContrastWarning`
 - Wraps: `zod` (token schema); CSS variables from `applyIdentityTokenSheet`
-- Status: alpha
+- Status: beta
 - Short name: Draft look
 - Audience: Teams that want to try spacing, borders, type and colour on a live card before copying tokens.
 - Purpose: Design your own look — colour, radius, spacing, type — on a live card, then apply it to the whole site.
@@ -1739,7 +1817,7 @@ void css;
 - When not to use: To switch a published built-in look — use `IdentitySwitcher` or `data-identity` on the root instead.
 - See also: `Switch the visual identity with one attribute`
 - Examples: Write a draft sheet
-- A11y: Every field has a visible label. Reset, Dark, Suggest, Apply, Discard and Apply to the whole site are named buttons (`aria-pressed` on Dark). The draft card is a live preview of the tokens. Colour fields accept HSL channels (`H S% L%`). Foreground/background pairs below 4.5:1 show a warning and a Fix that nudges lightness. Suggest never writes tokens until Apply. While a custom identity is active, a status bar offers Reset to default.
+- A11y: Every field has a visible label. Reset, Dark, Suggest, Apply, Discard and Apply to the whole site are named buttons (`aria-pressed` on Dark). The draft card is a live preview of the tokens. Colour fields accept HSL channels (`H S% L%`). Each exportable text pair (body, primary, muted) must reach 4.5:1 against its surface; accent and border need 3:1 against the background — warnings show inline with a Fix that nudges lightness. Copy CSS/JSON stays behind an explicit confirm while any pair fails. Suggest never writes tokens until Apply. While a custom identity is active, a status bar offers Reset to default.
 - Troubleshooting: The whole docs page changed — Apply to the whole site wrote `:root`; Reset to default clears `IDENTITY_CUSTOM_STORAGE_KEY`; picking a built-in identity only parks the sheet. A field snaps back — the value failed the token schema (HSL, leading, or tracking). A refresh loses the draft — the address bar holds only fields that differ from the chosen look, plus `theme=dark` when the dark preview is on. Suggest shows a keyword match — the HTTP service is off, rate-limited, or the response failed the token schema.
 
 ```ts

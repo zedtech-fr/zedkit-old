@@ -9,12 +9,13 @@ import {
   zedkitUiMessagesEn,
   ZedkitUiProvider,
 } from "@zedtech/zedkit-ui";
+import { multiSelectCopy } from "@/components/demos/i18n/multi-select-copy";
 
 const TAGS: ComboboxOption[] = [
-  { value: "design", label: "Design" },
-  { value: "docs", label: "Docs" },
-  { value: "infra", label: "Infra" },
-  { value: "release", label: "Release" },
+  { value: "design", label: multiSelectCopy.design },
+  { value: "docs", label: multiSelectCopy.docs },
+  { value: "infra", label: multiSelectCopy.infra },
+  { value: "release", label: multiSelectCopy.release },
 ];
 
 export function MultiSelectDemo() {
@@ -22,9 +23,9 @@ export function MultiSelectDemo() {
   return (
     <ZedkitUiProvider messages={zedkitUiMessagesEn}>
       <Stack gap={2} className="max-w-sm min-w-0">
-        <MultiSelect options={TAGS} value={tags} onValueChange={setTags} aria-label="Filter tags" placeholder="Add tags…" />
+        <MultiSelect options={TAGS} value={tags} onValueChange={setTags} aria-label={multiSelectCopy.label} placeholder={multiSelectCopy.placeholder} />
         <Text variant="muted" className="text-xs" aria-live="polite">
-          {tags.length === 0 ? "Pick one or more tags." : `${tags.length} tag(s) selected.`}
+          {tags.length === 0 ? multiSelectCopy.empty : multiSelectCopy.selected(tags.length)}
         </Text>
       </Stack>
     </ZedkitUiProvider>

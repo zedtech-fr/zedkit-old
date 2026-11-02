@@ -2,13 +2,9 @@
 
 import { useState } from "react";
 import { Combobox, Stack, Text, type ComboboxOption, zedkitUiMessagesEn, ZedkitUiProvider } from "@zedtech/zedkit-ui";
+import { comboboxCopy } from "@/components/demos/i18n/combobox-copy";
 
-const CITIES: ComboboxOption[] = [
-  { value: "paris", label: "Paris" },
-  { value: "lyon", label: "Lyon" },
-  { value: "marseille", label: "Marseille" },
-  { value: "toulouse", label: "Toulouse" },
-];
+const CITIES: ComboboxOption[] = [...comboboxCopy.cities];
 
 export function ComboboxDemo() {
   const [city, setCity] = useState<string | null>(null);
@@ -19,11 +15,13 @@ export function ComboboxDemo() {
           options={CITIES}
           value={city}
           onValueChange={setCity}
-          aria-label="Office city"
-          placeholder="Search cities…"
+          aria-label={comboboxCopy.officeCityAriaLabel}
+          placeholder={comboboxCopy.placeholder}
         />
         <Text variant="muted" className="text-xs" aria-live="polite">
-          {city ? `Selected: ${CITIES.find((entry) => entry.value === city)?.label ?? city}` : "Type to filter the list."}
+          {city
+            ? comboboxCopy.selected(CITIES.find((entry) => entry.value === city)?.label ?? city)
+            : comboboxCopy.filterHint}
         </Text>
       </Stack>
     </ZedkitUiProvider>

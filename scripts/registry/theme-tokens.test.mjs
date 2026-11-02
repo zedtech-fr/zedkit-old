@@ -9,6 +9,19 @@ import { checkRegistryThemeDrift, expectedRegistryThemeFromStyles } from "./them
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
+test("focus-ring registry css follows the outline in styles.css, not a box-shadow", () => {
+  const css = readFileSync(join(root, "packages/ui/src/styles.css"), "utf8");
+  const expected = expectedRegistryThemeFromStyles(css);
+  const ring = expected.badge.css["@utility focus-ring"]["&:focus-visible"];
+  const control = expected.button.css["@utility focus-ring-control"]["&:focus-visible"];
+  assert.equal(ring.outline, "var(--ring-width) solid hsl(var(--ring))");
+  assert.equal(ring["outline-offset"], "var(--ring-offset-width)");
+  assert.equal(ring["box-shadow"], undefined);
+  assert.equal(control.outline, "var(--ring-width-control) solid hsl(var(--ring))");
+  assert.equal(control["outline-offset"], "var(--ring-offset-width)");
+  assert.equal(control["box-shadow"], undefined);
+});
+
 test("expectedRegistryThemeFromStyles matches registry.json badge, drawer and status-dot", () => {
   const css = readFileSync(join(root, "packages/ui/src/styles.css"), "utf8");
   const registry = JSON.parse(readFileSync(join(root, "registry.json"), "utf8"));

@@ -1,6 +1,7 @@
 import {
   Button,
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -11,32 +12,20 @@ import {
   Stack,
   Text,
 } from "@zedtech/zedkit-ui";
+import { dialogCopy } from "@/components/demos/i18n/dialog-copy";
 
-const EVENTS = [
-  "Order placed by Camille Rousseau.",
-  "Payment captured for €101.50.",
-  "Picking started in the warehouse.",
-  "Linen shirt packed.",
-  "Canvas tote packed.",
-  "Wool socks packed.",
-  "Label printed for Express shipping.",
-  "Handover to the courier.",
-  "Out for delivery, 2 working days.",
-  "First delivery attempt missed.",
-  "Second attempt scheduled.",
-  "Delivered and signed.",
-] as const;
+const EVENTS = dialogCopy.tall.events;
 
 export function DialogTallDemo() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline">Open long dialog</Button>
+        <Button variant="outline">{dialogCopy.tall.open}</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Order activity</DialogTitle>
-          <DialogDescription>Twelve events. The title stays put; the list and note scroll.</DialogDescription>
+          <DialogTitle>{dialogCopy.tall.title}</DialogTitle>
+          <DialogDescription>{dialogCopy.tall.description}</DialogDescription>
         </DialogHeader>
         <Stack gap={2} className="py-2">
           {EVENTS.map((line) => (
@@ -44,10 +33,12 @@ export function DialogTallDemo() {
               {line}
             </Text>
           ))}
-          <Input aria-label="Note" placeholder="Add a note for the team" />
+          <Input aria-label={dialogCopy.tall.noteAriaLabel} placeholder={dialogCopy.tall.notePlaceholder} />
         </Stack>
         <DialogFooter>
-          <Button>Done</Button>
+          <DialogClose asChild>
+            <Button type="button">{dialogCopy.tall.done}</Button>
+          </DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>

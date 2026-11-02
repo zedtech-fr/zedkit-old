@@ -9,8 +9,9 @@ const BUTTON_PAGE = "/docs/ui/trigger-actions-with-buttons";
 
 async function openAsIdentity(page: Page, url: string, identity: string, theme: "light" | "dark") {
   await page.addInitScript(({ id, mode }) => {
-    localStorage.removeItem("zk-identity-custom");
-    localStorage.setItem("zk-identity", id);
+    localStorage.removeItem("zk-docs-site-identity-custom");
+    localStorage.setItem("zk-docs-site-identity", id);
+    localStorage.setItem("zk-docs-site-identity-opt-in", "1");
     localStorage.setItem("theme", mode);
   }, { id: identity, mode: theme });
   await page.goto(url, { waitUntil: "networkidle" });
@@ -39,10 +40,10 @@ test.describe("press identity", () => {
 
   test("has square corners, soft shadows and a hairline rule", async ({ page }) => {
     await openAsIdentity(page, HOME, "press", "light");
-    expect(await probe(page, "border-top-left-radius", "var(--radius-xl)")).toBe("0px");
-    const shadowMd = await probe(page, "box-shadow", "var(--zk-shadow-md)");
+    expect(await probe(page, "border-top-left-radius", "var(--radius-xl)", "press")).toBe("0px");
+    const shadowMd = await probe(page, "box-shadow", "var(--zk-shadow-md)", "press");
     expect(shadowMd).not.toMatch(/^0px 0px 0px 0px/);
-    expect(await probe(page, "box-shadow", "var(--zk-shadow-overlay)")).not.toMatch(/0px 0px 0px 1px/);
+    expect(await probe(page, "box-shadow", "var(--zk-shadow-overlay)", "press")).not.toMatch(/0px 0px 0px 1px/);
     expect(await probe(page, "border-top-width", "var(--zk-border-width)")).toBe("1px");
   });
 
@@ -51,7 +52,7 @@ test.describe("press identity", () => {
       await page.setViewportSize(viewport);
       await openAsIdentity(page, HOME, "press", "light");
       if (viewport.width >= 768) {
-        const card = page.locator('#home-page #entry-points:not(.sr-only) [data-slot="card"]').first();
+        const card = page.locator('#home-page #identities:not(.sr-only) [data-slot="card"]').first();
         await expect(card).toBeVisible({ timeout: 20_000 });
         const cardBorder = await card.evaluate((el) => Number.parseFloat(getComputedStyle(el).borderTopWidth));
         expect(cardBorder).toBeLessThanOrEqual(1.01);

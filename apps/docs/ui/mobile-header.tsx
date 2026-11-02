@@ -2,7 +2,8 @@
 
 import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { Menu, Moon, Sun } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { ExternalLink, Menu, Moon, Sun } from "lucide-react";
 import { GithubIcon } from "@/ui/github-icon";
 import { useTheme } from "next-themes";
 import { useSidebar } from "fumadocs-ui/components/sidebar/base";
@@ -14,19 +15,29 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@zedtech/zedkit-ui";
-import { DocsIdentityPicker } from "@/components/docs-identity-chooser";
-import { SearchPill } from "@/ui/search-pill";
+import { MobileSearchTrigger } from "@/ui/mobile-search-trigger";
 import { SiteBrand } from "@/ui/site-brand";
+import { SiteFullSearchTrigger } from "@/ui/site-chrome";
+import { KitVersionLabel } from "@/ui/kit-version-label";
 import { SITE_GITHUB_URL } from "@/lib/site-links.mjs";
+import {
+  SHELL_NAV_GUIDE_ITEM_CLASS,
+  SHELL_NAV_GUIDE_LABEL_CLASS,
+  SHELL_NAV_PRIMARY_ITEM_CLASS,
+} from "@/lib/shell-nav-classes";
+import {
+  isSiteNavLinkActive,
+  sitePrimaryNavLinks,
+  SITE_GUIDE_LINKS,
+  type SiteNavLink,
+} from "@/lib/site-nav-data";
 
 const iconButtonClassName =
   "inline-flex min-h-overlay-touch-target min-w-overlay-touch-target items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-ring-control";
 
-type MobileLink = { text: string; href: string; external?: boolean };
-
 const noop = () => () => {};
 
-function ThemeButton() {
+function ThemeButton({ className }: { className?: string }) {
   const { resolvedTheme, setTheme } = useTheme();
   const mounted = useSyncExternalStore(noop, () => true, () => false);
   const dark = mounted && resolvedTheme === "dark";
@@ -34,7 +45,7 @@ function ThemeButton() {
     <button
       type="button"
       aria-label="Toggle theme"
-      className={iconButtonClassName}
+      className={className ?? iconButtonClassName}
       onClick={() => setTheme(dark ? "light" : "dark")}
     >
       {dark ? <Moon aria-hidden="true" className="size-4" /> : <Sun aria-hidden="true" className="size-4" />}
@@ -57,51 +68,137 @@ function DocsMenuButton() {
   );
 }
 
-function HomeMenuButton({ links }: { links: MobileLink[] }) {
+function NavDrawerLink({
+  link,
+  pathname,
+  onNavigate,
+  className,
+}: {
+  link: SiteNavLink;
+  pathname: string;
+  onNavigate: () => void;
+  className: string;
+}) {
+  const active = isSiteNavLinkActive(pathname, link);
+  return (
+    <Link
+      href={link.href}
+      onClick={onNavigate}
+      aria-current={active ? "page" : undefined}
+      className={`${className}${active ? " bg-muted/80 text-foreground" : ""}`}
+      {...(link.external ? { target: "_blank", rel: "noreferrer" } : {})}
+    >
+      <span className="min-w-0 flex-1">{link.text}</span>
+      {link.external ? <ExternalLink aria-hidden="true" className="size-4 shrink-0 opacity-70" /> : null}
+    </Link>
+  );
+}
+
+function SiteNavDrawerBody({ changelogHref, onNavigate }: { changelogHref: string; onNavigate: () => void }) {
+  const pathname = usePathname();
+  const primary = sitePrimaryNavLinks(changelogHref);
+
+  return (
+    <div data-shell-nav-drawer className="flex max-h-[min(85dvh,640px)] flex-col gap-4 overflow-y-auto px-4 pt-2 pb-6">
+      <div className="w-full [&_[data-search]]:w-full">
+        <SiteFullSearchTrigger className="w-full max-w-none" />
+      </div>
+      <nav aria-label="Menu" className="flex flex-col gap-1">
+        {primary.map((link) => (
+          <NavDrawerLink
+            key={link.href}
+            link={link}
+            pathname={pathname}
+            onNavigate={onNavigate}
+            className={SHELL_NAV_PRIMARY_ITEM_CLASS}
+          />
+        ))}
+        <p className={SHELL_NAV_GUIDE_LABEL_CLASS}>Guides</p>
+        {SITE_GUIDE_LINKS.map((link) => (
+          <NavDrawerLink
+            key={link.href}
+            link={link}
+            pathname={pathname}
+            onNavigate={onNavigate}
+            className={SHELL_NAV_GUIDE_ITEM_CLASS}
+          />
+        ))}
+      </nav>
+      <div className="mt-2 flex items-center justify-between gap-3 border-t pt-4">
+        <a
+          href={SITE_GITHUB_URL}
+          target="_blank"
+          rel="noreferrer"
+          className={`${SHELL_NAV_PRIMARY_ITEM_CLASS} inline-flex w-auto gap-2 text-muted-foreground`}
+        >
+          <GithubIcon className="size-4 shrink-0" />
+          GitHub
+        </a>
+        <ThemeButton />
+      </div>
+    </div>
+  );
+}
+
+function SiteNavDrawer({
+  open,
+  onOpenChange,
+  changelogHref,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  changelogHref: string;
+}) {
+  const close = () => onOpenChange(false);
+
+  return (
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent>
+        <DrawerHandle />
+        <DrawerHeader className="sr-only">
+          <DrawerTitle>Menu</DrawerTitle>
+          <DrawerDescription>Site navigation</DrawerDescription>
+        </DrawerHeader>
+        <SiteNavDrawerBody changelogHref={changelogHref} onNavigate={close} />
+      </DrawerContent>
+    </Drawer>
+  );
+}
+
+function HomeMenuButton({ changelogHref }: { changelogHref: string }) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button type="button" aria-label="Open menu" aria-haspopup="dialog" className={iconButtonClassName} onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        aria-label="Open menu"
+        aria-haspopup="dialog"
+        className={iconButtonClassName}
+        onClick={() => setOpen(true)}
+      >
         <Menu aria-hidden="true" className="size-4" />
       </button>
-      <Drawer open={open} onOpenChange={setOpen}>
-        <DrawerContent>
-          <DrawerHandle />
-          <DrawerHeader>
-            <DrawerTitle>Menu</DrawerTitle>
-            <DrawerDescription>Where to go next.</DrawerDescription>
-          </DrawerHeader>
-          <nav aria-label="Menu" className="flex flex-col gap-1 px-4 pb-6">
-            {links.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setOpen(false)}
-                className="flex min-h-overlay-touch-target items-center rounded-lg px-3 text-foreground focus-ring-control hover:bg-muted"
-                {...(link.external ? { target: "_blank", rel: "noreferrer" } : {})}
-              >
-                {link.text}
-              </Link>
-            ))}
-          </nav>
-        </DrawerContent>
-      </Drawer>
+      <SiteNavDrawer open={open} onOpenChange={setOpen} changelogHref={changelogHref} />
     </>
   );
 }
 
 /**
- * Phone header (< md): the logo and name at the left, the identity chooser in the
- * middle, the rest grouped at the right; search is a floating button.
+ * Phone header (< md): brand and version at the left; menu, theme, and GitHub at the right.
+ * Search opens from the header on phone (top bar + results sheet).
  */
 export function MobileHeader({
   mode,
-  links,
   className,
+  version,
+  releasesHref,
+  changelogHref,
 }: {
   mode: "home" | "docs";
-  links: MobileLink[];
   className?: string;
+  version: string;
+  releasesHref: string;
+  changelogHref: string;
 }) {
   return (
     <>
@@ -109,24 +206,28 @@ export function MobileHeader({
         id="nd-mobile-nav"
         className={
           className ??
-          "sticky top-0 z-40 grid h-14 grid-cols-[1fr_auto_1fr] items-center border-b bg-background px-2 md:hidden"
+          "sticky top-0 z-40 flex h-14 items-center justify-between gap-2 border-b bg-background px-2 md:hidden"
         }
       >
-        <Link href="/" aria-label="zedkit home" className={`${iconButtonClassName} justify-self-start text-foreground`}>
-          <span className="flex items-center gap-2 px-1 font-semibold">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <Link
+            href="/"
+            aria-label="zedkit home"
+            className="inline-flex min-h-overlay-touch-target items-center rounded-md px-1 text-foreground focus-ring-control"
+          >
             <SiteBrand />
-          </span>
-        </Link>
-        <DocsIdentityPicker />
-        <div className="flex items-center justify-self-end">
+          </Link>
+          <KitVersionLabel version={version} releasesHref={releasesHref} tone="shell" />
+        </div>
+        <div className="flex shrink-0 items-center">
+          <MobileSearchTrigger className={iconButtonClassName} />
           <ThemeButton />
           <a href={SITE_GITHUB_URL} target="_blank" rel="noreferrer" aria-label="GitHub" className={iconButtonClassName}>
             <GithubIcon className="size-4" />
           </a>
-          {mode === "docs" ? <DocsMenuButton /> : <HomeMenuButton links={links} />}
+          {mode === "docs" ? <DocsMenuButton /> : <HomeMenuButton changelogHref={changelogHref} />}
         </div>
       </header>
-      <SearchPill />
     </>
   );
 }

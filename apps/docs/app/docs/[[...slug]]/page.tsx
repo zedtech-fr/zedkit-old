@@ -4,8 +4,10 @@ import { notFound } from "next/navigation";
 
 import { Stack } from "@zedtech/zedkit-ui";
 
+import { docsPageCopy } from "@/app/i18n/docs-page-copy";
 import { JsonLd } from "@/components/json-ld";
 import { featuredPackageChangelogUrl } from "@/content/gallery";
+import { mergeComponentPageToc } from "@/lib/component-page-toc";
 import { docsPageMetadata } from "@/lib/docs-metadata";
 import { pageUrl } from "@/lib/site";
 import { getMDXComponents } from "@/mdx-components";
@@ -39,8 +41,8 @@ export default async function Page({ params }: { params: Promise<{ slug?: string
   const pathname = docsPath(slug);
   const url = pageUrl(pathname);
   const breadcrumb = buildBreadcrumbJsonLd([
-    { name: "Home", url: pageUrl("/") },
-    { name: "Documentation", url: pageUrl("/docs") },
+    { name: docsPageCopy.breadcrumbHome, url: pageUrl("/") },
+    { name: docsPageCopy.breadcrumbDocs, url: pageUrl("/docs") },
     { name: page.data.title, url },
   ]);
   const description = page.data.description ?? page.data.title;
@@ -55,19 +57,28 @@ export default async function Page({ params }: { params: Promise<{ slug?: string
     <>
       <JsonLd data={jsonLd} />
       <DocsPage
-        toc={page.data.toc}
+        toc={page.data.componentPage
+          ? mergeComponentPageToc(page.data.toc, page.data.componentSections ?? [])
+          : page.data.toc}
         tableOfContentPopover={{
           trigger: {
-            "aria-label": "Table of contents",
-            title: "Table of contents",
+            "aria-label": docsPageCopy.tableOfContents,
+            title: docsPageCopy.tableOfContents,
           },
         }}
       >
         <DocsTitle>{page.data.title}</DocsTitle>
-        <DocsDescription>{page.data.description}</DocsDescription>
-        <DocsBody>
-          <MDX components={getMDXComponents()} />
-        </DocsBody>
+        {page.data.componentPage ? null : <DocsDescription>{page.data.description}</DocsDescription>}
+        {page.data.componentPage ? (
+          // Component pages are composed from kit components; the `prose` reset DocsBody adds would restyle them.
+          <Stack className="flex-1">
+            <MDX components={getMDXComponents()} />
+          </Stack>
+        ) : (
+          <DocsBody>
+            <MDX components={getMDXComponents()} />
+          </DocsBody>
+        )}
         <Stack className="mt-section-md">
           <SiteMaintainerFooter changelogHref={featuredPackageChangelogUrl} embeddedInMain />
         </Stack>

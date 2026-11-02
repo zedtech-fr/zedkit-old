@@ -66,7 +66,7 @@ export const alertVariants: (props?: ({
 } & ClassProp) | undefined) => string;
 
 // @public
-export function applyCustomIdentity(tokens: IdentityTokens, storageKey?: string): boolean;
+export function applyCustomIdentity(tokens: IdentityTokens, lookOrKey?: string, persistKey?: string): boolean;
 
 // @public
 export function applyIdentity(id: string, storageKey?: string): void;
@@ -123,7 +123,7 @@ export interface ButtonProps extends React_2.ComponentProps<"button">, VariantPr
 
 // @public (undocumented)
 export const buttonVariants: (props?: ({
-    variant?: "default" | "destructive" | "secondary" | "outline" | "ghost" | null | undefined;
+    variant?: "link" | "default" | "destructive" | "secondary" | "outline" | "ghost" | null | undefined;
     size?: "default" | "sm" | "lg" | "icon" | null | undefined;
 } & ClassProp) | undefined) => string;
 
@@ -312,6 +312,7 @@ export interface DataTableProps<TData extends RowData> {
     columns: ReadonlyArray<DataTableColumn<TData, any>>;
     // (undocumented)
     data: TData[];
+    emptyAction?: React_2.ReactNode;
     // (undocumented)
     emptyMessage?: string;
     // (undocumented)
@@ -320,6 +321,7 @@ export interface DataTableProps<TData extends RowData> {
     filterPlaceholder?: string;
     // (undocumented)
     loading?: boolean;
+    noResultsMessage?: string;
     // (undocumented)
     pageSize?: number;
 }
@@ -656,7 +658,7 @@ export type HeadingProps = React_2.ComponentProps<"h1"> & VariantProps<typeof he
 
 // @public (undocumented)
 export const headingVariants: (props?: ({
-    level?: 1 | 3 | 4 | 2 | null | undefined;
+    level?: 1 | 2 | 3 | 4 | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -691,9 +693,12 @@ export const IDENTITY_CUSTOM_STORAGE_KEY = "zk-identity-custom";
 export const IDENTITY_STORAGE_KEY = "zk-identity";
 
 // @public (undocumented)
+export function identityContrastTokenLabel(token: IdentityContrastWarning["token"]): string;
+
+// @public (undocumented)
 export type IdentityContrastWarning = {
     scheme: "light" | "dark";
-    token: "foreground" | "accent" | "border";
+    token: ContrastToken;
     ratio: number;
     min: number;
     suggestedForeground: string;
@@ -743,15 +748,19 @@ export const identityPresets: {
             background: string;
             foreground: string;
             primary: string;
+            primaryForeground: string;
             accent: string;
             border: string;
+            mutedForeground: string;
         };
         dark: {
             background: string;
             foreground: string;
             primary: string;
+            primaryForeground: string;
             accent: string;
             border: string;
+            mutedForeground: string;
         };
         shadowSm: string;
         shadowMd: string;
@@ -770,15 +779,19 @@ export const identityPresets: {
             background: string;
             foreground: string;
             primary: string;
+            primaryForeground: string;
             accent: string;
             border: string;
+            mutedForeground: string;
         };
         dark: {
             background: string;
             foreground: string;
             primary: string;
+            primaryForeground: string;
             accent: string;
             border: string;
+            mutedForeground: string;
         };
         shadowSm: string;
         shadowMd: string;
@@ -797,15 +810,19 @@ export const identityPresets: {
             background: string;
             foreground: string;
             primary: string;
+            primaryForeground: string;
             accent: string;
             border: string;
+            mutedForeground: string;
         };
         dark: {
             background: string;
             foreground: string;
             primary: string;
+            primaryForeground: string;
             accent: string;
             border: string;
+            mutedForeground: string;
         };
         shadowSm: string;
         shadowMd: string;
@@ -824,15 +841,19 @@ export const identityPresets: {
             background: string;
             foreground: string;
             primary: string;
+            primaryForeground: string;
             accent: string;
             border: string;
+            mutedForeground: string;
         };
         dark: {
             background: string;
             foreground: string;
             primary: string;
+            primaryForeground: string;
             accent: string;
             border: string;
+            mutedForeground: string;
         };
         shadowSm: string;
         shadowMd: string;
@@ -851,15 +872,19 @@ export const identityPresets: {
             background: string;
             foreground: string;
             primary: string;
+            primaryForeground: string;
             accent: string;
             border: string;
+            mutedForeground: string;
         };
         dark: {
             background: string;
             foreground: string;
             primary: string;
+            primaryForeground: string;
             accent: string;
             border: string;
+            mutedForeground: string;
         };
         shadowSm: string;
         shadowMd: string;
@@ -878,15 +903,19 @@ export const identityPresets: {
             background: string;
             foreground: string;
             primary: string;
+            primaryForeground: string;
             accent: string;
             border: string;
+            mutedForeground: string;
         };
         dark: {
             background: string;
             foreground: string;
             primary: string;
+            primaryForeground: string;
             accent: string;
             border: string;
+            mutedForeground: string;
         };
         shadowSm: string;
         shadowMd: string;
@@ -901,6 +930,7 @@ export type IdentityScriptProps = {
     ids?: readonly string[];
     defaultIdentity?: string;
     storageKey?: string;
+    optInStorageKey?: string;
 };
 
 // @public
@@ -930,20 +960,56 @@ export const identityTokenSchema: z.ZodObject<{
     labelTracking: z.ZodString;
     fontSans: z.ZodString;
     fontDisplay: z.ZodString;
-    light: z.ZodObject<{
+    light: z.ZodPipe<z.ZodObject<{
         background: z.ZodString;
         foreground: z.ZodString;
         primary: z.ZodString;
+        primaryForeground: z.ZodOptional<z.ZodString>;
         accent: z.ZodString;
         border: z.ZodString;
-    }, z.core.$strip>;
-    dark: z.ZodObject<{
+        mutedForeground: z.ZodOptional<z.ZodString>;
+    }, z.core.$strip>, z.ZodTransform<{
+        background: string;
+        foreground: string;
+        primary: string;
+        primaryForeground: string;
+        accent: string;
+        border: string;
+        mutedForeground: string;
+    }, {
+        background: string;
+        foreground: string;
+        primary: string;
+        accent: string;
+        border: string;
+        primaryForeground?: string | undefined;
+        mutedForeground?: string | undefined;
+    }>>;
+    dark: z.ZodPipe<z.ZodObject<{
         background: z.ZodString;
         foreground: z.ZodString;
         primary: z.ZodString;
+        primaryForeground: z.ZodOptional<z.ZodString>;
         accent: z.ZodString;
         border: z.ZodString;
-    }, z.core.$strip>;
+        mutedForeground: z.ZodOptional<z.ZodString>;
+    }, z.core.$strip>, z.ZodTransform<{
+        background: string;
+        foreground: string;
+        primary: string;
+        primaryForeground: string;
+        accent: string;
+        border: string;
+        mutedForeground: string;
+    }, {
+        background: string;
+        foreground: string;
+        primary: string;
+        accent: string;
+        border: string;
+        primaryForeground?: string | undefined;
+        mutedForeground?: string | undefined;
+    }>>;
     shadowSm: z.ZodString;
     shadowMd: z.ZodString;
 }, z.core.$strip>;
@@ -1082,6 +1148,7 @@ export interface PageHeaderProps {
     description?: React_2.ReactNode;
     // (undocumented)
     title: React_2.ReactNode;
+    titleAs?: "h1" | "h2";
 }
 
 // @public
@@ -1114,15 +1181,19 @@ export function parseIdentityTokens(input: unknown): z.ZodSafeParseResult<{
         background: string;
         foreground: string;
         primary: string;
+        primaryForeground: string;
         accent: string;
         border: string;
+        mutedForeground: string;
     };
     dark: {
         background: string;
         foreground: string;
         primary: string;
+        primaryForeground: string;
         accent: string;
         border: string;
+        mutedForeground: string;
     };
     shadowSm: string;
     shadowMd: string;
@@ -1297,7 +1368,7 @@ export type StackProps = React_2.ComponentProps<"div"> & VariantProps<typeof sta
 // @public (undocumented)
 export const stackVariants: (props?: ({
     direction?: "horizontal" | "vertical" | null | undefined;
-    gap?: 1 | 8 | 3 | 4 | 2 | 5 | 6 | 7 | null | undefined;
+    gap?: 1 | 8 | 2 | 3 | 4 | 5 | 6 | 7 | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -1375,7 +1446,7 @@ export function TabsList(input: React_2.ComponentProps<typeof TabsPrimitive.List
 // @public (undocumented)
 export type TabsProps = React_2.ComponentProps<typeof TabsPrimitive.Root>;
 
-// @public (undocumented)
+// @public
 export function TabsTrigger(input: React_2.ComponentProps<typeof TabsPrimitive.Trigger>): React_2.JSX.Element;
 
 // @public (undocumented)
@@ -1398,6 +1469,15 @@ export type TextProps = React_2.ComponentProps<"p"> & VariantProps<typeof textVa
 export const textVariants: (props?: ({
     variant?: "body" | "muted" | null | undefined;
 } & ClassProp) | undefined) => string;
+
+// @public
+export function ThemeScope(input: ThemeScopeProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type ThemeScopeProps = React_2.ComponentProps<"div"> & {
+    identity?: string | undefined;
+    mode?: "light" | "dark" | undefined;
+};
 
 export { toast }
 
@@ -1459,6 +1539,9 @@ export function useIdentity(fallback?: string): string;
 // @public
 export function useOnlineStatus(): boolean;
 
+// @public
+export function usePortalContainer(): HTMLElement | undefined;
+
 // @public (undocumented)
 export function useUiMessages(): ZedkitUiMessages;
 
@@ -1517,9 +1600,11 @@ export type ZedkitUiMessages = {
     progress: string;
     filter: string;
     empty: string;
+    clearFilters: string;
     previous: string;
     next: string;
     pageOf: string;
+    wizardStepOf: string;
     copyToClipboard: string;
     live: string;
     idle: string;
@@ -1555,6 +1640,10 @@ export function ZedkitUiProvider(input: {
     messages: ZedkitUiMessages;
     children: ReactNode;
 }): JSX.Element;
+
+// Warnings were encountered during analysis:
+//
+// src/identity-contrast.ts:10:3 - (ae-forgotten-export) The symbol "ContrastToken" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

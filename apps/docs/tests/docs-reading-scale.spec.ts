@@ -3,20 +3,18 @@ import { expect, test } from "@playwright/test";
 import { probe } from "./identity-helpers";
 
 /*
- * Docs reading scale: Tide is the site default; scoped demos can still use a
- * dense identity (Volt: 10px xs / 12px sm, -0.08em headings). Inside the docs
- * shell, prose and
- * chrome keep a readable floor: 16px body, 13-14px labels, softened
- * tracking. Relative path: the config baseURL decides the port.
+ * Docs reading scale: shared tokens (12 / 13 / 14px ladder). Prose body is 15px.
+ * 16px applies to form controls only on narrow viewports (--zk-input-font-size).
  */
 test("docs shell keeps the reading-scale floor under the default identity", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto("/docs/getting-started", { waitUntil: "networkidle" });
-  expect(await probe(page, "font-size", "var(--text-xs)")).toBe("13px");
-  expect(await probe(page, "font-size", "var(--text-sm)")).toBe("14px");
+  expect(await probe(page, "font-size", "var(--text-xs)")).toBe("12px");
+  expect(await probe(page, "font-size", "var(--text-sm)")).toBe("13px");
+  expect(await probe(page, "font-size", "var(--text-base)")).toBe("14px");
 
-  const prose = await page.locator("#nd-page .prose p").first().evaluate((el) => getComputedStyle(el).fontSize);
-  expect(prose).toBe("16px");
+  const prose = await page.locator("#nd-page .prose").first().evaluate((el) => getComputedStyle(el).fontSize);
+  expect(prose).toBe("15px");
 
   const tracking = await page.locator("#nd-page h1").evaluate((el) => {
     const style = getComputedStyle(el);

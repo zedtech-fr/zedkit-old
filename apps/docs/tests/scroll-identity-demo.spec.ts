@@ -3,19 +3,32 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { assertA11yGate } from "./a11y-helpers";
 
 const BASE = "http://127.0.0.1:3100/docs/ui";
+const IDENTITY_KIT_DEMOS = "/features/identity-kit-demos";
 const IDENTITIES = ["mist", "press", "tide", "volt", "maison", "glass"] as const;
 const SCENES = "pin-a-stage-and-change-scene-as-the-page-scrolls";
-const SWITCH = "switch-the-visual-identity-with-one-attribute";
 
-async function open(page: Page, path: string, identity: string, mode: string) {
+async function openDocs(page: Page, slug: string, identity: string, mode: string) {
   await page.addInitScript(
     ([i, m]) => {
-      localStorage.setItem("zk-identity", i!);
+      localStorage.setItem("zk-docs-site-identity", i!);
+      localStorage.setItem("zk-docs-site-identity-opt-in", "1");
       localStorage.setItem("theme", m!);
     },
     [identity, mode],
   );
-  await page.goto(`${BASE}/${path}`, { waitUntil: "networkidle" });
+  await page.goto(`${BASE}/${slug}`, { waitUntil: "networkidle" });
+}
+
+async function openFeatures(page: Page, path: string, identity: string, mode: string) {
+  await page.addInitScript(
+    ([i, m]) => {
+      localStorage.setItem("zk-docs-site-identity", i!);
+      localStorage.setItem("zk-docs-site-identity-opt-in", "1");
+      localStorage.setItem("theme", m!);
+    },
+    [identity, mode],
+  );
+  await page.goto(`http://127.0.0.1:3100${path}`, { waitUntil: "networkidle" });
 }
 
 async function noSidewaysScroll(page: Page) {
@@ -67,18 +80,18 @@ test.describe("scroll scenes previews", () => {
       ] as const) {
         test(`${device} ${identity} ${mode}`, async ({ page }) => {
           await page.setViewportSize({ width, height });
-          await open(page, SCENES, identity, mode);
+          await openDocs(page, SCENES, identity, mode);
           const previews = page.locator("[data-component-preview]");
-          await expect(previews).toHaveCount(2);
+          await expect(previews).toHaveCount(4);
 
           const supported = await page.evaluate(() => CSS.supports("animation-timeline: view()"));
           const tour = previews.nth(0).locator("[data-scroll-scenes]");
           await expect(tour).toHaveAttribute("data-scene-count", "3");
           await expect(tour.locator("[data-scroll-scene]")).toHaveCount(3);
-          await expect(tour.getByRole("heading", { level: 3 })).toHaveCount(3);
+          await expect(tour.getByRole("heading", { level: 2 })).toHaveCount(3);
           for (const visual of await tour.locator("[data-demo-scene-visual]").all()) {
             await expect(visual).toHaveAttribute("aria-hidden", "true");
-            await expect(visual).toHaveAttribute("inert", "");
+            await expect(visual).toHaveJSProperty("inert", true);
           }
 
           if (supported) {
@@ -120,6 +133,13 @@ test.describe("scroll scenes previews", () => {
             expect(seen[seen.length - 1]!.active).toBe("after");
           }
 
+          const looks = previews.nth(2).locator("[data-scroll-scenes]");
+          await expect(looks).toHaveAttribute("data-scene-count", "3");
+          await expect(looks.locator("[data-scroll-scene]")).toHaveCount(3);
+          const pricing = previews.nth(3).locator("[data-scroll-scenes]");
+          await expect(pricing).toHaveAttribute("data-scene-count", "3");
+          await expect(pricing.getByText("$29")).toBeVisible();
+
           await page.evaluate(() => window.scrollTo(0, 0));
           await assertA11yGate(page, "[data-component-preview]");
           await noSidewaysScroll(page);
@@ -130,11 +150,11 @@ test.describe("scroll scenes previews", () => {
 
   test("reduced motion stacks the scenes with the same content", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await open(page, SCENES, "mist", "light");
+    await openDocs(page, SCENES, "mist", "light");
     const tour = page.locator("[data-component-preview]").nth(0).locator("[data-scroll-scenes]");
     for (const scene of await tour.locator("[data-scroll-scene]").all()) {
       await expect(scene).toHaveCSS("opacity", "1");
-      await expect(scene.getByRole("heading", { level: 3 })).toBeVisible();
+      await expect(scene.getByRole("heading", { level: 2 })).toBeVisible();
     }
     await assertA11yGate(page, "[data-component-preview]");
   });
@@ -149,7 +169,7 @@ test.describe("identity previews", () => {
       ] as const) {
         test(`${device} ${identity} ${mode}`, async ({ page }) => {
           await page.setViewportSize({ width, height });
-          await open(page, SWITCH, identity, mode);
+          await openFeatures(page, IDENTITY_KIT_DEMOS, identity, mode);
           const previews = page.locator("[data-component-preview]");
           await expect(previews).toHaveCount(3);
           const html = page.locator("html");
@@ -167,7 +187,7 @@ test.describe("identity previews", () => {
             `Current look: ${target[0]!.toUpperCase()}${target.slice(1)}`,
           );
           expect(await page.evaluate(() => localStorage.getItem("harbor-demo-identity"))).toBe(target);
-          expect(await page.evaluate(() => localStorage.getItem("zk-identity"))).toBe(identity);
+          expect(await page.evaluate(() => localStorage.getItem("zk-docs-site-identity"))).toBe(identity);
           await assertA11yGate(page, "[data-component-preview]");
           await select.selectOption(identity);
           await expect(html).toHaveAttribute("data-identity", identity);
@@ -178,10 +198,14 @@ test.describe("identity previews", () => {
           await scoped.scrollIntoViewIfNeeded();
           const cards = scoped.locator("[data-demo-scope]");
           await expect(cards).toHaveCount(6);
+          await cards.first().getByRole("button", { name: "Save" }).click();
+          await expect(cards.first().getByRole("status")).toHaveText("Saved");
+          await cards.first().getByRole("button", { name: "Cancel" }).click();
+          await expect(cards.first().getByRole("status")).toHaveText("New");
           const signatures = await cards.evaluateAll((nodes) =>
             nodes.map((node) => {
               const save = node.querySelector("button")!;
-              const title = node.querySelector("h3")!;
+              const title = node.querySelector("h2")!;
               return `${getComputedStyle(save).backgroundColor}|${getComputedStyle(title).fontFamily}|${getComputedStyle(node).borderRadius}`;
             }),
           );
@@ -213,7 +237,7 @@ test.describe("identity previews", () => {
 
   test("leaving the page restores the page look", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 1000 });
-    await open(page, SWITCH, "press", "light");
+    await openFeatures(page, IDENTITY_KIT_DEMOS, "press", "light");
     const live = page.locator("[data-component-preview]").nth(0);
     // Wait for hydration: the server renders the fallback look, the hydrated
     // store reports the page look. Selecting earlier loses the change when

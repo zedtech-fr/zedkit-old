@@ -1,20 +1,17 @@
 import { Badge } from "@zedtech/zedkit-ui";
+import { badgeCopy } from "@/components/demos/i18n/badge-copy";
 
-const JOBS = [
-  { name: "sync", target: "Product catalogue", state: "queued" },
-  { name: "export", target: "Orders, October", state: "running" },
-  { name: "backup", target: "Customer files", state: "done" },
-];
+const JOBS = badgeCopy.tableRow.jobs;
 
 export function BadgeTableRowDemo() {
   return (
     <table className="w-full min-w-0 text-left text-sm">
-      <caption className="sr-only">Background jobs</caption>
+      <caption className="sr-only">{badgeCopy.tableRow.caption}</caption>
       <thead>
         <tr className="border-b text-muted-foreground">
-          <th scope="col" className="py-2 pr-4 font-medium">Job</th>
-          <th scope="col" className="py-2 pr-4 font-medium">Target</th>
-          <th scope="col" className="py-2 font-medium">State</th>
+          <th scope="col" className="py-2 pr-4 font-medium">{badgeCopy.tableRow.columns.job}</th>
+          <th scope="col" className="py-2 pr-4 font-medium">{badgeCopy.tableRow.columns.target}</th>
+          <th scope="col" className="py-2 font-medium">{badgeCopy.tableRow.columns.state}</th>
         </tr>
       </thead>
       <tbody>

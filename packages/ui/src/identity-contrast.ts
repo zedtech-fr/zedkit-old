@@ -4,10 +4,10 @@ const AA_BODY = 4.5;
 const AA_UI = 3;
 
 type Hsl = { h: number; s: number; l: number };
-type ContrastToken = "foreground" | "accent" | "border";
+type ContrastToken = "foreground" | "primaryForeground" | "mutedForeground" | "accent" | "border";
 type IdentityContrastWarning = {
   scheme: "light" | "dark";
-  token: "foreground" | "accent" | "border";
+  token: ContrastToken;
   ratio: number;
   min: number;
   suggestedForeground: string;
@@ -77,6 +77,8 @@ function warningFor(
 function pairWarnings(scheme: "light" | "dark", pair: IdentityTokens["light"]): Array<IdentityContrastWarning | undefined> {
   return [
     warningFor(scheme, "foreground", pair.foreground, pair.background, AA_BODY),
+    warningFor(scheme, "primaryForeground", pair.primaryForeground, pair.primary, AA_BODY),
+    warningFor(scheme, "mutedForeground", pair.mutedForeground, pair.background, AA_BODY),
     warningFor(scheme, "accent", pair.accent, pair.background, AA_UI),
     warningFor(scheme, "border", pair.border, pair.background, AA_UI),
   ];
@@ -108,8 +110,10 @@ function darkPairFromLight(light: IdentityTokens["light"]): IdentityTokens["dark
     background: invertLightness(light.background),
     foreground: invertLightness(light.foreground),
     primary: invertLightness(light.primary),
+    primaryForeground: invertLightness(light.primaryForeground),
     accent: invertLightness(light.accent),
     border: invertLightness(light.border),
+    mutedForeground: invertLightness(light.mutedForeground),
   };
   const bg = parseHsl(inverted.background);
   if (!bg) return inverted;
@@ -117,16 +121,19 @@ function darkPairFromLight(light: IdentityTokens["light"]): IdentityTokens["dark
   const bgHsl = parseHsl(background);
   if (!bgHsl) return { ...inverted, background };
   const next = { ...inverted, background };
-  for (const token of ["foreground", "accent", "border"] as const) {
+  for (const token of ["foreground", "primaryForeground", "mutedForeground", "accent", "border"] as const) {
     const colour = parseHsl(next[token]);
     if (!colour) continue;
-    const min = token === "foreground" ? AA_BODY : AA_UI;
-    if (contrastRatio(colour, bgHsl) < min) next[token] = nudgeForeground(colour, bgHsl, min);
+    const background =
+      token === "primaryForeground" ? parseHsl(next.primary) : token === "mutedForeground" ? bgHsl : bgHsl;
+    if (!background) continue;
+    const min = token === "accent" || token === "border" ? AA_UI : AA_BODY;
+    if (contrastRatio(colour, background) < min) next[token] = nudgeForeground(colour, background, min);
   }
   return next;
 }
 
-const PAIR_KEYS = ["background", "foreground", "primary", "accent", "border"] as const;
+const PAIR_KEYS = ["background", "foreground", "primary", "primaryForeground", "accent", "border", "mutedForeground"] as const;
 
 function sameLightPair(a: IdentityTokens["light"], b: IdentityTokens["light"]): boolean {
   return PAIR_KEYS.every((key) => a[key] === b[key]);
@@ -152,4 +159,17 @@ function withIdentityDarkPair(tokens: IdentityTokens, previous?: IdentityTokens)
   return { ...tokens, dark: darkPairFromLight(tokens.light) };
 }
 
-export { identityContrastWarnings, keepIdentityDarkKeys, withIdentityDarkPair, type IdentityContrastWarning };
+function identityContrastTokenLabel(token: IdentityContrastWarning["token"]): string {
+  if (token === "foreground") return "text";
+  if (token === "primaryForeground") return "primary text";
+  if (token === "mutedForeground") return "muted text";
+  return token;
+}
+
+export {
+  identityContrastTokenLabel,
+  identityContrastWarnings,
+  keepIdentityDarkKeys,
+  withIdentityDarkPair,
+  type IdentityContrastWarning,
+};

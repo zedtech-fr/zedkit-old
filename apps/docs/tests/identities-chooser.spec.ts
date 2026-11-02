@@ -1,67 +1,40 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 import { DEFAULT_IDENTITY } from "../lib/default-identity";
-import { assertA11yGate } from "./a11y-helpers";
 
 // Relative paths: the config baseURL decides the port.
 const PAGES = ["/", "/docs/getting-started"] as const;
-const IDS = ["mist", "press", "tide", "volt", "maison", "glass"] as const;
 
-/** Picks an identity through the header chooser (desktop), as a visitor would. */
-async function choose(page: Page, id: string) {
-  await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto("/docs/getting-started", { waitUntil: "networkidle" });
-  await page.getByRole("combobox", { name: "Identity" }).first().selectOption(id);
-  await expect(page.locator("html")).toHaveAttribute("data-identity", id);
-}
-
-test("the header chooser lists the six identities and starts on the default", async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto("/docs/getting-started", { waitUntil: "networkidle" });
-  await expect(page.locator("html")).toHaveAttribute("data-identity", DEFAULT_IDENTITY);
-  const chooser = page.getByRole("combobox", { name: "Identity" }).first();
-  await expect(chooser).toBeVisible();
-  expect(await chooser.locator("option").evaluateAll((options) => options.map((o) => (o as HTMLOptionElement).value))).toEqual([...IDS]);
+test("site shell has no global identity chooser on desktop or phone", async ({ page }) => {
+  for (const width of [1280, 390] as const) {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto("/docs/getting-started", { waitUntil: "networkidle" });
+    await expect(page.getByRole("combobox", { name: "Identity" })).toHaveCount(0);
+    await expect(page.getByLabel("Try another identity")).toHaveCount(0);
+    await expect(page.locator("#nd-nav select, #nd-mobile-nav select")).toHaveCount(0);
+  }
 });
 
-for (const id of IDS) {
-  test.describe(`${id} chosen from the header`, () => {
-    test("is kept across pages and reloads", async ({ page }) => {
-      await choose(page, id);
-      await page.goto("/", { waitUntil: "networkidle" });
-      await expect(page.locator("html")).toHaveAttribute("data-identity", id);
-      await page.reload({ waitUntil: "networkidle" });
-      await expect(page.locator("html")).toHaveAttribute("data-identity", id);
-    });
+test("shell keeps the default identity across pages and reload", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  for (const path of PAGES) {
+    await page.goto(path, { waitUntil: "networkidle" });
+    await expect(page.locator("html")).toHaveAttribute("data-identity", DEFAULT_IDENTITY);
+    await page.reload({ waitUntil: "networkidle" });
+    await expect(page.locator("html")).toHaveAttribute("data-identity", DEFAULT_IDENTITY);
+  }
+});
 
-    for (const theme of ["light", "dark"] as const) {
-      test(`passes the a11y gate (contrast included) in ${theme}`, async ({ page }) => {
-        await page.addInitScript((mode) => localStorage.setItem("theme", mode), theme);
-        await choose(page, id);
-        for (const path of PAGES) {
-          await page.goto(path, { waitUntil: "networkidle" });
-          await expect(page.locator("html")).toHaveAttribute("data-identity", id);
-          await expect(page.locator("html")).toHaveClass(new RegExp(`\\b${theme}\\b`));
-          await page.evaluate(() => document.fonts.ready);
-          await assertA11yGate(page);
-        }
-      });
-    }
-
-    for (const width of [360, 390] as const) {
-      test(`does not overflow at ${width}px`, async ({ page }) => {
-        await choose(page, id);
-        await page.setViewportSize({ width, height: 800 });
-        for (const path of PAGES) {
-          await page.goto(path, { waitUntil: "networkidle" });
-          await expect(page.locator("html")).toHaveAttribute("data-identity", id);
-          await page.evaluate(() => document.fonts.ready);
-          const overflow = await page.evaluate(
-            () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-          );
-          expect(overflow).toBeLessThanOrEqual(0);
-        }
-      });
+for (const width of [360, 390] as const) {
+  test(`phone shell does not overflow at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    for (const path of PAGES) {
+      await page.goto(path, { waitUntil: "networkidle" });
+      await page.evaluate(() => document.fonts.ready);
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow).toBeLessThanOrEqual(0);
     }
   });
 }

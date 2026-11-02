@@ -10,7 +10,7 @@
 
 - Import: `@zedtech/zedkit-server` — `loadEnv`
 - Wraps: `zod`
-- Status: beta
+- Status: stable
 - Short name: loadEnv
 - Audience: Node service authors who want typed `process.env` without Nest.
 - Purpose: Parse env with a zod shape and throw one readable error at boot.
@@ -28,7 +28,7 @@ const env = loadEnv({ PORT: z.coerce.number(), DATABASE_URL: z.string().url() })
 
 - Import: `@zedtech/zedkit-server` — `MemoryRateLimiter`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Short name: Rate limiting
 - Audience: Node developers protecting endpoints from abuse without infrastructure.
 - Purpose: In-process per-key rate limiting with a two-line check.
@@ -45,7 +45,7 @@ if (!limiter.allow(clientIp, 100)) return tooManyRequests();
 
 - Import: `@zedtech/zedkit-server` — `redactValue`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Short name: Redaction
 - Audience: Server developers who log objects that may contain tokens or PII.
 - Purpose: Deep-redact secrets and PII from any value before it reaches the logs.
@@ -62,7 +62,7 @@ logger.info(redactValue({ user, token, headers }));
 
 - Import: `@zedtech/zedkit-server` — `computeBackoffMs`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Short name: Backoff
 - Audience: Developers calling flaky dependencies (APIs, queues, databases).
 - Purpose: Compute exponential-backoff delays with jitter from the attempt number.
@@ -79,7 +79,7 @@ await sleep(waitMs);
 
 - Import: `@zedtech/zedkit-server` — `webhookSignatureHeader`, `verifyWebhookSignatureHeader`, `VerifyWebhookOptions`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Short name: Webhook signatures
 - Audience: Developers receiving webhooks who must prove the sender and freshness.
 - Purpose: Sign outgoing and verify incoming webhook payloads (HMAC + timestamp window).
@@ -97,7 +97,7 @@ if (!verify(secret, rawBody, headers["webhook-signature"], { maxAgeSeconds: 300 
 
 - Import: `@zedtech/zedkit-server` — `pgErrorCode`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Short name: Postgres errors
 - Audience: Developers mapping Postgres driver errors to HTTP responses.
 - Purpose: Extract the Postgres error code so unique violations map to 409, not 500.
@@ -119,7 +119,7 @@ try {
 
 - Import: `@zedtech/zedkit-server` — `pgErrorRetryable`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Short name: Postgres retry
 - Audience: Workers and job runners using `@zedtech/zedkit-core` backoff helpers.
 - Purpose: Map serialization/deadlock/connection errors to retry without duplicating SQLSTATE lists.

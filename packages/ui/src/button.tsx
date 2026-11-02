@@ -14,9 +14,11 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         outline:
-          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
+          "border border-input bg-background text-foreground shadow-sm hover:bg-muted hover:text-foreground aria-pressed:border-input aria-pressed:bg-secondary aria-pressed:text-secondary-foreground",
         secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
+        ghost:
+          "text-foreground hover:bg-muted/80 hover:text-foreground aria-pressed:bg-secondary/80 aria-pressed:text-secondary-foreground",
+        link: "text-primary underline-offset-4 hover:underline focus-visible:underline",
       },
       size: {
         default: "h-control-height px-4 py-2",
@@ -25,6 +27,16 @@ const buttonVariants = cva(
         icon: "size-control-height",
       },
     },
+    compoundVariants: [
+      {
+        variant: "link",
+        class:
+          "h-auto min-h-0 bg-transparent px-0 py-0 shadow-none hover:bg-transparent active:bg-transparent",
+      },
+      { variant: "link", size: "sm", class: "min-h-11 px-2 text-sm" },
+      { variant: "link", size: "default", class: "min-h-11 px-3" },
+      { variant: "link", size: "lg", class: "min-h-11 px-4 text-base" },
+    ],
     defaultVariants: { variant: "default", size: "default" },
   },
 );

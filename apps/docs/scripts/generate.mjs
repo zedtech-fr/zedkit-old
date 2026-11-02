@@ -21,6 +21,8 @@ import { fileURLToPath } from "node:url";
 // eslint-disable-next-line no-restricted-imports -- repo-root registry.json
 import { loadRegistryBrickNames } from "../../../scripts/registry/catalog.mjs";
 import { buildLlmsFull, truncateDescription } from "@zedtech/zedkit-seo";
+import { componentPageSections } from "../lib/component-page-sections.mjs";
+import { docsOmitNeed, hrefForOmittedNeed } from "./docs-omitted-needs.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const APP = join(HERE, "..");
@@ -41,7 +43,17 @@ export const GUIDE_NAV_SLUGS = [
 ];
 
 /** Section titles owned by the generator — prose must not repeat them. */
-export const GENERATED_DOC_SECTIONS = new Set(["At a glance", "Preview", "Install", "Example", "Props", "Accessibility"]);
+export const GENERATED_DOC_SECTIONS = new Set([
+  "At a glance",
+  "Preview",
+  "Install",
+  "Install or copy",
+  "Example",
+  "Usage and states",
+  "Props",
+  "Accessibility",
+  "Related",
+]);
 
 function slugify(need) {
   const slug = need
@@ -49,6 +61,29 @@ function slugify(need) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
   return slug.length > 0 ? slug : "need";
+}
+
+function buildRegistryBrickDocHref(catalog, placementByNeed) {
+  const hrefs = {};
+  for (const [pkg, entry] of Object.entries(catalog.packages)) {
+    const folder = shortName(pkg);
+    for (const need of entry.needs) {
+      if (!need.registry) continue;
+      const placed = placementByNeed.get(need.need);
+      if (!placed) continue;
+      hrefs[need.registry] = `/docs/${folder}/${placed.slug}`;
+    }
+  }
+  const aliasNeed = (title) => {
+    const placed = placementByNeed.get(title);
+    if (!placed) throw new Error(`generator: missing placement for "${title}".`);
+    return `/docs/${placed.folder}/${placed.slug}`;
+  };
+  if (!hrefs.theme) hrefs.theme = aliasNeed("Theme an admin app (dark/light included)");
+  if (!hrefs.button) hrefs.button = aliasNeed("Trigger actions with buttons");
+  if (!hrefs.dialog) hrefs.dialog = aliasNeed("Open modal dialogs");
+  if (!hrefs["use-online-status"]) hrefs["use-online-status"] = aliasNeed("Flag offline state with a live note");
+  return hrefs;
 }
 
 function shortName(pkg) {
@@ -60,31 +95,15 @@ function packageVersion(pkgDir) {
   return JSON.parse(text).version ?? "0.0.0";
 }
 
-/** First sentence of the newest changelog bullet for one package dir. */
-function latestChangelogEntry(pkgDir) {
-  const text = readFileSync(join(ROOT, "packages", pkgDir, "CHANGELOG.md"), "utf8");
-  const lines = text.split("\n");
-  const release = lines.findIndex((line) => line.startsWith("## "));
-  const bullet = lines.slice(release + 1).find((line) => line.startsWith("- "));
-  if (release < 0 || !bullet) throw new Error(`generator: no changelog bullet found for ${pkgDir}.`);
-  // Visitor copy: drop inline-code backticks so the home line reads as prose (#1090).
-  const entry = bullet
-    .replace(/^- (?:[0-9a-f]{7,}: )?/, "")
-    .replace(/`([^`]*)`/g, "$1")
-    .replace(/`/g, "")
-    .trim();
-  const sentence = entry.match(/^[^.]+\./);
-  return sentence ? sentence[0] : entry;
-}
-
 function metaDescription(need, folder) {
   const purpose = (need.purpose ?? "").trim();
   if (purpose.length === 0) {
     throw new Error(`generator: catalog need "${need.need}" is missing purpose.`);
   }
-  const text =
-    folder === "ui"
-      ? `${purpose} Install with npm or copy published registry bricks.`
+  const text = need.registry
+    ? `${purpose} Install with npm or copy published registry bricks.`
+    : folder === "ui"
+      ? `${purpose} Install with npm.`
       : purpose;
   return truncateDescription(text);
 }
@@ -172,33 +191,74 @@ function guidanceBlock(need, seeAlsoLinks) {
   return lines;
 }
 
-function componentPageMdx(pkg, need, version, spec, related, prose, folder) {
+/** Stable needs: no frontmatter status and no inline badge (semver = no badge UX). */
+function maturityDocParts(need) {
+  if (need.status === "stable") {
+    return { frontmatterStatus: [], badgeImport: null, badgeLine: [] };
+  }
+  return {
+    frontmatterStatus: [`status: ${need.status}`],
+    badgeImport: `import { MaturityBadge } from "../../../components/maturity-badge";`,
+    badgeLine: [`<MaturityBadge status={${JSON.stringify(need.status)}} />`, ""],
+  };
+}
+
+function componentPageMdx(pkg, need, version, spec, related, prose) {
   const examples = need.examples ?? [{ title: "Simple", code: need.example }];
-  const seeAlsoLinks = related.map((link) => `[${link.title}](${link.href})`);
+  const pageTitle = need.shortName ?? need.need;
+  const propsPriority = spec.propsPriority ?? null;
+  const propsRest = spec.propsRest ?? null;
+  const registryBrick = spec.registry ?? need.registry ?? "";
+  const purpose = (need.purpose ?? "").trim();
+  if (purpose.length === 0) {
+    throw new Error(`generator: catalog need "${need.need}" is missing purpose.`);
+  }
+  if (!need.a11y && !spec.a11yNotApplicable) {
+    throw new Error(
+      `generator: "${need.need}" has no A11y line in its CATALOG.md entry. Document it, or set "a11yNotApplicable" with a reason on its docs-manifest.json entry when it has no interactive or semantic behavior.`,
+    );
+  }
+  const sections = componentPageSections({
+    hasProps: Boolean(spec.propsFile && spec.propsName),
+    a11y: need.a11y,
+    related,
+    troubleshooting: need.troubleshooting,
+  });
+  const maturity = maturityDocParts(need);
   const head = [
     "---",
-    `title: ${JSON.stringify(need.need)}`,
-    `description: ${JSON.stringify(metaDescription(need, folder))}`,
-    `status: ${need.status}`,
+    `title: ${JSON.stringify(pageTitle)}`,
+    `description: ${JSON.stringify(purpose)}`,
+    ...maturity.frontmatterStatus,
+    "componentPage: true",
+    `componentSections: ${JSON.stringify(sections)}`,
     "---",
     "",
     "{/* GENERATED from docs/catalog/catalog.json — do not edit. */}",
     "",
-    `import { MaturityBadge } from "../../../components/maturity-badge";`,
-    `import { ComponentPage } from "../../../components/component-page";`,
+  ];
+  head.push(`import { ComponentPage } from "../../../components/component-page";`);
+  if (prose?.includes("<ComponentPreview")) {
+    head.push(`import { ComponentPreview } from "../../../components/component-preview";`);
+  }
+  head.push(
     "",
-    `<MaturityBadge status={${JSON.stringify(need.status)}} />`,
-    "",
-    ...guidanceBlock(need, seeAlsoLinks),
     "<ComponentPage",
     `  packageName={${JSON.stringify(pkg)}}`,
     `  version={${JSON.stringify(version)}}`,
+    `  status={${JSON.stringify(need.status)}}`,
+    `  purpose={${JSON.stringify(need.purpose)}}`,
+    `  audience={${JSON.stringify(need.audience)}}`,
+    `  whenToUse={${JSON.stringify(need.whenToUse)}}`,
+    `  whenNotToUse={${JSON.stringify(need.whenNotToUse)}}`,
     `  importLine={${JSON.stringify(need.import)}}`,
     `  wraps={${JSON.stringify(need.wraps)}}`,
-    `  registry={${JSON.stringify(spec.registry)}}`,
+    `  registry={${JSON.stringify(registryBrick)}}`,
     `  demo={${JSON.stringify(spec.demo)}}`,
     `  propsFile={${JSON.stringify(spec.propsFile)}}`,
     `  propsName={${JSON.stringify(spec.propsName)}}`,
+    ...(propsPriority ? [`  propsPriority={${JSON.stringify(propsPriority)}}`] : []),
+    ...(propsRest ? [`  propsRest={${JSON.stringify(propsRest)}}`] : []),
     `  examples={${JSON.stringify(examples)}}`,
     ...(spec.examples && Object.keys(spec.examples).length > 0
       ? [`  examplePreviews={${JSON.stringify(spec.examples)}}`]
@@ -208,7 +268,7 @@ function componentPageMdx(pkg, need, version, spec, related, prose, folder) {
     `  related={${JSON.stringify(related)}}`,
     "/>",
     "",
-  ];
+  );
   if (prose) head.push(prose);
   return head.join("\n");
 }
@@ -223,6 +283,7 @@ export function catalogPageKeys(catalog) {
       let slug = slugify(need.need);
       for (let i = 2; seen.has(slug); i++) slug = `${slugify(need.need)}-${i}`;
       seen.add(slug);
+      if (docsOmitNeed(need.need)) continue;
       keys.add(`${folder}/${slug}`);
     }
   }
@@ -259,7 +320,7 @@ export function expandFencePreviews(text, withImport = null) {
     if (!key) return line;
     used = true;
     const rest = meta.replace(PREVIEW_META, "");
-    return `<ComponentPreview demo="${key}" detail="Live preview" hasProps={false} />\n\n\`\`\`${lang}${rest}`;
+    return `<ComponentPreview demo="${key}" hasProps={false} />\n\n\`\`\`${lang}${rest}`;
   });
   if (!used || !withImport || out.includes("import { ComponentPreview }")) return out;
   const frontmatter = out.match(/^---\n[\s\S]*?\n---\n/);
@@ -285,31 +346,32 @@ function writeGuidePages(outDir) {
 }
 
 function pageMdx(pkg, need, version, rich, seeAlsoLinks, prose, folder) {
+  const maturity = maturityDocParts(need);
   const head = [
     "---",
     `title: ${JSON.stringify(need.need)}`,
     `description: ${JSON.stringify(metaDescription(need, folder))}`,
-    `status: ${need.status}`,
+    ...maturity.frontmatterStatus,
     "---",
     "",
     "{/* GENERATED from docs/catalog/catalog.json — do not edit. */}",
     "",
-    `import { MaturityBadge } from "../../../components/maturity-badge";`,
-    `import { Tab, Tabs } from "fumadocs-ui/components/tabs";`,
   ];
+  if (maturity.badgeImport) head.push(maturity.badgeImport);
+  head.push(`import { Tab, Tabs } from "fumadocs-ui/components/tabs";`);
   if (rich || prose?.includes("<ComponentPreview")) head.push(`import { ComponentPreview } from "../../../components/component-preview";`);
   if (rich && rich.propsFile && rich.propsName) {
     head.push(`import { PropsTable } from "../../../components/props-table";`);
   }
-  head.push("", `<MaturityBadge status={${JSON.stringify(need.status)}} />`, "");
+  head.push(`import { ComponentWrapsLine } from "../../../components/component-wraps-line";`);
+  head.push("", ...maturity.badgeLine);
   head.push(...guidanceBlock(need, seeAlsoLinks));
   if (rich) {
-    const detail = need.import.replace(/`/g, "");
     const hasProps = Boolean(rich.propsFile && rich.propsName);
     head.push(
       "## Preview",
       "",
-      `<ComponentPreview demo="${rich.demo}" detail={${JSON.stringify(detail)}} hasProps={${JSON.stringify(hasProps)}} />`,
+      `<ComponentPreview demo="${rich.demo}" hasProps={${JSON.stringify(hasProps)}} />`,
       "",
     );
   }
@@ -351,11 +413,11 @@ function pageMdx(pkg, need, version, rich, seeAlsoLinks, prose, folder) {
   examples.forEach((ex, index) => {
     const preview = index > 0 ? rich?.examples?.[ex.title] : null;
     if (preview) {
-      head.push(`<ComponentPreview demo="${preview}" detail=${JSON.stringify(`Live preview: ${ex.title}`)} hasProps={false} />`, "");
+      head.push(`<ComponentPreview demo="${preview}" hasProps={false} />`, "");
     }
     head.push(`\`\`\`${ex.lang === "css" ? "css" : "tsx"} title=${JSON.stringify(index === 0 ? "Usage" : ex.title)}`, ex.code, "```", "");
   });
-  head.push(`Wraps: ${need.wraps}`, "");
+  head.push(`<ComponentWrapsLine wraps={${JSON.stringify(need.wraps)}} />`, "");
   if (prose) head.push(prose);
   if (rich && rich.propsFile && rich.propsName) {
     head.push("## Props", "", `<PropsTable file="${rich.propsFile}" name="${rich.propsName}" />`, "");
@@ -421,6 +483,7 @@ export function generate(outDir) {
     const slugs = [];
     llms.push(`## ${pkg}`, "");
     for (const need of entry.needs) {
+      if (docsOmitNeed(need.need)) continue;
       const { slug } = placementByNeed.get(need.need);
       slugs.push(slug);
       slugsByNeed.set(`${pkg} ${need.need}`, { folder, slug });
@@ -433,9 +496,17 @@ export function generate(outDir) {
           propsFile: spec.source ?? null,
           propsName: spec.props ?? null,
           registry: spec.registry ?? null,
+          propsPriority: spec.propsPriority ?? null,
+          propsRest: spec.propsRest ?? null,
+          a11yNotApplicable: spec.a11yNotApplicable ?? null,
         };
       }
       const related = (need.seeAlso ?? []).map((target) => {
+        if (docsOmitNeed(target)) {
+          const href = hrefForOmittedNeed(target);
+          if (!href) throw new Error(`generator: omitted need "${target}" has no public href.`);
+          return { title: target, href };
+        }
         const placed = placementByNeed.get(target);
         if (!placed) throw new Error(`generator: "${need.need}" links unknown need "${target}" in See also.`);
         return { title: target, href: `/docs/${placed.folder}/${placed.slug}` };
@@ -443,10 +514,16 @@ export function generate(outDir) {
       const links = related.map((r) => `[${r.title}](${r.href})`);
       const prose = readProse(folder, slug);
       if (prose) prosePages += 1;
-      const body =
-        richBlock?.registry
-          ? componentPageMdx(pkg, need, version, { ...richBlock, registry: richBlock.registry }, related, prose, folder)
-          : pageMdx(pkg, need, version, richBlock, links, prose, folder);
+      const body = richBlock
+        ? componentPageMdx(
+            pkg,
+            need,
+            version,
+            { ...richBlock, registry: richBlock.registry ?? need.registry ?? "" },
+            related,
+            prose,
+          )
+        : pageMdx(pkg, need, version, richBlock, links, prose, folder);
       writeFileSync(join(dir, `${slug}.mdx`), body);
       pages += 1;
       llms.push(`- [${need.need}](/docs/${folder}/${slug}) — ${metaDescription(need, folder)}`);
@@ -508,26 +585,28 @@ export function generate(outDir) {
   const gallery = [...live, ...rest];
   const homeCuratedGallery = buildHomeCuratedGallery(gallery);
   const catalogIndex = buildCatalogIndex(sorted, slugsByNeed, rich);
+  const docsSearchCanonicalByHref = buildDocsSearchCanonical(sorted, slugsByNeed);
   const stats = {
     packages: Object.keys(catalog.packages).length,
     needs: Object.values(catalog.packages).reduce((n, entry) => n + entry.needs.length, 0),
   };
   const uiVersion = packageVersion("ui");
-  const uiLatestChange = latestChangelogEntry("ui");
   const uiChangelogUrl =
     "https://github.com/zedtech-fr/zedkit/blob/main/packages/ui/CHANGELOG.md";
   const uiReleasesUrl = "https://github.com/zedtech-fr/zedkit/releases";
-  const galleryModule = `// GENERATED from docs/catalog/catalog.json — do not edit.\nexport interface GalleryCard {\n  href: string;\n  title: string;\n  need: string;\n  status: string;\n  detail: string;\n  demo: string | null;\n}\n\nexport const gallery: GalleryCard[] = ${JSON.stringify(gallery, null, 2)};\n\nexport const homeCuratedGallery: GalleryCard[] = ${JSON.stringify(homeCuratedGallery, null, 2)};\n\nexport const catalogStats: { packages: number; needs: number } = ${JSON.stringify(stats)};\n\nexport const featuredPackage: string = ${JSON.stringify(uiPackage)};\n\nexport const featuredPackageVersion: string = ${JSON.stringify(uiVersion)};\n\nexport const featuredPackageChangelogUrl: string = ${JSON.stringify(uiChangelogUrl)};\nexport const featuredPackageReleasesUrl: string = ${JSON.stringify(uiReleasesUrl)};\nexport const featuredPackageLatestChange: string = ${JSON.stringify(uiLatestChange)};\n\nexport const uiGalleryStats: { components: number; livePreviews: number } = ${JSON.stringify({
+  const galleryModule = `// GENERATED from docs/catalog/catalog.json — do not edit.\nexport interface GalleryCard {\n  href: string;\n  title: string;\n  need: string;\n  status: string;\n  detail: string;\n  demo: string | null;\n}\n\nexport const gallery: GalleryCard[] = ${JSON.stringify(gallery, null, 2)};\n\nexport const homeCuratedGallery: GalleryCard[] = ${JSON.stringify(homeCuratedGallery, null, 2)};\n\nexport const catalogStats: { packages: number; needs: number } = ${JSON.stringify(stats)};\n\nexport const featuredPackage: string = ${JSON.stringify(uiPackage)};\n\nexport const featuredPackageVersion: string = ${JSON.stringify(uiVersion)};\n\nexport const featuredPackageChangelogUrl: string = ${JSON.stringify(uiChangelogUrl)};\nexport const featuredPackageReleasesUrl: string = ${JSON.stringify(uiReleasesUrl)};\n\nexport const uiGalleryStats: { components: number; livePreviews: number } = ${JSON.stringify({
     components: gallery.length,
     livePreviews: gallery.filter((card) => card.demo).length,
   })};\n`;
   const catalogIndexModule = `// GENERATED from docs/catalog/catalog.json — do not edit.\nexport type CatalogArea = "ui" | "backend" | "seo" | "agents";\n\nexport interface CatalogIndexEntry {\n  href: string;\n  title: string;\n  need: string;\n  status: string;\n  area: CatalogArea;\n  package: string;\n}\n\nexport const catalogIndex: CatalogIndexEntry[] = ${JSON.stringify(catalogIndex, null, 2)};\n`;
+  const docsSearchCanonicalModule = `// GENERATED from docs/catalog/catalog.json — do not edit.\nexport interface DocsSearchCanonicalEntry {\n  href: string;\n  label: string;\n}\n\n/** Canonical UI component doc pages keyed by pathname (e.g. \`/docs/ui/trigger-actions-with-buttons\`). */\nexport const docsSearchCanonicalByHref: Record<string, DocsSearchCanonicalEntry> = ${JSON.stringify(docsSearchCanonicalByHref, null, 2)};\n`;
   const homeScenarios = buildHomeScenarios(slugsByNeed, catalog);
   const homeEntryPoints = buildHomeEntryPoints(catalog, slugsByNeed);
   const scenariosModule = `// GENERATED from home-scenarios.json + catalog slugs — do not edit.\nexport interface HomeScenario {\n  situation: string;\n  goal: string;\n  action: string;\n  href: string;\n  linkLabel: string;\n}\n\nexport const homeScenarios: HomeScenario[] = ${JSON.stringify(homeScenarios, null, 2)};\n`;
   const entryPointsModule = `// GENERATED from home-entry-points.json + catalog — do not edit.\nexport interface HomeEntryPoint {\n  title: string;\n  summary: string;\n  href: string;\n  needCount: number;\n  linkLabel: string;\n}\n\nexport const homeEntryPoints: HomeEntryPoint[] = ${JSON.stringify(homeEntryPoints, null, 2)};\n`;
   const registryBricks = loadRegistryBrickNames(ROOT);
-  const registrySiteModule = `// GENERATED from registry.json — do not edit.\nexport const registryBrickNames: string[] = ${JSON.stringify(registryBricks)};\n\nexport const featuredRegistryBrick: string = ${JSON.stringify(registryBricks.includes("badge") ? "badge" : (registryBricks.find((name) => name !== "theme") ?? registryBricks[0]))};\n`;
+  const registryBrickDocHref = buildRegistryBrickDocHref(catalog, placementByNeed);
+  const registrySiteModule = `// GENERATED from registry.json — do not edit.\nexport const registryBrickNames: string[] = ${JSON.stringify(registryBricks)};\n\nexport const featuredRegistryBrick: string = ${JSON.stringify(registryBricks.includes("button") ? "button" : (registryBricks.find((name) => name !== "theme") ?? registryBricks[0]))};\n\nexport const registryBrickDocHref: Record<string, string> = ${JSON.stringify(registryBrickDocHref, null, 2)};\n`;
   const maturityModule = buildMaturityCompatibility(catalog);
   return {
     pages,
@@ -545,6 +624,7 @@ export function generate(outDir) {
     registrySiteModule,
     catalogIndex,
     catalogIndexModule,
+    docsSearchCanonicalModule,
     homeCuratedGallery,
     maturityModule,
   };
@@ -570,6 +650,24 @@ function catalogAreaForFolder(folder) {
   const area = CATALOG_AREA_BY_FOLDER[folder];
   if (!area) throw new Error(`catalog index: unmapped docs folder "${folder}"`);
   return area;
+}
+
+/** UI kit short names -> doc href for docs search ranking (e.g. button -> Button page). */
+function buildDocsSearchCanonical(sorted, slugsByNeed) {
+  /** @type {Record<string, { href: string; label: string }>} */
+  const byHref = {};
+  for (const [pkg, entry] of sorted) {
+    if (shortName(pkg) !== "ui") continue;
+    for (const need of entry.needs) {
+      const name = need.shortName;
+      if (!name || typeof name !== "string") continue;
+      const placed = slugsByNeed.get(`${pkg} ${need.need}`);
+      if (!placed) continue;
+      const href = `/docs/${placed.folder}/${placed.slug}`;
+      byHref[href] = { href, label: name };
+    }
+  }
+  return byHref;
 }
 
 function buildCatalogIndex(sorted, slugsByNeed, rich) {
@@ -729,6 +827,7 @@ if (invoked === fileURLToPath(import.meta.url)) {
       entryPointsModule,
       registrySiteModule,
       catalogIndexModule,
+      docsSearchCanonicalModule,
       maturityModule,
     } = generate(outDir);
     writeFileSync(join(APP, "content", "gallery.ts"), galleryModule);
@@ -736,6 +835,7 @@ if (invoked === fileURLToPath(import.meta.url)) {
     writeFileSync(join(APP, "content", "home-entry-points.ts"), entryPointsModule);
     writeFileSync(join(APP, "content", "registry-site.ts"), registrySiteModule);
     writeFileSync(join(APP, "content", "catalog-index.ts"), catalogIndexModule);
+    writeFileSync(join(APP, "content", "docs-search-canonical.ts"), docsSearchCanonicalModule);
     writeFileSync(join(APP, "content", "maturity-compatibility.ts"), maturityModule);
     console.log(`docs: generated ${pages} pages in ${folders.length} folders -> ${outDir}.`);
   }

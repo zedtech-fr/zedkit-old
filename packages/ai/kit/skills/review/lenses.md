@@ -15,7 +15,7 @@ exists IS a blocker.
 | adversarial-tests | agent `test-writer` (method: skill `adversarial-tests`) | exists | logic, handlers, endpoints, state machines | when triggered | edge cases + missing tests |
 | security | agent `security-reviewer` | exists | auth, secrets, tenancy, user data, external calls, crypto | when triggered | threats + fixes, file:line |
 | skeptic | agent `skeptic` (angle per brief: plan, ui/ux, security, scope, data/ops, copy) | exists | plans, specs, ADRs, estimates, product/UI/scope decisions | when triggered | pre-mortem + ranked objections |
-| ui | agent `ui-designer` | exists | `packages/ui/**`, `**/*.tsx`, styles, preview/gallery | when triggered | kit/a11y/state findings + persona(lazy client) |
+| ui | agent `ui-designer` | exists | `packages/ui/**`, `**/*.tsx`, styles, preview/gallery | when triggered | kit/composition/hierarchy/state findings + examined screenshots + persona(lazy client) |
 | copy | agent `copywriter` | exists | user-visible strings, messages, errors, CTAs | when triggered | keys + FR/EN proposals |
 | a11y | agent `a11y-auditor` | exists | `**/*.tsx`, components, forms, tables | when triggered | WCAG findings + fixes, file:line |
 | seo | agent `seo-auditor` | exists | `packages/seo/**`, pages, metadata, sitemap, redirects | when triggered | rule findings + fixes |
@@ -23,7 +23,7 @@ exists IS a blocker.
 | docs | agent `docs-writer` | exists | `README.md`, `AGENTS.md`, `CATALOG.md`, `docs/**`, skills, agents, commands | when triggered | drift + fixes, compiling examples |
 | release | agent `release-manager` | exists | `.changeset/**`, public API, catalog `Status`, `package.json` metadata | when triggered | semver + migration-note + package-metadata (keywords/homepage/bugs/README) check |
 | research | agent `researcher` (method: skill `research`) | exists | new capability with no in-repo precedent | optional | adopt/wrap/build + sources |
-| frontend-quality | agents `ui-designer` + `console-architecture` | exists | app routes, views, `**/*.tsx`, styles, preview/gallery | when triggered | layer + composition + one-file-one-job findings, file:line |
+| frontend-quality | agents `ui-designer` + `console-architecture` | exists | app routes, views, `**/*.tsx`, styles, preview/gallery | when triggered | layer + composition + design critique + one-file-one-job findings, file:line |
 | doc-demos | agent `docs-writer` (demos: `ui-designer`) | exists | doc apps, `**/demos/**`, preview registries, generated pages | when triggered | registry + frame + drift findings per §Frontend rules, file:line |
 
 ## Frontend rules (the `ui` lens fails the review on any of these)
@@ -36,13 +36,18 @@ exists IS a blocker.
 3. Doc pages stay thin: load content + doc layout only. No direct
    imports of dozens of components.
 4. Zero raw structural HTML and zero ad-hoc styles in demos and doc
-   pages: `Stack`/`Section`/`Heading`/`Text` from the kit, tokens only.
+   pages: structure comes from `Stack`/`Section`/`Heading`/`Text` from the
+   kit (visually hidden text is `Text as="span"` with `sr-only`), utilities
+   are tokens only.
 5. A lint rule or test bans bulk imports in doc pages (it fails on the
    grab-bag it replaces, passes after).
-6. Gentle motion by default with reduced-motion respected: overlays and
-   state changes animate entry AND exit (~150-250ms, transform/opacity, no
-   shift). Example refusal: an overlay without transition.
-7. Loading and feedback named, never naked: zero naked spinners, zero
-   generic 'loading' — every wait names what loads, skeletons match the
-   real content shape, retry keeps state.
+6. Motion that explains a transition or preserves context (overlay
+   entry/exit, list reorder, focus-following panel), with reduced-motion
+   respected (fade or instant, never displacement). Not required on every
+   state change; instant is fine for small feedback. Example refusal: a
+   modal that appears with no fade and hides what changed.
+7. Loading and feedback named, never naked: where a wait exists, there are
+   zero naked spinners and zero generic 'loading' — it names what loads,
+   skeletons match the real content shape, retry keeps state. A page or
+   example with no wait has no loading state.
    Example refusal: a spinner with no label on a slow save.

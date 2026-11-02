@@ -1,11 +1,12 @@
 import { Badge, Section, Stack } from "@zedtech/zedkit-ui";
+import { stackCopy } from "@/components/demos/i18n/stack-copy";
 
 export function StackDemo() {
   return (
-    <Section title="Team" description="Who can access.">
+    <Section title={stackCopy.title} description={stackCopy.description}>
       <Stack direction="horizontal" gap={2}>
-        <Badge>Ada</Badge>
-        <Badge variant="secondary">Bo</Badge>
+        <Badge>{stackCopy.ada}</Badge>
+        <Badge variant="secondary">{stackCopy.bo}</Badge>
       </Stack>
     </Section>
   );

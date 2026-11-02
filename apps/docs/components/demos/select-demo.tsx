@@ -10,11 +10,12 @@ import {
   Stack,
   Text,
 } from "@zedtech/zedkit-ui";
+import { selectCopy } from "@/components/demos/i18n/select-copy";
 
 const DELIVERY: Record<string, string> = {
-  eu: "Delivery in 2 to 3 working days.",
-  us: "Delivery in 5 to 7 working days.",
-  apac: "Delivery in 7 to 10 working days.",
+  eu: selectCopy.delivery.eu,
+  us: selectCopy.delivery.us,
+  apac: selectCopy.delivery.apac,
 };
 
 export function SelectDemo() {
@@ -22,17 +23,17 @@ export function SelectDemo() {
   return (
     <Stack gap={2} className="min-w-0">
       <Select {...(region === undefined ? {} : { value: region })} onValueChange={setRegion}>
-        <SelectTrigger aria-label="Pick a region">
-          <SelectValue placeholder="Pick a region" />
+        <SelectTrigger aria-label={selectCopy.label}>
+          <SelectValue placeholder={selectCopy.placeholder} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="eu">Europe</SelectItem>
-          <SelectItem value="us">Americas</SelectItem>
-          <SelectItem value="apac">Asia-Pacific</SelectItem>
+          <SelectItem value="eu">{selectCopy.europe}</SelectItem>
+          <SelectItem value="us">{selectCopy.americas}</SelectItem>
+          <SelectItem value="apac">{selectCopy.apac}</SelectItem>
         </SelectContent>
       </Select>
       <Text variant="muted" className="text-xs" aria-live="polite">
-        {region ? DELIVERY[region] : "Shipping options depend on the region."}
+        {region ? DELIVERY[region] : selectCopy.empty}
       </Text>
     </Stack>
   );

@@ -38,7 +38,7 @@ test.describe("docs dialog and drawer previews show realistic screens", () => {
 
   test("confirm: custom labels preview keeps access when cancelled, revokes when confirmed", async ({ page }) => {
     await page.goto(`${BASE}/docs/ui/confirm-destructive-actions`, { waitUntil: "networkidle" });
-    await expect(page.getByText("Live preview: Custom button labels")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Custom button labels", exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Revoke", exact: true }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByRole("heading", { name: "Revoke this API key?" })).toBeVisible();

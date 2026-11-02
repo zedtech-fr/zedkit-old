@@ -1,15 +1,16 @@
 "use client";
 
 import { DataTable, createDataTableColumns } from "@zedtech/zedkit-ui";
+import { fourStateCopy } from "@/components/demos/i18n/four-state-copy";
 
 type Person = { name: string; age: number };
 
 const helper = createDataTableColumns<Person>();
-const columns = [helper.accessor("name", { header: "Name" }), helper.accessor("age", { header: "Age" })];
-const rows: Person[] = [
-  { name: "Ada", age: 36 },
-  { name: "Bob", age: 30 },
+const columns = [
+  helper.accessor("name", { header: fourStateCopy.success.columns.name }),
+  helper.accessor("age", { header: fourStateCopy.success.columns.age }),
 ];
+const rows: Person[] = [...fourStateCopy.success.rows];
 
 export function FourStateSuccessDemo() {
   return <DataTable columns={columns} data={rows} />;

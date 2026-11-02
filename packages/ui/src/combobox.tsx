@@ -17,6 +17,8 @@ function Combobox(props: ComboboxProps) {
   const { combobox, filteredItems, inputProps, openOnFocus } = useComboboxLogic(props);
   const emptyMessage = props.emptyMessage ?? messages.empty;
   const loading = props.loading ?? false;
+  // Called every render, not only when the popover is open: downshift needs the call, and the ref attaches when the list mounts.
+  const menuProps = combobox.getMenuProps({}, { suppressRefError: true });
 
   return (
     <Popover open={combobox.isOpen}>
@@ -40,7 +42,7 @@ function Combobox(props: ComboboxProps) {
         <ComboboxMenu
           emptyMessage={emptyMessage}
           getItemProps={combobox.getItemProps}
-          getMenuProps={combobox.getMenuProps}
+          menuProps={menuProps}
           highlightedIndex={combobox.highlightedIndex}
           items={filteredItems}
           loading={loading}

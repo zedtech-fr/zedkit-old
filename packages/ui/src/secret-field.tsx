@@ -15,11 +15,12 @@ export interface SecretFieldProps {
   /** Accessible label for the copy button. */
   copyLabel?: string;
   /**
-   * Render the value wrapped in an auto-growing textarea instead of a
-   * single-line input, so long values (install commands, short file
-   * snippets) read in full on narrow screens. Shown-once secrets should
-   * stay single-line (default). Browsers without `field-sizing` fall back
-   * to one row per line of the value.
+   * Render the value in a read-only textarea that wraps (at spaces, and
+   * inside a token that is longer than the line) and grows to show all of
+   * it, so long values (install commands, short file snippets) read in full
+   * on narrow screens. Shown-once secrets should stay single-line (default).
+   * Browsers without `field-sizing` start at one row per line of the value
+   * and scroll inside the box when a line wraps.
    */
   multiline?: boolean | undefined;
   /**
@@ -61,7 +62,7 @@ function SecretField({ id, value, copyLabel, multiline = false, "aria-label": ar
           rows={Math.max(1, value.split("\n").length)}
           spellCheck={false}
           autoComplete="off"
-          className="field-sizing-content max-h-64 min-h-control-height resize-none font-mono wrap-anywhere"
+          className="field-sizing-content max-h-64 min-h-control-height resize-none overflow-y-auto font-mono wrap-anywhere whitespace-pre-wrap"
           aria-label={ariaLabel}
         />
       ) : (

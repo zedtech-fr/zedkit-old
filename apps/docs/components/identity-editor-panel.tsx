@@ -1,7 +1,6 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
-import { useTheme } from "next-themes";
 import {
   applyIdentity,
   applyIdentityTokenSheet,
@@ -19,10 +18,11 @@ import {
   type IdentityTokens,
 } from "@zedtech/zedkit-ui";
 
+import { identityEditorCopy } from "@/components/i18n/identity-editor-copy";
 import { ContrastChips, DRAFT_SELECTOR, DraftCard, EditorFields } from "@/components/identity-editor-fields";
 import { IdentityEditorExport } from "@/components/identity-editor-export";
 import { IdentityEditorSuggest } from "@/components/identity-editor-suggest";
-import { IdentityEditorToolbar } from "@/components/identity-editor-toolbar";
+import { IdentityEditorKeepBar, IdentityEditorPreviewBar } from "@/components/identity-editor-toolbar";
 import { DEFAULT_IDENTITY } from "@/lib/default-identity";
 import { useDraftTokens } from "@/lib/identity-editor-draft";
 import {
@@ -54,6 +54,7 @@ type EditorBodyProps = {
   onFix: (warning: IdentityContrastWarning) => void;
   onSuggestApply: (next: IdentityTokens, toSite: boolean) => void;
   onUndo: () => void;
+  onLoad: (tokens: IdentityTokens, darkKept: readonly string[]) => void;
   onApplySite: () => void;
   canUndo: boolean;
   appliedSite: boolean;
@@ -110,32 +111,56 @@ function bindNamedLooks(
 
 function IdentityEditorBody(props: EditorBodyProps) {
   const scheme = props.darkPreview ? "dark" : "light";
+  // The order is the task: choose a look, read the hint, see the card, make the first adjustment, then keep
+  // the look. On a phone the card is a flex item placed by `order` between the hint and the adjustments;
+  // from `lg` it is the right column and stays in view while the left column scrolls.
   return (
-    <Stack gap={6} data-slot="identity-editor">
-      <IdentityEditorToolbar
-        identity={props.identity}
-        looks={props.looks}
-        name={props.name}
-        namedSelected={props.namedSelected}
-        darkPreview={props.darkPreview}
-        canUndo={props.canUndo}
-        onIdentity={props.onIdentity}
-        onName={props.onName}
-        onSave={props.onSave}
-        onRename={props.onRename}
-        onDelete={props.onDelete}
-        onDark={props.onDark}
-        onUndo={props.onUndo}
-        onReset={props.onReset}
-        onApplySite={props.onApplySite}
-      />
-      <Text>Change spacing first, then watch the card.</Text>
-      {props.appliedSite ? <Text role="status">Applied to the whole site.</Text> : null}
-      <ContrastChips warnings={identityContrastWarnings(props.tokens)} onFix={props.onFix} />
-      <IdentityEditorSuggest tokens={props.tokens} onApply={props.onSuggestApply} />
+    <Stack gap={6} className="min-w-0 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:items-start" data-slot="identity-editor">
       <DraftCard darkPreview={props.darkPreview} />
-      <EditorFields tokens={props.tokens} scheme={scheme} onPatch={props.onPatch} />
-      <IdentityEditorExport tokens={props.tokens} />
+      <Stack gap={6} className="min-w-0 max-lg:contents lg:col-start-1 lg:row-start-1">
+        <IdentityEditorPreviewBar
+          className="max-lg:order-1"
+          identity={props.identity}
+          looks={props.looks}
+          darkPreview={props.darkPreview}
+          canUndo={props.canUndo}
+          onIdentity={props.onIdentity}
+          onDark={props.onDark}
+          onUndo={props.onUndo}
+          onReset={props.onReset}
+        />
+        <Stack gap={2} className="max-lg:order-2">
+          <Text>{identityEditorCopy.panel.hint}</Text>
+          {props.appliedSite ? <Text role="status">{identityEditorCopy.panel.applied}</Text> : null}
+        </Stack>
+        <Stack className="empty:hidden max-lg:order-4">
+          <ContrastChips warnings={identityContrastWarnings(props.tokens)} onFix={props.onFix} />
+        </Stack>
+        <Stack className="max-lg:order-5">
+          <EditorFields
+            tokens={props.tokens}
+            scheme={scheme}
+            onPatch={props.onPatch}
+            afterShape={
+              <IdentityEditorKeepBar
+                name={props.name}
+                namedSelected={props.namedSelected}
+                onName={props.onName}
+                onSave={props.onSave}
+                onRename={props.onRename}
+                onDelete={props.onDelete}
+                onApplySite={props.onApplySite}
+              />
+            }
+          />
+        </Stack>
+        <Stack className="max-lg:order-6">
+          <IdentityEditorSuggest tokens={props.tokens} onApply={props.onSuggestApply} />
+        </Stack>
+        <Stack className="max-lg:order-7">
+          <IdentityEditorExport tokens={props.tokens} onLoad={props.onLoad} />
+        </Stack>
+      </Stack>
     </Stack>
   );
 }
@@ -190,7 +215,6 @@ function IdentityEditorPanel() {
   const [name, setName] = useState("");
   const [darkPreview, setDarkPreview] = useState(false);
   const [ready, setReady] = useState(false);
-  const { setTheme } = useTheme();
   const { tokens, darkKept, remember, undo, applySite, detachSite, appliedSite, past, load, patch, fix, applySuggest } = draft;
   const bound = bindNamedLooks(named, identity, name, tokens, setIdentity, setName, remember);
 
@@ -200,10 +224,7 @@ function IdentityEditorPanel() {
     load(parsed.tokens, parsed.darkKept);
     const saved = readNamedIdentities().find((item) => item.id === parsed.identity);
     if (saved) setName(saved.label);
-    if (parsed.darkPreview) {
-      setDarkPreview(true);
-      setTheme("dark");
-    }
+    if (parsed.darkPreview) setDarkPreview(true);
     setReady(true);
   }, []);
 
@@ -227,14 +248,12 @@ function IdentityEditorPanel() {
       darkPreview={darkPreview}
       {...bound}
       onName={setName}
-      onDark={() => {
-        setDarkPreview(!darkPreview);
-        setTheme(darkPreview ? "light" : "dark");
-      }}
+      onDark={() => setDarkPreview(!darkPreview)}
       onPatch={(key, value) => patch(key, value, darkPreview ? "dark" : "light")}
       onFix={fix}
       onSuggestApply={applySuggest}
       onUndo={undo}
+      onLoad={remember}
       onApplySite={applySite}
       canUndo={past.length > 0}
       appliedSite={appliedSite}

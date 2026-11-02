@@ -49,6 +49,18 @@ test.describe("overlay mobile (refs #425)", () => {
     await expect(dialog).toBeHidden();
   });
 
+  test("Done closes the long dialog", async ({ page }) => {
+    await page.goto(DIALOG_PAGE, { waitUntil: "networkidle" });
+    const trigger = page.getByRole("button", { name: "Open long dialog" });
+    await trigger.scrollIntoViewIfNeeded();
+    await trigger.click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible({ timeout: 10_000 });
+    await expect(dialog.getByRole("heading", { name: "Order activity" })).toBeVisible();
+    await dialog.getByRole("button", { name: "Done" }).click();
+    await expect(dialog).toBeHidden();
+  });
+
   test("confirm stays compact with a 44px close", async ({ page }) => {
     await page.goto(CONFIRM_PAGE, { waitUntil: "networkidle" });
     await page.getByRole("button", { name: "Delete item" }).click();

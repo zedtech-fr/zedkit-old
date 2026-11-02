@@ -6,7 +6,10 @@ test.use({ viewport: { width: 360, height: 740 } });
 
 for (const identity of IDENTITIES) {
   test(`code blocks keep a single frame and scroll inside it (${identity}, 360px)`, async ({ page }) => {
-    await page.addInitScript((id) => localStorage.setItem("zk-identity", id), identity);
+    await page.addInitScript((id) => {
+      localStorage.setItem("zk-docs-site-identity", id);
+      localStorage.setItem("zk-docs-site-identity-opt-in", "1");
+    }, identity);
     await page.goto("/docs/add-seo-to-nextjs");
     await expect(page.locator("html")).toHaveAttribute("data-identity", identity);
     const frame = page.locator("figure.shiki").first();
@@ -40,7 +43,10 @@ for (const identity of IDENTITIES) {
 for (const identity of IDENTITIES) {
   test(`component page code blocks have no frame inside a frame (${identity}, 390px)`, async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.addInitScript((id) => localStorage.setItem("zk-identity", id), identity);
+    await page.addInitScript((id) => {
+      localStorage.setItem("zk-docs-site-identity", id);
+      localStorage.setItem("zk-docs-site-identity-opt-in", "1");
+    }, identity);
     await page.goto("/docs/ui/call-out-a-notice-or-an-error-state");
     await expect(page.locator("html")).toHaveAttribute("data-identity", identity);
     await expect(page.locator("figure.shiki").first()).toBeVisible();

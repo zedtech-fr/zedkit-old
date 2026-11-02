@@ -1,96 +1,52 @@
-import Link from "next/link";
-import { Button, Card, CardContent, CardHeader, CardTitle, Section, Stack, Text } from "@zedtech/zedkit-ui";
-import { CatalogActionLabel } from "@/components/docs-action-label";
-import { MaturityBadge } from "@/components/maturity-badge";
-import type { GalleryCard } from "@/content/gallery";
-import { homeGalleryDemos } from "@/components/home-gallery-demos";
-import type { HomeScenario } from "@/content/home-scenarios";
+import dynamic from "next/dynamic";
 import type { HomeEntryPoint } from "@/content/home-entry-points";
-import { HomeEntryPointsSection } from "@/ui/home/home-entry-points-section";
-import { HomeProofs } from "@/ui/home/home-proofs";
-import { HomeScenariosSection } from "@/ui/home/home-scenarios-section";
-import {
-  HOME_CARD_GRID_THREE_COL,
-  HOME_MARKETING_ROOT_PROPS,
-  HOME_CARD_TITLE_CLASS,
-  HOME_PERSUASION_TEXT_CLASS,
-  HOME_SECTION_CONTENT_GAP,
-} from "@/ui/home/home-rhythm";
+import { loadHomeInitCommand } from "@/ui/home/home-get-started-section";
+import { HomeIdentitiesSection } from "@/ui/home/home-identities-section";
+import { HomeSecondarySection } from "@/ui/home/home-secondary-section";
 
-function GalleryEntry({ card, className = "min-w-0" }: { card: GalleryCard; className?: string }) {
-  const Demo = card.demo ? homeGalleryDemos[card.demo] : undefined;
-  return (
-    <Card className={className}>
-      <CardHeader className="flex-row items-center justify-between space-y-0">
-        <CardTitle className={HOME_CARD_TITLE_CLASS}>
-          <Link href={card.href}>{card.title}</Link>
-        </CardTitle>
-        <MaturityBadge status={card.status} />
-      </CardHeader>
-      <CardContent>
-        {Demo ? <Demo /> : <Text variant="muted" className={HOME_PERSUASION_TEXT_CLASS}>{card.detail}</Text>}
-      </CardContent>
-    </Card>
-  );
-}
+const HomeGetStartedSection = dynamic(
+  () => import("@/ui/home/home-get-started-section").then((mod) => ({ default: mod.HomeGetStartedSection })),
+  {
+    loading: () => (
+      <section id="get-started" aria-busy="true" className="min-h-96 w-full scroll-mt-24">
+        <section id="install-or-copy" className="sr-only" />
+      </section>
+    ),
+  },
+);
+
+const HomeComponentFamiliesSection = dynamic(
+  () =>
+    import("@/ui/home/home-component-families-section").then((mod) => ({
+      default: mod.HomeComponentFamiliesSection,
+    })),
+  {
+    loading: () => <section id="components" aria-busy="true" className="min-h-48 w-full scroll-mt-24" />,
+  },
+);
 
 export type HomeBelowHeroProps = {
-  curatedGallery: GalleryCard[];
-  galleryCount: number;
-  stats: { packages: number; needs: number };
+  featuredPackage: string;
   uiGalleryStats: { components: number; livePreviews: number };
-  scenarios: HomeScenario[];
   entryPoints: HomeEntryPoint[];
-  themeHref: string;
 };
 
-/** Marketing sections below the hero — code-split from the first home payload (#618). */
+/**
+ * Marketing sections below the hero, code-split from the first home payload (#618), in the order a visitor
+ * decides: the proof is above, then the same task in six looks, then how to adopt, then where to look next.
+ */
 export function HomeBelowHero({
-  curatedGallery,
-  galleryCount,
-  stats,
+  featuredPackage,
   uiGalleryStats,
-  scenarios,
   entryPoints,
-  themeHref,
 }: HomeBelowHeroProps) {
+  const initCommand = loadHomeInitCommand();
   return (
-    <div {...HOME_MARKETING_ROOT_PROPS} data-home-below-hero="">
-      <HomeEntryPointsSection entryPoints={entryPoints} />
-      <HomeScenariosSection scenarios={scenarios} />
-      <HomeProofs
-        packages={stats.packages}
-        needs={stats.needs}
-        uiComponents={uiGalleryStats.components}
-        livePreviews={uiGalleryStats.livePreviews}
-        themeHref={themeHref}
-      />
-      <Section
-        bleed
-        tone="muted"
-        spacing="lg"
-        containerWidth="wide"
-        title="Components"
-        id="components"
-        description={`Curated UI previews (${curatedGallery.length} of ${galleryCount} components). Open the catalog to filter every need across UI, core & server, SEO, and agents.`}
-      >
-        <Stack gap={HOME_SECTION_CONTENT_GAP}>
-          <Stack className={HOME_CARD_GRID_THREE_COL}>
-            {curatedGallery.map((card, index) => (
-              <GalleryEntry
-                key={card.href}
-                card={card}
-                className={index >= 3 ? "hidden min-w-0 md:flex md:flex-col" : "min-w-0"}
-              />
-            ))}
-          </Stack>
-          <Button asChild variant="outline">
-            <Link href="/catalog">
-              <CatalogActionLabel>Browse full catalog</CatalogActionLabel>
-            </Link>
-          </Button>
-        </Stack>
-      </Section>
+    <div data-home-below-hero="">
+      <HomeIdentitiesSection />
+      <HomeGetStartedSection npmPackage={featuredPackage} />
+      <HomeComponentFamiliesSection componentCount={uiGalleryStats.components} />
+      <HomeSecondarySection entryPoints={entryPoints} initCommand={initCommand} />
     </div>
   );
 }

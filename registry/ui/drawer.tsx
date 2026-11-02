@@ -8,38 +8,11 @@ import * as React from "react";
 import { X } from "lucide-react";
 import { Drawer as DrawerPrimitive } from "vaul";
 import { buttonVariants } from "@/components/ui/button";
-import { resolveModalMountAutoFocus } from "@/components/ui/overlay-modal";
+import { resolveModalMountAutoFocus, overlayDrawerFooterClass, overlayDrawerHeaderClass } from "@/components/ui/overlay-modal";
 import { cn } from "@/lib/utils";
+import { usePortalContainer } from "@/components/ui/theme-scope";
+import { useNarrowViewport } from "@/components/ui/use-narrow-viewport";
 import { useUiMessages } from "@/components/ui/ui-provider";
-
-/** Matches Tailwind `sm` (640px): phones and narrow viewports. */
-const MOBILE_MEDIA = "(max-width: 639px)";
-
-function readMobileViewport(): boolean {
-  if (typeof window === "undefined") {
-    return false;
-  }
-  // Some prerender and test environments ship a `window` without matchMedia.
-  const query = typeof window.matchMedia === "function" ? window.matchMedia(MOBILE_MEDIA) : null;
-  return window.innerWidth < 640 || Boolean(query?.matches);
-}
-
-function useMobileViewport(): boolean {
-  const [isMobile, setIsMobile] = React.useState(readMobileViewport);
-
-  React.useLayoutEffect(() => {
-    const sync = () => setIsMobile(readMobileViewport());
-    sync();
-    if (typeof window.matchMedia !== "function") {
-      return;
-    }
-    const mql = window.matchMedia(MOBILE_MEDIA);
-    mql.addEventListener("change", sync);
-    return () => mql.removeEventListener("change", sync);
-  }, []);
-
-  return isMobile;
-}
 
 type DrawerRootProps = React.ComponentProps<typeof DrawerPrimitive.Root> & {
   /**
@@ -70,7 +43,7 @@ function Drawer({
   autoFocus,
   ...props
 }: DrawerRootProps) {
-  const isMobile = useMobileViewport();
+  const isMobile = useNarrowViewport();
   const resolvedDirection = resolveDrawerDirection(direction, mobile, isMobile) ?? "bottom";
   const mountAutoFocus = resolveModalMountAutoFocus(autoFocus, modal);
   return (
@@ -94,8 +67,14 @@ function DrawerClose({ ...props }: React.ComponentProps<typeof DrawerPrimitive.C
   return <DrawerPrimitive.Close data-slot="drawer-close" {...props} />;
 }
 
-function DrawerPortal({ ...props }: React.ComponentProps<typeof DrawerPrimitive.Portal>) {
-  return <DrawerPrimitive.Portal data-slot="drawer-portal" {...props} />;
+function DrawerPortal({
+  container,
+  ...props
+}: React.ComponentProps<typeof DrawerPrimitive.Portal>) {
+  const scoped = usePortalContainer();
+  return (
+    <DrawerPrimitive.Portal data-slot="drawer-portal" {...props} container={container ?? scoped} />
+  );
 }
 
 function DrawerOverlay({ className, ...props }: React.ComponentProps<typeof DrawerPrimitive.Overlay>) {
@@ -103,7 +82,7 @@ function DrawerOverlay({ className, ...props }: React.ComponentProps<typeof Draw
     <DrawerPrimitive.Overlay
       data-slot="drawer-overlay"
       className={cn(
-        "fixed inset-0 z-overlay bg-overlay/80",
+        "fixed inset-0 z-overlay bg-overlay/50 backdrop-blur-sm",
         "motion-safe:data-[state=open]:animate-[zk-fade-in_var(--motion-base)_var(--ease-enter)]",
         "motion-safe:data-[state=closed]:animate-[zk-fade-out_var(--motion-base)_var(--ease-exit)]",
         className,
@@ -131,7 +110,7 @@ function DrawerContent({
       <DrawerPrimitive.Content
         data-slot="drawer-content"
         className={cn(
-          "fixed z-overlay flex flex-col border bg-background outline-none",
+          "fixed z-overlay flex flex-col border bg-card text-card-foreground outline-none",
           // Safety net for content composed without DrawerHeader/Body/Footer (a bare form, text, a list): it still
           // gets the shared side gutters and a bottom inset that clears the home indicator. Buttons and the
           // kit slots keep their own spacing.
@@ -169,10 +148,7 @@ function DrawerHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="drawer-header"
-      className={cn(
-        "sticky top-0 z-10 flex shrink-0 flex-col gap-drawer-header-gap border-b border-border bg-background p-4 text-center sm:text-left",
-        className,
-      )}
+      className={cn(overlayDrawerHeaderClass, className)}
       {...props}
     />
   );
@@ -192,10 +168,7 @@ function DrawerFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="drawer-footer"
-      className={cn(
-        "sticky bottom-0 z-10 mt-auto flex shrink-0 flex-col gap-2 border-t border-border bg-background px-4 pt-4 pb-drawer-footer-safe",
-        className,
-      )}
+      className={cn(overlayDrawerFooterClass, className)}
       {...props}
     />
   );

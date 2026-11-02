@@ -9,7 +9,7 @@
 
 - Import: `@zedtech/zedkit-flags` — `defineFlagRegistry`, `memoryProviderFromRegistry`, `createMemoryProvider`, `OpenFeature`, `TypedInMemoryProvider`, `Client`, `Provider`, `EvaluationContext`, `JsonValue`, `buildOpenFeatureFlagDefinitions`, `FlagValue`, `FlagRegistry`
 - Wraps: `@openfeature/server-sdk` (peer)
-- Status: alpha
+- Status: beta
 - Short name: defineFlagRegistry
 - Audience: Server boot code and tests that need deterministic flag values.
 - Purpose: Keep flag keys and default values in one object; build an in-memory OpenFeature provider from it.
@@ -27,7 +27,7 @@ OpenFeature.setProvider(memoryProviderFromRegistry(registry));
 
 - Import: `@zedtech/zedkit-flags` — `getFlag`, `Client`, `FlagReturnValue`
 - Wraps: `@openfeature/server-sdk` (peer)
-- Status: alpha
+- Status: beta
 - Short name: getFlag
 - Audience: Handlers and jobs that branch on feature flags.
 - Purpose: Read a flag with the default type taken from the registry entry.
@@ -46,7 +46,7 @@ const enabled = await getFlag(OpenFeature.getClient(), registry, "exportCsv");
 
 - Import: `@zedtech/zedkit-flags` — `parseFlagsJson`, `loadFlagsFromEnv`, `mergeFlagValues`, `createMemoryProvider`
 - Wraps: `(none)`
-- Status: alpha
+- Status: beta
 - Short name: loadFlagsFromEnv
 - Audience: CI, preview apps, and integration tests.
 - Purpose: Parse `ZEDKIT_FLAGS_JSON` or a JSON string and merge overrides onto registry defaults.
@@ -65,7 +65,7 @@ OpenFeature.setProvider(createMemoryProvider(merged));
 
 - Import: `@zedtech/zedkit-flags` — `readFlagOverrides`, `writeFlagOverride`, `mergeFlagValue`, `FLAG_OVERRIDE_STORAGE_KEY`, `flagOverridesSnapshot`, `subscribeFlagOverrides`
 - Wraps: `(none)`
-- Status: alpha
+- Status: beta
 - Short name: writeFlagOverride
 - Audience: Authors building internal dev panels or docs previews.
 - Purpose: Persist boolean, string, or number overrides in `localStorage` and merge them after OpenFeature evaluation.
@@ -85,7 +85,7 @@ writeFlagOverride(localStorage, "beta", !effective);
 
 - Import: `@zedtech/zedkit-flags/react` — `ZedkitFlagsProvider`, `useFlag`, `OpenFeatureProvider`, `OpenFeature`, `TypedInMemoryProvider`, `useBooleanFlagValue`, `useStringFlagValue`, `useNumberFlagValue`
 - Wraps: `@openfeature/react-sdk`, `@openfeature/web-sdk` (peers)
-- Status: alpha
+- Status: beta
 - Short name: useFlag
 - Audience: Client components that gate UI on feature flags.
 - Purpose: Register an in-memory provider from a registry and subscribe to local overrides via `useFlag`.

@@ -10,7 +10,8 @@ const THEME = "theme-an-admin-app-dark-light-included";
 async function open(page: import("@playwright/test").Page, path: string, identity: string, mode: string) {
   await page.addInitScript(
     ([i, m]) => {
-      localStorage.setItem("zk-identity", i!);
+      localStorage.setItem("zk-docs-site-identity", i!);
+      localStorage.setItem("zk-docs-site-identity-opt-in", "1");
       localStorage.setItem("theme", m!);
     },
     [identity, mode],
@@ -82,7 +83,7 @@ test.describe("offline note previews", () => {
 test("theme page shows a literal globals.css and names next-themes (#1068)", async ({ page }) => {
   await page.goto(`${BASE}/${THEME}`, { waitUntil: "networkidle" });
   await expect(page.getByText("Globals CSS", { exact: true })).toBeVisible();
-  const cssBlock = page.locator("pre").filter({ hasText: "@source" }).first();
+  const cssBlock = page.locator("pre").filter({ hasText: '@import "tailwindcss"' }).first();
   await expect(cssBlock).toContainText('@import "@zedtech/zedkit-ui/styles.css"');
   await expect(page.locator("pre").filter({ hasText: "pnpm add next-themes" }).first()).toBeVisible();
 });

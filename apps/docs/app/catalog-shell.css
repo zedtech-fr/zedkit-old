@@ -1,0 +1,15 @@
+[data-catalog-shell] [data-catalog-filter-search],
+[data-catalog-shell] [data-catalog-filter-select] {
+  box-shadow: none;
+  color: hsl(var(--foreground));
+}
+
+[data-catalog-shell] [data-catalog-filter-select] [data-slot="select-value"] {
+  color: hsl(var(--foreground));
+}
+
+@media (width >= 40rem) {
+  [data-catalog-shell] [data-catalog-filter-search] {
+    min-width: 12rem;
+  }
+}

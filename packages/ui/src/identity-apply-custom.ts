@@ -11,11 +11,15 @@ import { isPresetId, parseIdentityTokens, tokensToCss, type IdentityTokens } fro
  * A look id writes CSS under `:root[data-identity="…"]` and keeps that id;
  * any other string is the storage key and activates `custom`.
  */
-function applyCustomIdentity(tokens: IdentityTokens, storageKey: string = IDENTITY_STORAGE_KEY): boolean {
+function applyCustomIdentity(
+  tokens: IdentityTokens,
+  lookOrKey: string = IDENTITY_STORAGE_KEY,
+  persistKey: string = IDENTITY_STORAGE_KEY,
+): boolean {
   const parsed = parseIdentityTokens(tokens);
   if (!parsed.success) return false;
-  const look = isPresetId(storageKey) || isNamedIdentityId(storageKey) ? storageKey : undefined;
-  const key = look ? IDENTITY_STORAGE_KEY : storageKey;
+  const look = isPresetId(lookOrKey) || isNamedIdentityId(lookOrKey) ? lookOrKey : undefined;
+  const key = look ? persistKey : lookOrKey;
   const selector = `:root[data-identity="${look ?? CUSTOM_IDENTITY_ID}"]`;
   applyCustomIdentityCss(tokensToCss(parsed.data, selector), key);
   if (!look) {

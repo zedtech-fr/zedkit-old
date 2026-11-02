@@ -95,10 +95,17 @@ for spec in "${entries[@]}"; do
   fi
   cfg="packages/$pkg/temp/$report.extractor.json"
   write_config "$pkg" "$entry" "$report" "$cfg"
-  extra=()
-  [ "$write" = 1 ] && extra+=(--local)
-  if ! pnpm exec api-extractor run --config "$cfg" "${extra[@]}"; then
+  generated="packages/$pkg/temp/$report"
+  pnpm exec api-extractor run --config "$cfg" --local >/dev/null 2>&1 || true
+  if [ ! -f "$generated" ]; then
     echo "api-report: $pkg $report drifted or extractor failed"
+    fail=1
+  elif [ "$write" = 1 ]; then
+    cp "$generated" "$dest"
+    echo "api-report: $pkg $report wrote"
+  elif ! diff -q "$dest" "$generated" >/dev/null; then
+    echo "api-report: $pkg $report drifted"
+    diff -u "$dest" "$generated" || true
     fail=1
   else
     echo "api-report: $pkg $report ok"

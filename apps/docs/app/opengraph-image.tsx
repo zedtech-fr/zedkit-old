@@ -1,6 +1,8 @@
 import { ImageResponse } from "next/og";
 import { Logo } from "@zedtech/zedkit-ui";
 
+import { openGraphCopy } from "@/app/i18n/opengraph-copy";
+
 export const dynamic = "force-static";
 
 export const size = { width: 1200, height: 630 };
@@ -23,10 +25,10 @@ export default function OpenGraphImage() {
         }}
       >
         <Logo title="" style={{ height: 180, width: 240 }} />
-        <div style={{ fontSize: 96, marginTop: 24, fontWeight: 600, letterSpacing: "-0.04em" }}>zedkit</div>
-        <div style={{ fontSize: 32, marginTop: 16, opacity: 0.75 }}>
-          TypeScript packages and coding-agent setup for your repo
+        <div style={{ fontSize: 96, marginTop: 24, fontWeight: 600, letterSpacing: "-0.04em" }}>
+          {openGraphCopy.name}
         </div>
+        <div style={{ fontSize: 32, marginTop: 16, opacity: 0.75 }}>{openGraphCopy.tagline}</div>
       </div>
     ),
     { ...size },

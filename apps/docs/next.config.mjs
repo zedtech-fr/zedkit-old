@@ -10,6 +10,8 @@ const nextConfig = {
   // Static export: the docs build emits the whole site to apps/docs/out,
   // ready to be served by any static host.
   output: "export",
+  // Playwright talks to 127.0.0.1; Next 16 otherwise blocks that origin in dev.
+  allowedDevOrigins: ["127.0.0.1", "localhost"],
   experimental: {
     ...(Number.isFinite(buildCpus) && buildCpus > 0 ? { cpus: buildCpus } : {}),
     // Smaller client chunks on home/catalog (#618): barrel imports tree-shake per module.

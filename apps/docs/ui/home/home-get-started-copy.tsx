@@ -1,34 +1,21 @@
 "use client";
 
-import { Heading, Stack } from "@zedtech/zedkit-ui";
-import { HomeGetStartedAiBlock } from "@/ui/home/home-get-started-ai-block";
-import { HomeGetStartedInstallBlock } from "@/ui/home/home-get-started-install-block";
-import { HomeGetStartedQuickstartBlock } from "@/ui/home/home-get-started-quickstart-block";
+import { HomeGetStartedAdoptionResult } from "@/ui/home/home-get-started-adoption-result";
 import { HOME_SECTION_CONTENT_GAP } from "@/ui/home/home-rhythm";
+import { Stack } from "@zedtech/zedkit-ui";
 
 export function HomeGetStartedCopy({
-  initCommand,
-  packageInstallCmd,
-  registryAddCmd,
-  registryBricks,
+  packageName,
+  brick,
+  source,
 }: {
-  initCommand: string;
-  packageInstallCmd: string;
-  registryAddCmd: string;
-  registryBricks: string[];
+  packageName: string;
+  brick: string;
+  source: string;
 }) {
   return (
     <Stack gap={HOME_SECTION_CONTENT_GAP} className="w-full min-w-0">
-      <Heading level={3}>Set up your coding agent</Heading>
-      <HomeGetStartedAiBlock initCommand={initCommand} />
-      <Heading level={3}>Install it or copy it</Heading>
-      <HomeGetStartedInstallBlock
-        packageInstallCmd={packageInstallCmd}
-        registryAddCmd={registryAddCmd}
-        registryBricks={registryBricks}
-      />
-      <Heading level={3}>UI quickstart</Heading>
-      <HomeGetStartedQuickstartBlock />
+      <HomeGetStartedAdoptionResult packageName={packageName} brick={brick} source={source} />
     </Stack>
   );
 }

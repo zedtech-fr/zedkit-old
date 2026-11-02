@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { contrastRatio } from "./a11y-helpers";
+import { contrastRatio, revealPreviewDisplay } from "./a11y-helpers";
 import { useIdentity } from "./identity-helpers";
 
 // Relative paths: the config baseURL decides the port.
@@ -45,6 +45,11 @@ function over(fg: Rgba, backdrop: [number, number, number]): [number, number, nu
 async function openOverlay(page: Page, path: string, trigger: string, identity: string | null, theme: "light" | "dark") {
   await page.goto(path, { waitUntil: "networkidle" });
   await useIdentity(page, identity, theme);
+  // Overlays mount in the nearest ThemeScope, so pin the look on the specimen itself.
+  const preview = page.locator("[data-component-preview]").first();
+  await revealPreviewDisplay(preview);
+  if (identity) await preview.getByRole("combobox", { name: "Style of this demo" }).selectOption(identity);
+  await preview.getByRole("button", { name: theme === "light" ? "Light" : "Dark", exact: true }).click();
   await page.getByRole("button", { name: trigger }).click();
   const panel = page.getByRole("dialog");
   await expect(panel).toBeVisible({ timeout: 10_000 });
@@ -97,7 +102,7 @@ test.describe("glass overlay surfaces", () => {
         expect(s.filter).toContain("saturate(");
         expect(parseColor(s.borderColor)[3]).toBeLessThan(1);
         expect(s.shadow).not.toBe("none");
-        // A lighter scrim than the stock 80%, so the blurred page shows through.
+        // A lighter scrim than the stock 50%, so the blurred page shows through.
         expect(parseColor(s.scrim)[3]).toBeLessThanOrEqual(0.45);
 
         // Contrast holds over the lightest and darkest content that can sit behind the glass.
@@ -129,13 +134,13 @@ test.describe("glass overlay surfaces", () => {
     }
   }
 
-  test("other identities and the stock look keep opaque panels and the 80% scrim", async ({ page }) => {
+  test("other identities and the stock look keep opaque panels and the 50% frosted scrim", async ({ page }) => {
     for (const identity of [null, "mist", "press", "tide", "volt", "maison"]) {
       const panel = await openOverlay(page, DRAWER_PAGE, "Open drawer", identity, "light");
       const s = await readSurface(page, "drawer");
       expect(parseColor(s.background)[3], `${identity} panel`).toBe(1);
       expect(s.filter === "none" || s.filter === "", `${identity} filter`).toBe(true);
-      expect(parseColor(s.scrim)[3], `${identity} scrim`).toBeGreaterThanOrEqual(0.7);
+      expect(parseColor(s.scrim)[3], `${identity} scrim`).toBeGreaterThanOrEqual(0.49);
       await page.keyboard.press("Escape");
       await expect(panel).toBeHidden();
     }
@@ -144,6 +149,9 @@ test.describe("glass overlay surfaces", () => {
   test("select list is glass too", async ({ page }) => {
     await page.goto(SELECT_PAGE, { waitUntil: "networkidle" });
     await useIdentity(page, "glass", "light");
+    const preview = page.locator("[data-component-preview]").first();
+    await revealPreviewDisplay(preview);
+    await preview.getByRole("combobox", { name: "Style of this demo" }).selectOption("glass");
     await page.getByRole("combobox", { name: "Pick a region" }).first().click();
     const list = page.getByRole("listbox");
     await expect(list).toBeVisible();

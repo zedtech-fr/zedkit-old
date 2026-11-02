@@ -2,14 +2,8 @@
 
 import { IconLabel } from "@zedtech/zedkit-ui";
 import { areaIconFor } from "@/lib/domain-icons";
+import { docsAreaLabelCopy } from "@/components/i18n/docs-area-label-copy";
 
-const AREA_LABELS = {
-  ui: "UI",
-  backend: "Core & server",
-  seo: "SEO",
-  agents: "Coding agents",
-} as const;
-
-export function DocsAreaLabel({ area }: { area: keyof typeof AREA_LABELS }) {
-  return <IconLabel icon={areaIconFor(area)}>{AREA_LABELS[area]}</IconLabel>;
+export function DocsAreaLabel({ area }: { area: keyof typeof docsAreaLabelCopy }) {
+  return <IconLabel icon={areaIconFor(area)}>{docsAreaLabelCopy[area]}</IconLabel>;
 }

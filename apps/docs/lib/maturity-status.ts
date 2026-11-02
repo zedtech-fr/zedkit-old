@@ -16,11 +16,12 @@ const MATURITY_ICONS = {
 export function maturityBadgeVariant(status: string): MaturityBadgeVariant {
   switch (status.toLowerCase()) {
     case "stable":
-      return "success";
+      return "outline";
     case "beta":
       return "secondary";
     case "alpha":
-      return "warning";
+      // Outline, not the solid warning fill: the heaviest chip on a page should not outweigh the names it labels.
+      return "outline";
     case "planned":
       return "outline";
     case "deprecated":
@@ -28,6 +29,11 @@ export function maturityBadgeVariant(status: string): MaturityBadgeVariant {
     default:
       return "secondary";
   }
+}
+
+/** Alpha keeps its warning colour on the border and the icon; the label stays in the text colour (4.5:1). */
+export function maturityBadgeClass(status: string): string {
+  return status.toLowerCase() === "alpha" ? "border-warning [&_svg]:text-warning" : "";
 }
 
 export function maturityIconFor(status: string): LucideIcon {

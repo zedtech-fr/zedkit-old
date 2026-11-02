@@ -23,7 +23,6 @@ import {
   Badge,
   Button,
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardSkeleton,
@@ -49,74 +48,11 @@ import {
   cn,
   createDataTableColumns,
   toast,
-  type BadgeProps,
 } from "@zedtech/zedkit-ui";
 
+import { projectTrackerDemoCopy } from "@/components/i18n/project-tracker-demo-copy";
+import { SEED_TASKS, STATUS_VARIANT, type TaskRow } from "./project-tracker-demo-data";
 import { usePreviewMobile } from "./preview-viewport";
-
-type TaskStatus = "To do" | "In progress" | "In review" | "Blocked" | "Done";
-
-interface TaskRow {
-  id: string;
-  title: string;
-  owner: string;
-  status: TaskStatus;
-  /** ISO date (UTC), formatted on render so the output never depends on the viewer locale. */
-  due: string;
-}
-
-const STATUS_VARIANT: Record<TaskStatus, BadgeProps["variant"]> = {
-  "To do": "outline",
-  "In progress": "secondary",
-  "In review": "warning",
-  Blocked: "destructive",
-  Done: "success",
-};
-
-const SEED_TASKS: TaskRow[] = [
-  { id: "t-101", title: "Write the homepage copy", owner: "Priya Nair", status: "In review", due: "2026-11-03" },
-  {
-    id: "t-102",
-    title: "Redirect the old product URLs",
-    owner: "Luca Moretti",
-    status: "In progress",
-    due: "2026-11-04",
-  },
-  { id: "t-103", title: "Compress and resize hero images", owner: "Tom Becker", status: "Done", due: "2026-10-28" },
-  { id: "t-104", title: "Choose the new typeface pairing", owner: "Aiko Tanaka", status: "Done", due: "2026-10-26" },
-  {
-    id: "t-105",
-    title: "Connect the contact form to email",
-    owner: "Luca Moretti",
-    status: "Blocked",
-    due: "2026-11-05",
-  },
-  {
-    id: "t-106",
-    title: "Review the checkout flow on phones",
-    owner: "Maya Chen",
-    status: "In progress",
-    due: "2026-11-06",
-  },
-  {
-    id: "t-107",
-    title: "Translate the pricing page to French",
-    owner: "Priya Nair",
-    status: "To do",
-    due: "2026-11-10",
-  },
-  { id: "t-108", title: "Set up the analytics dashboard", owner: "Tom Becker", status: "To do", due: "2026-11-12" },
-  {
-    id: "t-109",
-    title: "Test keyboard navigation on every page",
-    owner: "Aiko Tanaka",
-    status: "In review",
-    due: "2026-11-07",
-  },
-  { id: "t-110", title: "Archive the 2024 blog posts", owner: "Maya Chen", status: "To do", due: "2026-11-18" },
-  { id: "t-111", title: "Write the launch announcement", owner: "Priya Nair", status: "To do", due: "2026-11-20" },
-  { id: "t-112", title: "Run the final accessibility check", owner: "Aiko Tanaka", status: "To do", due: "2026-11-24" },
-];
 
 const dueFormat = new Intl.DateTimeFormat("en", { month: "short", day: "numeric", timeZone: "UTC" });
 
@@ -124,7 +60,7 @@ const tableHelper = createDataTableColumns<TaskRow>();
 
 const columns = [
   tableHelper.accessor("title", {
-    header: "Task",
+    header: projectTrackerDemoCopy.columns.task,
     cell: ({ row }) => (
       <Stack gap={1} className="min-w-0">
         <Text className="font-medium">{row.original.title}</Text>
@@ -135,11 +71,11 @@ const columns = [
     ),
   }),
   tableHelper.accessor("status", {
-    header: "Status",
+    header: projectTrackerDemoCopy.columns.status,
     cell: ({ getValue }) => <Badge variant={STATUS_VARIANT[getValue()]}>{getValue()}</Badge>,
   }),
   tableHelper.accessor("due", {
-    header: "Due",
+    header: projectTrackerDemoCopy.columns.due,
     cell: ({ getValue }) => dueFormat.format(new Date(`${getValue()}T00:00:00Z`)),
   }),
 ];
@@ -150,28 +86,28 @@ interface NavItem {
 }
 
 const NAV_ITEMS: readonly NavItem[] = [
-  { label: "Overview", icon: LayoutDashboard },
-  { label: "Tasks", icon: ListChecks },
-  { label: "Calendar", icon: CalendarDays },
-  { label: "Team", icon: Users },
-  { label: "Settings", icon: Settings },
+  { label: projectTrackerDemoCopy.nav.overview, icon: LayoutDashboard },
+  { label: projectTrackerDemoCopy.nav.tasks, icon: ListChecks },
+  { label: projectTrackerDemoCopy.nav.calendar, icon: CalendarDays },
+  { label: projectTrackerDemoCopy.nav.team, icon: Users },
+  { label: projectTrackerDemoCopy.nav.settings, icon: Settings },
 ];
 
-const ACTIVE_ITEM = "Tasks";
+const ACTIVE_ITEM = projectTrackerDemoCopy.nav.tasks;
 
 type PageState = "data" | "loading" | "empty";
 
 const PAGE_STATES: readonly { value: PageState; label: string }[] = [
-  { value: "data", label: "With data" },
-  { value: "loading", label: "Loading" },
-  { value: "empty", label: "Empty" },
+  { value: "data", label: projectTrackerDemoCopy.pageStates.data },
+  { value: "loading", label: projectTrackerDemoCopy.pageStates.loading },
+  { value: "empty", label: projectTrackerDemoCopy.pageStates.empty },
 ];
 
 const MENU_ITEMS: readonly NavItem[] = [
-  { label: "Your profile", icon: UserRound },
-  { label: "Notification settings", icon: Bell },
-  { label: "Switch workspace", icon: Repeat },
-  { label: "Help and shortcuts", icon: CircleHelp },
+  { label: projectTrackerDemoCopy.menu.profile, icon: UserRound },
+  { label: projectTrackerDemoCopy.menu.notifications, icon: Bell },
+  { label: projectTrackerDemoCopy.menu.workspace, icon: Repeat },
+  { label: projectTrackerDemoCopy.menu.help, icon: CircleHelp },
 ];
 
 function notice(message: string) {
@@ -195,7 +131,7 @@ function Avatar({ initials, className }: { initials: string; className?: string 
 
 function ShellNav({ wrap }: { wrap?: (item: ReactNode) => ReactNode }) {
   return (
-    <nav aria-label="Main">
+    <nav aria-label={projectTrackerDemoCopy.nav.ariaLabel}>
       <Stack gap={1}>
         {NAV_ITEMS.map(({ label, icon: Icon }) => {
           const active = label === ACTIVE_ITEM;
@@ -205,7 +141,7 @@ function ShellNav({ wrap }: { wrap?: (item: ReactNode) => ReactNode }) {
               variant={active ? "secondary" : "ghost"}
               aria-current={active ? "page" : undefined}
               className="w-full justify-start gap-2"
-              onClick={active ? undefined : notice(`${label} is not part of this example. Tasks has the full screen.`)}
+              onClick={active ? undefined : notice(projectTrackerDemoCopy.nav.unavailable(label))}
             >
               <Icon className="size-4" aria-hidden />
               {label}
@@ -220,18 +156,18 @@ function ShellNav({ wrap }: { wrap?: (item: ReactNode) => ReactNode }) {
 
 function Sidebar() {
   return (
-    <Stack gap={6} className="h-full p-4">
+    <Stack gap={4} className="h-full p-3">
       <Stack gap={1}>
-        <Text className="font-semibold">Harbor Studio</Text>
+        <Text className="font-semibold">{projectTrackerDemoCopy.brand}</Text>
         <Text variant="muted" className="text-xs">
-          Project tracker
+          {projectTrackerDemoCopy.product}
         </Text>
       </Stack>
       <ShellNav />
       <Stack gap={2} className="mt-auto">
-        <ProgressBar value={62} label="Sprint 14 progress" />
+        <ProgressBar value={62} label={projectTrackerDemoCopy.sprintLabel} />
         <Text variant="muted" className="text-xs">
-          Sprint 14 · 62% done · 5 days left
+          {projectTrackerDemoCopy.sprintCaption}
         </Text>
       </Stack>
     </Stack>
@@ -243,15 +179,15 @@ function MobileNav() {
   return (
     <Drawer direction="left" mobile="side">
       <DrawerTrigger asChild>
-        <IconButton label="Open navigation" variant="ghost" className={mobile ? undefined : "md:hidden"}>
+        <IconButton label={projectTrackerDemoCopy.openNavigation} variant="ghost" className={mobile ? undefined : "md:hidden"}>
           <Menu className="size-4" aria-hidden />
         </IconButton>
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHandle />
         <DrawerHeader>
-          <DrawerTitle>Harbor Studio</DrawerTitle>
-          <DrawerDescription>Project tracker</DrawerDescription>
+          <DrawerTitle>{projectTrackerDemoCopy.brand}</DrawerTitle>
+          <DrawerDescription>{projectTrackerDemoCopy.product}</DrawerDescription>
         </DrawerHeader>
         <DrawerBody>
           <ShellNav wrap={(item) => <DrawerClose asChild>{item}</DrawerClose>} />
@@ -266,10 +202,10 @@ function UserMenu() {
   return (
     <Drawer>
       <DrawerTrigger asChild>
-        <Button type="button" variant="ghost" className="gap-2 px-2" aria-label="Open user menu">
-          <Avatar initials="MC" />
+        <Button type="button" variant="ghost" className="gap-2 px-2" aria-label={projectTrackerDemoCopy.openUserMenu}>
+          <Avatar initials={projectTrackerDemoCopy.initials} />
           <Text as="span" className={cn("text-sm font-medium", mobile ? "hidden" : "max-sm:hidden")}>
-            Maya Chen
+            {projectTrackerDemoCopy.people.maya}
           </Text>
         </Button>
       </DrawerTrigger>
@@ -277,14 +213,14 @@ function UserMenu() {
         <DrawerHandle />
         <DrawerHeader>
           <Stack direction="horizontal" gap={3} className="text-left">
-            <Avatar initials="MC" className="size-10 text-sm" />
+            <Avatar initials={projectTrackerDemoCopy.initials} className="size-10 text-sm" />
             <Stack gap={1}>
-              <DrawerTitle>Maya Chen</DrawerTitle>
-              <DrawerDescription>maya.chen@example.com</DrawerDescription>
+              <DrawerTitle>{projectTrackerDemoCopy.people.maya}</DrawerTitle>
+              <DrawerDescription>{projectTrackerDemoCopy.email}</DrawerDescription>
             </Stack>
           </Stack>
           <Badge variant="secondary" className="w-fit">
-            Project manager
+            {projectTrackerDemoCopy.role}
           </Badge>
         </DrawerHeader>
         <DrawerBody>
@@ -295,7 +231,7 @@ function UserMenu() {
                   type="button"
                   variant="ghost"
                   className="w-full justify-start gap-2"
-                  onClick={notice(`${label} is not part of this example.`)}
+                  onClick={notice(projectTrackerDemoCopy.menu.unavailable(label))}
                 >
                   <Icon className="size-4" aria-hidden />
                   {label}
@@ -306,9 +242,9 @@ function UserMenu() {
         </DrawerBody>
         <DrawerFooter>
           <DrawerClose asChild>
-            <Button type="button" variant="outline" className="gap-2" onClick={notice("Signed out (example only)")}>
+            <Button type="button" variant="outline" className="gap-2" onClick={notice(projectTrackerDemoCopy.signedOut)}>
               <LogOut className="size-4" aria-hidden />
-              Sign out
+              {projectTrackerDemoCopy.signOut}
             </Button>
           </DrawerClose>
         </DrawerFooter>
@@ -322,10 +258,10 @@ function TopBar() {
     <Stack direction="horizontal" gap={2} className="justify-between px-4 py-2">
       <Stack direction="horizontal" gap={2}>
         <MobileNav />
-        <Text className="text-sm font-medium md:hidden">Harbor Studio</Text>
+        <Text className="text-sm font-medium md:hidden">{projectTrackerDemoCopy.brand}</Text>
       </Stack>
       <Stack direction="horizontal" gap={1}>
-        <IconButton label="Notifications" variant="ghost" onClick={notice("You are all caught up.")}>
+        <IconButton label={projectTrackerDemoCopy.notifications} variant="ghost" onClick={notice(projectTrackerDemoCopy.caughtUp)}>
           <Bell className="size-4" aria-hidden />
         </IconButton>
         <UserMenu />
@@ -336,11 +272,11 @@ function TopBar() {
 
 function Breadcrumbs() {
   return (
-    <nav aria-label="Breadcrumb" className="mb-2">
+    <nav aria-label={projectTrackerDemoCopy.breadcrumbAriaLabel} className="mb-2">
       <Text as="span" variant="muted" className="text-xs">
-        Projects / Website relaunch /{" "}
+        {projectTrackerDemoCopy.breadcrumbLead}
         <Text as="span" className="text-xs text-foreground">
-          Tasks
+          {projectTrackerDemoCopy.nav.tasks}
         </Text>
       </Text>
     </nav>
@@ -348,41 +284,42 @@ function Breadcrumbs() {
 }
 
 function SummaryCards({ rows }: { rows: TaskRow[] }) {
-  const done = rows.filter((row) => row.status === "Done").length;
-  const review = rows.filter((row) => row.status === "In review").length;
-  const blocked = rows.filter((row) => row.status === "Blocked").length;
+  const done = rows.filter((row) => row.status === projectTrackerDemoCopy.status.done).length;
+  const review = rows.filter((row) => row.status === projectTrackerDemoCopy.status.inReview).length;
+  const blocked = rows.filter((row) => row.status === projectTrackerDemoCopy.status.blocked).length;
   const cards = [
-    { label: "Open tasks", value: String(rows.length - done), note: `${blocked} blocked` },
-    { label: "Waiting for review", value: String(review), note: "Reviewers were notified" },
-    { label: "Completed", value: `${done} of ${rows.length}`, note: "Since the project started" },
+    { label: projectTrackerDemoCopy.summary.openTasks, value: String(rows.length - done), note: projectTrackerDemoCopy.summary.blocked(blocked) },
+    { label: projectTrackerDemoCopy.summary.waiting, value: String(review), note: projectTrackerDemoCopy.summary.reviewersNotified },
+    { label: projectTrackerDemoCopy.summary.completed, value: projectTrackerDemoCopy.summary.completedValue(done, rows.length), note: projectTrackerDemoCopy.summary.sinceStart },
   ];
   return (
-    <Stack direction="horizontal" gap={4} className="flex-wrap items-stretch">
-      {cards.map((card) => (
-        <Card key={card.label} className="min-w-40 flex-1">
-          <CardHeader>
-            <CardDescription>{card.label}</CardDescription>
-            <CardTitle className="text-2xl">{card.value}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Text variant="muted" className="text-xs">
-              {card.note}
-            </Text>
-          </CardContent>
-        </Card>
-      ))}
-    </Stack>
+    <Card>
+      <CardHeader className="p-4">
+        <Stack gap={3}>
+          {cards.map((card) => (
+            <Stack
+              key={card.label}
+              direction="horizontal"
+              gap={3}
+              className="items-baseline justify-between"
+            >
+              <Stack gap={1} className="min-w-0">
+                <CardDescription>{card.label}</CardDescription>
+                <Text variant="muted" className="text-xs">
+                  {card.note}
+                </Text>
+              </Stack>
+              <CardTitle className="text-2xl whitespace-nowrap tabular-nums">{card.value}</CardTitle>
+            </Stack>
+          ))}
+        </Stack>
+      </CardHeader>
+    </Card>
   );
 }
 
 function SummarySkeletons() {
-  return (
-    <Stack direction="horizontal" gap={4} className="flex-wrap items-stretch">
-      {[0, 1, 2].map((index) => (
-        <CardSkeleton key={index} label="Loading summary" className="min-w-40 flex-1" />
-      ))}
-    </Stack>
-  );
+  return <CardSkeleton label={projectTrackerDemoCopy.summary.loading} />;
 }
 
 /**
@@ -399,15 +336,15 @@ export function ProjectTrackerDemoApp() {
     setRows((prev) => [
       {
         id: `t-${200 + prev.length}`,
-        title: "Plan the next sprint review",
-        owner: "Maya Chen",
-        status: "To do",
+        title: projectTrackerDemoCopy.tasks.nextReview,
+        owner: projectTrackerDemoCopy.people.maya,
+        status: projectTrackerDemoCopy.status.todo,
         due: "2026-11-09",
       },
       ...prev,
     ]);
     setState("data");
-    toast.success("Task created");
+    toast.success(projectTrackerDemoCopy.taskCreated);
   }
 
   const loading = state === "loading";
@@ -416,9 +353,9 @@ export function ProjectTrackerDemoApp() {
   return (
     <Stack gap={3} className="w-full min-w-0">
       <Toaster />
-      <Stack direction="horizontal" gap={2} className="flex-wrap" role="group" aria-label="Page state">
+      <Stack direction="horizontal" gap={2} className="flex-wrap" role="group" aria-label={projectTrackerDemoCopy.pageState}>
         <Text variant="muted" className="text-xs">
-          Page state
+          {projectTrackerDemoCopy.pageState}
         </Text>
         {PAGE_STATES.map((entry) => (
           <Button
@@ -433,38 +370,39 @@ export function ProjectTrackerDemoApp() {
           </Button>
         ))}
       </Stack>
-      <Stack className="h-[min(40rem,80svh)] min-w-0 overflow-y-auto rounded-lg border border-border bg-background">
+      <Stack className="h-[min(40rem,80svh)] min-w-0 overflow-hidden rounded-lg border border-border bg-background">
         <AppShell
-          className={cn("min-h-0", mobile && "[&>aside]:hidden")}
+          className={cn("h-full min-h-0 [&>aside]:w-48", mobile && "[&>aside]:hidden")}
           sidebar={<Sidebar />}
           topbar={<TopBar />}
         >
           <Breadcrumbs />
           <PageHeader
-            title="Tasks"
-            description="Website relaunch · everything the team has to ship before the launch on November 25."
+            titleAs="h2"
+            title={projectTrackerDemoCopy.nav.tasks}
+            description={projectTrackerDemoCopy.description}
             actions={
               <>
-                <Button type="button" variant="outline" className="gap-2" onClick={notice("Export started: tasks.csv")}>
+                <Button type="button" size="sm" variant="outline" className="gap-2" onClick={notice(projectTrackerDemoCopy.exportStarted)}>
                   <Download className="size-4" aria-hidden />
-                  Export
+                  {projectTrackerDemoCopy.export}
                 </Button>
-                <Button type="button" className="gap-2" onClick={addTask}>
+                <Button type="button" size="sm" className="gap-2" onClick={addTask}>
                   <Plus className="size-4" aria-hidden />
-                  New task
+                  {projectTrackerDemoCopy.newTask}
                 </Button>
               </>
             }
           />
-          <Stack gap={6}>
+          <Stack gap={4}>
             {loading ? <SummarySkeletons /> : state === "data" ? <SummaryCards rows={rows} /> : null}
             <Separator />
             <DataTable
               columns={columns}
               data={tableRows}
               loading={loading}
-              emptyMessage="No tasks yet. Select New task to add the first one."
-              filterPlaceholder="Filter tasks…"
+              emptyMessage={projectTrackerDemoCopy.emptyMessage}
+              filterPlaceholder={projectTrackerDemoCopy.filterPlaceholder}
               pageSize={6}
             />
           </Stack>

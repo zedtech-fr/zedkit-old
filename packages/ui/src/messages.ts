@@ -6,10 +6,13 @@ export type ZedkitUiMessages = {
   progress: string;
   filter: string;
   empty: string;
+  clearFilters: string;
   previous: string;
   next: string;
   /** Template with `{page}` and `{pageCount}`. */
   pageOf: string;
+  /** Template with `{step}`, `{stepCount}`, and `{title}` (WizardSteps mobile summary). */
+  wizardStepOf: string;
   copyToClipboard: string;
   live: string;
   idle: string;
@@ -47,9 +50,11 @@ export const zedkitUiMessagesEn: ZedkitUiMessages = {
   progress: "Progress",
   filter: "Filter…",
   empty: "No results.",
+  clearFilters: "Clear filters",
   previous: "Previous",
   next: "Next",
   pageOf: "Page {page} of {pageCount}",
+  wizardStepOf: "Step {step} of {stepCount} · {title}",
   copyToClipboard: "Copy to clipboard",
   live: "Live",
   idle: "Idle",
@@ -82,9 +87,11 @@ export const zedkitUiMessagesFr: ZedkitUiMessages = {
   progress: "Progression",
   filter: "Filtrer…",
   empty: "Aucun résultat.",
+  clearFilters: "Effacer les filtres",
   previous: "Précédent",
   next: "Suivant",
   pageOf: "Page {page} sur {pageCount}",
+  wizardStepOf: "Étape {step} sur {stepCount} · {title}",
   copyToClipboard: "Copier dans le presse-papiers",
   live: "En direct",
   idle: "Inactif",

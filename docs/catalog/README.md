@@ -73,22 +73,31 @@ import { a } from "@zedtech/zedkit-core";
 
 ## Maturity
 
-Every need carries an honest maturity badge (also in
-[`catalog.json`](catalog.json) as `status`, for docs badges and agents).
-New entries start at `alpha`; promotion is a deliberate small PR that
-re-checks the criteria below.
+Every need carries a maturity label in [`catalog.json`](catalog.json) as
+`status` (for docs, agents, and the README package table). New entries
+start at `alpha`; promotion is a deliberate small PR that re-checks the
+criteria below. **Stable entries have no badge** on the docs site; the
+semver guarantee applies to them only (see **Maturity and compatibility**
+on the published docs).
 
 - `planned` — documented shape, not implemented yet. No code, no tests.
-- `alpha` — implemented, but the API may still change. Proof is thin:
-  missing tests, docs, or review.
-- `beta` — tested through the public interface, documented with an
-  example, reviewed — and for UI also covered by a11y checks and the
-  gallery. API settling, ready for a first adoption. Not yet proven in
-  a real app.
-- `stable` — proven in real apps: adopted by at least two consumers,
-  API protected by semver (breaking changes are a major), documented.
+- `alpha` — works, but the API can change in any release. Not covered by
+  the semver guarantee. Proof can still be thin (missing tests, docs, or
+  review).
+- `beta` — tested through the public API, documented with an example, and
+  reviewed. UI entries are also accessible (a11y checks and gallery where
+  applicable). The API may still change in a minor, with a migration note;
+  not covered by the semver guarantee. Adoption in a real app is a plus, not
+  a requirement.
+- `stable` — tested through the public API, accessible for UI, documented,
+  and API-frozen under semver (breaking changes are a major). Consumer usage
+  is a plus, not a requirement. Shown on the docs site **without a badge**.
 - `deprecated` — do not adopt; the entry names its replacement and will
   be removed in a future major.
+
+An entry stays `beta` when it has no tests, when its API broke in its
+package's last minor, or when it is still settling after a recent break
+(for example `ui` Form / `useValidatedForm` after 0.9.0).
 
 Regenerate after any catalog edit: `pnpm catalog:build`, then commit the
 result. CI fails when `catalog.json` drifts from the package catalogs.

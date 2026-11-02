@@ -34,7 +34,7 @@ fields: [
 
 - Import: `@zedtech/zedkit-payload-seo` — `maxLengthValidator`, `SEO_TITLE_MAX`, `SEO_DESCRIPTION_MAX`, `SEO_VALIDATION_MESSAGES`, `formatMaxLengthMessage`, `resolveLocale`, `SeoValidationMessages`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Short name: Length validation
 - Audience: Payload developers who want editors warned before over-long titles ship.
 - Purpose: Friendly max-length validators and constants for SEO titles and descriptions.

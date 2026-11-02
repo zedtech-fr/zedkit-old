@@ -8,12 +8,14 @@ import {
   Field,
   FieldLabel,
   identityContrastWarnings,
+  identityContrastTokenLabel,
   Input,
   Stack,
   Text,
   type IdentityTokens,
 } from "@zedtech/zedkit-ui";
 
+import { identityEditorCopy } from "@/components/i18n/identity-editor-copy";
 import {
   requestIdentitySuggest,
   tokenDiff,
@@ -36,14 +38,12 @@ function ColourSwatch({ path, value }: { path: string; value: string }) {
 
 function DiffRows({ current, next }: { current: IdentityTokens; next: IdentityTokens }) {
   const rows = tokenDiff(current, next);
-  if (rows.length === 0) return <Text>No token changes.</Text>;
+  if (rows.length === 0) return <Text>{identityEditorCopy.suggest.noChanges}</Text>;
   return (
     <Stack gap={1} data-slot="identity-editor-suggest-diff">
       {rows.map((row) => (
         <Stack key={row.path} direction="horizontal" gap={2}>
-          <Text>
-            {row.path}: {row.from} → {row.to}
-          </Text>
+          <Text>{identityEditorCopy.suggest.diffRow(row.path, row.from, row.to)}</Text>
           <ColourSwatch path={row.path} value={row.to} />
         </Stack>
       ))}
@@ -54,15 +54,17 @@ function DiffRows({ current, next }: { current: IdentityTokens; next: IdentityTo
 function ContrastPreview({ tokens }: { tokens: IdentityTokens }) {
   const warnings = identityContrastWarnings(tokens);
   if (warnings.length === 0) {
-    return <Text>Contrast check passed (text 4.5:1, accent and border 3:1).</Text>;
+    return (
+      <Text>{identityEditorCopy.suggest.contrastPassed}</Text>
+    );
   }
   return (
     <Stack gap={2} role="status">
       {warnings.map((warning) => {
-        const label = warning.token === "foreground" ? "text" : warning.token;
+        const label = identityContrastTokenLabel(warning.token);
         return (
           <Badge key={`${warning.scheme}-${warning.token}`} variant="warning">
-            {warning.scheme} {label} {warning.ratio}:1 (need {warning.min}:1)
+            {identityEditorCopy.fields.contrastBadge(warning.scheme, label, warning.ratio, warning.min)}
           </Badge>
         );
       })}
@@ -97,15 +99,15 @@ function ProposalCard({
             checked={applySite}
             onCheckedChange={(value) => onApplySite(value === true)}
           />
-          <FieldLabel htmlFor="identity-editor-suggest-site">Also apply to the whole site</FieldLabel>
+          <FieldLabel htmlFor="identity-editor-suggest-site">{identityEditorCopy.suggest.applySite}</FieldLabel>
         </Stack>
       </Field>
       <Stack direction="horizontal" gap={2}>
         <Button type="button" onClick={onApply}>
-          Apply
+          {identityEditorCopy.suggest.apply}
         </Button>
         <Button type="button" variant="outline" onClick={onDiscard}>
-          Discard
+          {identityEditorCopy.suggest.discard}
         </Button>
       </Stack>
     </Stack>
@@ -136,22 +138,24 @@ function IdentityEditorSuggest({
 
   return (
     <Stack gap={3} data-slot="identity-editor-suggest">
-      <Text>Describe a look, then Suggest. Review the list before Apply.</Text>
-      <Field>
-        <FieldLabel htmlFor="identity-editor-suggest">Request</FieldLabel>
-        <Input
-          id="identity-editor-suggest"
-          value={prompt}
-          onChange={(event) => setPrompt(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") runSuggest();
-          }}
-        />
-      </Field>
-      <Button type="button" onClick={runSuggest} disabled={busy || prompt.trim() === ""}>
-        Suggest
-      </Button>
-      {busy ? <Text role="status">Suggesting…</Text> : null}
+      <Text variant="muted">{identityEditorCopy.suggest.intro}</Text>
+      <Stack gap={2} className="sm:flex-row sm:items-end">
+        <Field className="min-w-0 flex-1">
+          <FieldLabel htmlFor="identity-editor-suggest">{identityEditorCopy.suggest.request}</FieldLabel>
+          <Input
+            id="identity-editor-suggest"
+            value={prompt}
+            onChange={(event) => setPrompt(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") runSuggest();
+            }}
+          />
+        </Field>
+        <Button type="button" className="sm:shrink-0" onClick={runSuggest} disabled={busy || prompt.trim() === ""}>
+          {identityEditorCopy.suggest.suggest}
+        </Button>
+      </Stack>
+      {busy ? <Text role="status">{identityEditorCopy.suggest.suggesting}</Text> : null}
       {proposal ? (
         <ProposalCard
           current={tokens}

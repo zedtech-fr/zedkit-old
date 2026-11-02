@@ -60,7 +60,8 @@ describe("DataTable", () => {
 
   it("styles loading skeletons from design tokens", () => {
     const { container } = render(<DataTable columns={columns} data={data} loading />);
-    const skeleton = container.querySelector(".motion-safe\\:animate-pulse");
+    const loading = container.querySelector('[data-slot="data-table-loading"]');
+    const skeleton = loading?.querySelector(".motion-safe\\:animate-pulse");
     expect(skeleton?.classList.contains("h-4")).toBe(true);
     expect(skeleton?.className).not.toContain("h-data-table-skeleton-height");
   });
@@ -74,10 +75,42 @@ describe("DataTable", () => {
     expect(bodyRowTexts()).toEqual(["Bob30", "Ada36"]);
   });
 
+  it("exposes aria-sort on the active column header only (ZK-12)", async () => {
+    const user = userEvent.setup();
+    render(<DataTable columns={columns} data={data} />);
+    const headers = () => screen.getAllByRole("columnheader");
+    expect(headers()[0]?.getAttribute("aria-sort")).toBeNull();
+    expect(headers()[1]?.getAttribute("aria-sort")).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: /Name, sort/i }));
+    expect(headers()[0]?.getAttribute("aria-sort")).toBe("ascending");
+    expect(headers()[1]?.getAttribute("aria-sort")).toBeNull();
+    expect(screen.getByRole("button", { name: /Name, sorted ascending/i })).toBeTruthy();
+
+    await user.click(screen.getByRole("button", { name: /Name, sorted ascending/i }));
+    expect(headers()[0]?.getAttribute("aria-sort")).toBe("descending");
+    expect(screen.getByRole("button", { name: /Name, sorted descending/i })).toBeTruthy();
+
+    await user.click(screen.getByRole("button", { name: /Age, sort/i }));
+    expect(headers()[0]?.getAttribute("aria-sort")).toBeNull();
+    expect(headers()[1]?.getAttribute("aria-sort")).toBe("descending");
+    expect(screen.getByRole("button", { name: /Age, sorted descending/i })).toBeTruthy();
+  });
+
   it("shows the empty message when there is no data", () => {
     render(<DataTable columns={columns} data={[]} emptyMessage="Nothing here." />);
     expect(screen.getByText("Nothing here.").textContent).toBe("Nothing here.");
     expect(screen.queryByText(/Page \d+ of/)).toBeNull();
+  });
+
+  it("shows no-results with clear filters when the filter hides every row", async () => {
+    const user = userEvent.setup();
+    render(<DataTable columns={columns} data={data} />);
+    await user.type(screen.getByLabelText("Filter…"), "nobody");
+    expect(screen.getByText("No results.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Clear filters" })).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Clear filters" }));
+    expect(bodyRowTexts()).toEqual(["Bob30", "Ada36"]);
   });
 
   it("composes the empty row standalone with spanning cell", () => {
@@ -100,14 +133,16 @@ describe("DataTable", () => {
 
   it("shows loading placeholders while loading", () => {
     const { container } = render(<DataTable columns={columns} data={data} loading />);
-    expect(screen.getByLabelText("Loading").tagName).toBe("TABLE");
-    expect(container.querySelectorAll(".motion-safe\\:animate-pulse")).toHaveLength(6);
+    expect(screen.getByRole("table").getAttribute("aria-busy")).toBe("true");
+    expect(screen.getByRole("status", { name: "Loading" })).toBeTruthy();
+    expect(container.querySelectorAll('[data-slot="data-table-loading"] .motion-safe\\:animate-pulse')).toHaveLength(3);
     expect(screen.queryByText("Ada")).toBeNull();
   });
 
   it("shows the error message when one is set", () => {
     render(<DataTable columns={columns} data={data} error="Could not load rows." />);
-    expect(screen.getByRole("alert").textContent).toBe("Could not load rows.");
+    expect(screen.getByRole("alert").textContent).toContain("Could not load rows.");
+    expect(screen.queryByText("Bob")).toBeNull();
   });
 
   it("filters rows by the filter input", async () => {

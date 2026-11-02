@@ -12,10 +12,24 @@ import { Heading, Text } from "#index.js";
 import { Textarea } from "#index.js";
 
 describe("primitives", () => {
-  it("renders a button with its variant classes", () => {
-    render(<Button variant="destructive">Delete</Button>);
-    const button = screen.getByRole("button", { name: "Delete" });
-    expect(button.className).toContain("bg-destructive");
+  it("uses a quiet ghost hover (muted tint, not accent fill)", () => {
+    render(<Button variant="ghost">Quiet</Button>);
+    const button = screen.getByRole("button", { name: "Quiet" });
+    expect(button.className).toContain("hover:bg-muted/80");
+    expect(button.className).not.toContain("hover:bg-accent");
+  });
+
+  it("uses underline-only link styling without a hover fill", () => {
+    render(
+      <Button asChild variant="link" size="sm">
+        <a href="/docs">Read docs</a>
+      </Button>,
+    );
+    const link = screen.getByRole("link", { name: "Read docs" });
+    expect(link.className).toContain("hover:underline");
+    expect(link.className).toContain("hover:bg-transparent");
+    expect(link.className).not.toContain("hover:bg-accent");
+    expect(link.className).toContain("min-h-11");
   });
 
   it("takes ref as a prop", () => {

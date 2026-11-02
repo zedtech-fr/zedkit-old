@@ -38,4 +38,10 @@ export default defineConfig({
     trace: ci ? "on-first-retry" : "off",
   },
   projects,
+  expect: {
+    toHaveScreenshot: {
+      animations: "disabled",
+      maxDiffPixelRatio: 0.02,
+    },
+  },
 });

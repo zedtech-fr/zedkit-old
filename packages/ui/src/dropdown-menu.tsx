@@ -4,6 +4,7 @@
 import type * as React from "react";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 
+import { usePortalContainer } from "./theme-scope.js";
 import { cn } from "./utils.js";
 
 export type DropdownMenuProps = React.ComponentProps<typeof DropdownMenuPrimitive.Root>;
@@ -21,8 +22,9 @@ function DropdownMenuContent({
   sideOffset = 4,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Content>) {
+  const container = usePortalContainer();
   return (
-    <DropdownMenuPrimitive.Portal>
+    <DropdownMenuPrimitive.Portal container={container}>
       <DropdownMenuPrimitive.Content
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}

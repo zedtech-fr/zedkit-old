@@ -9,6 +9,8 @@ type IdentityScriptProps = {
   /** Applied when nothing valid is stored. Without it, the attribute is left unset (stock look). */
   defaultIdentity?: string;
   storageKey?: string;
+  /** When set, stored look applies only if this localStorage key is `"1"`. */
+  optInStorageKey?: string;
 };
 
 /**
@@ -21,6 +23,7 @@ function IdentityScript({
   ids = identities.map((item) => item.id),
   defaultIdentity,
   storageKey = IDENTITY_STORAGE_KEY,
+  optInStorageKey,
 }: IdentityScriptProps): React.JSX.Element {
   return (
     <script
@@ -28,6 +31,7 @@ function IdentityScript({
       data-ids={JSON.stringify(ids)}
       data-storage-key={storageKey}
       data-custom-key={customIdentityStorageKey(storageKey)}
+      {...(optInStorageKey !== undefined ? { "data-opt-in-key": optInStorageKey } : {})}
       {...(defaultIdentity !== undefined ? { "data-default": defaultIdentity } : {})}
       dangerouslySetInnerHTML={{ __html: IDENTITY_BOOTSTRAP_SOURCE }}
       suppressHydrationWarning

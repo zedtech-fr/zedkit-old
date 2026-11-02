@@ -8,7 +8,9 @@ export const source = loader({
   source: docs.toFumadocsSource(),
   plugins: [
     statusBadgesPlugin({
-      renderBadge: (status) => <MaturityBadge status={status} />,
+      // Sidebar: alpha only (stable has no badge; beta is page + catalog only).
+      renderBadge: (status) =>
+        status.toLowerCase() === "alpha" ? <MaturityBadge status={status} /> : null,
     }),
   ],
 });

@@ -2,30 +2,31 @@
 
 import { useState } from "react";
 import { Badge, Button, DetailPanel, RouteModal, Stack, Text } from "@zedtech/zedkit-ui";
+import { routeModalCopy } from "@/components/demos/i18n/route-modal-copy";
 
 export function RouteModalDemo() {
   const [open, setOpen] = useState(false);
   return (
     <Stack gap={3} className="min-w-0 items-start">
-      <Text variant="muted">Clicking a row in a list opens its detail over the list; the address bar changes too.</Text>
+      <Text variant="muted">{routeModalCopy.drawer.intro}</Text>
       <Button type="button" variant="outline" onClick={() => setOpen(true)}>
-        Open route modal
+        {routeModalCopy.drawer.open}
       </Button>
       {open ? (
         <RouteModal
-          title="Order #1042"
-          description="Same view as the full-page route /orders/1042, mounted from an intercept."
+          title={routeModalCopy.drawer.title}
+          description={routeModalCopy.drawer.description}
           onClose={() => setOpen(false)}
         >
           <Stack gap={3}>
             <DetailPanel
               items={[
-                { label: "Customer", value: "Camille Rousseau" },
-                { label: "Total", value: "€101.50" },
-                { label: "Status", value: <Badge variant="warning">Awaiting shipment</Badge> },
+                { label: routeModalCopy.details.customer, value: routeModalCopy.details.customerName },
+                { label: routeModalCopy.details.total, value: routeModalCopy.details.totalValue },
+                { label: routeModalCopy.details.status, value: <Badge variant="warning">{routeModalCopy.details.statusValue}</Badge> },
               ]}
             />
-            <Text variant="muted">Reloading this address, or sharing it, opens the full page instead.</Text>
+            <Text variant="muted">{routeModalCopy.drawer.footnote}</Text>
           </Stack>
         </RouteModal>
       ) : null}

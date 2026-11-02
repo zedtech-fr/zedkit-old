@@ -1,0 +1,48 @@
+/*
+ * Fenced code: horizontal scroll inside the figure frame, keyboard focus on the
+ * scroller, and a right-edge fade so clipped install lines read as scrollable.
+ */
+figure.shiki {
+  position: relative;
+}
+
+figure.shiki [role="region"] {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+figure.shiki [role="region"]:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: -2px;
+}
+
+figure.shiki pre {
+  min-width: min-content;
+  white-space: pre;
+}
+
+figure.shiki pre code,
+figure.shiki pre .line {
+  white-space: pre;
+}
+
+figure.shiki [role="region"] {
+  padding-inline-end: 2.75rem;
+  mask-image: linear-gradient(to right, black calc(100% - 2.5rem), transparent);
+  -webkit-mask-image: linear-gradient(to right, black calc(100% - 2.5rem), transparent);
+}
+
+[data-install-command] [role="region"] {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  mask-image: linear-gradient(to right, black calc(100% - 2.5rem), transparent);
+  -webkit-mask-image: linear-gradient(to right, black calc(100% - 2.5rem), transparent);
+}
+
+[data-install-command] [role="region"]:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: -2px;
+}

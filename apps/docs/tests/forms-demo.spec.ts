@@ -32,7 +32,8 @@ test.describe("docs form previews show realistic forms", () => {
 
   test("label: required mark preview is hidden from assistive tech", async ({ page }) => {
     await page.goto(`${BASE}/docs/ui/label-a-form-control`, { waitUntil: "networkidle" });
-    await expect(page.getByText("Live preview: Required mark")).toBeVisible();
+    const preview = page.locator("[data-component-preview]").filter({ has: page.getByLabel("Work email") }).first();
+    await expect(preview).toBeVisible();
     await expect(page.getByLabel("Work email")).toBeVisible();
     await expect(page.getByLabel("Work email")).toHaveAttribute("required", "");
   });
@@ -69,8 +70,8 @@ test.describe("docs form previews show realistic forms", () => {
     await expect(page.getByText(/Ready to open: physical products/)).toBeVisible();
     await page.getByRole("button", { name: "Back" }).first().click();
     await expect(page.getByRole("group", { name: "How will you deliver?" }).first()).toBeVisible();
-    await expect(page.getByText("Live preview: Composed steps")).toBeVisible();
-    await expect(page.getByText("Checkout: payment is the current step")).toBeVisible();
+    await expect(page.getByText("Live preview: Composed steps")).toHaveCount(0);
+    await expect(page.locator("[data-component-preview]").filter({ hasText: "Checkout: payment is the current step" })).toBeVisible();
     await expect(page.getByText("You will receive the digest.")).toBeVisible();
     await page.getByText("Weekly digest").click();
     await expect(page.getByText("No digest.")).toBeVisible();

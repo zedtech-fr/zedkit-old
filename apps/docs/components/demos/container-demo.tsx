@@ -1,22 +1,23 @@
 import { Container, Section, Stack, Text } from "@zedtech/zedkit-ui";
+import { containerCopy } from "@/components/demos/i18n/container-copy";
 
 export function ContainerDemo() {
   return (
     <Stack gap={4}>
       <Container width="narrow" className="border py-2">
-        <Text>Narrow — forms and focused flows.</Text>
+        <Text>{containerCopy.narrow}</Text>
       </Container>
       <Container width="reading" className="border py-2">
-        <Text>Reading — long-form text measure.</Text>
+        <Text>{containerCopy.reading}</Text>
       </Container>
       <Container className="border py-2">
-        <Text>Default — standard page shell.</Text>
+        <Text>{containerCopy.default}</Text>
       </Container>
       <Container width="wide" className="border py-2">
-        <Text>Wide — landing sections on large viewports.</Text>
+        <Text>{containerCopy.wide}</Text>
       </Container>
-      <Section bleed tone="muted" spacing="sm" title="Bleed band" description="Background runs edge to edge; content stays capped.">
-        <Text>Band content.</Text>
+      <Section bleed tone="muted" spacing="sm" title={containerCopy.bleedTitle} description={containerCopy.bleedDescription}>
+        <Text>{containerCopy.bandContent}</Text>
       </Section>
     </Stack>
   );

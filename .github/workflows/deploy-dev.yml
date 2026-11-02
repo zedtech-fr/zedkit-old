@@ -2,13 +2,13 @@ name: deploy-dev
 
 on:
   push:
-    branches: ["main"]
+    branches: ["integration/visual"]
   workflow_dispatch:
     inputs:
       ref:
         description: "Branch, tag, or commit to publish to the dev site"
         required: true
-        default: "main"
+        default: "integration/visual"
 
 permissions:
   contents: read

@@ -1,12 +1,6 @@
 import { expect, test } from "@playwright/test";
-import {
-  catalogStats,
-  featuredPackageLatestChange,
-  featuredPackageVersion,
-  uiGalleryStats,
-} from "../content/gallery";
 import { DEFAULT_IDENTITY } from "../lib/default-identity";
-import { registryBrickNames } from "../content/registry-site";
+import { openHeroPage } from "./hero-helpers";
 
 const BASE = "http://127.0.0.1:3100";
 
@@ -21,12 +15,12 @@ test("home explains the product and four entry areas", async ({ page }) => {
       level: 1,
     }),
   ).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Choose an area" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "More in the kit" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Start with buttons" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Start with the Nest bootstrap" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Open SEO docs" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Open agent setup docs" })).toBeVisible();
-  await expect(page.locator("#entry-points svg[aria-hidden='true']")).toHaveCount(8);
+  await expect(page.locator("#entry-points [data-home-secondary-links] svg[aria-hidden='true']")).toHaveCount(4);
   expect(errors).toEqual([]);
 });
 
@@ -38,93 +32,94 @@ test("home visitor copy carries no repo internals or literal backticks (#1090)",
   }
 });
 
-test("home hero offers two ways in and keeps the other paths lower (#1038)", async ({ page }) => {
+test("home hero offers get started first with catalog and demo links (#1038)", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(BASE, { waitUntil: "networkidle" });
 
   const heroActions = page.locator("[data-home-hero-actions] a");
   await expect(heroActions).toHaveCount(2);
-  await expect(heroActions.nth(0)).toHaveText("Explore the demo");
-  await expect(heroActions.nth(0)).toHaveAttribute("href", "#demo");
-  await expect(heroActions.nth(1)).toHaveText("Start building");
-  await expect(heroActions.nth(1)).toHaveAttribute("href", "#quickstart");
+  await expect(heroActions.nth(0)).toHaveText("Get started");
+  await expect(heroActions.nth(0)).toHaveAttribute("href", "#get-started");
+  await expect(heroActions.nth(1)).toHaveText("Browse catalog");
+  await expect(heroActions.nth(1)).toHaveAttribute("href", "/catalog");
 
-  const more = page.locator("[data-home-secondary-actions] a");
-  await expect(more).toHaveCount(2);
-  await expect(more.nth(0)).toHaveText("Set up your coding agent");
-  await expect(more.nth(0)).toHaveAttribute("href", "#ai-setup");
-  await expect(more.nth(1)).toHaveAttribute("href", "/docs");
-
-  const primaryBox = await page.locator("[data-home-hero-actions]").boundingBox();
-  const secondaryBox = await page.locator("[data-home-secondary-actions]").boundingBox();
-  expect(primaryBox && secondaryBox).toBeTruthy();
-  expect(secondaryBox!.y).toBeGreaterThan(primaryBox!.y + primaryBox!.height - 1);
-
-  await expect(
-    page.getByText("An interface made of ready parts, for the app you already have."),
-  ).toBeVisible();
+  await expect(page.locator("[data-home-hero-sub]")).toHaveText("Play with it yourself");
+  await expect(page.locator("[data-home-hero-lead]")).toContainText("Everything in this app is a zedkit component.");
+  // Nothing above the title: the page header already says what this is.
+  await expect(page.locator("[data-home-hero-lead] > :first-child")).toHaveJSProperty("tagName", "H1");
   await expect(page.getByText(/theme everything with one of six identities/)).toHaveCount(0);
   await expect(page.getByText(/linked maturity badges/)).toHaveCount(0);
-  await expect(page.getByRole("link", { name: new RegExp(`v${featuredPackageVersion}`) }).filter({ visible: true })).toHaveCount(1);
+  await expect(page.locator("[data-home-hero-lead]").getByText(/Latest in v/)).toHaveCount(0);
+  await expect(page.locator("[data-home-hero-lead] [data-install-command]")).toHaveCount(0);
 });
 
-test("home hero shows a short proof and the latest change (#1057)", async ({ page }) => {
+test("home hero shows proof line without a separate proofs band (#1057)", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(BASE, { waitUntil: "networkidle" });
-  await expect(page.getByText("MIT · React 19 · Tailwind 4 · npm or source")).toBeVisible();
-  await expect(page.locator("#proofs")).toContainText(
-    `${catalogStats.packages} packages, ${catalogStats.needs} needs`,
-  );
-  await expect(page.locator("#proofs")).toContainText(`${uiGalleryStats.components} UI catalog entries`);
   await expect(
-    page.getByText(`Latest in v${featuredPackageVersion}: ${featuredPackageLatestChange}`),
+    page.getByText("What you see installs from npm or copies as source · MIT · React 19 · Tailwind 4"),
   ).toBeVisible();
-  const versionLinks = page.getByRole("link", { name: `v${featuredPackageVersion} (releases)` });
-  await expect(versionLinks.first()).toHaveAttribute(
-    "href",
-    "https://github.com/zedtech-fr/zedkit/releases",
-  );
+  await expect(page.getByText(/^Latest in v/)).toHaveCount(0);
+  await expect(page.locator("#proofs")).toHaveCount(0);
 });
 
-test("home hero proof flips identity and dark in scope (#1072)", async ({ page }) => {
+test("home hero proof follows site mode and can override dark (#1072)", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.addInitScript(() => {
+    localStorage.setItem("theme", "dark");
+  });
   await page.goto(BASE, { waitUntil: "networkidle" });
   const proof = page.locator("[data-home-hero-proof]");
   const scope = proof.locator("[data-identity-scope]");
   const shellIdentity = await page.locator("html").getAttribute("data-identity");
   await expect(scope).toHaveAttribute("data-identity", DEFAULT_IDENTITY);
+  const siteDarkBg = await scope.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const siteChannels = siteDarkBg.match(/\d+/g)!.map(Number);
+  expect(Math.max(...siteChannels.slice(0, 3))).toBeLessThan(70);
+
   await proof.getByRole("combobox", { name: "Identity for this demo" }).click();
   await page.getByRole("option", { name: "Tide" }).click();
   await expect(scope).toHaveAttribute("data-identity", "tide");
   await proof.getByRole("combobox", { name: "Color mode for this demo" }).click();
+  await page.getByRole("option", { name: "Light" }).click();
+  const lightBg = await scope.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const lightChannels = lightBg.match(/\d+/g)!.map(Number);
+  expect(Math.max(...lightChannels.slice(0, 3))).toBeGreaterThan(200);
+
+  await proof.getByRole("combobox", { name: "Color mode for this demo" }).click();
   await page.getByRole("option", { name: "Dark" }).click();
-  await expect(proof.locator("[data-home-hero-preview]")).toHaveClass(/dark/);
-  const darkBg = await scope.evaluate((el) => getComputedStyle(el).backgroundColor);
-  const channels = darkBg.match(/\d+/g)!.map(Number);
-  expect(Math.max(...channels.slice(0, 3))).toBeLessThan(70);
+  const overrideDarkBg = await scope.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const overrideChannels = overrideDarkBg.match(/\d+/g)!.map(Number);
+  expect(Math.max(...overrideChannels.slice(0, 3))).toBeLessThan(70);
   expect(await page.locator("html").getAttribute("data-identity")).toBe(shellIdentity);
-  expect(await page.evaluate(() => document.documentElement.classList.contains("dark"))).toBe(false);
+  expect(await page.evaluate(() => document.documentElement.classList.contains("dark"))).toBe(true);
 });
 
-test("home hero embeds the interactive admin demo above the fold (#1111 L1b)", async ({ page }) => {
+test("home hero embeds the interactive admin demo above the fold on desktop (#1111 L1b)", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto(BASE, { waitUntil: "networkidle" });
+  await openHeroPage(page, "Apps");
   const demo = page.locator("#demo").getByLabel("Interactive admin dashboard demo in the hero");
   await expect(demo.getByRole("button", { name: "Add app" })).toBeVisible();
   const box = await demo.getByRole("button", { name: "Add app" }).boundingBox();
   expect(box).toBeTruthy();
   expect(box!.y + box!.height).toBeLessThanOrEqual(720);
-  await expect(demo.getByRole("columnheader", { name: "Name" })).toBeVisible();
 });
 
-test("home hero demo starts on the first mobile screen (#1111 L1b)", async ({ page }) => {
+test("home hero specimen follows the headline within the mobile demo budget (#1111 L1b)", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(BASE, { waitUntil: "networkidle" });
-  const demo = page.locator("#demo").getByLabel("Interactive admin dashboard demo in the hero");
-  await expect(demo.getByRole("button", { name: "Add app" })).toBeVisible();
-  const top = await demo.boundingBox();
-  expect(top).toBeTruthy();
-  expect(top!.y).toBeLessThan(844);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  const metrics = await page.evaluate(() => {
+    const root = document.querySelector("#home-page");
+    const demoEl = document.querySelector("#demo");
+    if (!root || !demoEl) return null;
+    const rootTop = root.getBoundingClientRect().top + window.scrollY;
+    const demoTop = demoEl.getBoundingClientRect().top + window.scrollY;
+    return demoTop - rootTop;
+  });
+  expect(metrics).not.toBeNull();
+  expect(metrics!).toBeLessThanOrEqual(760);
 });
 
 test("home area cards keep a decorative icon at tablet width and up", async ({ page }) => {
@@ -132,9 +127,9 @@ test("home area cards keep a decorative icon at tablet width and up", async ({ p
   await page.goto(BASE, { waitUntil: "networkidle" });
   const section = page.locator("#entry-points");
   await expect(section.getByText("Build a UI", { exact: true })).toBeVisible();
-  await expect(section.locator("svg[aria-hidden='true']")).toHaveCount(8);
+  await expect(section.locator("[data-home-secondary-links] svg[aria-hidden='true']")).toHaveCount(4);
   const overflow = await page.evaluate(
-    () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,
+    () => (document.querySelector("#home-page")?.scrollWidth ?? 0) <= document.documentElement.clientWidth + 1,
   );
   expect(overflow).toBe(true);
 });
@@ -148,75 +143,96 @@ test("entry point CTAs open catalog or guide pages (not folder 404s)", async ({ 
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });
 
-test("home gallery maturity badges keep a decorative icon", async ({ page }) => {
+test("home gallery shows no maturity badges", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(BASE, { waitUntil: "networkidle" });
-  const badges = page.locator("#components a[data-badge-link]");
-  const count = await badges.count();
-  expect(count).toBeGreaterThan(0);
-  await expect(badges.locator("svg[aria-hidden='true']")).toHaveCount(count);
+  await expect(page.locator("#components a[data-badge-link]")).toHaveCount(0);
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,
   );
   expect(overflow).toBe(true);
 });
 
-test.describe("home gallery maturity badges light/dark (#753)", () => {
+test("home component families list quiet example links on desktop", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(BASE, { waitUntil: "networkidle" });
+  const section = page.locator("#components");
+  await section.scrollIntoViewIfNeeded();
+  await expect(section.getByRole("heading", { name: "Find a component" })).toBeVisible();
+  const families = section.locator("[data-home-component-families] [data-family-title]");
+  expect(await families.count()).toBeGreaterThanOrEqual(4);
+  await expect(section.locator("[data-home-gallery-card]")).toHaveCount(0);
+  await expect(section.locator("a").filter({ hasText: "Button" }).first()).toBeVisible();
+});
+
+test("home component families layout stays sane on a phone", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(BASE, { waitUntil: "networkidle" });
+  const section = page.locator("#components");
+  await section.scrollIntoViewIfNeeded();
+  await expect(section.locator("[data-home-component-families] [data-family-title]").first()).toBeVisible();
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,
+  );
+  expect(overflow).toBe(true);
+  await section.screenshot({ path: "test-results/home-gallery-390.png" });
+});
+
+test.describe("home component families light/dark (#753)", () => {
   for (const mode of ["light", "dark"] as const) {
     test(`mist ${mode}`, async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 900 });
       await page.addInitScript((theme) => {
-        localStorage.setItem("zk-identity", "mist");
+        localStorage.setItem("zk-docs-site-identity", "mist");
+        localStorage.setItem("zk-docs-site-identity-opt-in", "1");
         localStorage.setItem("theme", theme);
       }, mode);
       await page.goto(BASE, { waitUntil: "networkidle" });
       const section = page.locator("#components");
       await section.scrollIntoViewIfNeeded();
-      await expect(section.locator("a[data-badge-link]").first()).toBeVisible();
+      await expect(section.getByRole("link", { name: /Browse all UI in the catalog/ })).toBeVisible();
       await section.screenshot({ path: `test-results/home-maturity-gallery-${mode}.png` });
     });
   }
 });
 
-test("home scenario titles keep a decorative icon at tablet width and up", async ({ page }) => {
+test("home entry-point links keep a decorative icon at tablet width and up", async ({ page }) => {
   await page.setViewportSize({ width: 768, height: 900 });
   await page.goto(BASE, { waitUntil: "networkidle" });
-  const titles = page.locator("#scenarios [data-slot='card-title']");
-  await expect(titles).toHaveCount(6);
-  await expect(titles.locator("svg[aria-hidden='true']")).toHaveCount(6);
+  const entry = page.locator("#entry-points");
+  await expect(entry.getByRole("link", { name: "Start with buttons" }).locator("svg[aria-hidden='true']")).toHaveCount(1);
   const overflow = await page.evaluate(
-    () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,
+    () => (document.querySelector("#home-page")?.scrollWidth ?? 0) <= document.documentElement.clientWidth + 1,
   );
   expect(overflow).toBe(true);
 });
 
-test.describe("home scenario titles light/dark (#753)", () => {
+test.describe("home entry-point links light/dark (#753)", () => {
   for (const mode of ["light", "dark"] as const) {
     test(`mist ${mode}`, async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 900 });
       await page.addInitScript((theme) => {
-        localStorage.setItem("zk-identity", "mist");
+        localStorage.setItem("zk-docs-site-identity", "mist");
+        localStorage.setItem("zk-docs-site-identity-opt-in", "1");
         localStorage.setItem("theme", theme);
       }, mode);
       await page.goto(BASE, { waitUntil: "networkidle" });
-      const scenarios = page.locator("#scenarios");
-      await scenarios.scrollIntoViewIfNeeded();
-      await expect(scenarios.getByText("New admin UI in an existing app", { exact: true })).toBeVisible();
-      await scenarios.screenshot({ path: `test-results/home-scenario-titles-${mode}.png` });
+      const entry = page.locator("#entry-points");
+      await entry.scrollIntoViewIfNeeded();
+      await expect(entry.getByRole("link", { name: "Start with buttons" })).toBeVisible();
+      await entry.screenshot({ path: `test-results/home-scenario-titles-${mode}.png` });
     });
   }
 });
 
-test("home docs CTAs keep a decorative icon on phone (start-building band)", async ({ page }) => {
+test("home docs CTAs keep a decorative icon on phone (get started band)", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(BASE, { waitUntil: "networkidle" });
-  await expect(page.locator("#install-or-copy [data-docs-ctas] svg[aria-hidden='true']")).toHaveCount(2);
-  await expect(page.locator("#ai-setup [data-docs-ctas] svg[aria-hidden='true']")).toHaveCount(2);
-  await expect(page.getByRole("link", { name: "Open documentation" }).locator("svg[aria-hidden='true']")).toHaveCount(1);
-  await expect(page.getByRole("link", { name: "Theme setup page" }).locator("svg[aria-hidden='true']")).toHaveCount(1);
-  await expect(page.getByRole("link", { name: "axe test suite" }).locator("svg")).toHaveCount(0);
+  await expect(page.locator("#get-started [data-docs-ctas] svg[aria-hidden='true']")).toHaveCount(0);
+  await expect(page.locator("#entry-points [data-docs-ctas] svg[aria-hidden='true']")).toHaveCount(2);
+  await expect(page.locator("#proofs")).toHaveCount(0);
   const overflow = await page.evaluate(
-    () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,
+    () => (document.querySelector("#home-page")?.scrollWidth ?? 0) <= document.documentElement.clientWidth + 1,
   );
   expect(overflow).toBe(true);
 });
@@ -224,18 +240,10 @@ test("home docs CTAs keep a decorative icon on phone (start-building band)", asy
 test("home docs CTAs keep a decorative icon on tablet (catalog bands)", async ({ page }) => {
   await page.setViewportSize({ width: 768, height: 900 });
   await page.goto(BASE, { waitUntil: "networkidle" });
-  for (const name of [
-    "Start with buttons",
-    "Start with the Nest bootstrap",
-    "Open SEO docs",
-    "Open agent setup docs",
-  ] as const) {
-    await expect(page.getByRole("link", { name }).locator("svg[aria-hidden='true']")).toHaveCount(1);
-  }
-  const scenarios = page.locator("#scenarios");
-  await expect(scenarios.getByRole("link").locator("svg[aria-hidden='true']")).toHaveCount(6);
+  const entry = page.locator("#entry-points");
+  await expect(entry.getByRole("link", { name: "Start with buttons" }).locator("svg[aria-hidden='true']")).toHaveCount(1);
   const overflow = await page.evaluate(
-    () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,
+    () => (document.querySelector("#home-page")?.scrollWidth ?? 0) <= document.documentElement.clientWidth + 1,
   );
   expect(overflow).toBe(true);
 });
@@ -245,18 +253,19 @@ test.describe("home docs CTAs light/dark (#748)", () => {
     test(`mist ${mode}`, async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 900 });
       await page.addInitScript((theme) => {
-        localStorage.setItem("zk-identity", "mist");
+        localStorage.setItem("zk-docs-site-identity", "mist");
+        localStorage.setItem("zk-docs-site-identity-opt-in", "1");
         localStorage.setItem("theme", theme);
       }, mode);
       await page.goto(BASE, { waitUntil: "networkidle" });
       const entry = page.locator("#entry-points");
-      const scenarios = page.locator("#scenarios");
       await entry.scrollIntoViewIfNeeded();
       await expect(entry.getByRole("link", { name: "Start with buttons" })).toBeVisible();
       await entry.screenshot({ path: `test-results/home-cta-entry-${mode}.png` });
-      await scenarios.scrollIntoViewIfNeeded();
-      await expect(scenarios.getByRole("link", { name: "Read the theme docs" })).toBeVisible();
-      await scenarios.screenshot({ path: `test-results/home-cta-scenarios-${mode}.png` });
+      const ai = page.locator("#entry-points [data-docs-ctas]");
+      await ai.scrollIntoViewIfNeeded();
+      await expect(ai.getByRole("link", { name: "AI setup docs" })).toBeVisible();
+      await ai.screenshot({ path: `test-results/home-cta-scenarios-${mode}.png` });
     });
   }
 });
@@ -266,18 +275,16 @@ test.describe("home section docs CTAs light/dark (#769)", () => {
     test(`mist ${mode}`, async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 900 });
       await page.addInitScript((theme) => {
-        localStorage.setItem("zk-identity", "mist");
+        localStorage.setItem("zk-docs-site-identity", "mist");
+        localStorage.setItem("zk-docs-site-identity-opt-in", "1");
         localStorage.setItem("theme", theme);
       }, mode);
       await page.goto(BASE, { waitUntil: "networkidle" });
-      const install = page.locator("#install-or-copy [data-docs-ctas]");
-      const ai = page.locator("#ai-setup [data-docs-ctas]");
+      const install = page.locator("#entry-points [data-docs-ctas]");
       await install.scrollIntoViewIfNeeded();
-      await expect(install.getByRole("link", { name: "Getting started" })).toBeVisible();
+      await expect(install.getByRole("link", { name: "AI setup docs" })).toBeVisible();
       await install.screenshot({ path: `test-results/home-section-cta-install-${mode}.png` });
-      await ai.scrollIntoViewIfNeeded();
-      await expect(ai.getByRole("link", { name: "AI setup docs" })).toBeVisible();
-      await ai.screenshot({ path: `test-results/home-section-cta-ai-${mode}.png` });
+      await install.screenshot({ path: `test-results/home-section-cta-ai-${mode}.png` });
     });
   }
 });
@@ -287,35 +294,32 @@ test.describe("home hero and proofs docs CTAs light/dark", () => {
     test(`mist ${mode}`, async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 900 });
       await page.addInitScript((theme) => {
-        localStorage.setItem("zk-identity", "mist");
+        localStorage.setItem("zk-docs-site-identity", "mist");
+        localStorage.setItem("zk-docs-site-identity-opt-in", "1");
         localStorage.setItem("theme", theme);
       }, mode);
       await page.goto(BASE, { waitUntil: "networkidle" });
-      const hero = page.getByRole("link", { name: "Open documentation" });
-      const theme = page.getByRole("link", { name: "Theme setup page" });
+      const hero = page.getByRole("link", { name: "Get started" }).first();
       await hero.scrollIntoViewIfNeeded();
       await expect(hero).toBeVisible();
       await hero.screenshot({ path: `test-results/home-hero-docs-cta-${mode}.png` });
-      await theme.scrollIntoViewIfNeeded();
-      await expect(theme).toBeVisible();
-      await theme.screenshot({ path: `test-results/home-proofs-theme-cta-${mode}.png` });
+      const catalog = page.getByRole("link", { name: "Browse catalog" }).first();
+      await catalog.scrollIntoViewIfNeeded();
+      await expect(catalog).toBeVisible();
+      await catalog.screenshot({ path: `test-results/home-proofs-theme-cta-${mode}.png` });
     });
   }
 });
 
-test("home scenario links have unique accessible names", async ({ page }) => {
+test("home entry-point links have unique accessible names", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto(BASE, { waitUntil: "networkidle" });
-  const scenarios = page.locator("#scenarios");
-  await expect(scenarios.getByRole("link", { name: "Read the theme docs" })).toBeVisible();
-  await expect(scenarios.getByRole("link", { name: "Read the agent setup docs" })).toBeVisible();
-  await expect(scenarios.getByRole("link", { name: "Read the form docs" })).toBeVisible();
-  await expect(scenarios.getByRole("link", { name: "Read the DataTable docs" })).toBeVisible();
-  await expect(scenarios.getByRole("link", { name: "Read the Drawer docs" })).toBeVisible();
-  const scenarioLink = scenarios.getByRole("link", { name: "Read the Button docs" });
-  await expect(scenarioLink).toBeVisible();
+  const entry = page.locator("#entry-points");
+  await expect(entry.getByRole("link", { name: "Start with buttons" })).toBeVisible();
+  await expect(entry.getByRole("link", { name: "Open agent setup docs" })).toBeVisible();
+  const scenarioLink = entry.getByRole("link", { name: "Start with buttons" });
   await scenarioLink.click();
-  await page.waitForURL("**/docs/ui/trigger-actions-with-buttons", { timeout: 10000 });
+  await page.waitForURL("**/docs/ui/**", { timeout: 10000 });
 });
 
 test("home has no nested interactive elements", async ({ page }) => {
@@ -336,41 +340,22 @@ test("home has no nested interactive elements", async ({ page }) => {
   expect(nested).toEqual([]);
 });
 
-test("home UI quickstart points to the getting started guide", async ({ page }) => {
-  await page.goto(`${BASE}#quickstart`, { waitUntil: "networkidle" });
-  await expect(page.getByRole("link", { name: "Open the full UI quickstart" })).toHaveAttribute(
-    "href",
-    "/docs/getting-started#quickstart",
-  );
+test("home get-started npm tab exposes the package install command", async ({ page }) => {
+  await page.goto(`${BASE}#get-started`, { waitUntil: "networkidle" });
+  await expect(page.getByRole("region", { name: "Package install command" })).toBeVisible();
 });
 
-test("quickstart brick names keep a decorative icon", async ({ page }) => {
+test("home install section has no registry brick grid; catalog link lives in families", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${BASE}#install-or-copy`, { waitUntil: "networkidle" });
-  const list = page.locator("#install-or-copy [data-registry-bricks]");
-  await expect(list.locator("[data-registry-brick]")).toHaveCount(registryBrickNames.length);
-  await expect(list.locator("svg[aria-hidden='true']")).toHaveCount(registryBrickNames.length);
+  await expect(page.locator("#install-or-copy [data-registry-bricks]")).toHaveCount(0);
+  const catalog = page.getByRole("link", { name: /Browse all UI in the catalog/ });
+  await catalog.scrollIntoViewIfNeeded();
+  await expect(catalog).toHaveAttribute("href", "/catalog?area=ui");
   const overflow = await page.evaluate(
-    () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,
+    () => (document.querySelector("#home-page")?.scrollWidth ?? 0) <= document.documentElement.clientWidth + 1,
   );
   expect(overflow).toBe(true);
-});
-
-test.describe("quickstart brick list light/dark (#769)", () => {
-  for (const mode of ["light", "dark"] as const) {
-    test(`mist ${mode}`, async ({ page }) => {
-      await page.setViewportSize({ width: 1280, height: 900 });
-      await page.addInitScript((theme) => {
-        localStorage.setItem("zk-identity", "mist");
-        localStorage.setItem("theme", theme);
-      }, mode);
-      await page.goto(`${BASE}#install-or-copy`, { waitUntil: "networkidle" });
-      const list = page.locator("#install-or-copy [data-registry-bricks]");
-      await list.scrollIntoViewIfNeeded();
-      await expect(list.getByText("badge", { exact: true })).toBeVisible();
-      await list.screenshot({ path: `test-results/quickstart-brick-list-${mode}.png` });
-    });
-  }
 });
 
 test("home search opens from the header", async ({ page }) => {
@@ -406,4 +391,24 @@ test.describe("persona evidence screenshots", () => {
     const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1);
   });
+});
+
+test("home component families link only to live docs pages, and Overlays keeps its promise", async ({ page, request }) => {
+  await page.goto(BASE, { waitUntil: "networkidle" });
+  const section = page.locator("#components");
+  const overlays = section.locator("[data-home-component-families] > div > div").filter({ hasText: "Overlays" });
+  const names = await overlays.locator("a").allTextContents();
+  for (const expected of ["Dialog", "Drawer", "Popover", "Dropdown menu", "Tooltip"]) {
+    expect(names).toContain(expected);
+  }
+  await expect(overlays.locator("[data-family-title]")).toHaveText("Overlays");
+  await expect(overlays.locator("[data-family-title] a")).toHaveCount(0);
+  const hrefs = await section.locator("[data-home-component-families] > div a").evaluateAll((links) => [
+    ...new Set(links.map((link) => (link as HTMLAnchorElement).getAttribute("href") ?? "")),
+  ]);
+  for (const href of hrefs) {
+    expect(href.startsWith("/docs/"), href).toBe(true);
+    const response = await request.get(`${BASE}${href}`);
+    expect(response.status(), href).toBe(200);
+  }
 });

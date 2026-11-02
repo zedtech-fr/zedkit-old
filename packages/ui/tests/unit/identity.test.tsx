@@ -107,6 +107,15 @@ describe("IdentityScript", () => {
     expect(document.documentElement.hasAttribute("data-identity")).toBe(false);
   });
 
+  it("honours opt-in before applying a stored id", () => {
+    localStorage.setItem("my-look", "bold");
+    runScript(<IdentityScript ids={["calm", "bold"]} storageKey="my-look" optInStorageKey="my-opt-in" />);
+    expect(document.documentElement.hasAttribute("data-identity")).toBe(false);
+    localStorage.setItem("my-opt-in", "1");
+    runScript(<IdentityScript ids={["calm", "bold"]} storageKey="my-look" optInStorageKey="my-opt-in" defaultIdentity="calm" />);
+    expect(document.documentElement.getAttribute("data-identity")).toBe("bold");
+  });
+
   it("honours a custom storage key", () => {
     localStorage.setItem("my-look", "calm");
     runScript(<IdentityScript ids={["calm"]} storageKey="my-look" />);

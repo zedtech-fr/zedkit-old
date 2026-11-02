@@ -64,8 +64,8 @@
         },
         "@utility focus-ring-control": {
           "&:focus-visible": {
-            "outline": "none",
-            "box-shadow": "0 0 0 var(--ring-offset-width) hsl(var(--background)),\n      0 0 0 calc(var(--ring-offset-width) + var(--ring-width-control)) hsl(var(--ring))"
+            "outline": "var(--ring-width-control) solid hsl(var(--ring))",
+            "outline-offset": "var(--ring-offset-width)"
           }
         },
         "html [data-vaul-drawer]": {
@@ -116,8 +116,8 @@
       "css": {
         "@utility focus-ring-control": {
           "&:focus-visible": {
-            "outline": "none",
-            "box-shadow": "0 0 0 var(--ring-offset-width) hsl(var(--background)),\n      0 0 0 calc(var(--ring-offset-width) + var(--ring-width-control)) hsl(var(--ring))"
+            "outline": "var(--ring-width-control) solid hsl(var(--ring))",
+            "outline-offset": "var(--ring-offset-width)"
           }
         },
         "@utility button-press": {
@@ -143,6 +143,14 @@
       "files": [
         {
           "path": "registry/ui/dialog.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/overlay-modal.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/theme-scope.tsx",
           "type": "registry:ui"
         },
         {
@@ -207,8 +215,8 @@
       "css": {
         "@utility focus-ring": {
           "&:focus-visible": {
-            "outline": "none",
-            "box-shadow": "0 0 0 var(--ring-offset-width) hsl(var(--background)), 0 0 0 calc(var(--ring-offset-width) + var(--ring-width)) hsl(var(--ring))"
+            "outline": "var(--ring-width) solid hsl(var(--ring))",
+            "outline-offset": "var(--ring-offset-width)"
           }
         }
       }
@@ -227,6 +235,18 @@
       "files": [
         {
           "path": "registry/ui/drawer.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/overlay-modal.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/theme-scope.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-narrow-viewport.ts",
           "type": "registry:ui"
         },
         {
@@ -553,8 +573,8 @@
       "css": {
         "@utility focus-ring": {
           "&:focus-visible": {
-            "outline": "none",
-            "box-shadow": "0 0 0 var(--ring-offset-width) hsl(var(--background)), 0 0 0 calc(var(--ring-offset-width) + var(--ring-width)) hsl(var(--ring))"
+            "outline": "var(--ring-width) solid hsl(var(--ring))",
+            "outline-offset": "var(--ring-offset-width)"
           }
         }
       }
@@ -610,6 +630,14 @@
       "files": [
         {
           "path": "registry/ui/wizard-steps.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/use-narrow-viewport.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/format-message.ts",
           "type": "registry:ui"
         },
         {
@@ -707,7 +735,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
-        "alert"
+        "@zedkit/alert"
       ],
       "files": [
         {
@@ -732,7 +760,7 @@
       "name": "icon-button",
       "type": "registry:ui",
       "registryDependencies": [
-        "button"
+        "@zedkit/button"
       ],
       "files": [
         {
@@ -745,7 +773,7 @@
       "name": "empty-state",
       "type": "registry:ui",
       "registryDependencies": [
-        "typography",
+        "@zedkit/typography",
         "utils"
       ],
       "files": [
@@ -759,7 +787,7 @@
       "name": "error-state",
       "type": "registry:ui",
       "registryDependencies": [
-        "alert",
+        "@zedkit/alert",
         "utils"
       ],
       "files": [
@@ -785,6 +813,10 @@
         },
         {
           "path": "registry/ui/ui-provider.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/create-messages-context.tsx",
           "type": "registry:ui"
         },
         {

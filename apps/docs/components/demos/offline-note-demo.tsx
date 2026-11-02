@@ -2,19 +2,17 @@
 
 import { useState } from "react";
 import { Badge, Button, Heading, OfflineNote, Stack, Text, useOnlineStatus } from "@zedtech/zedkit-ui";
+import { offlineNoteCopy } from "@/components/demos/i18n/offline-note-copy";
 
-const DRAFTS = [
-  { id: "INV-2041", client: "Harbor Studio", amount: "€1,280.00" },
-  { id: "INV-2042", client: "Northwind Bakery", amount: "€346.50" },
-];
+const DRAFTS = [offlineNoteCopy.drafts.harbor, offlineNoteCopy.drafts.northwind];
 
 /** A page-level note above work that is still saved on the device. */
 export function OfflineNoteDemo() {
   return (
     <Stack gap={3} className="min-w-0 rounded-lg border border-border bg-background p-4">
       <OfflineNote />
-      <Heading level={3}>Invoice drafts</Heading>
-      <ul aria-label="Invoice drafts" className="divide-y divide-border rounded-lg border border-border">
+      <Heading level={3}>{offlineNoteCopy.drafts.title}</Heading>
+      <ul aria-label={offlineNoteCopy.drafts.label} className="divide-y divide-border rounded-lg border border-border">
         {DRAFTS.map((draft) => (
           <li key={draft.id} className="flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3">
             <Stack gap={1} className="min-w-0">
@@ -29,7 +27,7 @@ export function OfflineNoteDemo() {
               <Text as="span" className="text-sm">
                 {draft.amount}
               </Text>
-              <Badge variant="secondary">Waiting to sync</Badge>
+              <Badge variant="secondary">{offlineNoteCopy.drafts.waiting}</Badge>
             </Stack>
           </li>
         ))}
@@ -45,19 +43,19 @@ export function OfflineNoteWiredDemo() {
   const simulate = () => window.dispatchEvent(new Event(online ? "offline" : "online"));
   return (
     <Stack gap={3} className="min-w-0 rounded-lg border border-border bg-background p-4">
-      {online ? null : <OfflineNote title="No connection">Try again when you are back.</OfflineNote>}
+      {online ? null : <OfflineNote title={offlineNoteCopy.wired.title}>{offlineNoteCopy.wired.body}</OfflineNote>}
       <Stack gap={1}>
-        <Heading level={3}>Delivery note</Heading>
+        <Heading level={3}>{offlineNoteCopy.wired.heading}</Heading>
         <Text variant="muted" className="text-sm">
-          Order #1043 · Canvas tote bag · {saved === 0 ? "not saved yet" : `saved ${saved} time${saved > 1 ? "s" : ""}`}
+          {offlineNoteCopy.wired.summary(saved)}
         </Text>
       </Stack>
       <Stack direction="horizontal" gap={2} className="flex-wrap">
         <Button disabled={!online} onClick={() => setSaved((count) => count + 1)}>
-          Save note
+          {offlineNoteCopy.wired.save}
         </Button>
         <Button variant="outline" aria-pressed={!online} onClick={simulate}>
-          {online ? "Simulate losing the connection" : "Simulate coming back online"}
+          {online ? offlineNoteCopy.wired.simulateOffline : offlineNoteCopy.wired.simulateOnline}
         </Button>
       </Stack>
     </Stack>
@@ -68,15 +66,15 @@ export function OfflineNoteWiredDemo() {
 export function OfflineNoteWordingDemo() {
   return (
     <Stack gap={3} className="min-w-0 rounded-lg border border-border bg-background p-4">
-      <OfflineNote title="No connection">Your cart is saved on this device. Reconnect to pay.</OfflineNote>
+      <OfflineNote title={offlineNoteCopy.wording.title}>{offlineNoteCopy.wording.body}</OfflineNote>
       <Stack gap={1}>
-        <Heading level={3}>Your cart</Heading>
+        <Heading level={3}>{offlineNoteCopy.wording.heading}</Heading>
         <Text variant="muted" className="text-sm">
-          2 items · €58.00
+          {offlineNoteCopy.wording.summary}
         </Text>
       </Stack>
       <Button disabled className="w-fit">
-        Pay now
+        {offlineNoteCopy.wording.pay}
       </Button>
     </Stack>
   );

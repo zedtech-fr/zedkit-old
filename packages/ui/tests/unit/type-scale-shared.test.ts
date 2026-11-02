@@ -67,14 +67,14 @@ describe("shared type scale (P0)", () => {
     expect(token(read("identities/tide.css"), "--font-weight-semibold")).toBe("600");
   });
 
-  it("still gives each identity distinct tracking and spacing flavour", () => {
-    const ids = identityFiles.map((file) => [file, read(join("identities", file))] as const);
-    const seen = new Map<string, string>();
-    for (const [file, css] of ids) {
+  it("clamps identity heading tracking within the P0 spec (|t| ≤ 0.02em)", () => {
+    for (const file of identityFiles) {
+      const css = read(join("identities", file));
       const track = token(css, "--zk-heading-tracking") ?? "";
       expect(track.length).toBeGreaterThan(0);
-      expect(seen.get(track) ?? "").toBe("");
-      seen.set(track, file);
+      const em = Number.parseFloat(track);
+      expect(Number.isFinite(em)).toBe(true);
+      expect(Math.abs(em)).toBeLessThanOrEqual(0.02);
     }
   });
 });

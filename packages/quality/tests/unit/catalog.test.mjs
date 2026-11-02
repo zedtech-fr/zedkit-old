@@ -18,13 +18,13 @@ function needSections() {
     }));
 }
 
-describe("catalog beta evidence", () => {
-  it("documents every beta need with a fenced example", () => {
+describe("catalog stable evidence", () => {
+  it("documents every stable need with a fenced example", () => {
     const sections = needSections();
     expect(sections.length).toBeGreaterThan(0);
-    const beta = sections.filter((s) => s.status === "beta");
-    expect(beta.length).toBeGreaterThan(0);
-    for (const section of beta) {
+    const stable = sections.filter((s) => s.status === "stable");
+    expect(stable.length).toBeGreaterThan(0);
+    for (const section of stable) {
       expect(section.body, `${section.name} example`).toContain("```");
     }
   });

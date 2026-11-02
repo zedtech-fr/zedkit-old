@@ -10,14 +10,14 @@ import type { ComboboxOption } from "./combobox-shared.js";
 export function ComboboxMenu({
   emptyMessage,
   getItemProps,
-  getMenuProps,
+  menuProps,
   highlightedIndex,
   items,
   loading,
 }: {
   emptyMessage: string;
   getItemProps: ReturnType<typeof useCombobox<ComboboxOption>>["getItemProps"];
-  getMenuProps: ReturnType<typeof useCombobox<ComboboxOption>>["getMenuProps"];
+  menuProps: ReturnType<ReturnType<typeof useCombobox<ComboboxOption>>["getMenuProps"]>;
   highlightedIndex: number;
   items: ComboboxOption[];
   loading: boolean;
@@ -25,7 +25,7 @@ export function ComboboxMenu({
   const messages = useUiMessages();
   return (
     <ul
-      {...getMenuProps()}
+      {...menuProps}
       className="max-h-[--radix-select-content-available-height] overflow-y-auto p-1 outline-none"
       data-slot="combobox-list"
     >

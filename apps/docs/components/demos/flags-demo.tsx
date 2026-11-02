@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button, Stack, Text } from "@zedtech/zedkit-ui";
 import { defineFlagRegistry, useFlag, writeFlagOverride, ZedkitFlagsProvider } from "@zedtech/zedkit-flags/react";
+import { flagsCopy } from "@/components/demos/i18n/flags-copy";
 
 const DEMO_REGISTRY = defineFlagRegistry({ docsPreview: false });
 const DEMO_OVERRIDE_KEY = "docsPreview";
@@ -13,36 +14,36 @@ function FlagsDemoInner() {
 
   return (
     <Stack gap={3}>
-      <Text>{enabled ? "Preview feature is on." : "Preview feature is off (registry default)."}</Text>
+      <Text>{enabled ? flagsCopy.on : flagsCopy.off}</Text>
       <Stack direction="horizontal" gap={2} className="flex-wrap">
         <Button
           type="button"
           onClick={() => {
             writeFlagOverride(localStorage, DEMO_OVERRIDE_KEY, true);
-            setLastAction("Forced on via local override.");
+            setLastAction(flagsCopy.forcedOn);
           }}
         >
-          Force on
+          {flagsCopy.forceOn}
         </Button>
         <Button
           type="button"
           variant="secondary"
           onClick={() => {
             writeFlagOverride(localStorage, DEMO_OVERRIDE_KEY, false);
-            setLastAction("Forced off via local override.");
+            setLastAction(flagsCopy.forcedOff);
           }}
         >
-          Force off
+          {flagsCopy.forceOff}
         </Button>
         <Button
           type="button"
           variant="outline"
           onClick={() => {
             writeFlagOverride(localStorage, DEMO_OVERRIDE_KEY, null);
-            setLastAction("Cleared override; back to registry default.");
+            setLastAction(flagsCopy.clearedOverride);
           }}
         >
-          Clear override
+          {flagsCopy.clearOverride}
         </Button>
       </Stack>
       {lastAction ? <Text className="text-sm text-muted-foreground">{lastAction}</Text> : null}

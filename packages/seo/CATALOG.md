@@ -9,7 +9,7 @@
 
 - Import: `@zedtech/zedkit-seo` — `buildRobots`, `BuildRobotsOptions`, `RobotsConfig`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Short name: robots.txt
 - Audience: Developers who want a correct robots.txt without memorizing the syntax.
 - Purpose: Build robots.txt content (allows, disallows, sitemap links) from typed options.
@@ -28,7 +28,7 @@ export function robots() {
 
 - Import: `@zedtech/zedkit-seo` — `buildSitemapEntries`, `BuildSitemapOptions`, `SitemapEntry`, `SitemapPage`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Short name: Sitemap
 - Audience: Developers shipping multi-locale sites that search engines should crawl fully.
 - Purpose: Build sitemap entries with hreflang alternates from a page list.
@@ -46,7 +46,7 @@ return buildSitemapEntries({ siteUrl, locales: ["en", "fr"], pages });
 
 - Import: `@zedtech/zedkit-seo` — `buildVideoSitemap`, `BuildVideoSitemapOptions`, `VideoSitemapEntry`, `escapeXml`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Short name: Video sitemap
 - Audience: Sites embedding video that should appear in Google video search.
 - Purpose: Build a Google video sitemap (page, thumbnail, title, description) from typed entries.
@@ -64,7 +64,7 @@ return new Response(xml, { headers: { "Content-Type": "application/xml" } });
 
 - Import: `@zedtech/zedkit-seo` — `buildOrganizationJsonLd`, `buildWebPageJsonLd`, `buildBreadcrumbJsonLd`, `buildArticleJsonLd`, `OrganizationJsonLdOptions`, `WebPageJsonLdOptions`, `BreadcrumbItem`, `ArticleJsonLdOptions`
 - Wraps: `schema-dts`
-- Status: beta
+- Status: stable
 - Short name: JSON-LD
 - Audience: Developers who want rich results without hand-writing schema.org JSON.
 - Purpose: Typed builders for Organization, WebPage, Breadcrumb and Article JSON-LD.
@@ -82,7 +82,7 @@ const jsonLd = buildArticleJsonLd({ title, description, url, datePublished });
 
 - Import: `@zedtech/zedkit-seo` — `buildPageMetadata`, `BuildPageMetadataOptions`, `SiteMetadata`, `PageContent`, `PageMetadata`, `OpenGraphImage`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Short name: Page metadata
 - Audience: Developers wiring titles, descriptions and OG tags across locales.
 - Purpose: Build complete localized page metadata (title, description, canonical, OG) from site + page data.
@@ -99,7 +99,7 @@ return buildPageMetadata({ site, page, locale, pathname, ogImage });
 
 - Import: `@zedtech/zedkit-seo` — `llmsTextResponse`, `LlmsTextResponseOptions`, `normalizeLlmsBody`, `buildLlmsFull`, `LlmsFullSection`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Short name: llms.txt
 - Audience: Sites that want AI agents and assistants to understand their content.
 - Purpose: Serve a valid llms.txt (full or scoped) from stored settings.
@@ -119,7 +119,7 @@ export async function GET() {
 
 - Import: `@zedtech/zedkit-seo` — `truncateDescription`, `SEO_DESCRIPTION_MAX`, `resolveDescription`, `DescriptionSource`, `resolveLocalizedField`, `LocalizedField`, `normalizeSlug`, `isDraftSlug`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Short name: Slugs & descriptions
 - Audience: Developers normalizing CMS or user content for URLs and meta tags.
 - Purpose: Resolve descriptions with fallback, normalize slugs, and pick localized field values.

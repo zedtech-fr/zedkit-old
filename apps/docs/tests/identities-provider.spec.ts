@@ -33,8 +33,11 @@ test("an unknown stored id is ignored: the site default applies", async ({ page 
   await expect(page.locator("html")).toHaveAttribute("data-identity", DEFAULT_IDENTITY);
 });
 
-test("a stored built-in id is applied before first paint", async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("zk-identity", "press"));
+test("a stored built-in id is applied before first paint when the visitor opted in", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("zk-docs-site-identity", "press");
+    localStorage.setItem("zk-docs-site-identity-opt-in", "1");
+  });
   await page.goto(PAGE, { waitUntil: "commit" });
   await expect(page.locator("html")).toHaveAttribute("data-identity", "press");
 });

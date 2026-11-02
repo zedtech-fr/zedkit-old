@@ -10,6 +10,7 @@ import {
   createDataTableColumns,
   type BadgeProps,
 } from "@zedtech/zedkit-ui";
+import { dataTableCopy } from "@/components/demos/i18n/data-table-copy";
 
 interface Order {
   id: string;
@@ -26,40 +27,27 @@ const STATUS_VARIANT: Record<Order["status"], BadgeProps["variant"]> = {
   Refunded: "outline",
 };
 
-const orders: Order[] = [
-  { id: "#1042", customer: "Camille Rousseau", date: "2026-10-26", total: 128.5, status: "Paid" },
-  { id: "#1041", customer: "Noah Bernard", date: "2026-10-26", total: 54.9, status: "Pending" },
-  { id: "#1040", customer: "Inès Moreau", date: "2026-10-25", total: 239, status: "Shipped" },
-  { id: "#1039", customer: "Lucas Petit", date: "2026-10-25", total: 18.2, status: "Paid" },
-  { id: "#1038", customer: "Sofia Garcia", date: "2026-10-24", total: 76.4, status: "Refunded" },
-  { id: "#1037", customer: "Hugo Lambert", date: "2026-10-24", total: 312.75, status: "Shipped" },
-  { id: "#1036", customer: "Léa Fontaine", date: "2026-10-23", total: 42, status: "Paid" },
-  { id: "#1035", customer: "Adam Mercier", date: "2026-10-23", total: 99.99, status: "Pending" },
-  { id: "#1034", customer: "Chloé Girard", date: "2026-10-22", total: 150.3, status: "Paid" },
-  { id: "#1033", customer: "Jules Faure", date: "2026-10-21", total: 27.6, status: "Shipped" },
-  { id: "#1032", customer: "Manon Roux", date: "2026-10-21", total: 83, status: "Paid" },
-  { id: "#1031", customer: "Tom Lefèvre", date: "2026-10-20", total: 64.25, status: "Refunded" },
-];
+const orders: Order[] = [...dataTableCopy.demo.orders];
 
 const money = new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR" });
 const day = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
 
 const helper = createDataTableColumns<Order>();
 const columns = [
-  helper.accessor("id", { header: "Order" }),
-  helper.accessor("customer", { header: "Customer" }),
+  helper.accessor("id", { header: dataTableCopy.demo.columns.order }),
+  helper.accessor("customer", { header: dataTableCopy.demo.columns.customer }),
   helper.accessor("date", {
-    header: "Date",
+    header: dataTableCopy.demo.columns.date,
     cell: ({ getValue }) => day.format(new Date(`${getValue()}T00:00:00Z`)),
   }),
-  helper.accessor("total", { header: "Total", cell: ({ getValue }) => money.format(getValue()) }),
+  helper.accessor("total", { header: dataTableCopy.demo.columns.total, cell: ({ getValue }) => money.format(getValue()) }),
   helper.accessor("status", {
-    header: "Status",
+    header: dataTableCopy.demo.columns.status,
     cell: ({ getValue }) => <Badge variant={STATUS_VARIANT[getValue()]}>{getValue()}</Badge>,
   }),
 ];
 
-const VIEWS = ["Orders", "Loading", "Error", "Empty"] as const;
+const VIEWS = dataTableCopy.demo.views;
 type View = (typeof VIEWS)[number];
 
 /** Store admin: filter, sort by a column header, page through 12 orders; switch the view to see each state. */
@@ -67,7 +55,7 @@ export function DataTableDemo() {
   const [view, setView] = useState<View>("Orders");
   return (
     <Stack gap={4}>
-      <Stack direction="horizontal" gap={2} role="group" aria-label="Table state">
+      <Stack direction="horizontal" gap={2} className="flex-wrap" role="group" aria-label={dataTableCopy.demo.stateGroupAriaLabel}>
         {VIEWS.map((name) => (
           <Button
             key={name}
@@ -80,14 +68,21 @@ export function DataTableDemo() {
           </Button>
         ))}
       </Stack>
-      <Text variant="muted">Click a column header to sort. Type in the filter to search every column.</Text>
+      <Text variant="muted">{dataTableCopy.demo.hint}</Text>
       <DataTable
         columns={columns}
         data={view === "Empty" ? [] : orders}
         loading={view === "Loading"}
-        error={view === "Error" ? "Could not load orders. Check your connection and try again." : null}
-        emptyMessage="No orders yet. New orders appear here as soon as they are paid."
-        filterPlaceholder="Filter orders"
+        error={view === "Error" ? dataTableCopy.demo.error : null}
+        emptyMessage={dataTableCopy.demo.emptyMessage}
+        emptyAction={
+          view === "Empty" ? (
+            <Button size="sm" type="button">
+              {dataTableCopy.demo.emptyAction}
+            </Button>
+          ) : undefined
+        }
+        filterPlaceholder={dataTableCopy.demo.filterPlaceholder}
         pageSize={5}
       />
     </Stack>

@@ -54,7 +54,8 @@
   --tracking-tight: -0.03em;
   --tracking-wide: 0.1em;
   --zk-heading-weight: 600;
-  --zk-heading-tracking: -0.08em;
+  --zk-heading-tracking: -0.02em;
+  --zk-subtle-foreground: 0 0% 38%;
   --zk-heading-transform: none;
   --zk-label-transform: uppercase;
   --zk-label-tracking: 0.1em;
@@ -112,7 +113,13 @@
 }
 
 :root[data-identity="volt"].dark,
-.dark [data-identity-scope][data-identity="volt"] {
+[data-identity-scope][data-identity="volt"].dark,
+/* A plain `.dark` section inside this look keeps the look and only adds the dark tokens. The nearer scope owns a section: the root rule skips anything inside a scope, a scope rule skips anything inside a deeper scope of another look. */
+:root[data-identity="volt"] .dark:not([data-identity-scope], [data-identity-scope] *),
+[data-identity-scope][data-identity="volt"] .dark:not(
+  [data-identity-scope],
+  [data-identity-scope][data-identity="volt"] [data-identity-scope]:not([data-identity="volt"]) *
+) {
   --background: 0 0% 3%;
   --foreground: 0 0% 96%;
   --card: 0 0% 7%;

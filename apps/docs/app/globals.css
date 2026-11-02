@@ -1,6 +1,20 @@
+/* One Tailwind build: fumadocs' sources go through the same compiler as the kit,
+   so `flex` and `max-xl:hidden` (or `w-full` and `sm:w-40`) keep a single,
+   correct order. The precompiled `fumadocs-ui/style.css` carried its own copy
+   of the utilities and let base classes beat responsive variants. */
 @import "tailwindcss";
 @import "@zedtech/zedkit-ui/styles.css";
-@import "fumadocs-ui/style.css";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+@source "../node_modules/fumadocs-ui/dist/**/*.js";
+
+@layer base {
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+}
 
 /* Scan the workspace kit sources so preview components get their classes. */
 @source "../../../packages/ui/src";
@@ -43,45 +57,6 @@
   color: hsl(var(--foreground));
 }
 
-/* Live preview islands stay on light kit tokens when the site shell is dark (#396). */
-html.dark :is([data-home-dashboard-card], [class*="bg-muted/40"]):not(.dark) {
-  color-scheme: light;
-  color: hsl(var(--foreground));
-  --background: 0 0% 100%;
-  --foreground: 240 10% 3.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 240 10% 3.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 240 10% 3.9%;
-  --primary: 240 5.9% 10%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 240 4.8% 95.9%;
-  --secondary-foreground: 240 5.9% 10%;
-  --muted: 240 4.8% 95.9%;
-  --muted-foreground: 240 5% 32%;
-  --accent: 240 4.8% 59.9%;
-  --accent-foreground: 240 5.9% 10%;
-  --destructive: 0 72.2% 47%;
-  --destructive-foreground: 0 0% 98%;
-  --success: 142.1 76.2% 27%;
-  --success-foreground: 0 0% 98%;
-  --warning: 32 95% 44%;
-  --warning-foreground: 240 10% 3.9%;
-  --border: 240 5.9% 60%;
-  --input: 240 5.9% 90%;
-  --ring: 240 5% 64.9%;
-}
-
-/* The island tint is opaque: a translucent light tint over the dark page reads as mid-grey under the light tokens. */
-html.dark [class*="bg-muted/40"]:not(.dark) {
-  background-color: color-mix(in srgb, hsl(var(--muted)) 40%, hsl(var(--background)));
-}
-
-/* Doc prose paints links in the page colour; ghost and outline buttons rendered as links follow the island. */
-html.dark [class*="bg-muted/40"]:not(.dark) a[class*="hover:bg-accent"] {
-  color: hsl(var(--foreground));
-}
-
 /* Phone search: hidden while a drawer or dialog is open. */
 body:has([data-vaul-overlay][data-state="open"]) [data-search-pill],
 body:has([role="dialog"][data-state="open"]) [data-search-pill] {
@@ -105,9 +80,13 @@ body:has([role="dialog"][data-state="open"]) [data-search-pill] {
 /*
  * Docs chrome follows the kit tokens: once an identity is chosen, fumadocs
  * colours are bridged to it (light or dark), so one identity switch restyles
- * the whole site. Without an identity the stock fumadocs palette stays.
+ * the whole site. The same bridge on `[data-identity-scope]` keeps a
+ * pinned specimen from inheriting the page's computed `--color-fd-*`
+ * (prose tables paint `background: var(--color-fd-card)`). Without an
+ * identity the stock fumadocs palette stays.
  */
-:root[data-identity] {
+:root[data-identity],
+[data-identity-scope][data-identity] {
   --color-fd-background: hsl(var(--background));
   --color-fd-foreground: hsl(var(--foreground));
   --color-fd-muted: hsl(var(--muted));
@@ -121,15 +100,19 @@ body:has([role="dialog"][data-state="open"]) [data-search-pill] {
   --color-fd-primary-foreground: hsl(var(--primary-foreground));
   --color-fd-secondary: hsl(var(--secondary));
   --color-fd-secondary-foreground: hsl(var(--secondary-foreground));
-  --color-fd-accent: hsl(var(--accent));
-  --color-fd-accent-foreground: hsl(var(--accent-foreground));
+  /* fumadocs "accent" is a neutral hover/selected surface (theme toggle, nav);
+     the kit's --accent is the brand color and stays on primary actions. */
+  --color-fd-accent: hsl(var(--muted));
+  --color-fd-accent-foreground: hsl(var(--foreground));
   --color-fd-ring: hsl(var(--ring));
+}
 
+:root[data-identity] {
   /* Navbar and sidebar follow the identity border and surfaces (glass tokens default to solid). */
   #nd-nav {
     background-color: hsl(var(--background) / var(--zk-glass-alpha, 1));
     border-bottom: var(--zk-border-width) solid hsl(var(--zk-glass-edge, var(--border)) / var(--zk-glass-edge-alpha, 1));
-    box-shadow: var(--zk-shadow-sm);
+    box-shadow: none;
     -webkit-backdrop-filter: var(--zk-glass-filter, none);
     backdrop-filter: var(--zk-glass-filter, none);
   }
@@ -150,23 +133,23 @@ body:has([role="dialog"][data-state="open"]) [data-search-pill] {
   /* Code blocks: one frame (the figure), never a frame inside a frame; the scroll area stays inside it. */
   figure.shiki {
     background-color: hsl(var(--card) / var(--zk-glass-alpha, 1));
-    border: var(--zk-border-width) solid hsl(var(--zk-glass-edge, var(--border)) / var(--zk-glass-edge-alpha, 1));
+    border: var(--zk-border-width) solid hsl(var(--border) / 0.35);
     border-radius: var(--radius-xl);
     box-shadow: var(--zk-shadow-sm);
     -webkit-backdrop-filter: var(--zk-glass-filter, none);
     backdrop-filter: var(--zk-glass-filter, none);
     max-width: 100%;
   }
-  figure.shiki [role="region"] {
-    scrollbar-width: thin;
-    scrollbar-color: hsl(var(--muted-foreground) / 0.5) transparent;
-  }
-  /* Copy button: quiet until hovered or focused. */
   figure.shiki > div:first-child {
     background: hsl(var(--card));
+    border-bottom: var(--zk-border-width) solid hsl(var(--border) / 0.25);
     border-radius: var(--radius-md);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+  }
+  figure.shiki [role="region"] {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.5) transparent;
   }
   /* Inside a tab group the group is the frame: its code block carries no border of its own. */
   [role="tabpanel"] > figure.shiki:only-child {
@@ -186,11 +169,21 @@ body:has([role="dialog"][data-state="open"]) [data-search-pill] {
  * exactly this, and let the article — previews included — take a share
  * of the surplus. Widths below 1920px are untouched.
  */
+#nd-docs-layout [role="tabpanel"] figure.shiki {
+  border: 0;
+  box-shadow: none;
+}
+
+#nd-docs-layout [role="tabpanel"] figure.shiki pre {
+  border: 0;
+  box-shadow: none;
+}
+
 @media (min-width: 120rem) {
   #nd-docs-layout {
     --fd-layout-width: 112.5rem;
   }
   #nd-page {
-    max-width: 68.75rem;
+    max-width: 70rem;
   }
 }

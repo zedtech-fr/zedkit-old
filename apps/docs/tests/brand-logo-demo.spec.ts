@@ -1,10 +1,11 @@
 import { expect, test } from "@playwright/test";
 
-const URL = "http://127.0.0.1:3100/docs/ui/show-your-brand-logo";
-const IDENTITIES = ["mist", "press", "tide", "volt", "maison", "glass"] as const;
+import { DOCS_SHIPPED_IDENTITIES, pinDemoLook } from "./a11y-helpers";
+
+const URL = "/docs/ui/show-your-brand-logo";
 
 test.describe("brand logo preview shows a fictional brand in header, footer and share image", () => {
-  for (const identity of IDENTITIES) {
+  for (const identity of DOCS_SHIPPED_IDENTITIES) {
     for (const mode of ["light", "dark"] as const) {
       for (const [device, width, height] of [
         ["desktop", 1280, 1000],
@@ -12,16 +13,9 @@ test.describe("brand logo preview shows a fictional brand in header, footer and 
       ] as const) {
         test(`${device} ${identity} ${mode}`, async ({ page }) => {
           await page.setViewportSize({ width, height });
-          await page.addInitScript(
-            ([i, m]) => {
-              localStorage.setItem("zk-identity", i!);
-              localStorage.setItem("theme", m!);
-            },
-            [identity, mode],
-          );
           await page.goto(URL, { waitUntil: "networkidle" });
           const preview = page.locator("[data-component-preview]").first();
-          await preview.scrollIntoViewIfNeeded();
+          await pinDemoLook(preview, identity, mode);
           const home = preview.getByRole("link", { name: "Harbor Studio" });
           await expect(home).toBeVisible();
           await expect(home.getByRole("img")).toHaveCount(0);

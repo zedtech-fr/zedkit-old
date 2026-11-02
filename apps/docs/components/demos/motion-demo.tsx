@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { Button, Card, CardDescription, CardHeader, CardTitle, Stack, Text } from "@zedtech/zedkit-ui";
+import { motionCopy } from "@/components/demos/i18n/motion-copy";
 
 // Literal class names so Tailwind generates each stagger step.
 const STEPS = [
-  { title: "Install", description: "One package, one CSS import.", className: "hover-lift animate-fade-up stagger-1" },
-  { title: "Compose", description: "Kit components, tokens only.", className: "hover-lift animate-fade-up stagger-2" },
-  { title: "Ship", description: "Same code in light and dark.", className: "hover-lift animate-fade-up stagger-3" },
+  { ...motionCopy.steps.install, className: "hover-lift animate-fade-up stagger-1" },
+  { ...motionCopy.steps.compose, className: "hover-lift animate-fade-up stagger-2" },
+  { ...motionCopy.steps.ship, className: "hover-lift animate-fade-up stagger-3" },
 ] as const;
 
 export function MotionDemo() {
@@ -25,12 +26,12 @@ export function MotionDemo() {
         ))}
       </Stack>
       <Stack key={`list-${run}`} gap={1} data-stagger="in">
-        <Text variant="muted">Children of data-stagger enter one after another.</Text>
-        <Text variant="muted">Reduced motion shows everything at once.</Text>
+        <Text variant="muted">{motionCopy.staggerNote}</Text>
+        <Text variant="muted">{motionCopy.reducedMotion}</Text>
       </Stack>
       <Stack direction="horizontal" gap={2}>
         <Button className="hover-press" onClick={() => setRun((n) => n + 1)}>
-          Replay entrance
+          {motionCopy.replayEntrance}
         </Button>
       </Stack>
     </Stack>

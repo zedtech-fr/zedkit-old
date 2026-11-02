@@ -13,7 +13,7 @@ test.describe("home mobile demo position (L2d)", () => {
     const metrics = await page.evaluate(() => {
       const root = document.querySelector("#home-page");
       const demo = document.querySelector("#demo");
-      const demoApp = document.querySelector('[aria-label="Interactive admin dashboard demo"]');
+      const demoApp = document.querySelector('[aria-label="Interactive admin dashboard demo in the hero"]');
       if (!root || !demo || !demoApp) return null;
       const rootTop = root.getBoundingClientRect().top + window.scrollY;
       const demoTop = demo.getBoundingClientRect().top + window.scrollY;

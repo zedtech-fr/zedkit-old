@@ -1,48 +1,39 @@
-/* Unlayered overrides: Fumadocs shadcn theme must not win over kit contrast (#396). */
-:root {
-  --muted-foreground: 240 5% 32% !important;
-  --color-fd-muted-foreground: hsl(240 5% 32%) !important;
-}
-
-:root.dark,
-html.dark {
-  --muted-foreground: 240 5% 64.9% !important;
-  --color-fd-muted-foreground: hsl(240 5% 64.9%) !important;
-}
-
+/* Unlayered: fumadocs chrome follows the nearest identity tokens, not a stock pin. */
 .text-fd-muted-foreground {
-  color: hsl(240 5% 32%) !important;
-}
-
-:root.dark .text-fd-muted-foreground,
-html.dark .text-fd-muted-foreground {
-  color: hsl(240 5% 64.9%) !important;
-}
-
-[id^="type-table"] .line-through {
-  color: hsl(240 5% 32%) !important;
-  text-decoration-color: hsl(240 5% 32%);
-}
-
-:root.dark [id^="type-table"] .line-through,
-html.dark [id^="type-table"] .line-through {
-  color: hsl(240 5% 64.9%) !important;
-  text-decoration-color: hsl(240 5% 64.9%);
+  color: hsl(var(--muted-foreground));
 }
 
 /*
- * Docs reading scale: identities ship a dense display scale (Volt: 10px
- * xs / 12px sm, -0.08em headings, 1.22 body leading). Inside the docs
- * shell, prose and chrome keep a readable floor: 13-14px labels,
- * softened tracking, 1.6 leading. Scoped demos that set their own
- * identity keep it; the home page keeps its own scale.
+ * Dark chrome: fumadocs 80%/50% fills read Tide muted too faint.
+ * Pin the tokens those utilities inherit; keep specimens on ThemeScope.
+ */
+html.dark[data-identity] #nd-nav,
+html.dark[data-identity] #nd-mobile-nav {
+  --muted-foreground: 0 0% 96%;
+  --color-fd-muted-foreground: #f4f6f8;
+  --color-muted-foreground: #f4f6f8;
+  --color-fd-background: #121826;
+  --color-fd-secondary: #1d263a;
+}
+
+html.dark[data-identity] #home-page [data-slot="tabs-trigger"][data-state="active"] {
+  color: hsl(var(--foreground));
+}
+
+[id^="type-table"] .line-through {
+  color: hsl(var(--muted-foreground));
+  text-decoration-color: hsl(var(--muted-foreground));
+}
+
+/*
+ * Docs shell contrast overrides only (type scale is global via shared-type-scale.css).
  */
 #nd-docs-layout {
-  --text-xs: 0.8125rem;
-  --text-sm: 0.875rem;
   --tracking-tight: -0.025em;
   --zk-heading-tracking: -0.02em;
   --zk-body-leading: 1.6;
+  /* Sticky nav + mobile docs header; shared with prose anchor targets. */
+  --zk-docs-scroll-offset: calc(var(--fd-docs-row-1, 0px) + 3.5rem);
 }
 
 /*
@@ -56,6 +47,59 @@ html.dark [id^="type-table"] .line-through {
   --zk-container-default: 72.5rem;
 }
 
+/*
+ * Home hero band: one section step between the secondary links and the next
+ * full-bleed band; get-started uses the same wide measure as use-cases.
+ */
+#home-page [data-home-hero-band] {
+  padding-top: 2.5rem;
+  padding-bottom: 0;
+}
+
+@media (width < 64rem) {
+  #home-page [data-home-hero-band] {
+    padding-top: 1.25rem;
+    padding-bottom: 1.25rem;
+  }
+}
+
+#home-page #get-started[data-slot="section"] {
+  padding-top: var(--zk-section-md);
+}
+
+#home-page [data-home-specimen-stage] {
+  box-shadow: none;
+}
+
+/*
+ * Home hero specimen: one frame (toolbar + stage). Hide table chrome that
+ * duplicates the Display row or adds noise in the compact hero preview.
+ */
+#home-page [data-admin-dashboard-demo="home"] [data-slot="data-table-toolbar"] {
+  display: none;
+}
+
+#home-page [data-admin-dashboard-demo="home"] [data-slot="data-table"] {
+  gap: 0.75rem;
+}
+
+#home-page [data-admin-dashboard-demo="home"] [data-slot="data-table-pagination"] {
+  display: none;
+}
+
+#home-page #components[data-slot="section"],
+#home-page #entry-points[data-slot="section"] {
+  padding-block: var(--zk-section-md);
+}
+
+#home-page [data-hero-demo-display] [data-slot="select-trigger"] {
+  box-shadow: none;
+}
+
+#home-page [data-home-install-choice] [role="tablist"] button[role="tab"] {
+  box-shadow: none;
+}
+
 @media (width < 48rem) {
   #nd-page {
     padding-inline: var(--zk-page-gutter);
@@ -63,6 +107,30 @@ html.dark [id^="type-table"] .line-through {
   [data-catalog-shell] {
     --zk-section-lg: calc(var(--spacing) * 16);
   }
+}
+
+/* Props accordion: plain mono names, not bordered inline-code pills. */
+#nd-docs-layout [id^="type-table"] code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: inherit;
+  box-decoration-break: unset;
+  -webkit-box-decoration-break: unset;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+#nd-docs-layout [id^="type-table"] > div {
+  min-width: 0;
+}
+
+#nd-docs-layout [id^="type-table"] > div:first-child {
+  border-bottom: 0;
+}
+
+#nd-docs-layout [id^="type-table"] [data-state] {
+  border-color: hsl(var(--border) / 0.22);
 }
 
 /*
@@ -77,11 +145,46 @@ html:not(.dark):root[data-identity] body:has([data-catalog-shell]) {
 }
 
 /*
- * D5 specimen surface: one hairline frame on component previews, no drop
- * shadow (shadows stay on overlays). Card fill replaces the muted wash.
+ * Quiet site chrome. The site wears its identity's colors and type, but its
+ * own chrome (header, sidebar, search, toggles, tabs, code wells, tables)
+ * uses a hairline divider, a clear control border, small radii and a faint
+ * shadow. Specimens re-declare their full identity on their own
+ * ThemeScope node, so these roles never leak into what is being shown.
+ * Roles: --border = structural divider, --input = interactive boundary.
  */
-#nd-docs-layout [data-component-preview] > :last-child {
+:root[data-identity] {
+  --zk-border-width: 1px;
+  --border: var(--sidebar-border);
+  --radius: 0.5rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --zk-shadow-sm: 0 1px 2px hsl(var(--zk-shadow-color) / 0.06);
+  --zk-shadow-md: 0 2px 6px hsl(var(--zk-shadow-color) / 0.08);
+}
+
+/* One hairline around an example; the stage inside carries the specimen. */
+#nd-docs-layout [data-component-preview] {
+  width: 100%;
+  max-width: none;
+}
+
+#nd-docs-layout [data-preview-code-panel] {
+  max-height: min(28rem, 62vh);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+#nd-docs-layout [data-preview-code-panel] figure.shiki {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
   box-shadow: none;
-  background-color: hsl(var(--card));
-  border: var(--zk-border-width, 1px) solid hsl(var(--border));
+}
+
+/* Palette dots show a look's colours; the look's own --spacing must not resize them. */
+[data-palette-dots] {
+  --spacing: 0.25rem;
 }

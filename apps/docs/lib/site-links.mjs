@@ -8,6 +8,9 @@ export const SITE_BUG_REPORT_URL =
 export const SITE_CHANGELOG_URL =
   "https://github.com/zedtech-fr/zedkit/blob/main/packages/ui/CHANGELOG.md";
 
+/** Demo-only identity editor (not a catalog docs page). */
+export const IDENTITY_EDITOR_HREF = "/features/identity-editor";
+
 /** In-app routes referenced from the global header (must exist in the static export). */
 export const SITE_HEADER_INTERNAL_PATHS = [
   "/docs",
@@ -20,6 +23,7 @@ export const SITE_HEADER_INTERNAL_PATHS = [
   "/docs/zedkit-and-shadcn",
   "/docs/maturity-and-compatibility",
   "/examples/note-list",
+  IDENTITY_EDITOR_HREF,
 ];
 
 /**

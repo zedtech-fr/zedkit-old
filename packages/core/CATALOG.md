@@ -10,7 +10,7 @@
 
 - Import: `@zedtech/zedkit-core` — `Result`, `ok`, `err`, `isOk`, `isErr`, `mapResult`, `unwrapOr`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Short name: Result
 - Audience: TypeScript developers who want typed outcomes instead of try/catch everywhere.
 - Purpose: Return `ok`/`err` Results so failures are values the compiler forces you to handle.
@@ -29,7 +29,7 @@ const name = unwrapOr(found, { name: "?" }).name;
 
 - Import: `@zedtech/zedkit-core` — `tryCatch`, `tryCatchAsync`, `normalizeThrown`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Short name: tryCatch
 - Audience: TypeScript developers wrapping throwing calls (JSON, IO, third-party SDKs).
 - Purpose: Turn any throwing call into a typed Result without a try/catch block.
@@ -47,7 +47,7 @@ if (!parsed.ok) return fallback(parsed.error);
 
 - Import: `@zedtech/zedkit-core` — `DomainError`, `TransientError`, `PermanentError`, `classifyError`, `ErrorKind`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Short name: Error taxonomy
 - Audience: Service authors who route failures to retry, dead-letter, or client-facing errors.
 - Purpose: Typed error kinds plus `classifyError` so workers and HTTP layers pick the same policy.
@@ -65,7 +65,7 @@ throw new TransientError("upstream timeout", { cause: err });
 
 - Import: `@zedtech/zedkit-core` — `Clock`, `systemClock`, `fixedClock`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Short name: Clock
 - Audience: Developers who need deterministic dates in tests without mocking `Date` globally.
 - Purpose: A tiny `Clock` port with production and fixed implementations.
@@ -82,7 +82,7 @@ const ageMs = clock.now().getTime() - createdAt.getTime();
 
 - Import: `@zedtech/zedkit-core` — `newPrefixedId`, `isPrefixedId`
 - Wraps: `ulid`
-- Status: beta
+- Status: stable
 - Short name: Prefixed IDs
 - Audience: Developers who want readable, sortable, collision-free IDs (orders, jobs, keys).
 - Purpose: Generate ULID-based IDs with a type prefix (`order_...`) plus a prefix check.

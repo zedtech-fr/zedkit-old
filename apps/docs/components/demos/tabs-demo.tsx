@@ -20,46 +20,43 @@ import {
   TabsTrigger,
   Text,
 } from "@zedtech/zedkit-ui";
+import { tabsCopy } from "@/components/demos/i18n/tabs-copy";
 
 const tasks = [
-  { name: "Homepage layout", status: "Done", tone: "success" },
-  { name: "Case study pages", status: "In review", tone: "warning" },
-  { name: "Contact form", status: "Active", tone: "secondary" },
-  { name: "Launch checklist", status: "To do", tone: "outline" },
+  { ...tabsCopy.project.rows[0], tone: "success" },
+  { ...tabsCopy.project.rows[1], tone: "warning" },
+  { ...tabsCopy.project.rows[2], tone: "secondary" },
+  { ...tabsCopy.project.rows[3], tone: "outline" },
 ] as const;
 
-const activity = [
-  { who: "Leo Martin", what: "moved “Case study pages” to In review", when: "10 min ago" },
-  { who: "Maya Laurent", what: "closed “Homepage layout”", when: "2 h ago" },
-  { who: "Sam Okafor", what: "commented on “Contact form”", when: "Yesterday" },
-] as const;
+const activity = tabsCopy.project.feed;
 
 /** A project page: one heading, three panels that share its context. */
 export function TabsDemo() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Website relaunch</CardTitle>
-        <CardDescription>Harbor Studio · due 14 November</CardDescription>
+        <CardTitle>{tabsCopy.project.title}</CardTitle>
+        <CardDescription>{tabsCopy.project.description}</CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="overview">
-          <TabsList aria-label="Project sections">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="tasks">Tasks</TabsTrigger>
-            <TabsTrigger value="activity">Activity</TabsTrigger>
+          <TabsList aria-label={tabsCopy.project.sections}>
+            <TabsTrigger value="overview">{tabsCopy.project.overview}</TabsTrigger>
+            <TabsTrigger value="tasks">{tabsCopy.project.tasks}</TabsTrigger>
+            <TabsTrigger value="activity">{tabsCopy.project.activity}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
             <Stack gap={4}>
-              <ProgressBar value={55} label="Project progress, 55 percent" />
-              <Text variant="muted">11 of 20 tasks done</Text>
+              <ProgressBar value={55} label={tabsCopy.project.progress} />
+              <Text variant="muted">{tabsCopy.project.done}</Text>
               <DetailPanel
                 items={[
-                  { label: "Owner", value: "Maya Laurent" },
-                  { label: "Team", value: "4 people" },
-                  { label: "Status", value: <Badge variant="success">On track</Badge> },
-                  { label: "Next milestone", value: "Design review, 3 November" },
+                  { label: tabsCopy.project.owner, value: tabsCopy.project.ownerName },
+                  { label: tabsCopy.project.team, value: tabsCopy.project.teamSize },
+                  { label: tabsCopy.project.status, value: <Badge variant="success">{tabsCopy.project.onTrack}</Badge> },
+                  { label: tabsCopy.project.milestone, value: tabsCopy.project.milestoneValue },
                 ]}
               />
             </Stack>
@@ -69,8 +66,8 @@ export function TabsDemo() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Task</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>{tabsCopy.project.task}</TableHead>
+                  <TableHead>{tabsCopy.project.statusColumn}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

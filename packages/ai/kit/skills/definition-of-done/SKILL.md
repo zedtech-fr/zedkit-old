@@ -1,6 +1,6 @@
 ---
 name: definition-of-done
-description: "Checklist to pass before calling a code change done: real gates on the final state, tests for every changed file, no weakened tests, refactor parity, a cold second review. Use at the end of any code change and before opening a PR."
+description: "Checklist to pass before calling a code change done: real gates on the final state, tests for every changed file, no weakened tests, refactor parity, a cold second review, and a rendered-page critique for visual work. Use at the end of any code change and before opening a PR."
 ---
 
 # Definition of done
@@ -38,6 +38,16 @@ Done is a claim. This list is the evidence. If one box cannot be ticked, say whi
 
 - [ ] The change is small enough to review in one sitting. If it keeps growing past your first estimate, stop and propose a split before going on. Ignore lockfiles and generated files when counting.
 - [ ] Each PR is mergeable alone, never a broken intermediate state. Split along seams: contract, implementation, wiring, tests with their code.
+
+## Visual work
+
+Applies when the change is a page, view, component, style or preview.
+Exception: a non-visual change (N/A).
+
+- [ ] Lint, types, axe and screenshot diffs ran on the final state. Necessary, not sufficient.
+- [ ] A rendered-page critique names the strongest remaining weaknesses (composition, hierarchy, type roles, density, rhythm). A self-assigned score is not done.
+- [ ] Screenshots were opened and described (matching content/viewport/identity/mode, before vs after). `UNSEEN` if not looked at. Generated-but-unread shots do not count.
+- [ ] agent `ui-designer` verdict in hand.
 
 ## Review: two independent passes
 

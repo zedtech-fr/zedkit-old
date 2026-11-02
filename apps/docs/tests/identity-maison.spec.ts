@@ -11,8 +11,9 @@ const ms = (value: string) => Number.parseFloat(value) * (value.trim().endsWith(
 
 async function openAsIdentity(page: Page, url: string, identity: string, theme: "light" | "dark") {
   await page.addInitScript(({ id, mode }) => {
-    localStorage.removeItem("zk-identity-custom");
-    localStorage.setItem("zk-identity", id);
+    localStorage.removeItem("zk-docs-site-identity-custom");
+    localStorage.setItem("zk-docs-site-identity", id);
+    localStorage.setItem("zk-docs-site-identity-opt-in", "1");
     localStorage.setItem("theme", mode);
   }, { id: identity, mode: theme });
   await page.goto(url, { waitUntil: "networkidle" });
@@ -35,7 +36,7 @@ test.describe("maison identity", () => {
     expect(heading).toContain('"Cormorant Variable Fallback"');
     await expect.poll(() => page.evaluate(() => document.fonts.check('16px "Jost Variable"'))).toBe(true);
     await expect.poll(() => page.evaluate(() => document.fonts.check('16px "Cormorant Variable"'))).toBe(true);
-    expect(await probe(page, "border-top-left-radius", "var(--radius-xl)")).toBe("2px");
+    expect(await probe(page, "border-top-left-radius", "var(--radius-xl)", "maison")).toBe("2px");
   });
 
   test("keeps interactions within the caps and saves the slow motion for reveals", async ({ page }) => {
@@ -54,7 +55,7 @@ test.describe("maison identity", () => {
       await openAsIdentity(page, HOME, "maison", "light");
       expect(await probe(page, "border-top-width", "var(--zk-border-width)")).toBe("1px");
       if (viewport.width >= 768) {
-        const card = page.locator('#home-page #entry-points:not(.sr-only) [data-slot="card"]').first();
+        const card = page.locator('#home-page #identities:not(.sr-only) [data-slot="card"]').first();
         await expect(card).toBeVisible({ timeout: 20_000 });
         const cardBorder = await card.evaluate((el) => Number.parseFloat(getComputedStyle(el).borderTopWidth));
         expect(cardBorder).toBeLessThanOrEqual(1.01);

@@ -28,7 +28,7 @@ export function zedkitShadcnFaq(registryBrickCount: number): FaqEntry[] {
     {
       question: "Is zedkit production-ready?",
       answer:
-        "It is public MIT software under active development. Catalog maturity labels apply: nothing is marked stable yet; UI needs are alpha or beta. Use maturity badges and the compatibility matrix before betting a critical launch on a specific need.",
+        "It is public MIT software under active development. Catalog maturity labels apply: stable needs have no badge and follow semver on 1.0 packages; alpha and beta entries can still change. Use the maturity legend and compatibility matrix before betting a critical launch on a specific need.",
     },
   ];
 }

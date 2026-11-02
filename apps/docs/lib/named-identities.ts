@@ -1,7 +1,6 @@
 import { tryCatch } from "@zedtech/zedkit-core";
 import {
   IDENTITY_CHANGE_EVENT,
-  IDENTITY_STORAGE_KEY,
   NAMED_IDENTITY_PREFIX,
   applyCustomIdentity,
   isNamedIdentityId,
@@ -9,6 +8,11 @@ import {
   type IdentityOption,
   type IdentityTokens,
 } from "@zedtech/zedkit-ui";
+
+import {
+  DOCS_SITE_IDENTITY_STORAGE_KEY,
+  isDocsSiteIdentityOptIn,
+} from "@/lib/site-identity-storage";
 
 const NAMED_STORAGE_KEY = "zk-identity-named";
 const NAMED_CHANGE_EVENT = "zk-identity-named-change";
@@ -114,12 +118,13 @@ function subscribeNamedIdentities(onStoreChange: () => void) {
   };
 }
 
-/** Re-apply a stored named look. React hydrating `<html>` can drop `data-identity`. */
+/** Re-apply a stored named look after hydration (uses the docs site identity keys). */
 function restoreNamedIdentity() {
-  const id = window.localStorage.getItem(IDENTITY_STORAGE_KEY);
+  if (!isDocsSiteIdentityOptIn()) return;
+  const id = window.localStorage.getItem(DOCS_SITE_IDENTITY_STORAGE_KEY);
   if (!id || !isNamedIdentityId(id)) return;
   const saved = readNamedIdentities().find((item) => item.id === id);
-  if (saved) applyCustomIdentity(saved.tokens, saved.id);
+  if (saved) applyCustomIdentity(saved.tokens, saved.id, DOCS_SITE_IDENTITY_STORAGE_KEY);
 }
 
 export {

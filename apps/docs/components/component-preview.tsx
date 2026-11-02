@@ -2,51 +2,52 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import Link from "next/link";
 import { highlight } from "fumadocs-core/highlight";
-import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { CodeBlock, Pre } from "fumadocs-ui/components/codeblock";
 import { Stack, Text } from "@zedtech/zedkit-ui";
-import { PreviewViewport } from "./preview-viewport";
+import { PreviewFrame } from "./preview-viewport";
 import { demoRegistry, type DemoEntry } from "./demos/registry";
+import { componentPreviewCopy } from "@/components/i18n/component-preview-copy";
 
 interface ComponentPreviewProps {
   /** Registry key, e.g. `ButtonDemo`. */
   demo: string;
-  /** One-line import reference shown above the source. */
-  detail: string;
   /** Whether the page renders a Props section to link to. */
   hasProps: boolean;
+  /** Scope a11y gates to this preview (hero on component pages). */
+  a11yRoot?: boolean;
 }
 
 /**
- * Deep frame around one live demo: Preview/Code tabs with a scoped
- * light/dark/mobile viewport, and Shiki-highlighted source (read from
- * the demo file at build — always current) with copy + filename title.
- * Consumed by generated MDX via registry key only.
+ * One framed live demo: Preview/Code tabs, a quiet Display row, and Shiki source.
  */
-export async function ComponentPreview({ demo, detail, hasProps }: ComponentPreviewProps) {
+export async function ComponentPreview({ demo, hasProps, a11yRoot }: ComponentPreviewProps) {
   const entry = (demoRegistry as Record<string, DemoEntry | undefined>)[demo];
-  if (!entry) return <Text>Unknown demo “{demo}”.</Text>;
+  if (!entry) return <Text>{componentPreviewCopy.unknownDemo(demo)}</Text>;
   const code = await readFile(join(process.cwd(), "components", "demos", entry.file), "utf8");
   const highlighted = await highlight(code, { lang: "tsx", components: { pre: Pre } });
   const { Demo } = entry;
   return (
-    <Stack gap={3}>
-      <Text variant="muted" className="text-xs">{detail}</Text>
-      <Tabs items={["Preview", "Code"]} className={entry.pinned ? "overflow-clip" : undefined}>
-        <Tab value="Preview">
-          <PreviewViewport center={entry.center ?? false}>
-            <Demo />
-          </PreviewViewport>
-        </Tab>
-        <Tab value="Code">
-          <CodeBlock title={entry.file} allowCopy>
-            {highlighted}
-          </CodeBlock>
-        </Tab>
-      </Tabs>
+    <Stack gap={2} className="w-full min-w-0">
+      <div
+        className="w-full min-w-0"
+        data-component-preview={a11yRoot ? "primary" : true}
+        {...(a11yRoot ? { "data-a11y-preview-root": "" } : {})}
+      >
+        <PreviewFrame
+          center={entry.center ?? false}
+          pinned={entry.pinned ?? false}
+          codePanel={
+            <CodeBlock title={entry.file} allowCopy>
+              {highlighted}
+            </CodeBlock>
+          }
+        >
+          <Demo />
+        </PreviewFrame>
+      </div>
       {hasProps ? (
-        <Link href="#props" className="w-fit text-sm text-primary underline-offset-4 hover:underline">
-          View props table
+        <Link href="#props" className="w-fit text-sm text-primary underline underline-offset-4 hover:no-underline">
+          {componentPreviewCopy.viewPropsTable}
         </Link>
       ) : null}
     </Stack>

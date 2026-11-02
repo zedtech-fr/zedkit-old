@@ -9,6 +9,10 @@ import {
 } from "@zedtech/zedkit-ui";
 
 import { LIGHT_KEYS } from "@/lib/identity-editor-search";
+import {
+  DOCS_SITE_IDENTITY_STORAGE_KEY,
+  setDocsSiteIdentityOptIn,
+} from "@/lib/site-identity-storage";
 
 const LIGHT_KEY_SET = new Set<string>(LIGHT_KEYS);
 
@@ -94,7 +98,10 @@ function useDraftTokens(present: IdentityTokens, look: string) {
   function applySuggest(next: IdentityTokens, toSite: boolean) {
     const suggested = withSuggestedDark(next, tokens, darkKept);
     remember(suggested.tokens, suggested.keep);
-    if (toSite) setAppliedSite(true);
+    if (toSite) {
+      setDocsSiteIdentityOptIn(true);
+      setAppliedSite(true);
+    }
   }
 
   function load(next: IdentityTokens, keep: readonly string[] = []) {
@@ -105,7 +112,7 @@ function useDraftTokens(present: IdentityTokens, look: string) {
 
   useLayoutEffect(() => {
     if (!appliedSite) return;
-    applyCustomIdentity(tokens, look);
+    applyCustomIdentity(tokens, look, DOCS_SITE_IDENTITY_STORAGE_KEY);
   }, [appliedSite, look, tokens]);
 
   return {
@@ -115,7 +122,10 @@ function useDraftTokens(present: IdentityTokens, look: string) {
     appliedSite,
     remember,
     undo,
-    applySite: () => setAppliedSite(true),
+    applySite: () => {
+      setDocsSiteIdentityOptIn(true);
+      setAppliedSite(true);
+    },
     detachSite: () => setAppliedSite(false),
     load,
     patch,

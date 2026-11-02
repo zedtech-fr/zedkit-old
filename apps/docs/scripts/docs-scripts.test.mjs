@@ -2,6 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { catalogPageKeys, expandFencePreviews, expandGuideSnippets } from "./generate.mjs";
 import { checkGeneratedPage, readFrontmatterDescription, readFrontmatterTitle } from "./page-checks.mjs";
+import { componentPageSections } from "../lib/component-page-sections.mjs";
+import { declarationOrigin } from "../lib/declared-props.mjs";
+import { partitionPropsEntries } from "../lib/props-priority.mjs";
+import { groupCatalogResults } from "../lib/catalog-result-groups.mjs";
 
 const page = `---
 title: "Trigger actions with buttons"
@@ -24,6 +28,92 @@ status: beta
 <Button>Save</Button>
 \`\`\`
 `;
+
+test("groupCatalogResults uses the same area labels as catalog filters", () => {
+  const groups = groupCatalogResults([
+    { area: "ui", package: "ui", href: "/docs/ui/a", title: "Button", need: "n", status: "stable" },
+    { area: "backend", package: "core", href: "/docs/core/a", title: "tryCatch", need: "n", status: "stable" },
+    { area: "backend", package: "quality", href: "/docs/quality/a", title: "lint", need: "n", status: "stable" },
+    { area: "agents", package: "ai", href: "/docs/ai/a", title: "setup-ai", need: "n", status: "stable" },
+  ]);
+  assert.deepEqual(
+    groups.map((group) => [group.id, group.label, group.entries.length]),
+    [
+      ["ui", "UI", 1],
+      ["backend", "Core & server", 2],
+      ["agents", "Agents", 1],
+    ],
+  );
+});
+
+test("partitionPropsEntries surfaces variant and size before inherited attrs", () => {
+  const entries = [
+    { name: "disabled" },
+    { name: "variant" },
+    { name: "size" },
+    { name: "asChild" },
+    { name: "type" },
+  ];
+  const { primary, inherited } = partitionPropsEntries(entries);
+  assert.deepEqual(
+    primary.map((entry) => entry.name),
+    ["variant", "size", "asChild"],
+  );
+  assert.deepEqual(
+    inherited.map((entry) => entry.name),
+    ["disabled", "type"],
+  );
+});
+
+test("partitionPropsEntries keeps required and kit-declared props, folds inherited ones", () => {
+  const entries = [
+    { name: "title", origin: "inherited" },
+    { name: "label", required: true, origin: "inherited" },
+    { name: "tone", origin: "kit" },
+    { name: "onClick", origin: "inherited" },
+    { name: "size", origin: "inherited" },
+  ];
+  const { primary, inherited } = partitionPropsEntries(entries, ["size"]);
+  assert.deepEqual(primary.map((e) => e.name), ["label", "size", "tone"]);
+  assert.deepEqual(inherited.map((e) => e.name), ["onClick", "title"]);
+});
+
+test("partitionPropsEntries in only-mode folds everything but the priority list", () => {
+  const entries = [
+    { name: "required", required: true, origin: "kit" },
+    { name: "variant", origin: "kit" },
+    { name: "other", origin: "kit" },
+  ];
+  const { primary, inherited } = partitionPropsEntries(entries, ["variant"], true);
+  assert.deepEqual(primary.map((e) => e.name), ["variant"]);
+  assert.deepEqual(inherited.map((e) => e.name), ["other", "required"]);
+});
+
+test("declarationOrigin follows where a property is declared", () => {
+  const react = "/repo/node_modules/.pnpm/@types+react@19/node_modules/@types/react/index.d.ts";
+  const lib = "/repo/node_modules/typescript/lib/lib.dom.d.ts";
+  const kit = "/repo/packages/ui/src/layout.tsx";
+  assert.equal(declarationOrigin([react]), "inherited");
+  assert.equal(declarationOrigin([lib]), "inherited");
+  assert.equal(
+    declarationOrigin(["/repo/node_modules/.pnpm/react-hook-form@7/node_modules/react-hook-form/dist/types/controller.d.ts"]),
+    "kit",
+    "a wrapped library's own option is the component's API, not an element attribute",
+  );
+  assert.equal(declarationOrigin([kit]), "kit");
+  assert.equal(declarationOrigin([react, kit]), "kit", "a kit redeclaration of a native name is the kit's option");
+  assert.equal(declarationOrigin([]), "inherited");
+});
+
+test("componentPageSections lists a section only when it has content", () => {
+  const always = ["example", "guidance", "install-or-copy", "usage-and-states"];
+  assert.deepEqual(componentPageSections({ hasProps: false, a11y: "", related: [], troubleshooting: "" }), always);
+  assert.deepEqual(
+    componentPageSections({ hasProps: true, a11y: "Name it.", related: [{ title: "x" }], troubleshooting: "Wire the CSS." }),
+    [...always, "props", "accessibility", "related", "troubleshooting"],
+  );
+  assert.deepEqual(componentPageSections({ hasProps: false, a11y: "Name it." }), [...always, "accessibility"]);
+});
 
 test("catalogPageKeys maps a need to folder/slug and suffixes collisions", () => {
   const keys = catalogPageKeys({
@@ -87,12 +177,12 @@ test("checkGeneratedPage fails when a component page lacks the guidance block", 
   const errors = [];
   checkGeneratedPage(
     "ui/confirm-destructive-actions.mdx",
-    "---\ntitle: \"Confirm destructive actions\"\ndescription: \"A destructive confirmation.\"\nstatus: beta\n---\n\n<ComponentPage registry={\"confirm-dialog\"} />\n",
+    "---\ntitle: \"ConfirmDialog\"\ndescription: \"A destructive confirmation.\"\nstatus: beta\n---\n\n<ComponentPage registry={\"confirm-dialog\"} />\n",
     { seoMax: 160, descriptionsSeen: new Map() },
     errors,
   );
   assert.equal(
-    errors.some((entry) => entry.includes("lacks the At-a-glance guidance block")),
+    errors.some((entry) => entry.includes("lacks ComponentPage guidance prop")),
     true,
   );
   assert.equal(

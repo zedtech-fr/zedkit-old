@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { assertA11yGate } from "./a11y-helpers";
 import { probe, useIdentity } from "./identity-helpers";
+import { openHeroPage } from "./hero-helpers";
 
 // Relative path: the config baseURL decides the port.
 const HOME = "/";
@@ -14,13 +15,13 @@ test.describe("tide identity", () => {
     expect(body.startsWith('"Inter Variable"')).toBe(true);
     expect(body).toContain('"Inter Variable Fallback"');
     const h1 = await page.evaluate(() => {
-      const style = getComputedStyle(document.querySelector("h1")!);
+      const style = getComputedStyle(document.querySelector("#home-page h1")!);
       return { family: style.fontFamily, weight: style.fontWeight };
     });
     expect(h1.family).toBe(body);
-    expect(h1.weight).toBe("700");
+    expect(h1.weight).toBe("600");
     await expect.poll(() => page.evaluate(() => document.fonts.check('16px "Inter Variable"'))).toBe(true);
-    expect(await probe(page, "border-top-left-radius", "var(--radius-xl)")).toBe("24px");
+    expect(await probe(page, "border-top-left-radius", "var(--radius-xl)", "tide")).toBe("24px");
   });
 
   test("keeps interaction motion within the caps", async ({ page }) => {
@@ -52,15 +53,27 @@ test.describe("tide identity", () => {
     expect(overflow).toBeLessThanOrEqual(0);
   });
 
-  test("keeps the hero admin preview on the first phone screen", async ({ page }) => {
+  test("hero admin preview sizes to content on phone (no clipped overflow)", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(HOME, { waitUntil: "networkidle" });
+    await openHeroPage(page, "Apps");
     await expect(page.locator("html")).toHaveAttribute("data-identity", "tide");
     const preview = page.locator("[data-home-hero-preview]");
-    await expect(preview).toBeVisible();
-    const box = await preview.boundingBox();
-    expect(box).not.toBeNull();
-    expect(box!.y + box!.height).toBeLessThanOrEqual(844);
+    await preview.scrollIntoViewIfNeeded();
+    const clip = await preview.evaluate((el) => {
+      const style = getComputedStyle(el);
+      return {
+        overflowY: style.overflowY,
+        maxHeight: style.maxHeight,
+        clientHeight: el.clientHeight,
+        scrollHeight: el.scrollHeight,
+      };
+    });
+    expect(clip.overflowY).not.toBe("hidden");
+    expect(clip.clientHeight + 2).toBeGreaterThanOrEqual(clip.scrollHeight);
+    const card = page.locator("[data-home-dashboard-card]");
+    await expect(card.getByRole("button", { name: "Edit console" })).toBeVisible();
+    await expect(card.getByRole("button", { name: "Delete console" })).toBeVisible();
   });
 
   for (const width of [360, 390] as const) {

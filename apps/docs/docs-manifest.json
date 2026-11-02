@@ -16,9 +16,12 @@
     "Trigger actions with buttons": {
       "package": "@zedtech/zedkit-ui",
       "component": "Button",
+      "registry": "button",
       "props": "ButtonProps",
       "source": "button.tsx",
-      "demo": "ButtonDemo"
+      "demo": "ButtonDemo",
+      "examples": { "Variants and sizes": "ButtonSizesDemo" },
+      "propsPriority": ["variant", "size", "asChild"]
     },
     "Show a status or count badge": {
       "package": "@zedtech/zedkit-ui",
@@ -27,6 +30,7 @@
       "props": "BadgeProps",
       "source": "badge.tsx",
       "demo": "BadgeDemo",
+      "propsPriority": ["variant", "asChild"],
       "examples": {
         "Variants": "BadgeVariantsDemo",
         "In a table row": "BadgeTableRowDemo",
@@ -87,6 +91,7 @@
     "Open modal dialogs": {
       "package": "@zedtech/zedkit-ui",
       "component": "Dialog",
+      "registry": "dialog",
       "props": "DialogProps",
       "source": "dialog.tsx",
       "demo": "DialogDemo",
@@ -120,7 +125,9 @@
       "component": "Calendar",
       "props": "CalendarProps",
       "source": "calendar.tsx",
-      "demo": "CalendarDemo"
+      "demo": "CalendarDemo",
+      "propsPriority": ["mode", "selected", "onSelect", "defaultMonth", "month", "onMonthChange", "numberOfMonths", "disabled", "required", "showOutsideDays", "captionLayout", "fixedWeeks", "weekStartsOn", "locale"],
+      "propsRest": { "summary": "other react-day-picker props", "href": "https://daypicker.dev/api/type-aliases/DayPickerProps" }
     },
     "Pick a date from a popover": {
       "package": "@zedtech/zedkit-ui",
@@ -502,7 +509,9 @@
       "source": "scroll-scenes.tsx",
       "demo": "ScrollScenesDemo",
       "examples": {
-        "Before and after": "ScrollScenesBeforeAfterDemo"
+        "Before and after": "ScrollScenesBeforeAfterDemo",
+        "Same product in three looks": "ScrollScenesLooksDemo",
+        "Pricing walkthrough": "ScrollScenesPricingDemo"
       }
     },
     "Switch the visual identity with one attribute": {
@@ -521,7 +530,8 @@
       "component": null,
       "props": null,
       "source": "react.tsx",
-      "demo": "FlagsDemo"
+      "demo": "FlagsDemo",
+      "a11yNotApplicable": "Hooks and providers render nothing."
     }
   }
 }

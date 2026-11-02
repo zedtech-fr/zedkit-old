@@ -8,7 +8,8 @@ const IDENTITIES = ["mist", "press", "tide", "volt", "maison", "glass"] as const
 async function open(page: import("@playwright/test").Page, path: string, identity: string, mode: string) {
   await page.addInitScript(
     ([i, m]) => {
-      localStorage.setItem("zk-identity", i!);
+      localStorage.setItem("zk-docs-site-identity", i!);
+      localStorage.setItem("zk-docs-site-identity-opt-in", "1");
       localStorage.setItem("theme", m!);
     },
     [identity, mode],
@@ -56,7 +57,7 @@ test.describe("icon-only actions with a visible name", () => {
 
   test("preview has no axe violations", async ({ page }) => {
     await open(page, "icon-only-actions-with-a-visible-name", "mist", "light");
-    await assertA11yGate(page, "[data-component-preview]");
+    await assertA11yGate(page, "[data-a11y-preview-root]");
   });
 });
 
@@ -98,6 +99,6 @@ test.describe("quiet icon beside inline text", () => {
 
   test("preview has no axe violations", async ({ page }) => {
     await open(page, "quiet-icon-beside-inline-text", "mist", "light");
-    await assertA11yGate(page, "[data-component-preview]");
+    await assertA11yGate(page, "[data-a11y-preview-root]");
   });
 });

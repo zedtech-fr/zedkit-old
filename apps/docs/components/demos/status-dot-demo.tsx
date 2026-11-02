@@ -1,27 +1,28 @@
 import { Stack, StatusDot, Text } from "@zedtech/zedkit-ui";
+import { statusDotCopy } from "@/components/demos/i18n/status-dot-copy";
 
 export function StatusDotDemo() {
   return (
     <Stack gap={2}>
       <Stack direction="horizontal" gap={2} className="items-center">
         <StatusDot tone="active" />
-        <Text>Syncing…</Text>
+        <Text>{statusDotCopy.syncing}</Text>
       </Stack>
       <Stack direction="horizontal" gap={2} className="items-center">
         <StatusDot tone="idle" />
-        <Text>Idle</Text>
+        <Text>{statusDotCopy.idle}</Text>
       </Stack>
       <Stack direction="horizontal" gap={2} className="items-center">
         <StatusDot tone="success" />
-        <Text>Saved</Text>
+        <Text>{statusDotCopy.saved}</Text>
       </Stack>
       <Stack direction="horizontal" gap={2} className="items-center">
         <StatusDot tone="warning" />
-        <Text>Retrying…</Text>
+        <Text>{statusDotCopy.retrying}</Text>
       </Stack>
       <Stack direction="horizontal" gap={2} className="items-center">
         <StatusDot tone="danger" />
-        <Text>Failed</Text>
+        <Text>{statusDotCopy.failed}</Text>
       </Stack>
     </Stack>
   );

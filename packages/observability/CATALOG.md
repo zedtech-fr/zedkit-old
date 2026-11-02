@@ -10,7 +10,7 @@
 
 - Import: `@zedtech/zedkit-observability` — `Logger`, `LogLevel`, `LogContext`, `noopLogger`, `createConsoleLogger`, `createMemoryLogger`, `CapturedLog`
 - Wraps: `(none)`
-- Status: alpha
+- Status: beta
 - Short name: Logger port
 - Audience: TypeScript services and apps that should not import a logging SDK in feature code.
 - Purpose: A small `Logger` port with noop, console, and in-memory adapters.
@@ -27,7 +27,7 @@ logger.info("ready", { port: 3000 });
 
 - Import: `@zedtech/zedkit-observability` — `Tracker`, `EventMap`, `createNoopTracker`, `createConsoleTracker`, `createMemoryTracker`
 - Wraps: `(none)`
-- Status: alpha
+- Status: beta
 - Short name: Tracker port
 - Audience: Front-end and full-stack teams sending product analytics events.
 - Purpose: Typed `capture` calls backed by noop, console, or in-memory adapters.
@@ -45,7 +45,7 @@ tracker.capture("signup", { plan: "free" });
 
 - Import: `@zedtech/zedkit-observability/react` — `ObservabilityProvider`, `useLogger`, `useTracker`
 - Wraps: `react`
-- Status: alpha
+- Status: beta
 - Short name: React observability
 - Audience: React apps that should read logging/analytics from context.
 - Purpose: One provider at the root; hooks below stay backend-agnostic.
@@ -71,7 +71,7 @@ function Home() {
 
 - Import: `@zedtech/zedkit-observability/pino` — `createPinoLogger`, `PinoLoggerOptions`
 - Wraps: `pino` (peer)
-- Status: alpha
+- Status: beta
 - Short name: Pino adapter
 - Audience: Node services that already run `pino` at the edge.
 - Purpose: Wrap `pino` behind the shared `Logger` port.
@@ -88,7 +88,7 @@ logger.info("listening", { port: 3000 });
 
 - Import: `@zedtech/zedkit-observability/posthog` — `createProductAnalyticsTracker`, `ProductAnalyticsClient`
 - Wraps: `posthog-js` (peer)
-- Status: alpha
+- Status: beta
 - Short name: Analytics adapter
 - Audience: Teams using a browser product-analytics SDK at the composition root.
 - Purpose: Map the `Tracker` port onto an SDK client (for example `posthog-js`).
@@ -105,7 +105,7 @@ tracker.capture("page_view", { path: "/home" });
 
 - Import: `@zedtech/zedkit-observability/consent` — `ConsentStore`, `ConsentRecord`, `ConsentCategory`, `createMemoryConsentStore`, `createLocalStorageConsentStore`, `isCategoryGranted`, `CONSENT_CATEGORIES`
 - Wraps: `(none)`
-- Status: alpha
+- Status: beta
 - Short name: Consent store
 - Audience: Public sites that must record analytics/marketing opt-in before loading tags.
 - Purpose: Small consent store with memory and localStorage backends.
@@ -122,7 +122,7 @@ store.write({ analytics: true, marketing: false });
 
 - Import: `@zedtech/zedkit-observability/consent` — `createConsentGatedTracker`, `runConsentGatedLoader`
 - Wraps: `(none)`
-- Status: alpha
+- Status: beta
 - Short name: Gated tracker
 - Audience: Teams wiring the Tracker port behind analytics consent.
 - Purpose: Drop captures until a category is granted; run loaders when consent turns on.
@@ -138,7 +138,7 @@ const gated = createConsentGatedTracker(tracker, store, "analytics");
 
 - Import: `@zedtech/zedkit-observability/consent/react` — `ConsentProvider`, `ConsentGate`, `ConsentBanner`, `useConsentCategory`, `useConsentGatedLoader`
 - Wraps: `@zedtech/zedkit-ui` (Dialog, Switch)
-- Status: alpha
+- Status: beta
 - Short name: Consent UI
 - Audience: React apps showing a first-visit banner and gating children.
 - Purpose: Provider, category gate, banner, and hook to defer analytics loaders.

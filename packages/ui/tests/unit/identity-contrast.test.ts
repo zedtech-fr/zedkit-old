@@ -5,7 +5,7 @@ import { identityPresets, identityTokenSchema, parseIdentityTokens } from "#iden
 
 function ofToken(
   tokens: ReturnType<typeof identityTokenSchema.parse>,
-  token: "foreground" | "accent" | "border",
+  token: "foreground" | "primaryForeground" | "mutedForeground" | "accent" | "border",
   scheme?: "light" | "dark",
 ) {
   return identityContrastWarnings(tokens).filter(
@@ -70,6 +70,25 @@ describe("identityContrastWarnings", () => {
     if (fixed.success) expect(ofToken(fixed.data, "accent", "light")).toEqual([]);
   });
 
+  it("warns when primary text matches the primary fill", () => {
+    const tokens = identityTokenSchema.parse({
+      ...identityPresets.mist,
+      light: {
+        ...identityPresets.mist.light,
+        primaryForeground: identityPresets.mist.light.primary,
+      },
+    });
+    const warnings = ofToken(tokens, "primaryForeground", "light");
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]?.min).toBe(4.5);
+    const fixed = parseIdentityTokens({
+      ...tokens,
+      light: { ...tokens.light, primaryForeground: warnings[0]?.suggestedForeground },
+    });
+    expect(fixed.success).toBe(true);
+    if (fixed.success) expect(ofToken(fixed.data, "primaryForeground", "light")).toEqual([]);
+  });
+
   it("warns when light border matches the background", () => {
     const tokens = identityTokenSchema.parse({
       ...identityPresets.press,
@@ -96,8 +115,10 @@ describe("withIdentityDarkPair", () => {
         background: "200 80% 96%",
         foreground: "200 50% 12%",
         primary: "200 80% 36%",
+        primaryForeground: "0 0% 100%",
         accent: "200 80% 32%",
         border: "200 30% 40%",
+        mutedForeground: "200 50% 12%",
       },
     });
     const next = withIdentityDarkPair(tokens);

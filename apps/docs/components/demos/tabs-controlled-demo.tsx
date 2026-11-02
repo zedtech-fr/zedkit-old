@@ -16,11 +16,12 @@ import {
   TabsTrigger,
   Text,
 } from "@zedtech/zedkit-ui";
+import { tabsCopy } from "@/components/demos/i18n/tabs-copy";
 
 const views = {
-  day: { label: "Day", appointments: 6, detail: "Tuesday 27 October: 6 appointments, first at 08:30." },
-  week: { label: "Week", appointments: 31, detail: "Week 44: 31 appointments, busiest day is Thursday." },
-  month: { label: "Month", appointments: 118, detail: "October: 118 appointments, 4 free slots left on Friday." },
+  day: tabsCopy.controlled.day,
+  week: tabsCopy.controlled.week,
+  month: tabsCopy.controlled.month,
 } as const;
 
 type View = keyof typeof views;
@@ -32,19 +33,19 @@ export function TabsControlledDemo() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Clinic agenda</CardTitle>
-        <CardDescription>Dr. Amara Diallo · Rue des Lilas</CardDescription>
+        <CardTitle>{tabsCopy.controlled.title}</CardTitle>
+        <CardDescription>{tabsCopy.controlled.description}</CardDescription>
       </CardHeader>
       <CardContent>
         <Stack gap={4}>
           <Stack direction="horizontal" gap={3}>
-            <Badge variant="secondary" className="whitespace-nowrap">Showing: {views[view].label}</Badge>
+            <Badge variant="secondary" className="whitespace-nowrap">{tabsCopy.controlled.showing(views[view].label)}</Badge>
             <Button variant="outline" size="sm" onClick={() => setView("month")}>
-              Jump to the month
+              {tabsCopy.controlled.jump}
             </Button>
           </Stack>
           <Tabs value={view} onValueChange={(next) => setView(next as View)}>
-            <TabsList aria-label="Agenda range">
+            <TabsList aria-label={tabsCopy.controlled.range}>
               {(Object.keys(views) as View[]).map((key) => (
                 <TabsTrigger key={key} value={key}>
                   {views[key].label}

@@ -9,7 +9,7 @@
 
 - Import: `@zedtech/zedkit-quality/eslint` — `uiPreset`
 - Wraps: `eslint-plugin-jsx-a11y`, `eslint-plugin-better-tailwindcss`, `typescript-eslint`
-- Status: beta
+- Status: stable
 - Short name: UiPreset
 - Audience: Frontend teams linting tsx/jsx everywhere the same way.
 - Purpose: Enforce a11y, Tailwind hygiene, tokens-only classes (no arbitrary px/rem, no raw focus:ring-N), no inline style, no forwardRef, no explicit any, and a 300/60 size budget on every UI file.
@@ -27,7 +27,7 @@ export default [...uiPreset({ entryPoint: "./app/globals.css" })];
 
 - Import: `@zedtech/zedkit-quality/eslint` — `defineLayers`
 - Wraps: `eslint`
-- Status: beta
+- Status: stable
 - Short name: DefineLayers
 - Audience: Frontend teams keeping routes thin, views presentational and data UI-free.
 - Purpose: Ban cross-layer imports (route to kit, view to data client, data to UI) at lint time.
@@ -52,7 +52,7 @@ export default [
 
 - Import: `@zedtech/zedkit-quality/eslint` — `defineLayers`
 - Wraps: `eslint`
-- Status: beta
+- Status: stable
 - Short name: FeatureFolders
 - Audience: Teams that colocate each feature as `features/<name>/{ui,ports,adapters,model}`.
 - Purpose: Ban UI→adapter imports, keep the model pure, and leave adapter injection to the composition root.
@@ -76,7 +76,7 @@ export default [
 
 - Import: `@zedtech/zedkit-quality/tsconfig`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Short name: TsconfigBase
 - Audience: TypeScript repos that want the same strictness without copying a file.
 - Purpose: One strict base (`strict`, exact optionals, unchecked indexed access, unused checks) every tsconfig extends.

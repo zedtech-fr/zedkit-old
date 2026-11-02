@@ -28,8 +28,9 @@
     "catalog:check": "node scripts/catalog.mjs check && node apps/docs/scripts/check.mjs && node apps/docs/scripts/check-previews.mjs && node apps/docs/scripts/check-registry-urls.mjs",
     "registry:build": "node scripts/registry/build.mjs",
     "registry:check": "node scripts/registry/check.mjs",
-    "registry:smoke": "bash scripts/registry/smoke-shadcn-add.sh && bash scripts/registry/smoke-ui-quickstart.sh",
-    "test:registry": "node --test scripts/registry/*.test.mjs scripts/dts-api-report.test.mjs scripts/check-api-report.test.mjs scripts/catalog-states.test.mjs scripts/coverage-summary.test.mjs scripts/release-tags-wait.test.mjs apps/docs/scripts/*.test.mjs deploy/*.test.mjs deploy/suggest/*.test.mjs",
+    "registry:smoke": "bash scripts/registry/smoke-shadcn-add.sh && bash scripts/registry/smoke-ui-quickstart.sh && bash scripts/quickstart-smoke.sh",
+    "quickstart:smoke": "bash scripts/quickstart-smoke.sh",
+    "test:registry": "node --test scripts/registry/*.test.mjs scripts/dts-api-report.test.mjs scripts/check-api-report.test.mjs scripts/catalog-states.test.mjs scripts/catalog-maturity.test.mjs scripts/coverage-summary.test.mjs scripts/release-tags-wait.test.mjs apps/docs/scripts/*.test.mjs deploy/*.test.mjs deploy/suggest/*.test.mjs",
     "knip": "pnpm dlx knip@5",
     "test:coverage": "vitest run --coverage"
   },

@@ -16,8 +16,9 @@ import {
   Text,
   useValidatedForm,
 } from "@zedtech/zedkit-ui";
+import { validatedFormCopy } from "@/components/demos/i18n/validated-form-copy";
 
-const schema = z.object({ name: z.string().min(2, "Use at least 2 characters.") });
+const schema = z.object({ name: z.string().min(2, validatedFormCopy.nameMin) });
 
 export function ValidatedFormDemo() {
   const [saved, setSaved] = useState<string | null>(null);
@@ -34,17 +35,17 @@ export function ValidatedFormDemo() {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Display name</FormLabel>
+              <FormLabel>{validatedFormCopy.label}</FormLabel>
               <FormControl>
                 <Input {...field} />
               </FormControl>
-              <FormDescription>Shown to other members of the workspace.</FormDescription>
+              <FormDescription>{validatedFormCopy.description}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-        <FormSubmit pendingLabel="Saving…">Save</FormSubmit>
-        {saved ? <Text variant="muted">Saved: {saved}</Text> : null}
+        <FormSubmit pendingLabel={validatedFormCopy.pending}>{validatedFormCopy.save}</FormSubmit>
+        {saved ? <Text variant="muted">{validatedFormCopy.saved(saved)}</Text> : null}
       </form>
     </Form>
   );

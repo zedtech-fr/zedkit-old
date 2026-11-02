@@ -7,8 +7,8 @@ set -uo pipefail
 fail=0
 
 # 1. Known build-output / cache paths must never be tracked.
-artifact_dirs='(node_modules|\.next|dist|build|coverage|\.turbo|\.pnpm-store|\.vercel|test-results|playwright-report|blob-report|temp)'
-artifact_files='(\.tsbuildinfo|\.pack(\.gz)?)$|(^|/)next-env\.d\.ts$'
+artifact_dirs='(node_modules|\.next|dist|build|coverage|\.vitest|\.turbo|\.pnpm-store|\.vercel|test-results|playwright-report|blob-report|temp)'
+artifact_files='(\.tsbuildinfo|\.pack(\.gz)?)$|(^|/)next-env\.d\.ts$|chromium-darwin\.png$'
 artifacts=$(git ls-files | grep -E "(^|/)${artifact_dirs}/|${artifact_files}" || true)
 if [ -n "$artifacts" ]; then
   echo "tracked build artifacts (see .gitignore):"

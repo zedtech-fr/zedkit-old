@@ -31,8 +31,10 @@ describe("AppShell", () => {
       </AppShell>,
     );
     expect(container.querySelector("aside")?.className).toContain("w-app-shell-sidebar");
+    expect(container.querySelector("aside")?.className).toContain("flex-col");
     expect(container.querySelector("main")?.className).toContain("p-4");
     expect(container.querySelector("main")?.className).toContain("md:p-app-shell-padding-md");
+    expect(container.querySelector("main")?.className).toContain("overflow-y-auto");
   });
 
   it("hides the sidebar below md with a single display rule, so no base rule can win on desktop", () => {
@@ -58,8 +60,7 @@ describe("PageHeader", () => {
 
   it("uses the token-driven title spacing with no arbitrary values", () => {
     const { container } = render(<PageHeader title="Items" description="All items." />);
-    const titleBlock = screen.getByRole("heading", { name: "Items" }).parentElement;
-    expect(titleBlock?.className).toContain("space-y-page-header-title-gap");
+    expect(container.firstElementChild?.className).toContain("gap-page-header-title-gap");
     expect(container.firstElementChild?.className).not.toContain("[");
   });
 
@@ -69,8 +70,10 @@ describe("PageHeader", () => {
     );
     const root = container.firstElementChild;
     expect(root?.className).toContain("mb-page-header-offset");
-    expect(root?.className).toContain("gap-4");
+    expect(root?.className).toContain("gap-page-header-title-gap");
     expect(root?.className).not.toMatch(/(^|\s)mb-6(\s|$)/);
+    const titleRow = screen.getByRole("heading", { name: "Items" }).parentElement;
+    expect(titleRow?.className).toContain("gap-4");
     const actions = screen.getByRole("button", { name: "New" }).parentElement;
     expect(actions?.className).toContain("gap-2");
     expect(actions?.className).not.toContain("gap-page-header-actions-gap");

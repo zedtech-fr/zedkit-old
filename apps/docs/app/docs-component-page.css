@@ -1,0 +1,59 @@
+/*
+ * Component catalog pages: section rhythm (VISUAL-CONTRACT).
+ */
+
+#nd-docs-layout [data-slot="section"] figure.shiki {
+  margin-block: 0;
+}
+
+/*
+ * Install or copy: the command and its import share one frame. The frame is the
+ * only border and surface; the figures inside lose theirs (no frame in a frame,
+ * flat, no shadow). Each figure's header is a quiet band: title left, tools right.
+ * Selectors carry the section id so they beat the identity bridge in globals.css.
+ */
+#install-or-copy [data-code-frame] {
+  overflow: hidden;
+  background-color: hsl(var(--card));
+  border: var(--zk-border-width, 1px) solid hsl(var(--border));
+  border-radius: var(--radius-lg);
+}
+
+#install-or-copy [data-code-frame] figure.shiki {
+  margin: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+#install-or-copy [data-code-frame] figure.shiki > div:first-child {
+  height: auto;
+  min-height: 2.75rem;
+  padding-block: 0.25rem;
+  background: hsl(var(--muted) / 0.5);
+  border-top: var(--zk-border-width, 1px) solid hsl(var(--border));
+  border-bottom: var(--zk-border-width, 1px) solid hsl(var(--border));
+  border-radius: 0;
+}
+
+/* The frame clips its children, so a header control draws its focus ring inside its own edge. */
+#install-or-copy [data-code-frame] figure.shiki > div:first-child :is(button, [role="combobox"]):focus-visible {
+  outline-offset: -2px;
+}
+
+/* The tab list scrolls (it clips on both axes), so its tabs draw the focus ring inside their own edge. */
+#install-or-copy [data-slot="tabs-list"] [role="tab"]:focus-visible {
+  outline-offset: calc(var(--ring-width, 2px) * -1);
+}
+
+/* The frame's own border closes the first header; no double line. */
+#install-or-copy [data-code-frame] figure.shiki:first-child > div:first-child {
+  border-top: 0;
+}
+
+#install-or-copy [data-code-frame] figure.shiki figcaption {
+  font-size: var(--text-sm, 0.8125rem);
+}

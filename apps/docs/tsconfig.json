@@ -28,5 +28,6 @@
     "next.config.mjs",
     "postcss.config.mjs",
     "prose/guides/snippets/**/*.tsx"
-  ]
+  ],
+  "exclude": ["prose/guides/snippets/registry-page.tsx"]
 }

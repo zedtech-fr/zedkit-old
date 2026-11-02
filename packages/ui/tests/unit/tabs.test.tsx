@@ -40,6 +40,8 @@ describe("tabs", () => {
     expect(trigger.className).not.toContain("px-tabs-trigger-inline");
     expect(trigger.classList.contains("py-tabs-trigger-block")).toBe(true);
     expect(trigger.classList.contains("focus-ring")).toBe(true);
+    // Drawn inside the trigger: the list scrolls sideways, and a ring outside its padding box would be cut off.
+    expect(trigger.className).toContain("focus-visible:-outline-offset-(--ring-width)");
     expect(trigger.className).not.toMatch(/(^|\s)(py-1|ring-2)(\s|$)/);
     const panel = screen.getByText("First panel.");
     expect(panel.className).toContain("mt-2");

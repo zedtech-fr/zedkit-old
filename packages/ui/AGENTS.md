@@ -41,5 +41,15 @@ Rules:
   half-asleep?), and attaches a gallery screenshot showing the
   change (`pnpm --filter @zedtech/zedkit-ui smoke` writes them to
   test-results/, never committed).
+- Overlay (drawer/dialog) is a sibling of the panel. `backdrop-filter`
+  on the overlay becomes the backdrop root. Frost the scrim (`bg-overlay/50`
+  + `backdrop-blur-sm`) or put blur on the panel and set the overlay
+  filter to `none`. `prefers-reduced-transparency`: solid scrim, no filter.
+- Calendar month grid is `role="grid"`: hover `.rdp-day`, not `tbody tr`.
+- Identity `--spacing` scales width/padding/gap utilities. Check Tide
+  before locking chrome widths.
+- `overflow-hidden` on a scroll-scenes ancestor breaks the pin; use
+  `overflow-clip`. After source changes, rebuild this package before
+  judging the docs site.
 - Public repo: generic wording only, no private project names
   anywhere (CI denylist enforces it).

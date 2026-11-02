@@ -17,8 +17,9 @@ import {
   Stack,
   Text,
 } from "@zedtech/zedkit-ui";
+import { drawerCopy } from "@/components/demos/i18n/drawer-copy";
 
-const STATUSES = ["Paid", "Awaiting shipment", "Shipped", "Refunded"] as const;
+const STATUSES = drawerCopy.bottomSheet.statuses;
 
 export function DrawerBottomSheetDemo() {
   const [checked, setChecked] = React.useState<readonly string[]>(["Paid"]);
@@ -27,13 +28,13 @@ export function DrawerBottomSheetDemo() {
   return (
     <Drawer>
       <DrawerTrigger asChild>
-        <Button variant="outline">Filters</Button>
+        <Button variant="outline">{drawerCopy.bottomSheet.filters}</Button>
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHandle />
         <DrawerHeader>
-          <DrawerTitle>Filters</DrawerTitle>
-          <DrawerDescription>Narrow the orders list by status.</DrawerDescription>
+          <DrawerTitle>{drawerCopy.bottomSheet.filters}</DrawerTitle>
+          <DrawerDescription>{drawerCopy.bottomSheet.description}</DrawerDescription>
         </DrawerHeader>
         <DrawerBody>
           <Stack gap={3} className="py-3">
@@ -43,12 +44,14 @@ export function DrawerBottomSheetDemo() {
                 <Label htmlFor={`filter-${status}`}>{status}</Label>
               </Stack>
             ))}
-            <Text variant="muted">{checked.length === 0 ? "All orders are shown." : `${checked.length} status selected.`}</Text>
+            <Text variant="muted">
+              {checked.length === 0 ? drawerCopy.bottomSheet.allOrdersShown : drawerCopy.bottomSheet.statusSelected(checked.length)}
+            </Text>
           </Stack>
         </DrawerBody>
         <DrawerFooter>
           <Button variant="outline" size="sm" onClick={() => setChecked([])}>
-            Reset
+            {drawerCopy.bottomSheet.reset}
           </Button>
         </DrawerFooter>
       </DrawerContent>

@@ -12,43 +12,36 @@ import {
   TableRow,
   Text,
 } from "@zedtech/zedkit-ui";
+import { cardCopy } from "@/components/demos/i18n/card-copy";
 
 /** A store order as a self-contained card: title, who and when, then the lines. */
 export function CardDemo() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Order #1042</CardTitle>
-        <CardDescription>Placed 26 October by Camille Rousseau</CardDescription>
+        <CardTitle>{cardCopy.demo.title}</CardTitle>
+        <CardDescription>{cardCopy.demo.description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <Table aria-label="Order lines">
+        <Table aria-label={cardCopy.demo.tableAriaLabel}>
           <TableHeader>
             <TableRow>
-              <TableHead>Item</TableHead>
-              <TableHead>Qty</TableHead>
-              <TableHead>Price</TableHead>
+              <TableHead>{cardCopy.demo.columns.item}</TableHead>
+              <TableHead>{cardCopy.demo.columns.qty}</TableHead>
+              <TableHead>{cardCopy.demo.columns.price}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            <TableRow>
-              <TableCell>Linen shirt</TableCell>
-              <TableCell>1</TableCell>
-              <TableCell>€49.00</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>Canvas tote</TableCell>
-              <TableCell>2</TableCell>
-              <TableCell>€48.00</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>Shipping</TableCell>
-              <TableCell>1</TableCell>
-              <TableCell>€4.50</TableCell>
-            </TableRow>
+            {cardCopy.demo.rows.map((row) => (
+              <TableRow key={row.item}>
+                <TableCell>{row.item}</TableCell>
+                <TableCell>{row.qty}</TableCell>
+                <TableCell>{row.price}</TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
-        <Text className="mt-4 font-medium">Total €101.50</Text>
+        <Text className="mt-4 font-medium">{cardCopy.demo.total}</Text>
       </CardContent>
     </Card>
   );

@@ -5,11 +5,11 @@
 @import "./identities/press.css";
 @import "./font-fallbacks.css";
 @import "./identities/glass.css";
-@import "./identities/tide.css";
 @import "./motion.css";
 @import "./scroll-scenes.css";
 @import "./identities/volt.css";
 @import "./shared-type-scale.css";
+@import "./identities/tide.css";
 @import "./calendar.css";
 
 /*
@@ -388,12 +388,15 @@
  * Shared focus ring for controls that need a visible keyboard focus
  * (badge links, tabs, etc.). Width and offset come from theme tokens.
  */
+/*
+ * Focus is an outline, not a box-shadow: component shadows (`shadow-none`,
+ * the active-tab shadow, identity depth) cannot erase it, it follows the
+ * border radius, and forced-colors mode keeps drawing it.
+ */
 @utility focus-ring {
   &:focus-visible {
-    outline: none;
-    box-shadow:
-      0 0 0 var(--ring-offset-width) hsl(var(--background)),
-      0 0 0 calc(var(--ring-offset-width) + var(--ring-width)) hsl(var(--ring));
+    outline: var(--ring-width) solid hsl(var(--ring));
+    outline-offset: var(--ring-offset-width);
   }
 }
 
@@ -411,10 +414,8 @@
 /* Controls (Button, Input, …): focus weight comes from `--ring-width-control` (2px or more). */
 @utility focus-ring-control {
   &:focus-visible {
-    outline: none;
-    box-shadow:
-      0 0 0 var(--ring-offset-width) hsl(var(--background)),
-      0 0 0 calc(var(--ring-offset-width) + var(--ring-width-control)) hsl(var(--ring));
+    outline: var(--ring-width-control) solid hsl(var(--ring));
+    outline-offset: var(--ring-offset-width);
   }
 }
 
@@ -566,6 +567,14 @@ html [data-vaul-drawer] {
 
 html [data-vaul-overlay] {
   animation-duration: var(--motion-base);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  [data-slot="drawer-overlay"] {
+    background-color: hsl(var(--overlay) / 0.8);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 }
 
 /*

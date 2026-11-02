@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { openHeroPage } from "./hero-helpers";
 
 const MOBILE = { width: 390, height: 844 };
 
@@ -7,13 +8,14 @@ test.describe("home dashboard mobile (#388)", () => {
 
   test("single card chrome, toolbar row, compact row actions", async ({ page }) => {
     await page.goto("/", { waitUntil: "networkidle" });
+    await openHeroPage(page, "Apps");
 
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1);
 
     const bordered = await page.locator("[data-home-dashboard-card]").evaluate((card) => {
-      const demo = card.querySelector('[aria-label="Interactive admin dashboard demo"]');
+      const demo = card.querySelector('[aria-label="Interactive admin dashboard demo in the hero"]');
       if (!demo) return { ok: false, reason: "demo missing" };
       const cardBorder = getComputedStyle(card).borderTopWidth;
       const demoBorder = getComputedStyle(demo).borderTopWidth;
@@ -26,12 +28,15 @@ test.describe("home dashboard mobile (#388)", () => {
 
     const toolbar = card.locator("[data-demo-toolbar]");
     await expect(toolbar).toBeVisible();
-    const toolbarRow = toolbar.locator("> div").last();
-    const tops = await toolbarRow.locator("button, [role=combobox]").evaluateAll((nodes) =>
-      nodes.map((node) => node.getBoundingClientRect().top),
+    await expect(toolbar.getByRole("button", { name: "Add app" })).toBeVisible();
+    const display = page.locator("[data-hero-demo-display]");
+    await expect(display.locator("[role=combobox]")).toHaveCount(3);
+    // The three selects may wrap onto a second row; none may shrink until its value is unreadable.
+    const widths = await display.evaluate((row) =>
+      [...row.querySelectorAll("[role=combobox]")].map((el) => Math.round(el.getBoundingClientRect().width)),
     );
-    expect(tops.length).toBeGreaterThanOrEqual(2);
-    expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(4);
+    expect(widths.every((width) => width >= 80), JSON.stringify(widths)).toBe(true);
+    expect(widths[0], "the look select shows its value").toBeGreaterThanOrEqual(100);
 
     const actionStacks = card.locator("[data-demo-row-actions]");
     await expect(actionStacks.first()).toBeVisible();
@@ -49,6 +54,7 @@ test.describe("home dashboard mobile (#388)", () => {
 
   test("edit sheet keeps side gutters, a visible handle, and clears the bottom edge", async ({ page }) => {
     await page.goto("/", { waitUntil: "networkidle" });
+    await openHeroPage(page, "Apps");
     const card = page.locator("[data-home-dashboard-card]");
     await card.scrollIntoViewIfNeeded();
     await card.getByRole("button", { name: "Edit console" }).click();
@@ -116,4 +122,33 @@ test.describe("home dashboard mobile (#388)", () => {
     await page.keyboard.press("Escape");
     await expect(dialog).toBeHidden();
   });
+
+  for (const width of [320, 360, 390] as const) {
+    test(`hero shows a full record row and actions at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 844 });
+      await page.goto("/", { waitUntil: "networkidle" });
+      await openHeroPage(page, "Apps");
+      const card = page.locator("[data-home-dashboard-card]");
+      await card.scrollIntoViewIfNeeded();
+      const preview = page.locator("[data-home-hero-preview]");
+      const metrics = await preview.evaluate((el) => {
+        const style = getComputedStyle(el);
+        return {
+          overflowY: style.overflowY,
+          clientHeight: el.clientHeight,
+          scrollHeight: el.scrollHeight,
+        };
+      });
+      expect(metrics.overflowY).not.toBe("hidden");
+      expect(metrics.clientHeight + 2).toBeGreaterThanOrEqual(metrics.scrollHeight);
+      await expect(card.getByRole("button", { name: "Edit console" })).toBeVisible();
+      await expect(card.getByRole("button", { name: "Delete console" })).toBeVisible();
+
+      await card.getByRole("button", { name: "Add app" }).click();
+      await page.getByRole("dialog").getByLabel("Name").fill(`mobile-${width}`);
+      await page.getByRole("button", { name: "Create app" }).click();
+      await expect(page.getByRole("dialog")).toBeHidden();
+      await expect(card.getByRole("cell", { name: `mobile-${width}`, exact: true })).toBeVisible();
+    });
+  }
 });

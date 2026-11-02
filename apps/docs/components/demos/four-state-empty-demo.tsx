@@ -1,11 +1,12 @@
 import { Button, EmptyState } from "@zedtech/zedkit-ui";
+import { emptyStateCopy } from "@/components/demos/i18n/empty-state-copy";
 
 export function FourStateEmptyDemo() {
   return (
     <EmptyState
-      title="No invoices"
-      description="Create an invoice to send to a client."
-      actions={<Button>New invoice</Button>}
+      title={emptyStateCopy.title}
+      description={emptyStateCopy.description}
+      actions={<Button>{emptyStateCopy.newInvoice}</Button>}
     />
   );
 }

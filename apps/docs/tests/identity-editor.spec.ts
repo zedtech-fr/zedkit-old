@@ -3,7 +3,14 @@ import { expect, test, type Page } from "@playwright/test";
 import { DEFAULT_IDENTITY } from "../lib/default-identity";
 import { assertA11yGate } from "./a11y-helpers";
 
-const PAGE = "/docs/ui/design-your-identity";
+const PAGE = "/features/identity-editor";
+/** The site's own light/dark switch (header), which is separate from the editor's Preview dark. */
+async function siteDark(page: Page) {
+  await page.getByRole("button", { name: /toggle theme/i }).first().click();
+  await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+}
+
+const DOCS_CUSTOM_STORAGE_KEY = "zk-docs-site-identity-custom";
 
 async function spacingOnDraft(page: Page) {
   return page.locator('[data-slot="identity-editor-preview"]').evaluate((node) =>
@@ -28,10 +35,10 @@ test.describe("identity editor page", () => {
     await page.goto(PAGE, { waitUntil: "networkidle" });
     const description = await page.locator('meta[name="description"]').getAttribute("content");
     expect(description).toBe(
-      "Design your own look — colour, radius, spacing, type — on a live card, then apply it to the whole site. Install with npm or copy published registry bricks.",
+      "Try spacing, colour, and type tokens in the browser. Demo only — not a shipped docs feature.",
     );
     await expect(
-      page.getByRole("paragraph").filter({ hasText: "Design your own look — colour, radius, spacing, type" }),
+      page.getByRole("paragraph").filter({ hasText: "Tune tokens and preview them on a card" }),
     ).toBeVisible();
   });
 
@@ -44,8 +51,8 @@ test.describe("identity editor page", () => {
 
   test("writes spacing onto the draft card and into the URL", async ({ page }) => {
     await page.goto(PAGE, { waitUntil: "networkidle" });
-    await expect(page.getByRole("heading", { name: "Design your identity" })).toBeVisible();
-    await expect(page.getByText("Change spacing first, then watch the card.", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Try looks in the demo editor" })).toBeVisible();
+    await expect(page.getByText(/^Change spacing first, then watch the card\./)).toBeVisible();
     await page.getByLabel("Spacing", { exact: true }).fill("0.4rem");
     await expect.poll(() => spacingOnDraft(page)).toBe("0.4rem");
     expect(page.url()).toContain("spacing=0.4rem");
@@ -86,25 +93,39 @@ test.describe("identity editor page", () => {
     await expect(chip).toHaveCount(0);
   });
 
-  test("keeps the dark preview in the URL", async ({ page }) => {
+  test("Preview dark changes the card, not the site, and lives in the URL", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("theme", "light"));
     await page.goto(PAGE, { waitUntil: "networkidle" });
+    const toggle = page.getByRole("button", { name: "Preview dark", exact: true });
+    const card = page.locator('[data-slot="identity-editor-preview"]');
     await expect(page.locator("html")).not.toHaveClass(/\bdark\b/);
-    await page.getByRole("button", { name: "Dark", exact: true }).click();
-    await expect(page.getByRole("button", { name: "Dark", exact: true })).toHaveAttribute("aria-pressed", "true");
-    await expect(page.locator("html")).toHaveClass(/\bdark\b/);
-    expect(page.url()).toContain("theme=dark");
-    await expect
-      .poll(() =>
-        page.locator('[data-slot="identity-editor-preview"]').evaluate((node) => node.classList.contains("dark")),
-      )
-      .toBe(true);
-    await page.getByRole("button", { name: "Dark", exact: true }).click();
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-pressed", "true");
+    await expect(card).toHaveClass(/\bdark\b/);
     await expect(page.locator("html")).not.toHaveClass(/\bdark\b/);
-    await expect(page.getByRole("button", { name: "Dark", exact: true })).toHaveAttribute("aria-pressed", "false");
+    expect(await page.evaluate(() => localStorage.getItem("theme"))).toBe("light");
+    expect(new URL(page.url()).searchParams.get("preview")).toBe("dark");
+    await toggle.click();
+    await expect(card).not.toHaveClass(/\bdark\b/);
+    await expect(toggle).toHaveAttribute("aria-pressed", "false");
+    expect(new URL(page.url()).searchParams.has("preview")).toBe(false);
+    await page.goto(`${PAGE}?preview=dark`, { waitUntil: "networkidle" });
+    await expect(toggle).toHaveAttribute("aria-pressed", "true");
+    await expect(card).toHaveClass(/\bdark\b/);
+    await expect(page.locator("html")).not.toHaveClass(/\bdark\b/);
     await page.goto(`${PAGE}?theme=dark`, { waitUntil: "networkidle" });
-    await expect(page.getByRole("button", { name: "Dark", exact: true })).toHaveAttribute("aria-pressed", "true");
-    await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+    await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  });
+
+  test("the specimen is not an editor command", async ({ page }) => {
+    await page.goto(PAGE, { waitUntil: "networkidle" });
+    const specimen = page.getByRole("group", { name: "Draft preview" });
+    await expect(specimen.locator("[inert]")).toHaveCount(1);
+    const buttons = specimen.locator("button");
+    expect(await buttons.count()).toBeGreaterThan(0);
+    expect(await buttons.evaluateAll((nodes) => nodes.every((node) => node.closest("[inert]") !== null))).toBe(true);
+    await expect(page.getByText("Preview only: the buttons and fields here are samples.")).toBeVisible();
+    for (const name of ["Choose and preview", "Save and apply"]) await expect(page.getByRole("group", { name })).toBeVisible();
   });
 
   test("Suggest applies a service patch after Apply", async ({ page }) => {
@@ -120,7 +141,7 @@ test.describe("identity editor page", () => {
     await page.getByLabel("Request").fill("more space");
     await page.getByRole("button", { name: "Suggest" }).click();
     await expect(page.getByText("Review these token changes.")).toBeVisible();
-    await expect(page.getByText("Contrast check passed (text 4.5:1, accent and border 3:1).")).toBeVisible();
+    await expect(page.getByText("Contrast check passed (body, primary, and muted text 4.5:1; accent and border 3:1).")).toBeVisible();
     await expect(page.getByText("spacing: 0.25rem → 0.5rem")).toBeVisible();
     await expect(page.locator('[data-slot="identity-editor-swatch"]')).toHaveCount(0);
     await page.getByRole("button", { name: "Apply", exact: true }).click();
@@ -170,7 +191,7 @@ test.describe("identity editor page", () => {
     await expect(page.getByText("dark.background:")).toBeVisible();
     await page.getByRole("button", { name: "Apply", exact: true }).click();
     await expect(page.getByText("Applied to the whole site.", { exact: true })).toBeVisible();
-    await page.getByRole("button", { name: "Dark", exact: true }).click();
+    await siteDark(page);
     await expect
       .poll(() =>
         page.locator("html").evaluate((node) => getComputedStyle(node).getPropertyValue("--background").trim()),
@@ -293,8 +314,8 @@ test.describe("identity editor on a phone", () => {
     await page.getByLabel("Spacing", { exact: true }).fill("0.4rem");
     await page.getByRole("button", { name: "Apply to the whole site" }).click();
     await expect(page.locator("html")).toHaveAttribute("data-identity", "mist");
-    await page.getByRole("button", { name: "Dark", exact: true }).click();
-    await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+    await siteDark(page);
+    await page.getByRole("button", { name: "Preview dark", exact: true }).click();
     await expect.poll(() => spacingOnHtml(page)).toBe("0.4rem");
     await page.getByLabel("Background").fill("120 40% 20%");
     await expect
@@ -327,11 +348,12 @@ test.describe("identity editor apply to site", () => {
         },
       });
     });
-    await page.goto(PAGE, { waitUntil: "networkidle" });
+    await page.goto("/docs/getting-started", { waitUntil: "networkidle" });
     await expect(page.locator("html")).toHaveAttribute("data-identity", DEFAULT_IDENTITY);
     const beforeSidebar = await sidebarBg(page);
     const beforeBackground = await htmlVar(page, "--background");
     await page.screenshot({ path: "test-results/identity-editor-site-before.png", fullPage: true });
+    await page.goto(PAGE, { waitUntil: "networkidle" });
     await page.getByLabel("Request").fill("warm ivory boutique");
     await page.getByRole("button", { name: "Suggest" }).click();
     await expect(page.getByText("light.background:")).toBeVisible();
@@ -340,7 +362,6 @@ test.describe("identity editor apply to site", () => {
     await expect.poll(() => htmlVar(page, "--background")).toBe("0 80% 70%");
     await expect.poll(() => htmlVar(page, "--sidebar")).toBe("0 80% 70%");
     await expect.poll(() => htmlVar(page, "--card")).toBe("0 80% 70%");
-    await expect.poll(() => sidebarBg(page)).not.toBe(beforeSidebar);
     expect(beforeBackground).not.toBe("0 80% 70%");
     await page.screenshot({ path: "test-results/identity-editor-site-after.png", fullPage: true });
     await page.goto("/docs/getting-started", { waitUntil: "networkidle" });
@@ -364,7 +385,6 @@ test.describe("identity editor apply to site", () => {
     await page.getByRole("button", { name: "Apply to the whole site" }).click();
     await expect(page.locator("html")).toHaveAttribute("data-identity", "mist");
     await expect.poll(() => spacingOnHtml(page)).toBe("0.4rem");
-    await expect(page.getByRole("combobox", { name: "Identity" }).first()).toHaveValue("mist");
     await expect(page.getByRole("status").filter({ hasText: "Custom identity active" })).toBeVisible();
   });
 
@@ -388,20 +408,20 @@ test.describe("identity editor apply to site", () => {
     await page.goto("/docs/getting-started", { waitUntil: "networkidle" });
     await expect(page.locator("html")).toHaveAttribute("data-identity", "mist");
     await expect.poll(() => spacingOnHtml(page)).toBe("0.4rem");
-    await expect(page.getByRole("combobox", { name: "Identity" }).first()).toHaveValue("mist");
   });
 
   test("resets to the default identity and clears storage", async ({ page }) => {
     await page.goto(PAGE, { waitUntil: "networkidle" });
     await page.getByLabel("Spacing", { exact: true }).fill("0.4rem");
     await page.getByRole("button", { name: "Apply to the whole site" }).click();
-    await page.getByRole("button", { name: "Reset to default" }).click();
+    await page.getByRole("button", { name: "Back to default" }).click();
     await expect(page.locator("html")).toHaveAttribute("data-identity", DEFAULT_IDENTITY);
     await expect.poll(() => spacingOnHtml(page)).toMatch(/^0?\.28rem$/);
-    await expect(page.getByRole("button", { name: "Reset to default" })).toHaveCount(0);
-    expect(await page.evaluate(() => localStorage.getItem("zk-identity-custom"))).toBeNull();
+    await expect(page.getByRole("button", { name: "Back to default" })).toHaveCount(0);
+    expect(await page.evaluate((key) => localStorage.getItem(key), DOCS_CUSTOM_STORAGE_KEY)).toBeNull();
   });
 
+  test.describe.skip("header preset switching (removed from site shell, D3)", () => {
   test("a header preset switch parks applied custom work instead of wiping it", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto(`${PAGE}?identity=mist`, { waitUntil: "networkidle" });
@@ -409,13 +429,13 @@ test.describe("identity editor apply to site", () => {
     await page.getByRole("button", { name: "Apply to the whole site" }).click();
     await expect(page.locator("html")).toHaveAttribute("data-identity", "mist");
     await expect.poll(() => htmlVar(page, "--radius")).toBe("2rem");
-    const parked = await page.evaluate(() => localStorage.getItem("zk-identity-custom"));
+    const parked = await page.evaluate((key) => localStorage.getItem(key), DOCS_CUSTOM_STORAGE_KEY);
     expect(parked).toContain("2rem");
 
     const chooser = page.getByRole("combobox", { name: "Identity" }).first();
     await chooser.selectOption("tide");
     await expect(page.locator("html")).toHaveAttribute("data-identity", "tide");
-    expect(await page.evaluate(() => localStorage.getItem("zk-identity-custom"))).toBe(parked);
+    expect(await page.evaluate((key) => localStorage.getItem(key), DOCS_CUSTOM_STORAGE_KEY)).toBe(parked);
 
     await chooser.selectOption("mist");
     await expect(page.locator("html")).toHaveAttribute("data-identity", "mist");
@@ -464,6 +484,7 @@ test.describe("identity editor apply to site", () => {
     expect(page.url()).toContain("identity=tide");
     expect(page.url()).toContain("radius=2rem");
   });
+  });
 
   test("Apply Press replaces the site look in light and dark", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("theme", "light"));
@@ -475,8 +496,8 @@ test.describe("identity editor apply to site", () => {
     await expect
       .poll(() => page.locator("html").evaluate((node) => getComputedStyle(node).getPropertyValue("--radius").trim()))
       .toBe("0px");
-    await page.getByRole("button", { name: "Dark", exact: true }).click();
-    await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+    await siteDark(page);
+    await page.getByRole("button", { name: "Preview dark", exact: true }).click();
     await expect
       .poll(() =>
         page.locator("html").evaluate((node) => getComputedStyle(node).getPropertyValue("--background").trim()),
@@ -497,7 +518,7 @@ test.describe("identity editor apply to site", () => {
     });
     await page.getByLabel("Background").fill("0 0% 95%");
     await page.getByRole("button", { name: "Apply to the whole site" }).click();
-    await page.getByRole("button", { name: "Dark", exact: true }).click();
+    await siteDark(page);
     await expect
       .poll(() =>
         page.locator("html").evaluate((node) => getComputedStyle(node).getPropertyValue("--background").trim()),
@@ -508,15 +529,15 @@ test.describe("identity editor apply to site", () => {
   test("a URL-loaded dark colour stays kept after a light edit", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("theme", "light"));
     await page.goto(PAGE, { waitUntil: "networkidle" });
-    await page.getByRole("button", { name: "Dark", exact: true }).click();
+    await page.getByRole("button", { name: "Preview dark", exact: true }).click();
     await page.getByLabel("Background").fill("120 40% 20%");
-    await page.getByRole("button", { name: "Dark", exact: true }).click();
+    await page.getByRole("button", { name: "Preview dark", exact: true }).click();
     await page.getByLabel("Background").fill("0 0% 95%");
     await expect.poll(() => new URL(page.url()).searchParams.get("darkKept")).toBe("background");
     await page.reload({ waitUntil: "networkidle" });
     await page.getByLabel("Background").fill("0 0% 90%");
     await page.getByRole("button", { name: "Apply to the whole site" }).click();
-    await page.getByRole("button", { name: "Dark", exact: true }).click();
+    await siteDark(page);
     await expect
       .poll(() =>
         page.locator("html").evaluate((node) => getComputedStyle(node).getPropertyValue("--background").trim()),
@@ -527,13 +548,12 @@ test.describe("identity editor apply to site", () => {
   test("a manual dark colour survives a later light edit", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("theme", "light"));
     await page.goto(PAGE, { waitUntil: "networkidle" });
-    await page.getByRole("button", { name: "Dark", exact: true }).click();
+    await page.getByRole("button", { name: "Preview dark", exact: true }).click();
     await page.getByLabel("Background").fill("120 40% 20%");
-    await page.getByRole("button", { name: "Dark", exact: true }).click();
+    await page.getByRole("button", { name: "Preview dark", exact: true }).click();
     await page.getByLabel("Background").fill("0 0% 95%");
     await page.getByRole("button", { name: "Apply to the whole site" }).click();
-    await page.getByRole("button", { name: "Dark", exact: true }).click();
-    await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+    await siteDark(page);
     await expect
       .poll(() =>
         page.locator("html").evaluate((node) => getComputedStyle(node).getPropertyValue("--background").trim()),
@@ -546,8 +566,7 @@ test.describe("identity editor apply to site", () => {
     await page.goto(PAGE, { waitUntil: "networkidle" });
     await page.getByLabel("Background").fill("0 0% 95%");
     await page.getByRole("button", { name: "Apply to the whole site" }).click();
-    await page.getByRole("button", { name: "Dark", exact: true }).click();
-    await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+    await siteDark(page);
     await expect(page.getByRole("button", { name: /^Fix dark / })).toHaveCount(0);
     await expect
       .poll(() =>
@@ -560,7 +579,7 @@ test.describe("identity editor apply to site", () => {
     await page.addInitScript(() => localStorage.setItem("theme", "dark"));
     await page.goto(PAGE, { waitUntil: "networkidle" });
     await expect(page.locator("html")).toHaveClass(/\bdark\b/);
-    await page.getByRole("button", { name: "Dark", exact: true }).click();
+    await page.getByRole("button", { name: "Preview dark", exact: true }).click();
     await page.getByLabel("Background").fill("120 40% 20%");
     await page.getByRole("button", { name: "Apply to the whole site" }).click();
     await expect.poll(() =>
@@ -569,6 +588,7 @@ test.describe("identity editor apply to site", () => {
     await expect(page.getByRole("status").filter({ hasText: "Custom identity active" })).toBeVisible();
   });
 
+  test.describe.skip("header Identity control (removed from site shell, D3)", () => {
   test("header Identity control parks Custom after Apply to the whole site; Reset discards it", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto(PAGE, { waitUntil: "networkidle" });
@@ -585,11 +605,11 @@ test.describe("identity editor apply to site", () => {
     );
     // Parked, not wiped: the applied work is still stored and the explicit
     // reset remains the way to drop it.
-    expect(await page.evaluate(() => localStorage.getItem("zk-identity-custom"))).toContain("0.4rem");
-    await page.getByRole("button", { name: "Reset to default" }).click();
+    expect(await page.evaluate((key) => localStorage.getItem(key), DOCS_CUSTOM_STORAGE_KEY)).toContain("0.4rem");
+    await page.getByRole("button", { name: "Back to default" }).click();
     await expect(page.locator("html")).toHaveAttribute("data-identity", DEFAULT_IDENTITY);
-    expect(await page.evaluate(() => localStorage.getItem("zk-identity-custom"))).toBeNull();
-    await expect(page.getByRole("button", { name: "Reset to default" })).toHaveCount(0);
+    expect(await page.evaluate((key) => localStorage.getItem(key), DOCS_CUSTOM_STORAGE_KEY)).toBeNull();
+    await expect(page.getByRole("button", { name: "Back to default" })).toHaveCount(0);
   });
 
   test("header Identity control parks Custom in dark mode", async ({ page }) => {
@@ -606,7 +626,8 @@ test.describe("identity editor apply to site", () => {
     await expect(page.locator("html")).toHaveClass(/\bdark\b/);
     await expect.poll(() => spacingOnHtml(page)).toMatch(/^0?\.28rem$/);
     await expect(chooser).toHaveValue("tide");
-    expect(await page.evaluate(() => localStorage.getItem("zk-identity-custom"))).toContain("0.4rem");
+    expect(await page.evaluate((key) => localStorage.getItem(key), DOCS_CUSTOM_STORAGE_KEY)).toContain("0.4rem");
+  });
   });
 });
 
@@ -618,19 +639,21 @@ test.describe("identity editor named looks", () => {
     await page.getByLabel("Name").fill("Coral");
     await page.getByRole("button", { name: "Save look" }).click();
     await expect(page.getByLabel("Look")).toHaveValue("n-coral");
-    const header = page.getByRole("combobox", { name: "Identity" }).first();
-    await expect(header.locator("option[value='n-coral']")).toHaveText("Coral");
-    await header.selectOption("n-coral");
+    const look = page.getByLabel("Look", { exact: true });
+    await look.selectOption("n-coral");
+    await page.getByRole("button", { name: "Apply to the whole site" }).click();
     await expect(page.locator("html")).toHaveAttribute("data-identity", "n-coral");
     await expect.poll(() => htmlVar(page, "--sidebar")).toBe("0 80% 70%");
     await expect.poll(() => htmlVar(page, "--card")).toBe("0 80% 70%");
     await page.getByLabel("Name").fill("Sunset");
     await page.getByRole("button", { name: "Rename" }).click();
-    await expect(header.locator("option[value='n-coral']")).toHaveText("Sunset");
-    await expect(header).toHaveValue("n-coral");
-    await page.getByRole("button", { name: "Delete" }).click();
-    await expect(page.getByLabel("Look")).toHaveValue("mist");
-    await expect(header.locator("option[value='n-coral']")).toHaveCount(0);
+    await expect(look).toHaveValue("n-coral");
+    await page.getByRole("button", { name: "Delete", exact: true }).click();
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expect(look).toHaveValue("n-coral");
+    await page.getByRole("button", { name: "Delete", exact: true }).click();
+    await page.getByRole("button", { name: "Delete look" }).click();
+    await expect(page.getByLabel("Look", { exact: true })).toHaveValue(DEFAULT_IDENTITY);
     await expect(page.locator("html")).toHaveAttribute("data-identity", DEFAULT_IDENTITY);
   });
 
@@ -644,8 +667,80 @@ test.describe("identity editor named looks", () => {
     await page.reload({ waitUntil: "networkidle" });
     await expect(page.locator("html")).toHaveAttribute("data-identity", "n-coral");
     await expect.poll(() => htmlVar(page, "--sidebar")).toBe("0 80% 70%");
-    await expect(page.getByRole("combobox", { name: "Identity" }).first()).toHaveValue("n-coral");
     await expect(page.getByLabel("Look")).toHaveValue("n-coral");
   });
 });
 
+
+test.describe("identity editor: choose, see, adjust, then keep", () => {
+  test("on a standard phone the first screen holds the look, a useful preview and the first adjustment", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(PAGE, { waitUntil: "networkidle" });
+    const boxes = await page.evaluate(() => {
+      const top = (selector: string) => document.querySelector(selector)?.getBoundingClientRect() ?? null;
+      const spacing = document.getElementById("identity-editor-spacing");
+      return {
+        look: top("#identity-editor-look"),
+        card: top('[data-slot="identity-editor-preview"]'),
+        spacing: spacing?.getBoundingClientRect() ?? null,
+        keep: top('[data-slot="identity-editor-keep"]'),
+        vh: innerHeight,
+      };
+    });
+    expect(boxes.look && boxes.card && boxes.spacing && boxes.keep).toBeTruthy();
+    // Look, then the card in full, then the first field: all above the fold of an 844px phone.
+    expect(boxes.look!.bottom).toBeLessThan(boxes.card!.top);
+    expect(boxes.card!.bottom).toBeLessThan(boxes.spacing!.top);
+    expect(boxes.spacing!.bottom, "the Spacing field is on the first screen").toBeLessThanOrEqual(boxes.vh);
+    // Saving and applying come after the first adjustment, and are still on the page, not folded away.
+    expect(boxes.keep!.top).toBeGreaterThan(boxes.spacing!.bottom);
+    await expect(page.getByRole("button", { name: "Save look" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Apply to the whole site" })).toBeVisible();
+  });
+
+  test("desktop rows line up on their bottom edge whatever the hint text under them", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(PAGE, { waitUntil: "networkidle" });
+    const rows = await page.evaluate(() => {
+      const bottom = (target: string) => {
+        const el = target.startsWith("#")
+          ? document.querySelector(target)
+          : [...document.querySelectorAll("button")].find((button) => button.textContent?.trim() === target);
+        return Math.round((el?.getBoundingClientRect().bottom ?? Number.NaN) * 10) / 10;
+      };
+      return {
+        look: ["#identity-editor-look", "Preview dark", "Undo", "Reset"].map(bottom),
+        name: ["#identity-editor-name", "Save look", "Rename", "Delete"].map(bottom),
+      };
+    });
+    for (const [row, values] of Object.entries(rows)) {
+      expect(values.every(Number.isFinite), `${row} row found`).toBe(true);
+      expect(Math.max(...values) - Math.min(...values), `${row} row bottoms ${values.join(", ")}`).toBeLessThanOrEqual(1);
+    }
+    // Typing a name removes the hint under it; nothing in the row moves.
+    const before = await page.locator("#identity-editor-name").evaluate((el) => el.getBoundingClientRect().bottom);
+    await page.locator("#identity-editor-name").fill("Harbor");
+    const after = await page.locator("#identity-editor-name").evaluate((el) => el.getBoundingClientRect().bottom);
+    expect(after).toBe(before);
+  });
+});
+
+test("on a phone the pinned preview card never covers the field that has focus", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(PAGE, { waitUntil: "networkidle" });
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  for (const label of ["Radius", "Border width", "Spacing"]) {
+    await page.getByLabel(label, { exact: true }).focus();
+    await page.waitForTimeout(150);
+    const gap = await page.evaluate((name) => {
+      const card = document.querySelector('[data-slot="identity-editor-preview"]')!.getBoundingClientRect();
+      const input = [...document.querySelectorAll("input")].find((el) => el.labels?.[0]?.textContent?.trim() === name)!;
+      const box = input.getBoundingClientRect();
+      const pinned = getComputedStyle(document.querySelector('[data-slot="identity-editor-preview"]')!).position === "sticky";
+      return { pinned, clearance: box.top - card.bottom, inView: box.bottom <= innerHeight };
+    }, label);
+    // Pinned or not, the focused field is on screen and not under the card (WCAG 2.4.11).
+    expect(gap.inView, `${label} on screen`).toBe(true);
+    if (gap.pinned) expect(gap.clearance, `${label} clear of the pinned card`).toBeGreaterThanOrEqual(0);
+  }
+});

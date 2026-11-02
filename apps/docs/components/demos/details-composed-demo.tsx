@@ -1,26 +1,27 @@
 import { Badge, Button, DetailPanelRow, Stack, StatusDot, Text } from "@zedtech/zedkit-ui";
+import { detailsCopy } from "@/components/demos/i18n/details-copy";
 
 /** Rows with custom content (badge, dot, button) inside your own definition list. */
 export function DetailsComposedDemo() {
   return (
     <dl className="divide-y divide-border rounded-lg border">
-      <DetailPanelRow label="Customer" value="Camille Rousseau" />
-      <DetailPanelRow label="Plan" value={<Badge variant="success">Pro</Badge>} />
+      <DetailPanelRow label={detailsCopy.composed.labels.customer} value={detailsCopy.composed.customer} />
+      <DetailPanelRow label={detailsCopy.composed.labels.plan} value={<Badge variant="success">{detailsCopy.composed.planBadge}</Badge>} />
       <DetailPanelRow
-        label="Last seen"
+        label={detailsCopy.composed.labels.lastSeen}
         value={
           <Stack direction="horizontal" gap={2}>
             <StatusDot tone="success" />
-            <Text>2 minutes ago</Text>
+            <Text>{detailsCopy.composed.lastSeen}</Text>
           </Stack>
         }
       />
-      <DetailPanelRow label="Renews" value="1 December 2026" />
+      <DetailPanelRow label={detailsCopy.composed.labels.renews} value={detailsCopy.composed.renews} />
       <DetailPanelRow
-        label="Customer ID"
+        label={detailsCopy.composed.labels.customerId}
         value={
           <Button size="sm" variant="outline">
-            Copy cus_4821
+            {detailsCopy.composed.copyId}
           </Button>
         }
       />

@@ -1,4 +1,6 @@
 import { expect, test } from "@playwright/test";
+
+import { DEFAULT_IDENTITY } from "../lib/default-identity";
 import { assertA11yGate, readComputedContrast } from "./a11y-helpers";
 
 const BASE = "http://127.0.0.1:3100";
@@ -38,10 +40,12 @@ async function openWithTheme(
     document.documentElement.style.colorScheme = mode;
   }, theme);
   if (theme === "light") {
-    await page.waitForFunction(() => {
-      const muted = getComputedStyle(document.documentElement).getPropertyValue("--muted-foreground");
-      return muted.includes("32%");
-    });
+    await page.waitForFunction(({ id }) => {
+      const root = document.documentElement;
+      if (root.getAttribute("data-identity") !== id) return false;
+      const muted = getComputedStyle(root).getPropertyValue("--muted-foreground").trim();
+      return muted.length > 0;
+    }, { id: DEFAULT_IDENTITY });
   }
 }
 
@@ -49,19 +53,18 @@ test.describe("a11y gate (#396)", () => {
   for (const route of A11Y_ROUTES) {
     for (const viewport of VIEWPORTS) {
       for (const theme of ["light", "dark"] as const) {
-        // Preview islands opt into their own dark scope (#394); axe dark runs on prose routes only.
-        if (theme === "dark" && route.label.startsWith("component-")) continue;
         test(`${route.label} ${viewport.name} ${theme}: axe gate rules`, async ({ page }) => {
           await page.setViewportSize({ width: viewport.width, height: viewport.height });
           await openWithTheme(page, route.path, theme);
-          await assertA11yGate(page);
+          const scope = route.label.startsWith("component-") ? "[data-component-preview]" : "body";
+          await assertA11yGate(page, scope);
         });
       }
     }
   }
 
   const maturitySamples: { path: string; name: string }[] = [
-    { path: "/docs/ui/stamp-data-with-its-age", name: "alpha" },
+    { path: "/docs/ui/pin-a-stage-and-change-scene-as-the-page-scrolls", name: "alpha" },
     { path: "/catalog", name: "beta" },
   ];
 
@@ -69,10 +72,11 @@ test.describe("a11y gate (#396)", () => {
     for (const sample of maturitySamples) {
       test(`maturity ${sample.name} badge ${theme}: contrast >= 4.5:1`, async ({ page }) => {
         await openWithTheme(page, sample.path, theme);
-        const badge =
-          sample.name === "alpha"
-            ? page.getByRole("link", { name: sample.name, exact: true })
-            : page.getByText(sample.name, { exact: true }).first();
+        const badge = page
+          .locator("main a[data-badge-link]")
+          .filter({ hasText: new RegExp(`^${sample.name}$`, "i") })
+          .first();
+        await expect(badge).toBeVisible();
         const ratio = await readComputedContrast(page, badge);
         expect(ratio).toBeGreaterThanOrEqual(4.5);
       });

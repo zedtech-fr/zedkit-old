@@ -23,8 +23,14 @@ import { AppShellDemo } from "./app-shell-demo";
 import { BadgeDemo } from "./badge-demo";
 import { BrandLogoDemo, BrandLogoHeaderDemo } from "./brand-logo-demo";
 import { ButtonDemo } from "./button-demo";
+import { ButtonSizesDemo } from "./button-sizes-demo";
 import { IdentityPickerDemo, IdentityScopeDemo, IdentitySwitcherDemo } from "./identity-demo";
-import { ScrollScenesBeforeAfterDemo, ScrollScenesDemo } from "./scroll-scenes-demo";
+import {
+  ScrollScenesBeforeAfterDemo,
+  ScrollScenesDemo,
+  ScrollScenesLooksDemo,
+  ScrollScenesPricingDemo,
+} from "./scroll-scenes-demo";
 import { CalendarDemo } from "./calendar-demo";
 import { CardDemo } from "./card-demo";
 import { CardFooterDemo } from "./card-footer-demo";
@@ -121,6 +127,7 @@ export const demoRegistry = {
   AppShellDemo: { Demo: AppShellDemo, file: "app-shell-demo.tsx" },
   BadgeDemo: { Demo: BadgeDemo, file: "badge-demo.tsx", center: true },
   ButtonDemo: { Demo: ButtonDemo, file: "button-demo.tsx", center: true },
+  ButtonSizesDemo: { Demo: ButtonSizesDemo, file: "button-sizes-demo.tsx", center: true },
   CalendarDemo: { Demo: CalendarDemo, file: "calendar-demo.tsx", center: true },
   CardDemo: { Demo: CardDemo, file: "card-demo.tsx" },
   CardFooterDemo: { Demo: CardFooterDemo, file: "card-footer-demo.tsx" },
@@ -177,7 +184,7 @@ export const demoRegistry = {
   DataTableToolbarDemo: { Demo: DataTableToolbarDemo, file: "data-table-toolbar-demo.tsx" },
   DetailsDemo: { Demo: DetailsDemo, file: "details-demo.tsx" },
   DetailsComposedDemo: { Demo: DetailsComposedDemo, file: "details-composed-demo.tsx" },
-  DialogDemo: { Demo: DialogDemo, file: "dialog-demo.tsx", center: true },
+  DialogDemo: { Demo: DialogDemo, file: "dialog-demo.tsx" },
   DialogTallDemo: { Demo: DialogTallDemo, file: "dialog-tall-demo.tsx", center: true },
   DropdownMenuDemo: { Demo: DropdownMenuDemo, file: "dropdown-menu-demo.tsx", center: true },
   DrawerBottomSheetDemo: { Demo: DrawerBottomSheetDemo, file: "drawer-bottom-sheet-demo.tsx", center: true },
@@ -215,6 +222,8 @@ export const demoRegistry = {
   IdentitySwitcherDemo: { Demo: IdentitySwitcherDemo, file: "identity-demo.tsx" },
   ScrollScenesBeforeAfterDemo: { Demo: ScrollScenesBeforeAfterDemo, file: "scroll-scenes-demo.tsx", pinned: true },
   ScrollScenesDemo: { Demo: ScrollScenesDemo, file: "scroll-scenes-demo.tsx", pinned: true },
+  ScrollScenesLooksDemo: { Demo: ScrollScenesLooksDemo, file: "scroll-scenes-demo.tsx", pinned: true },
+  ScrollScenesPricingDemo: { Demo: ScrollScenesPricingDemo, file: "scroll-scenes-demo.tsx", pinned: true },
   ToasterDemo: { Demo: ToasterDemo, file: "toaster-demo.tsx", center: true },
   TooltipDemo: { Demo: TooltipDemo, file: "tooltip-demo.tsx", center: true },
   ToggleDemo: { Demo: ToggleDemo, file: "toggle-demo.tsx", center: true },

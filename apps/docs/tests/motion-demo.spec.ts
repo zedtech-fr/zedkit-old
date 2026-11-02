@@ -20,7 +20,7 @@ test.describe("motion utilities demo", () => {
     await expect(card).toBeVisible();
     // Axe reads contrast mid-fade otherwise: wait for the entrances to end.
     await page.evaluate(() => Promise.all(document.getAnimations().filter((a) => a.effect?.getComputedTiming().iterations !== Infinity).map((a) => a.finished)));
-    const results = await new AxeBuilder({ page }).include(".rounded-lg.border.border-border.bg-muted\\/40").analyze();
+    const results = await new AxeBuilder({ page }).include("[data-preview-surface]").analyze();
     expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
     expect(errors).toEqual([]);
   });
@@ -35,16 +35,16 @@ test.describe("motion utilities demo", () => {
 
   test("hover and stagger examples have a live preview next to their code", async ({ page }) => {
     await page.goto(MOTION_PAGE, { waitUntil: "networkidle" });
-    const hover = page.getByText("Live preview: Hover feedback", { exact: true });
-    const stagger = page.getByText("Live preview: Staggered children", { exact: true });
-    await expect(hover).toHaveCount(1);
-    await expect(stagger).toHaveCount(1);
-    const lift = page.locator(".hover-lift").filter({ hasText: "Website relaunch" });
+    const hoverPreview = page.locator("[data-component-preview]").filter({ hasText: "Website relaunch" }).first();
+    await hoverPreview.scrollIntoViewIfNeeded();
+    const lift = hoverPreview.locator(".hover-lift").filter({ hasText: "Website relaunch" });
     await expect(lift).toBeVisible();
-    await expect(page.getByRole("button", { name: "Presses down on click" })).toBeVisible();
-    const tasks = stagger.locator("xpath=..").locator("[data-stagger]");
+    await expect(hoverPreview.getByRole("button", { name: "Presses down on click" })).toBeVisible();
+    const staggerPreview = page.locator("[data-component-preview]").filter({ hasText: "Write the launch email" }).first();
+    await staggerPreview.scrollIntoViewIfNeeded();
+    const tasks = staggerPreview.locator("[data-stagger]").first();
     await expect(tasks.getByText("Write the launch email")).toBeVisible();
-    await page.getByRole("button", { name: "Replay", exact: true }).click();
+    await staggerPreview.getByRole("button", { name: "Replay", exact: true }).click();
     await expect(tasks.getByText("Publish the sale banner")).toBeVisible();
   });
 });

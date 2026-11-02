@@ -24,7 +24,7 @@ export interface DetailPanelRowProps {
  */
 export function DetailPanelRow({ label, value, className }: DetailPanelRowProps) {
   return (
-    <div data-slot="detail-panel-row" className={cn("grid grid-cols-3 gap-4 px-4 py-detail-panel-block text-sm", className)}>
+    <div data-slot="detail-panel-row" className={cn("grid grid-cols-3 gap-4 px-4 py-3 text-sm", className)}>
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="col-span-2 min-w-0 font-medium break-words">{value}</dd>
     </div>

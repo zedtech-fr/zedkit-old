@@ -13,15 +13,9 @@ import {
   TableRow,
   Text,
 } from "@zedtech/zedkit-ui";
+import { dataTableCopy } from "@/components/demos/i18n/data-table-copy";
 
-const customers = [
-  { name: "Camille Rousseau", city: "Lyon", orders: 14 },
-  { name: "Noah Bernard", city: "Nantes", orders: 3 },
-  { name: "Inès Moreau", city: "Lille", orders: 9 },
-  { name: "Lucas Petit", city: "Lyon", orders: 1 },
-  { name: "Sofia Garcia", city: "Marseille", orders: 22 },
-  { name: "Hugo Lambert", city: "Nantes", orders: 6 },
-];
+const customers = [...dataTableCopy.toolbar.customers];
 
 /** The filter box on its own: you decide what it filters (here, name or city). */
 export function DataTableToolbarDemo() {
@@ -30,21 +24,21 @@ export function DataTableToolbarDemo() {
   const rows = customers.filter((c) => `${c.name} ${c.city}`.toLowerCase().includes(needle));
   return (
     <Stack gap={3}>
-      <DataTableToolbar value={query} onChange={setQuery} placeholder="Search customers" />
+      <DataTableToolbar value={query} onChange={setQuery} placeholder={dataTableCopy.toolbar.placeholder} />
       <Text variant="muted" aria-live="polite">
-        {rows.length} of {customers.length} customers
+        {dataTableCopy.toolbar.count(rows.length, customers.length)}
       </Text>
-      <Table aria-label="Customers">
+      <Table aria-label={dataTableCopy.toolbar.tableAriaLabel}>
         <TableHeader>
           <TableRow>
-            <TableHead>Customer</TableHead>
-            <TableHead>City</TableHead>
-            <TableHead>Orders</TableHead>
+            <TableHead>{dataTableCopy.toolbar.columns.customer}</TableHead>
+            <TableHead>{dataTableCopy.toolbar.columns.city}</TableHead>
+            <TableHead>{dataTableCopy.toolbar.columns.orders}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {rows.length === 0 ? (
-            <DataTableEmpty colSpan={3} message="No customer matches your search." />
+            <DataTableEmpty colSpan={3} message={dataTableCopy.toolbar.emptyMessage} />
           ) : (
             rows.map((c) => (
               <TableRow key={c.name}>

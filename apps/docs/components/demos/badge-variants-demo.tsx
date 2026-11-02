@@ -1,21 +1,21 @@
 import { Badge, Stack, Text } from "@zedtech/zedkit-ui";
+import { badgeCopy } from "@/components/demos/i18n/badge-copy";
 
-const RUNS = [
-  { name: "Deploy to staging", badge: <Badge variant="outline">3 retries</Badge> },
-  { name: "Nightly orders export", badge: <Badge variant="destructive">failed</Badge> },
-  { name: "Image optimisation", badge: <Badge variant="secondary">queued</Badge> },
-  { name: "Storefront build", badge: <Badge>passed</Badge> },
-];
+const RUNS = badgeCopy.variants.runs;
 
 export function BadgeVariantsDemo() {
   return (
     <Stack gap={3} className="min-w-0">
-      <Text variant="muted">Pipeline runs for Harbor Studio, last 24 hours</Text>
+      <Text variant="muted">{badgeCopy.variants.subtitle}</Text>
       <Stack gap={2}>
         {RUNS.map((run) => (
           <Stack key={run.name} direction="horizontal" gap={3} className="items-center justify-between">
             <Text>{run.name}</Text>
-            {run.badge}
+            {run.variant === "default" ? (
+              <Badge>{run.badge}</Badge>
+            ) : (
+              <Badge variant={run.variant}>{run.badge}</Badge>
+            )}
           </Stack>
         ))}
       </Stack>
