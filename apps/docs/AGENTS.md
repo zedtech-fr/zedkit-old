@@ -51,8 +51,10 @@ reject dead `/r/<name>.json` links.
 - Gates: `typecheck`, `lint`, `build` on the filter, then root
   `pnpm catalog:check` (`docs: ok (N pages cover N needs)`; needs built
   sibling packages, see the root Commands).
-- Browser tests run against the static export, as CI does (same port as
-  `dev`, so stop that first):
+- Browser tests run against the static export, as CI does. Many specs
+  hard-code `http://127.0.0.1:3100`, so stop `pnpm dev` first: `serve` moves
+  to another port without failing when 3100 is taken (read its
+  "Accepting connections" line):
 
   ```sh
   pnpm exec turbo run build --filter=@zedtech/zedkit-docs   # writes apps/docs/out
