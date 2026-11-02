@@ -184,10 +184,17 @@ for (const width of [1280, 1600] as const) {
       };
 
       const heroBand = document.querySelector("[data-home-hero-band]");
+      const identities = document.getElementById("identities");
       const getStarted = document.getElementById("get-started");
       const components = document.getElementById("components");
       const entryPoints = document.getElementById("entry-points");
-      const boxes = [containerBox(heroBand), containerBox(getStarted), containerBox(components), containerBox(entryPoints)];
+      const boxes = [
+        containerBox(heroBand),
+        containerBox(identities),
+        containerBox(getStarted),
+        containerBox(components),
+        containerBox(entryPoints),
+      ];
       if (boxes.some((box) => !box)) return null;
 
       const sectionMd = getComputedStyle(document.documentElement)
@@ -202,14 +209,15 @@ for (const width of [1280, 1600] as const) {
       const bandBottom = (el: Element | null) => el?.getBoundingClientRect().bottom ?? Number.NaN;
       const bandTop = (el: Element | null) => el?.getBoundingClientRect().top ?? Number.NaN;
       const gaps = [
-        bandTop(getStarted) - bandBottom(heroBand),
+        bandTop(identities) - bandBottom(heroBand),
+        bandTop(getStarted) - bandBottom(identities),
         bandTop(components) - bandBottom(getStarted),
         bandTop(entryPoints) - bandBottom(components),
       ];
 
-      const [heroBox, startBox, componentsBox, entryBox] = boxes as DOMRect[];
-      const widths = [heroBox.width, startBox.width, componentsBox.width, entryBox.width];
-      const lefts = [heroBox.left, startBox.left, componentsBox.left, entryBox.left];
+      const bands = boxes as DOMRect[];
+      const widths = bands.map((box) => box.width);
+      const lefts = bands.map((box) => box.left);
 
       return {
         gaps,

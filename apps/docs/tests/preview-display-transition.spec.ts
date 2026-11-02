@@ -59,7 +59,12 @@ test("Display opened on a phone keeps an intentional layout when the window wide
 
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
-  const back = await layout(preview);
-  expect(back.controls).toHaveLength(4);
-  expect(back.controls.every((control) => control.visible && control.inView)).toBe(true);
+  // The row settles into place over a transition; the assertion is about where it ends up, so it waits for
+  // that (a read taken during the move saw the controls at x=283..423 of a 390px screen).
+  await expect
+    .poll(async () => {
+      const back = await layout(preview);
+      return back.controls.length === 4 && back.controls.every((control) => control.visible && control.inView);
+    }, { message: "the four phone controls are back in view once the row has settled" })
+    .toBe(true);
 });
