@@ -23,7 +23,7 @@ test.describe("home mobile marketing body type (L2 + P0)", () => {
       };
 
       const getStarted = document.querySelector("#get-started");
-      const startCopy = getStarted?.querySelector("#install-or-copy .text-home-persuasion");
+      const startCopy = getStarted?.querySelector("#install-or-copy [data-adoption-mode] dd");
 
       const components = document.querySelector("#components");
       const componentsCopy = components?.querySelector(

@@ -51,7 +51,15 @@ import { a } from "@zedtech/zedkit-core";
 
 - **Import** names the package (and subpath, if any) plus the symbols the
   need uses. Every public export of the package must appear here — CI
-  checks it (`pnpm catalog:check`).
+  checks it (`pnpm catalog:check`). It is for JavaScript only: several
+  modules are joined with `;`. A need that is a stylesheet or a config file
+  types itself with optional lines instead, and `catalog.json` carries the
+  result as `adoption` (`js`, `css` or `config`) so the install steps are
+  written in the right language and never guessed from prose. The lines are
+  `CSS import` (a specifier ending in `.css`), `CSS directive` (a full
+  at-rule such as `@source`), `Also install`, `Utilities`, `Attributes` and
+  `Extends`; each takes backticked values. `Example file` names the path when the first example is a whole file (for instance `src/app/layout.tsx`) rather than JSX the page wraps in a component. An Import line that is neither
+  JavaScript nor typed this way fails the check.
 - UI component exports also need a four-state entry in
   [`packages/ui/four-states.json`](../../packages/ui/four-states.json)
   (`none`, or loading/empty/error/success plus fixture, vitest and axe

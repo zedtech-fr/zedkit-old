@@ -37,6 +37,21 @@
               "code": "import { installKit } from \"@zedtech/zedkit-ai\";\nconst result = installKit({ dest: \".\", preset: \"core\", providers: [\"claude\", \"cursor\"] });\nif (!result.ok) throw result.error;\nfor (const action of result.value) console.log(action.kind, action.path);"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ai",
+                "exports": [
+                  "installKit",
+                  "InstallOptions",
+                  "Action",
+                  "Provider",
+                  "Target"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Check that skills, subagents, commands and provider copies are valid"
           ]
@@ -59,6 +74,19 @@
               "code": "import { checkDrift, validateKit } from \"@zedtech/zedkit-ai\";\nconst issues = [...validateKit(\".agents\"), ...checkDrift(\".\", \".agents\")];\nfor (const issue of issues) console.error(`${issue.path}: ${issue.message}`);"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ai",
+                "exports": [
+                  "validateKit",
+                  "checkDrift",
+                  "Issue"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Set up AI agent instructions, skills, subagents and commands in a repo"
           ]
@@ -99,6 +127,23 @@
               "code": "import { isOk, ok, unwrapOr } from \"@zedtech/zedkit-core\";\nconst found = ok({ name: \"zed\" });\nif (isOk(found)) console.log(found.value.name);\nconst name = unwrapOr(found, { name: \"?\" }).name;"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-core",
+                "exports": [
+                  "Result",
+                  "ok",
+                  "err",
+                  "isOk",
+                  "isErr",
+                  "mapResult",
+                  "unwrapOr"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Handle errors without try/catch"
           ]
@@ -121,6 +166,19 @@
               "code": "import { tryCatch } from \"@zedtech/zedkit-core\";\nconst parsed = tryCatch(() => JSON.parse(input));\nif (!parsed.ok) return fallback(parsed.error);"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-core",
+                "exports": [
+                  "tryCatch",
+                  "tryCatchAsync",
+                  "normalizeThrown"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Model success or failure without throwing"
           ]
@@ -142,7 +200,22 @@
               "title": "Simple",
               "code": "import { classifyError, DomainError, TransientError } from \"@zedtech/zedkit-core\";\nif (classifyError(err) === \"transient\") await retryLater();\nthrow new DomainError(\"slot_taken\", \"Slot already booked\");\nthrow new TransientError(\"upstream timeout\", { cause: err });"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-core",
+                "exports": [
+                  "DomainError",
+                  "TransientError",
+                  "PermanentError",
+                  "classifyError",
+                  "ErrorKind"
+                ]
+              }
+            ]
+          }
         },
         {
           "need": "Inject time in domain code",
@@ -161,7 +234,20 @@
               "title": "Simple",
               "code": "import { fixedClock, systemClock, type Clock } from \"@zedtech/zedkit-core\";\nconst clock: Clock = process.env.NODE_ENV === \"test\" ? fixedClock(new Date(\"2026-01-01\")) : systemClock;\nconst ageMs = clock.now().getTime() - createdAt.getTime();"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-core",
+                "exports": [
+                  "Clock",
+                  "systemClock",
+                  "fixedClock"
+                ]
+              }
+            ]
+          }
         },
         {
           "need": "Generate prefixed unique IDs",
@@ -180,7 +266,19 @@
               "title": "Simple",
               "code": "import { isPrefixedId, newPrefixedId } from \"@zedtech/zedkit-core\";\nconst id = newPrefixedId(\"order\"); // order_01M5Q75SHJ9CVV6E3RBF0FGEM1\nif (!isPrefixedId(id, \"order\")) throw new Error(\"bad id\");"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-core",
+                "exports": [
+                  "newPrefixedId",
+                  "isPrefixedId"
+                ]
+              }
+            ]
+          }
         }
       ]
     },
@@ -212,7 +310,19 @@
               "title": "Simple",
               "code": "import { devtoolsEnabled } from \"@zedtech/zedkit-devtools\";\n\nif (devtoolsEnabled()) {\n  // mount devtools in development\n}"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-devtools",
+                "exports": [
+                  "devtoolsEnabled",
+                  "DevtoolsEnabledOptions"
+                ]
+              }
+            ]
+          }
         },
         {
           "need": "Mount a dev-only developer tools panel",
@@ -231,7 +341,21 @@
               "title": "Simple",
               "code": "import { ZedkitDevtools } from \"@zedtech/zedkit-devtools/react\";\n\n<ZedkitDevtools\n  flagKeys={[\"betaUi\"]}\n  buildInfo={[{ label: \"Git\", value: \"abc123\" }]}\n  localeOptions={[{ id: \"en\", label: \"English\" }]}\n  activeLocale=\"en\"\n  onLocaleChange={(id) => console.log(id)}\n/>;"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-devtools/react",
+                "exports": [
+                  "ZedkitDevtools",
+                  "ZedkitDevtoolsPanel",
+                  "DevtoolsBuildInfoRow",
+                  "DevtoolsLocaleOption"
+                ]
+              }
+            ]
+          }
         }
       ]
     },
@@ -263,7 +387,29 @@
               "title": "Simple",
               "code": "import { OpenFeature, defineFlagRegistry, memoryProviderFromRegistry } from \"@zedtech/zedkit-flags\";\n\nconst registry = defineFlagRegistry({ beta: false });\nOpenFeature.setProvider(memoryProviderFromRegistry(registry));"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-flags",
+                "exports": [
+                  "defineFlagRegistry",
+                  "memoryProviderFromRegistry",
+                  "createMemoryProvider",
+                  "OpenFeature",
+                  "TypedInMemoryProvider",
+                  "Client",
+                  "Provider",
+                  "EvaluationContext",
+                  "JsonValue",
+                  "buildOpenFeatureFlagDefinitions",
+                  "FlagValue",
+                  "FlagRegistry"
+                ]
+              }
+            ]
+          }
         },
         {
           "need": "Evaluate flags on the server",
@@ -282,7 +428,20 @@
               "title": "Simple",
               "code": "import { OpenFeature, defineFlagRegistry, getFlag, memoryProviderFromRegistry } from \"@zedtech/zedkit-flags\";\n\nconst registry = defineFlagRegistry({ exportCsv: true });\nOpenFeature.setProvider(memoryProviderFromRegistry(registry));\nconst enabled = await getFlag(OpenFeature.getClient(), registry, \"exportCsv\");"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-flags",
+                "exports": [
+                  "getFlag",
+                  "Client",
+                  "FlagReturnValue"
+                ]
+              }
+            ]
+          }
         },
         {
           "need": "Load flag values from JSON or env",
@@ -301,7 +460,21 @@
               "title": "Simple",
               "code": "import { OpenFeature, createMemoryProvider, defineFlagRegistry, loadFlagsFromEnv, mergeFlagValues } from \"@zedtech/zedkit-flags\";\n\nconst registry = defineFlagRegistry({ maintenance: false });\nconst merged = mergeFlagValues(registry, loadFlagsFromEnv());\nOpenFeature.setProvider(createMemoryProvider(merged));"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-flags",
+                "exports": [
+                  "parseFlagsJson",
+                  "loadFlagsFromEnv",
+                  "mergeFlagValues",
+                  "createMemoryProvider"
+                ]
+              }
+            ]
+          }
         },
         {
           "need": "Override flags in the browser for local dev",
@@ -320,7 +493,23 @@
               "title": "Simple",
               "code": "import { mergeFlagValue, readFlagOverrides, writeFlagOverride } from \"@zedtech/zedkit-flags\";\n\nconst evaluated = false;\nconst overrides = readFlagOverrides(localStorage);\nconst effective = mergeFlagValue(\"beta\", evaluated, overrides);\nwriteFlagOverride(localStorage, \"beta\", !effective);"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-flags",
+                "exports": [
+                  "readFlagOverrides",
+                  "writeFlagOverride",
+                  "mergeFlagValue",
+                  "FLAG_OVERRIDE_STORAGE_KEY",
+                  "flagOverridesSnapshot",
+                  "subscribeFlagOverrides"
+                ]
+              }
+            ]
+          }
         },
         {
           "need": "Read flags in React",
@@ -339,7 +528,25 @@
               "title": "Simple",
               "code": "import { defineFlagRegistry } from \"@zedtech/zedkit-flags\";\nimport { useFlag, ZedkitFlagsProvider } from \"@zedtech/zedkit-flags/react\";\n\nconst registry = defineFlagRegistry({ newDashboard: false });\n\nexport function FeatureGate({ children }: { children: React.ReactNode }) {\n  return (\n    <ZedkitFlagsProvider registry={registry}>\n      <FeatureGateInner>{children}</FeatureGateInner>\n    </ZedkitFlagsProvider>\n  );\n}\n\nfunction FeatureGateInner({ children }: { children: React.ReactNode }) {\n  const show = useFlag(\"newDashboard\", false);\n  return show ? children : null;\n}"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-flags/react",
+                "exports": [
+                  "ZedkitFlagsProvider",
+                  "useFlag",
+                  "OpenFeatureProvider",
+                  "OpenFeature",
+                  "TypedInMemoryProvider",
+                  "useBooleanFlagValue",
+                  "useStringFlagValue",
+                  "useNumberFlagValue"
+                ]
+              }
+            ]
+          }
         }
       ]
     },
@@ -371,7 +578,18 @@
               "title": "Simple",
               "code": "import { formatMessage } from \"@zedtech/zedkit-i18n\";\nformatMessage(\"Page {page} of {pageCount}\", { page: 2, pageCount: 5 });"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-i18n",
+                "exports": [
+                  "formatMessage"
+                ]
+              }
+            ]
+          }
         },
         {
           "need": "Create a typed messages context",
@@ -390,7 +608,19 @@
               "title": "Simple",
               "code": "import { createMessagesContext } from \"@zedtech/zedkit-i18n/react\";\n\nconst catalog = { save: \"Save\" };\nconst { MessagesProvider, useMessages } = createMessagesContext(catalog);"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-i18n/react",
+                "exports": [
+                  "createMessagesContext",
+                  "MessagesProviderProps"
+                ]
+              }
+            ]
+          }
         }
       ]
     },
@@ -430,6 +660,24 @@
               "code": "import { createNestApp } from \"@zedtech/zedkit-nest\";\nconst app = await createNestApp({ module: AppModule, envSchema: AppEnv });\nawait app.listen(3000);"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-nest",
+                "exports": [
+                  "createNestApp",
+                  "NestBootstrapOptions",
+                  "ThrottleOptions",
+                  "DocsOptions",
+                  "LoggerOptions",
+                  "ValidationOptions",
+                  "REQUEST_ID_HEADER",
+                  "RequestIdInterceptor"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Ship request logs without leaking credentials",
             "Return uniform error bodies"
@@ -453,6 +701,17 @@
               "code": "import { createNestApp } from \"@zedtech/zedkit-nest\";\nconst app = await createNestApp({\n  module: AppModule,\n  logger: { level: \"info\" }, // default: auth header + cookies redacted\n});"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-nest",
+                "exports": [
+                  "LoggerOptions"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Bootstrap a Nest app",
             "Redact secrets before logging"
@@ -476,6 +735,18 @@
               "code": "import { AllExceptionsFilter } from \"@zedtech/zedkit-nest\";\n// wired globally by createNestApp; reuse standalone:\napp.useGlobalFilters(new AllExceptionsFilter());"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-nest",
+                "exports": [
+                  "AllExceptionsFilter",
+                  "ErrorBody"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Bootstrap a Nest app",
             "Start a safe NestJS API"
@@ -499,6 +770,24 @@
               "code": "import { createNestApp } from \"@zedtech/zedkit-nest\";\nimport { newPrefixedId } from \"@zedtech/zedkit-core\";\nconst app = await createNestApp({ module: AppModule, envSchema: AppEnv });\nawait app.listen(3000);\n// Walkthrough sources: packages/nest/examples/safe-api (compiled in @zedtech/zedkit-nest tests)."
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-nest",
+                "exports": [
+                  "createNestApp",
+                  "ErrorBody"
+                ]
+              },
+              {
+                "from": "@zedtech/zedkit-core",
+                "exports": [
+                  "newPrefixedId"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Bootstrap a Nest app",
             "Return uniform error bodies",
@@ -538,7 +827,24 @@
               "title": "Simple",
               "code": "import { createMemoryLogger, type Logger } from \"@zedtech/zedkit-observability\";\nconst { logger, entries } = createMemoryLogger();\nlogger.info(\"ready\", { port: 3000 });"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-observability",
+                "exports": [
+                  "Logger",
+                  "LogLevel",
+                  "LogContext",
+                  "noopLogger",
+                  "createConsoleLogger",
+                  "createMemoryLogger",
+                  "CapturedLog"
+                ]
+              }
+            ]
+          }
         },
         {
           "need": "Track product events with a typed map",
@@ -557,7 +863,22 @@
               "title": "Simple",
               "code": "import { createMemoryTracker } from \"@zedtech/zedkit-observability\";\ntype Events = { signup: { plan: string } };\nconst { tracker, captured } = createMemoryTracker<Events>();\ntracker.capture(\"signup\", { plan: \"free\" });"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-observability",
+                "exports": [
+                  "Tracker",
+                  "EventMap",
+                  "createNoopTracker",
+                  "createConsoleTracker",
+                  "createMemoryTracker"
+                ]
+              }
+            ]
+          }
         },
         {
           "need": "Wire logger and tracker in React",
@@ -576,7 +897,20 @@
               "title": "Simple",
               "code": "import { ObservabilityProvider, useLogger } from \"@zedtech/zedkit-observability/react\";\nexport function App() {\n  return (\n    <ObservabilityProvider>\n      <Home />\n    </ObservabilityProvider>\n  );\n}\nfunction Home() {\n  useLogger().info(\"mounted\");\n  return null;\n}"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-observability/react",
+                "exports": [
+                  "ObservabilityProvider",
+                  "useLogger",
+                  "useTracker"
+                ]
+              }
+            ]
+          }
         },
         {
           "need": "Ship JSON logs on Node with pino",
@@ -595,7 +929,19 @@
               "title": "Simple",
               "code": "import { createPinoLogger } from \"@zedtech/zedkit-observability/pino\";\nconst logger = createPinoLogger({ name: \"api\" });\nlogger.info(\"listening\", { port: 3000 });"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-observability/pino",
+                "exports": [
+                  "createPinoLogger",
+                  "PinoLoggerOptions"
+                ]
+              }
+            ]
+          }
         },
         {
           "need": "Forward events to a browser analytics SDK",
@@ -614,7 +960,19 @@
               "title": "Simple",
               "code": "import { createProductAnalyticsTracker } from \"@zedtech/zedkit-observability/posthog\";\nconst tracker = createProductAnalyticsTracker(client);\ntracker.capture(\"page_view\", { path: \"/home\" });"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-observability/posthog",
+                "exports": [
+                  "createProductAnalyticsTracker",
+                  "ProductAnalyticsClient"
+                ]
+              }
+            ]
+          }
         },
         {
           "need": "Persist analytics consent choices",
@@ -633,7 +991,24 @@
               "title": "Simple",
               "code": "import { createMemoryConsentStore } from \"@zedtech/zedkit-observability/consent\";\nconst store = createMemoryConsentStore();\nstore.write({ analytics: true, marketing: false });"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-observability/consent",
+                "exports": [
+                  "ConsentStore",
+                  "ConsentRecord",
+                  "ConsentCategory",
+                  "createMemoryConsentStore",
+                  "createLocalStorageConsentStore",
+                  "isCategoryGranted",
+                  "CONSENT_CATEGORIES"
+                ]
+              }
+            ]
+          }
         },
         {
           "need": "Gate trackers and script loaders on consent",
@@ -652,7 +1027,19 @@
               "title": "Simple",
               "code": "import { createConsentGatedTracker } from \"@zedtech/zedkit-observability/consent\";\nconst gated = createConsentGatedTracker(tracker, store, \"analytics\");"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-observability/consent",
+                "exports": [
+                  "createConsentGatedTracker",
+                  "runConsentGatedLoader"
+                ]
+              }
+            ]
+          }
         },
         {
           "need": "Consent UI in React",
@@ -671,7 +1058,22 @@
               "title": "Simple",
               "code": "import { ConsentBanner, ConsentProvider } from \"@zedtech/zedkit-observability/consent/react\";\nimport { createMemoryConsentStore } from \"@zedtech/zedkit-observability/consent\";\nconst store = createMemoryConsentStore();"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-observability/consent/react",
+                "exports": [
+                  "ConsentProvider",
+                  "ConsentGate",
+                  "ConsentBanner",
+                  "useConsentCategory",
+                  "useConsentGatedLoader"
+                ]
+              }
+            ]
+          }
         }
       ]
     },
@@ -710,6 +1112,21 @@
               "code": "import { seoGroupField } from \"@zedtech/zedkit-payload-seo\";\nfields: [\n  seoGroupField({\n    mediaSlug: \"media\",\n    labels: { group: { en: \"SEO\", fr: \"Référencement\" }, metaTitle: { en: \"Title\", fr: \"Titre\" } },\n    keywordsAsText: true,\n    validationMessages: { maxLength: { en: \"Max {max} chars (now {length}).\" } },\n  }),\n];\n// meta/OG/robots leaves, localized, length-validated"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-payload-seo",
+                "exports": [
+                  "seoGroupField",
+                  "seoFields",
+                  "SeoFieldsOptions",
+                  "SeoFieldLabels",
+                  "SeoFieldLabelKey"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Validate editor-entered title/description lengths",
             "Build localized page metadata"
@@ -733,6 +1150,23 @@
               "code": "import {\n  SEO_TITLE_MAX,\n  SEO_VALIDATION_MESSAGES,\n  formatMaxLengthMessage,\n  resolveLocale,\n  maxLengthValidator,\n  type SeoValidationMessages,\n} from \"@zedtech/zedkit-payload-seo\";\nvalidate: maxLengthValidator(SEO_TITLE_MAX);\nformatMaxLengthMessage(SEO_VALIDATION_MESSAGES.maxLength.en, 70, 80);\nresolveLocale(req);"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-payload-seo",
+                "exports": [
+                  "maxLengthValidator",
+                  "SEO_TITLE_MAX",
+                  "SEO_DESCRIPTION_MAX",
+                  "SEO_VALIDATION_MESSAGES",
+                  "formatMaxLengthMessage",
+                  "resolveLocale",
+                  "SeoValidationMessages"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Add a localized SEO tab to a Payload collection",
             "Derive descriptions, slugs, and localized fields"
@@ -774,6 +1208,17 @@
               "code": "import { uiPreset } from \"@zedtech/zedkit-quality/eslint\";\n\nexport default [...uiPreset({ entryPoint: \"./app/globals.css\" })];"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-quality/eslint",
+                "exports": [
+                  "uiPreset"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Enforce route, view and data layer boundaries"
           ]
@@ -796,6 +1241,17 @@
               "code": "import { defineLayers } from \"@zedtech/zedkit-quality/eslint\";\n\nexport default [\n  ...defineLayers({\n    kitPackage: \"@acme/ui\",\n    viewDirs: [\"app/**/ui/**\"],\n    dataDirs: [\"lib/**\"],\n    actionPatterns: [\"@/lib/*\", \"**/actions\", \"**/actions/**\"],\n  }),\n];"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-quality/eslint",
+                "exports": [
+                  "defineLayers"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Lint UI files for accessibility, Tailwind and tokens",
             "Enforce feature-folder ports and adapters"
@@ -819,13 +1275,24 @@
               "code": "import { defineLayers } from \"@zedtech/zedkit-quality/eslint\";\n\nexport default [\n  ...defineLayers({\n    preset: \"feature-folders\",\n    kitPackage: \"@acme/ui\",\n    featureRoot: \"features\",\n  }),\n];"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-quality/eslint",
+                "exports": [
+                  "defineLayers"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Enforce route, view and data layer boundaries"
           ]
         },
         {
           "need": "Share one strict TypeScript base",
-          "import": "`@zedtech/zedkit-quality/tsconfig`",
+          "import": "`@zedtech/zedkit-quality/tsconfig` (tsconfig preset, not a JavaScript module)",
           "wraps": "`(none)`",
           "status": "stable",
           "shortName": "TsconfigBase",
@@ -841,6 +1308,10 @@
               "code": "// tsconfig.json\n{\n  \"extends\": \"@zedtech/zedkit-quality/tsconfig\",\n  \"compilerOptions\": { \"outDir\": \"dist\", \"rootDir\": \"src\" },\n  \"include\": [\"src\"]\n}"
             }
           ],
+          "adoption": {
+            "kind": "config",
+            "extends": "@zedtech/zedkit-quality/tsconfig"
+          },
           "seeAlso": [
             "Lint UI files for accessibility, Tailwind and tokens"
           ]
@@ -883,6 +1354,19 @@
               "code": "import { buildRobots } from \"@zedtech/zedkit-seo\";\nexport function robots() {\n  return buildRobots({ siteUrl, extraSitemaps: [`${siteUrl}/video-sitemap.xml`] });\n}"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-seo",
+                "exports": [
+                  "buildRobots",
+                  "BuildRobotsOptions",
+                  "RobotsConfig"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "List localized pages in a sitemap"
           ]
@@ -905,6 +1389,20 @@
               "code": "import { buildSitemapEntries } from \"@zedtech/zedkit-seo\";\nconst pages = docs.map((d) => ({ path: `/${d.slug}`, lastModified: d.updatedAt }));\nreturn buildSitemapEntries({ siteUrl, locales: [\"en\", \"fr\"], pages });"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-seo",
+                "exports": [
+                  "buildSitemapEntries",
+                  "BuildSitemapOptions",
+                  "SitemapEntry",
+                  "SitemapPage"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Serve robots.txt content",
             "Serve a Google video sitemap"
@@ -928,6 +1426,20 @@
               "code": "import { buildVideoSitemap } from \"@zedtech/zedkit-seo\";\nconst xml = buildVideoSitemap({ videos: [{ pageUrl, thumbnailUrl, title, description }] });\nreturn new Response(xml, { headers: { \"Content-Type\": \"application/xml\" } });"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-seo",
+                "exports": [
+                  "buildVideoSitemap",
+                  "BuildVideoSitemapOptions",
+                  "VideoSitemapEntry",
+                  "escapeXml"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "List localized pages in a sitemap"
           ]
@@ -950,6 +1462,24 @@
               "code": "import { buildArticleJsonLd, buildBreadcrumbJsonLd } from \"@zedtech/zedkit-seo\";\nconst jsonLd = buildArticleJsonLd({ title, description, url, datePublished });\n<script type=\"application/ld+json\">{JSON.stringify(jsonLd)}</script>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-seo",
+                "exports": [
+                  "buildOrganizationJsonLd",
+                  "buildWebPageJsonLd",
+                  "buildBreadcrumbJsonLd",
+                  "buildArticleJsonLd",
+                  "OrganizationJsonLdOptions",
+                  "WebPageJsonLdOptions",
+                  "BreadcrumbItem",
+                  "ArticleJsonLdOptions"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Build localized page metadata"
           ]
@@ -972,6 +1502,22 @@
               "code": "import { buildPageMetadata } from \"@zedtech/zedkit-seo\";\nreturn buildPageMetadata({ site, page, locale, pathname, ogImage });"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-seo",
+                "exports": [
+                  "buildPageMetadata",
+                  "BuildPageMetadataOptions",
+                  "SiteMetadata",
+                  "PageContent",
+                  "PageMetadata",
+                  "OpenGraphImage"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Emit typed JSON-LD structured data",
             "Derive descriptions, slugs, and localized fields"
@@ -995,6 +1541,21 @@
               "code": "import { llmsTextResponse } from \"@zedtech/zedkit-seo\";\nexport async function GET() {\n  const settings = await loadSettings();\n  return llmsTextResponse({ body: settings.llmsTxt ?? \"\" });\n}"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-seo",
+                "exports": [
+                  "llmsTextResponse",
+                  "LlmsTextResponseOptions",
+                  "normalizeLlmsBody",
+                  "buildLlmsFull",
+                  "LlmsFullSection"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Serve robots.txt content"
           ]
@@ -1017,6 +1578,24 @@
               "code": "import { normalizeSlug, resolveDescription } from \"@zedtech/zedkit-seo\";\nconst slug = normalizeSlug(title);\nconst description = resolveDescription({ custom: seo.metaDescription, bodyText, title });"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-seo",
+                "exports": [
+                  "truncateDescription",
+                  "SEO_DESCRIPTION_MAX",
+                  "resolveDescription",
+                  "DescriptionSource",
+                  "resolveLocalizedField",
+                  "LocalizedField",
+                  "normalizeSlug",
+                  "isDraftSlug"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Build localized page metadata",
             "Validate editor-entered title/description lengths"
@@ -1061,6 +1640,17 @@
               "code": "import { loadEnv } from \"@zedtech/zedkit-server\";\nimport { z } from \"zod\";\nconst env = loadEnv({ PORT: z.coerce.number(), DATABASE_URL: z.string().url() });"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-server",
+                "exports": [
+                  "loadEnv"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Bootstrap a Nest app"
           ]
@@ -1082,7 +1672,18 @@
               "title": "Simple",
               "code": "import { MemoryRateLimiter } from \"@zedtech/zedkit-server\";\nconst limiter = new MemoryRateLimiter();\nif (!limiter.allow(clientIp, 100)) return tooManyRequests();"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-server",
+                "exports": [
+                  "MemoryRateLimiter"
+                ]
+              }
+            ]
+          }
         },
         {
           "need": "Redact secrets before logging",
@@ -1102,6 +1703,17 @@
               "code": "import { redactValue } from \"@zedtech/zedkit-server\";\nlogger.info(redactValue({ user, token, headers }));"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-server",
+                "exports": [
+                  "redactValue"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Ship request logs without leaking credentials"
           ]
@@ -1123,7 +1735,18 @@
               "title": "Simple",
               "code": "import { computeBackoffMs } from \"@zedtech/zedkit-server\";\nconst waitMs = computeBackoffMs(failedAttemptNo);\nawait sleep(waitMs);"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-server",
+                "exports": [
+                  "computeBackoffMs"
+                ]
+              }
+            ]
+          }
         },
         {
           "need": "Sign and verify webhook deliveries",
@@ -1142,7 +1765,20 @@
               "title": "Simple",
               "code": "import { verifyWebhookSignatureHeader as verify } from \"@zedtech/zedkit-server\";\nif (!verify(secret, rawBody, headers[\"webhook-signature\"], { maxAgeSeconds: 300 })) {\n  return unauthorized();\n}"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-server",
+                "exports": [
+                  "webhookSignatureHeader",
+                  "verifyWebhookSignatureHeader",
+                  "VerifyWebhookOptions"
+                ]
+              }
+            ]
+          }
         },
         {
           "need": "Tell a Postgres conflict from a bug",
@@ -1162,6 +1798,17 @@
               "code": "import { pgErrorCode } from \"@zedtech/zedkit-server\";\ntry {\n  await db.insert(users).values(row);\n} catch (error) {\n  if (pgErrorCode(error) === \"23505\") return conflict();\n  throw error;\n}"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-server",
+                "exports": [
+                  "pgErrorCode"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Return uniform error bodies"
           ]
@@ -1184,6 +1831,17 @@
               "code": "import { pgErrorRetryable } from \"@zedtech/zedkit-server\";\nimport { computeBackoffMs } from \"@zedtech/zedkit-server\";\n\nif (pgErrorRetryable(error) === true) {\n  await sleep(computeBackoffMs(attempt));\n  continue;\n}"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-server",
+                "exports": [
+                  "pgErrorRetryable"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Tell a Postgres conflict from a bug"
           ]
@@ -1304,7 +1962,21 @@
               "title": "Simple",
               "code": "import { createS3Client, loadStorageConfig } from \"@zedtech/zedkit-storage\";\nconst config = loadStorageConfig();\nconst client = createS3Client(config);"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-storage",
+                "exports": [
+                  "loadStorageConfig",
+                  "storageConfigSchema",
+                  "StorageConfig",
+                  "createS3Client"
+                ]
+              }
+            ]
+          }
         },
         {
           "need": "Sanitise keys and presign uploads",
@@ -1323,7 +1995,24 @@
               "title": "Simple",
               "code": "import { presignPutUrl, sanitizeFilename } from \"@zedtech/zedkit-storage\";\nconst safe = sanitizeFilename(userName);\nawait presignPutUrl(client, config, { key: `${userId}/${safe}`, contentType: \"image/png\" });"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-storage",
+                "exports": [
+                  "sanitizeObjectKey",
+                  "sanitizeFilename",
+                  "presignPutUrl",
+                  "presignGetUrl",
+                  "headObject",
+                  "PresignPutInput",
+                  "PresignGetInput"
+                ]
+              }
+            ]
+          }
         },
         {
           "need": "Public URLs and response headers",
@@ -1342,7 +2031,20 @@
               "title": "Simple",
               "code": "import { buildPublicObjectUrl, immutableCacheControl, svgServingHeaders } from \"@zedtech/zedkit-storage\";\nbuildPublicObjectUrl(config, \"avatars/id.png\");"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-storage",
+                "exports": [
+                  "buildPublicObjectUrl",
+                  "immutableCacheControl",
+                  "svgServingHeaders"
+                ]
+              }
+            ]
+          }
         }
       ]
     },
@@ -1367,7 +2069,7 @@
       "needs": [
         {
           "need": "Theme an admin app (dark/light included)",
-          "import": "`@zedtech/zedkit-ui/styles.css` (+ one `@source` line, see README)",
+          "import": "`@zedtech/zedkit-ui/styles.css` (stylesheet, not a JavaScript module)",
           "wraps": "`tailwindcss` (v4 CSS-first) plus `next-themes` for the toggle",
           "status": "stable",
           "shortName": "Theme",
@@ -1376,11 +2078,11 @@
           "whenToUse": "As the first install in every app using the kit.",
           "whenNotToUse": "For apps with their own design system — use your tokens instead of fighting these.",
           "derivedFrom": "shadcn/ui (theme)",
-          "example": "// pnpm add next-themes\nimport \"./globals.css\";\nimport { ThemeProvider } from \"next-themes\";\n\nexport default function RootLayout({ children }: { children: React.ReactNode }) {\n  return (\n    <html lang=\"en\" suppressHydrationWarning>\n      <body>\n        <ThemeProvider attribute=\"class\" defaultTheme=\"system\" enableSystem>\n          {children}\n        </ThemeProvider>\n      </body>\n    </html>\n  );\n}",
+          "example": "import \"./globals.css\";\nimport { ThemeProvider } from \"next-themes\";\n\nexport default function RootLayout({ children }: { children: React.ReactNode }) {\n  return (\n    <html lang=\"en\" suppressHydrationWarning>\n      <body>\n        <ThemeProvider attribute=\"class\" defaultTheme=\"system\" enableSystem>\n          {children}\n        </ThemeProvider>\n      </body>\n    </html>\n  );\n}",
           "examples": [
             {
               "title": "Set up the theme",
-              "code": "// pnpm add next-themes\nimport \"./globals.css\";\nimport { ThemeProvider } from \"next-themes\";\n\nexport default function RootLayout({ children }: { children: React.ReactNode }) {\n  return (\n    <html lang=\"en\" suppressHydrationWarning>\n      <body>\n        <ThemeProvider attribute=\"class\" defaultTheme=\"system\" enableSystem>\n          {children}\n        </ThemeProvider>\n      </body>\n    </html>\n  );\n}"
+              "code": "import \"./globals.css\";\nimport { ThemeProvider } from \"next-themes\";\n\nexport default function RootLayout({ children }: { children: React.ReactNode }) {\n  return (\n    <html lang=\"en\" suppressHydrationWarning>\n      <body>\n        <ThemeProvider attribute=\"class\" defaultTheme=\"system\" enableSystem>\n          {children}\n        </ThemeProvider>\n      </body>\n    </html>\n  );\n}"
             },
             {
               "title": "Globals CSS",
@@ -1396,6 +2098,21 @@
               "code": "\"use client\";\n\nimport { useTheme } from \"next-themes\";\nimport { Button } from \"@zedtech/zedkit-ui\";\n\nexport function DarkThemeButton() {\n  const { resolvedTheme, setTheme } = useTheme();\n  const dark = resolvedTheme === \"dark\";\n  return (\n    <Button variant=\"outline\" aria-pressed={dark} onClick={() => setTheme(dark ? \"light\" : \"dark\")}>\n      Dark theme\n    </Button>\n  );\n}"
             }
           ],
+          "adoption": {
+            "kind": "css",
+            "imports": [
+              "@zedtech/zedkit-ui/styles.css"
+            ],
+            "directives": [
+              "@source \"../../node_modules/@zedtech/zedkit-ui/src/**/*.{ts,tsx}\""
+            ],
+            "install": [
+              "next-themes"
+            ],
+            "utilities": [],
+            "attributes": []
+          },
+          "exampleFile": "src/app/layout.tsx",
           "a11y": "Text and control colours keep at least 4.5:1 contrast (3:1 for focus rings and borders) in light and dark, and the checks run on each preview. Dark mode is chosen by the `dark` class, so it follows the setting you store, not only the system. Use the semantic utilities (`text-muted-foreground`, `text-destructive`), never a fixed colour, so both themes keep their contrast. Do not rely on colour alone: the status words in the examples (\"Deployed\", \"Rolled back\") carry the meaning.",
           "troubleshooting": "Components render unstyled — the `@source` line is missing in `globals.css`, so Tailwind never scans the kit. Dark mode does nothing — the `dark` class must be on `<html>` (next-themes `attribute=\"class\"`), not on `<body>`. A flash of the wrong theme on load — keep `suppressHydrationWarning` on `<html>` and let `ThemeProvider` set the class before paint. Utilities such as `bg-primary` have no effect — `globals.css` drifted from the Globals CSS snippet below; restore its three lines in order. A colour looks wrong in dark — a fixed colour (`text-gray-500`) was used; switch to a semantic token.",
           "seeAlso": [
@@ -1424,6 +2141,21 @@
               "code": "import { ConfirmDialog } from \"@zedtech/zedkit-ui\";\n\n<ConfirmDialog trigger={trigger} title=\"Delete?\" description=\"Gone.\" confirmLabel=\"Remove\" onConfirm={remove} />"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "ZedkitUiProvider",
+                  "useUiMessages",
+                  "zedkitUiMessagesEn",
+                  "zedkitUiMessagesFr",
+                  "ZedkitUiMessages"
+                ]
+              }
+            ]
+          },
           "troubleshooting": "English still shows — the provider is missing above that host, or a label prop is set. A custom bundle must keep every key (`locale` included) so `UpdatedAgo` can pick `Intl.RelativeTimeFormat`.",
           "seeAlso": [
             "Confirm destructive actions",
@@ -1447,11 +2179,22 @@
               "title": "Simple",
               "code": "import { cn } from \"@zedtech/zedkit-ui\";\ncn(\"px-4\", isActive && \"bg-accent\"); // \"px-4 bg-accent\"\ncn(\"px-4\", \"px-2\"); // \"px-2\" — last conflicting utility wins"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "cn"
+                ]
+              }
+            ]
+          }
         },
         {
           "need": "Animate entrances and hover feedback with CSS utilities",
-          "import": "`@zedtech/zedkit-ui/styles.css` (utilities `animate-fade-up`, `animate-fade-in`, `animate-pop-in`, `stagger-*`, `hover-lift`, `hover-press`, `button-press`, `hit-target`, `marquee-track`; attributes `data-reveal`, `data-stagger`)",
+          "import": "`@zedtech/zedkit-ui/styles.css` (stylesheet, not a JavaScript module)",
           "wraps": "`tailwindcss` (v4 `@utility` and `@theme`)",
           "status": "alpha",
           "shortName": "Motion",
@@ -1460,11 +2203,11 @@
           "whenToUse": "For first-paint entrances, staggered lists, card lift and button press feedback.",
           "whenNotToUse": "For gesture or layout animation (drag, shared-element transitions) — use a motion library instead.",
           "derivedFrom": null,
-          "example": "import \"@zedtech/zedkit-ui/styles.css\"; // motion utilities ship with the theme\n<Card className=\"animate-fade-up stagger-1\">First</Card>\n<Card className=\"animate-fade-up stagger-2\">Second</Card>",
+          "example": "import { Card } from \"@zedtech/zedkit-ui\";\n\n<Card className=\"animate-fade-up stagger-1\">First</Card>\n<Card className=\"animate-fade-up stagger-2\">Second</Card>",
           "examples": [
             {
               "title": "Entrance with stagger",
-              "code": "import \"@zedtech/zedkit-ui/styles.css\"; // motion utilities ship with the theme\n<Card className=\"animate-fade-up stagger-1\">First</Card>\n<Card className=\"animate-fade-up stagger-2\">Second</Card>"
+              "code": "import { Card } from \"@zedtech/zedkit-ui\";\n\n<Card className=\"animate-fade-up stagger-1\">First</Card>\n<Card className=\"animate-fade-up stagger-2\">Second</Card>"
             },
             {
               "title": "Hover feedback",
@@ -1475,6 +2218,31 @@
               "code": "// Children enter one after another; set \"pending\" first to hide them\n// until they scroll into view, then switch to \"in\".\n<Stack data-stagger=\"in\">\n  <Text>One</Text>\n  <Text>Two</Text>\n</Stack>"
             }
           ],
+          "adoption": {
+            "kind": "css",
+            "imports": [
+              "@zedtech/zedkit-ui/styles.css"
+            ],
+            "directives": [
+              "@source \"../../node_modules/@zedtech/zedkit-ui/src/**/*.{ts,tsx}\""
+            ],
+            "install": [],
+            "utilities": [
+              "animate-fade-up",
+              "animate-fade-in",
+              "animate-pop-in",
+              "stagger-*",
+              "hover-lift",
+              "hover-press",
+              "button-press",
+              "hit-target",
+              "marquee-track"
+            ],
+            "attributes": [
+              "data-reveal",
+              "data-stagger"
+            ]
+          },
           "a11y": "Every utility and attribute is switched off under `prefers-reduced-motion: reduce`, with content left visible and in place. Hover lift only applies on devices that hover, so it never sticks after a tap.",
           "troubleshooting": "Nothing animates — check the OS reduced-motion setting first. Content stays hidden — `data-reveal=\"pending\"` and `data-stagger=\"pending\"` hide content until your code sets them to `\"in\"`. Stagger has no delay — `stagger-*` delays an animation class (`animate-fade-up stagger-2`), not a transition.",
           "seeAlso": [
@@ -1504,6 +2272,19 @@
               "code": "import { Button } from \"@zedtech/zedkit-ui\";\n<Button size=\"sm\">Small</Button>\n<Button>Default</Button>\n<Button size=\"lg\">Large</Button>\n<Button disabled>Saving…</Button>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Button",
+                  "buttonVariants",
+                  "ButtonProps"
+                ]
+              }
+            ]
+          },
           "registry": "button",
           "a11y": "Native `button` (or `asChild` onto a link). Sizes `sm` / default / `lg` use Tailwind `px-3` / `px-4` / `px-8`; `--spacing-button-inline-lg` remains as a deprecated alias. Height still follows `--spacing` control tokens.",
           "troubleshooting": "Wrong variant colours in dark mode — ensure `.dark` is on the document root. Link styled as a button — use `asChild` with an anchor and keep visible link text. Icon-only control — pass `aria-label` (or use `IconButton` when the label should not appear as text).",
@@ -1533,6 +2314,18 @@
               "code": "import { Copy, Pencil, Trash2 } from \"lucide-react\";\nimport { IconButton } from \"@zedtech/zedkit-ui\";\n\n{tasks.map((task) => (\n  <li key={task.id}>\n    {task.title}\n    <IconButton label={`Edit ${task.title}`} variant=\"ghost\"><Pencil /></IconButton>\n    <IconButton label={`Duplicate ${task.title}`} variant=\"ghost\"><Copy /></IconButton>\n    <IconButton label={`Delete ${task.title}`} variant=\"ghost\" onClick={() => remove(task.id)}><Trash2 /></IconButton>\n  </li>\n))}"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "IconButton",
+                  "IconButtonProps"
+                ]
+              }
+            ]
+          },
           "registry": "icon-button",
           "a11y": "`label` becomes both `aria-label` and `title`, so screen readers and hover/long-press tooltips read the same name. Native `button` with `type=\"button\"` (never submits a form by accident); a visible focus ring shows on keyboard focus. Decorative glyphs inside should be icons, not text the reader would announce twice.",
           "troubleshooting": "A TypeScript error about a missing `label` — it is required on purpose, an icon-only control without a name is unusable with a screen reader. Several identical buttons in a list — put the row name in the label (`Delete ${task.title}`) so each is distinct. Button feels too big for a dense toolbar — the size defaults to `icon`; pass `size=\"sm\"` for a compact one (the glyph keeps the kit icon size). The button submits a form — it should not (`type=\"button\"`); pass `type=\"submit\"` explicitly if you really want that."
@@ -1567,6 +2360,19 @@
               "code": "import { Badge } from \"@zedtech/zedkit-ui\";\n<Badge asChild variant=\"secondary\">\n  <a href=\"/status\">all systems go</a>\n</Badge>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Badge",
+                  "badgeVariants",
+                  "BadgeProps"
+                ]
+              }
+            ]
+          },
           "registry": "badge",
           "a11y": "Default badge is a `div` (not a live region). Use `asChild` with an anchor or button for links; `focus-ring` applies on keyboard focus. Keep labels short. Corners follow identity `--radius-md` via `rounded-md`; identity label tracking already keys off `px-badge-inline`.",
           "troubleshooting": "Wrong colors in dark mode — ensure `.dark` is on the document root. `BadgeProps` is defined in `badge.tsx` for typing; import types from the same module when using the registry copy.",
@@ -1594,8 +2400,24 @@
             {
               "title": "Required mark",
               "code": "import { Input, Label } from \"@zedtech/zedkit-ui\";\n<Label htmlFor=\"email\">Email <span aria-hidden=\"true\">*</span></Label>\n<Input id=\"email\" required />"
+            },
+            {
+              "title": "Label a native input",
+              "code": "import { Label } from \"@zedtech/zedkit-ui\";\n<Label htmlFor=\"city\">City</Label>\n<input id=\"city\" className=\"rounded-md border border-border px-3 py-2\" />"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Label",
+                  "LabelProps"
+                ]
+              }
+            ]
+          },
           "registry": "label",
           "a11y": "Pairs with a control via `htmlFor` plus a matching `id`; clicking the label focuses the control (native behavior). A disabled peer dims the label via `peer-disabled`. Size is `text-sm`; identity `--zk-label-transform` stays on badges and table heads.",
           "troubleshooting": "Clicking the label does nothing — the control needs a matching `id` for `htmlFor`. Label not dimming with a disabled control — `peer-disabled` needs the control as a preceding `peer` sibling.",
@@ -1622,6 +2444,19 @@
               "code": "import { Input, Label } from \"@zedtech/zedkit-ui\";\n<Label htmlFor=\"name\">Name</Label>\n<Input id=\"name\" placeholder=\"Ada\" />"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Input",
+                  "InputProps",
+                  "Label"
+                ]
+              }
+            ]
+          },
           "a11y": "Pair with `Label` or `aria-label`; `focus-ring-control` matches Button keyboard focus. A disabled peer dims the label to `opacity-50`, the kit-wide disabled convention. Height and block padding follow `--spacing` (`h-control-height`, `py-control-block`); inline padding is Tailwind `px-3`.",
           "seeAlso": [
             "Collect multi-line text input",
@@ -1650,6 +2485,18 @@
               "code": "import { Separator } from \"@zedtech/zedkit-ui\";\n<Separator orientation=\"vertical\" className=\"h-6\" />"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Separator",
+                  "SeparatorProps"
+                ]
+              }
+            ]
+          },
           "registry": "separator",
           "a11y": "Decorative by default (`role=\"none\"`); pass `decorative={false}` with an accessible name when it separates named regions. Line weight follows `--zk-border-width` (mist 1px).",
           "troubleshooting": "Vertical divider invisible — it needs a bounded height from the parent (`h-6`, flex stretch). Announced as separator — set `decorative` explicitly; unnamed non-decorative separators confuse screen readers.",
@@ -1679,6 +2526,18 @@
               "code": "import { Skeleton } from \"@zedtech/zedkit-ui\";\n<Skeleton className=\"h-4 w-full\" /> // stack lines for text blocks; shape is all className"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Skeleton",
+                  "SkeletonProps"
+                ]
+              }
+            ]
+          },
           "registry": "skeleton",
           "a11y": "Renders a plain `div` with no semantics — empty blocks are ignored by assistive tech; set `aria-busy` on the loading container. Corners follow identity `--radius-md` via `rounded-md`.",
           "troubleshooting": "No pulse — the pulse is `motion-safe:animate-pulse`: static under reduced-motion, and it needs Tailwind's default theme. Wrong shape — size comes only from your `className`; the brick ships no dimensions.",
@@ -1712,6 +2571,19 @@
               "code": "import { StatusDot } from \"@zedtech/zedkit-ui\";\n<StatusDot tone=\"active\" pulse={false} /> // static dot, no ping"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "StatusDot",
+                  "StatusDotProps",
+                  "StatusDotTone"
+                ]
+              }
+            ]
+          },
           "registry": "status-dot",
           "a11y": "`aria-hidden` by design — the paired text carries the meaning. Size is `size-2` (0.5rem, Tailwind default scale); `--spacing-status-dot` remains as a deprecated alias. Tones map to semantic color tokens.",
           "troubleshooting": "Dot invisible — the paired text must carry the state (never color alone). Pinging when it should not — ongoing tones (`active`, `warning`, `danger`) ping by default; pass `pulse={false}`.",
@@ -1742,6 +2614,18 @@
               "code": "import { ProgressBar } from \"@zedtech/zedkit-ui\";\n<ProgressBar value={100} label=\"Upload complete\" />"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "ProgressBar",
+                  "ProgressBarProps"
+                ]
+              }
+            ]
+          },
           "registry": "progress-bar",
           "a11y": "Root carries `role=\"progressbar\"` with clamped value; keep the label screen-only and pair with visible text.",
           "troubleshooting": "Bar looks empty — `NaN` and out-of-range values clamp (negative to 0, over max to full). Screen reader silent — the bar is a plain progressbar; announce milestones with a `StatusLabel` beside it.",
@@ -1775,6 +2659,18 @@
               "code": "import { Bot, LayoutDashboard, Server, TrendingUp } from \"lucide-react\";\nimport { IconLabel } from \"@zedtech/zedkit-ui\";\n\n<IconLabel icon={LayoutDashboard}>Build a UI</IconLabel>\n<IconLabel icon={Server}>Core & server</IconLabel>\n<IconLabel icon={TrendingUp}>Improve SEO</IconLabel>\n<IconLabel icon={Bot}>Set up coding agents</IconLabel>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "IconLabel",
+                  "IconLabelProps"
+                ]
+              }
+            ]
+          },
           "registry": "icon-label",
           "a11y": "Icon is decorative (`aria-hidden`, not focusable); put the readable name in `children`. The muted colour keeps normal text contrast on every identity, but do not rely on the icon alone to carry meaning — the state or name must also be written.",
           "troubleshooting": "The icon does not appear — pass the component itself (`icon={Calendar}`), not an element (`icon={<Calendar />}`). Icon too small or too large — the size is `size-4` (1rem, Tailwind default scale); override with `className`. `--spacing-icon-control` remains as a deprecated alias. Long text overflows a narrow cell — the label shrinks inside flex parents, give the parent a width or let the row wrap (`flex-wrap`). Meaning is lost for a screen reader — the icon is hidden on purpose, so write the state in the text.",
@@ -1804,6 +2700,18 @@
               "code": "import { Checkmark } from \"@zedtech/zedkit-ui\";\n<Checkmark /> // decorative, pair with visible text"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Checkmark",
+                  "CheckmarkProps"
+                ]
+              }
+            ]
+          },
           "registry": "checkmark",
           "a11y": "Draws once under `motion-safe` (static full check under reduced motion); omit `label` when decorative.",
           "troubleshooting": "No draw animation — the path animates only under `motion-safe`; reduced motion shows the static check by design. Announced twice — pass `label` once (it names the `role=\"img\"`); nearby text should not repeat it. Registry copies without the theme show the static check (the `zk-check-draw` keyframes live in `styles.css`).",
@@ -1833,6 +2741,24 @@
               "code": "import { CardSkeleton } from \"@zedtech/zedkit-ui\";\n{loading ? <CardSkeleton label=\"Loading report\" /> : <ReportCard />}"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "CardSkeleton",
+                  "CardSkeletonProps",
+                  "DataTableSkeleton",
+                  "DataTableSkeletonProps",
+                  "DetailPanelSkeleton",
+                  "DetailPanelSkeletonProps",
+                  "PageHeaderSkeleton",
+                  "PageHeaderSkeletonProps"
+                ]
+              }
+            ]
+          },
           "registry": "card-skeleton",
           "a11y": "`role=\"status\"` with `aria-label` from the `label` prop (default \"Loading\") — screen readers announce the zone; the label is never shown visually.",
           "troubleshooting": "Generic announcement — pass a specific `label` per zone (default is \"Loading\"). Layout shifts when content lands — the skeleton mirrors card padding/stack tokens, but a mismatched container width still shifts.",
@@ -1866,6 +2792,19 @@
               "code": "import { StatusLabel } from \"@zedtech/zedkit-ui\";\n<StatusLabel tone=\"offline\">You are offline</StatusLabel>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "StatusLabel",
+                  "StatusLabelProps",
+                  "StatusLabelTone"
+                ]
+              }
+            ]
+          },
           "registry": "status-label",
           "a11y": "`role=status` announces the named operation; icon/text gap is `gap-1.5`; `--spacing-status-label-gap` remains as a deprecated alias.",
           "troubleshooting": "Announcement spam — one live label per operation; unmount or repurpose it when done. Wrong tone icon — `loading`/`updating`/`syncing` share the active dot; only `saved` shows the check.",
@@ -1895,6 +2834,18 @@
               "code": "import { UpdatedAgo } from \"@zedtech/zedkit-ui\";\n<UpdatedAgo date={syncedAt} prefix=\"Synced\" />"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "UpdatedAgo",
+                  "UpdatedAgoProps"
+                ]
+              }
+            ]
+          },
           "registry": "updated-ago",
           "a11y": "Static text (not a live region) — screen readers meet it while reading; re-render when the data refreshes. Styled with `text-xs text-muted-foreground` only.",
           "troubleshooting": "Stamp never changes — it renders once per render; re-render from your polling tick or SWR refresh. Future dates read as “just now” (clamped, never “in 5 minutes”).",
@@ -1928,6 +2879,19 @@
               "code": "import { Button, OfflineNote } from \"@zedtech/zedkit-ui\";\n\n<OfflineNote title=\"No connection\">Your cart is saved on this device. Reconnect to pay.</OfflineNote>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "OfflineNote",
+                  "OfflineNoteProps",
+                  "useOnlineStatus"
+                ]
+              }
+            ]
+          },
           "registry": "offline-note",
           "a11y": "`role=alert` announces the note as soon as it appears, so render it only when the state changes, not on every page load. The wifi icon is hidden from assistive technology (`aria-hidden`); the title and the text carry the message, so write both. Say what is kept and what to do next (\"Your cart is saved on this device. Reconnect to pay.\") and disable the actions that cannot work offline so a keyboard user does not trigger a failing request. Icon positioning comes from `--spacing-alert-*` theme tokens.",
           "troubleshooting": "The note never shows — `useOnlineStatus()` starts `true` and syncs after mount, so it stays hidden during server render and on a connected device; test with the browser devtools Offline switch. The note shows nothing on a device with a dead server — `navigator.onLine` only reports whether a network interface is up (a captive portal still reads online), so also handle failed requests. The note is announced twice — it already has `role=\"alert\"`; do not wrap it in another live region. The hook is used in a server component — it needs a client component (`\"use client\"`). Default wording does not fit — pass `title` and `children` (or only one of them).",
@@ -1957,6 +2921,18 @@
               "code": "import { Button, EmptyState } from \"@zedtech/zedkit-ui\";\n<EmptyState\n  title=\"No invoices\"\n  description=\"Create an invoice to send to a client.\"\n  actions={<Button>New invoice</Button>}\n/>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "EmptyState",
+                  "EmptyStateProps"
+                ]
+              }
+            ]
+          },
           "registry": "empty-state",
           "a11y": "The title is a heading. Write the description as what is missing plus the next step; put that step in `actions` so keyboard users can take it. Do not rely on colour alone.",
           "troubleshooting": "The heading is missing — pass `title`. The next step is only in the description — pass it as `actions` so it is a control. A table cell is empty — use `DataTableEmpty` inside the table, not this host.",
@@ -1987,6 +2963,18 @@
               "code": "import { Button, ErrorState } from \"@zedtech/zedkit-ui\";\n<ErrorState\n  title=\"Could not load invoices\"\n  description=\"Check your connection and try again.\"\n  actions={<Button variant=\"outline\">Try again</Button>}\n/>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "ErrorState",
+                  "ErrorStateProps"
+                ]
+              }
+            ]
+          },
           "registry": "error-state",
           "a11y": "Root is an alert (`role=\"alert\"`). Render it when the failure appears, not on every page load. Title plus description carry the meaning; `actions` is the next step.",
           "troubleshooting": "The alert is announced twice — do not wrap it in another live region. The retry control is only in the text — pass it as `actions`. A single field failed — use `FieldError` on that field.",
@@ -2017,6 +3005,18 @@
               "code": "import { Spinner, Text } from \"@zedtech/zedkit-ui\";\n<Spinner label=\"Saving invoices\" />\n<Text>Saving invoices</Text>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Spinner",
+                  "SpinnerProps"
+                ]
+              }
+            ]
+          },
           "registry": "spinner",
           "a11y": "`role=\"status\"` plus `aria-label`. The icon is `aria-hidden`. Keep visible text next to it that names the wait; a `label` prop overrides the kit `loading` string. The spin uses `motion-safe:animate-spin`.",
           "troubleshooting": "Screen readers say only \"Loading\" — pass `label` that names the operation, or keep visible text beside the spinner. The icon does not spin — `motion-safe:animate-spin` is static under reduced motion. Used as a full-page placeholder — prefer Skeleton so layout does not jump.",
@@ -2055,6 +3055,23 @@
               "code": "import { DataTable, createDataTableColumns } from \"@zedtech/zedkit-ui\";\nconst helper = createDataTableColumns<{ name: string; age: number }>();\nconst columns = [helper.accessor(\"name\", { header: \"Name\" })];\n<DataTable columns={columns} data={[{ name: \"Ada\", age: 36 }]} />"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Spinner",
+                  "EmptyState",
+                  "ErrorState",
+                  "DataTable",
+                  "Button",
+                  "Text",
+                  "createDataTableColumns"
+                ]
+              }
+            ]
+          },
           "a11y": "Render one state at a time. Spinner is `role=\"status\"`; EmptyState uses a heading; ErrorState is `role=\"alert\"`. Keep the next step in `actions`.",
           "troubleshooting": "Two live regions at once — do not nest ErrorState inside another alert. The spinner has no visible name — keep text beside it or pass `label`.",
           "seeAlso": [
@@ -2086,6 +3103,27 @@
               "code": "import { Button, Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, Text } from \"@zedtech/zedkit-ui\";\n<Dialog>\n  <DialogTrigger asChild><Button>Activity</Button></DialogTrigger>\n  <DialogContent>\n    <DialogHeader><DialogTitle>Order activity</DialogTitle></DialogHeader>\n    {[\"Packed\", \"Shipped\", \"Out for delivery\"].map((line) => <Text key={line}>{line}</Text>)}\n    <DialogFooter><DialogClose asChild><Button>Done</Button></DialogClose></DialogFooter>\n  </DialogContent>\n</Dialog>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Dialog",
+                  "DialogProps",
+                  "DialogTrigger",
+                  "DialogContent",
+                  "DialogHeader",
+                  "DialogTitle",
+                  "DialogDescription",
+                  "DialogFooter",
+                  "DialogClose",
+                  "DialogOverlay",
+                  "DialogPortal"
+                ]
+              }
+            ]
+          },
           "registry": "dialog",
           "a11y": "Focus trap and Escape come from Radix; opening moves focus to the panel (no heavy ring) before tabbing to actions. Header and footer share the content surface (transparent chrome on glass and solid identities). Content centers via the `dialog-center` utility (`--spacing-dialog-center`) and elevates with `--shadow-overlay`. Slots, close offset, and overlay stacking come from `--spacing-dialog-*` / `--z-index-overlay`; the close control is a 44px (`size-overlay-touch-target`) hit area with `focus-ring-control`, aligned to the title row. Tall content scrolls inside `max-h-dialog-max-height`, further capped to the visual viewport when the software keyboard is open, with `overscroll-behavior: contain`. Header copy is left-aligned; footer actions are right-aligned with token gaps; footer clears `env(safe-area-inset-bottom)`.",
           "troubleshooting": "A footer button does not close the dialog unless it is `DialogClose`. Nested overlays need their own `Dialog` root. Tall content scrolls inside the panel (`max-h-dialog-max-height`), not the page behind it.",
@@ -2118,6 +3156,18 @@
               "code": "import { Button, ConfirmDialog } from \"@zedtech/zedkit-ui\";\n<ConfirmDialog\n  trigger={<Button variant=\"outline\">Revoke</Button>}\n  title=\"Revoke access?\"\n  description=\"API keys stop working immediately.\"\n  confirmLabel=\"Revoke\"\n  cancelLabel=\"Keep access\"\n  onConfirm={() => revoke()}\n/>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "ConfirmDialog",
+                  "ConfirmDialogProps"
+                ]
+              }
+            ]
+          },
           "registry": "confirm-dialog",
           "a11y": "Opens a Radix dialog (`role=\"dialog\"`) with `DialogTitle` and `DialogDescription`; focus stays inside while open; Escape and Cancel dismiss without calling `onConfirm`. vitest-axe covers the open state in `packages/ui/tests/unit/a11y.test.tsx` (\"confirm dialog after opening\").",
           "troubleshooting": "`onConfirm` runs synchronously then closes — start async work inside the handler if needed. `trigger` must be one element (use `Button` asChild target). Registry install lists `button` and `dialog` as shadcn dependencies — use `pnpm add @zedtech/zedkit-ui` when you want one dependency graph.",
@@ -2151,6 +3201,30 @@
               "code": "import { Button, Drawer, DrawerBody, DrawerCloseButton, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from \"@zedtech/zedkit-ui\";\n<Drawer direction=\"left\" mobile=\"side\">\n  <DrawerTrigger asChild><Button variant=\"outline\">Menu</Button></DrawerTrigger>\n  <DrawerContent>\n    <DrawerHeader>\n      <DrawerTitle>Menu</DrawerTitle>\n      <DrawerCloseButton />\n    </DrawerHeader>\n    <DrawerBody>Links</DrawerBody>\n  </DrawerContent>\n</Drawer>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Drawer",
+                  "DrawerProps",
+                  "DrawerTrigger",
+                  "DrawerContent",
+                  "DrawerHeader",
+                  "DrawerTitle",
+                  "DrawerDescription",
+                  "DrawerBody",
+                  "DrawerFooter",
+                  "DrawerHandle",
+                  "DrawerClose",
+                  "DrawerCloseButton",
+                  "DrawerOverlay",
+                  "DrawerPortal"
+                ]
+              }
+            ]
+          },
           "registry": "drawer",
           "a11y": "Built on vaul / Radix Dialog: modal drawers move focus inside on open so the focus trap engages; Escape to close and focus returns to the trigger; rest of the page is hidden from assistive tech while open (`role=\"dialog\"`). Pass `modal={false}` (and matching `DrawerContent`) when the dimmed page must stay keyboard-reachable — mount autofocus stays off. Provide `DrawerTitle` (and `DrawerDescription` when the panel needs context). Use `DrawerCloseButton` (44px touch target) plus `DrawerHandle` for swipe-down; the handle hides itself on left and right drawers and moves to the bottom edge of a top drawer. Every direction closes by dragging toward its edge, tapping the dimmed area, or pressing Escape. Safe-area insets are respected, and fields inside a drawer stay at 16px on touch screens. Sticky `DrawerHeader` / `DrawerFooter` keep title and actions visible; `DrawerBody` scrolls with `overscroll-behavior: contain`.",
           "troubleshooting": "Dim overlay missing after `shadcn add` — install the drawer registry item (it injects the `--overlay` token) or add the token to your theme. `direction=\"right\"` with default `mobile=\"sheet\"` becomes a bottom sheet under 640px; pass `mobile=\"side\"` to keep a full-height side panel on phones (up to 90% of the width, so the dimmed page stays tappable).",
@@ -2177,6 +3251,21 @@
               "code": "import { Button, Heading, Popover, PopoverContent, PopoverTrigger, Text } from \"@zedtech/zedkit-ui\";\n<Popover>\n  <PopoverTrigger asChild><Button variant=\"outline\">Filters</Button></PopoverTrigger>\n  <PopoverContent aria-label=\"Filters\">\n    <Heading level={3}>Filters</Heading>\n    <Text>Status: open invoices only.</Text>\n  </PopoverContent>\n</Popover>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Popover",
+                  "PopoverProps",
+                  "PopoverTrigger",
+                  "PopoverContent",
+                  "PopoverAnchor"
+                ]
+              }
+            ]
+          },
           "a11y": "Content is `role=\"dialog\"`. Give it a name (`aria-label` or a heading). Focus is not trapped (unlike Dialog). Escape and outside click dismiss.",
           "seeAlso": [
             "Open modal dialogs",
@@ -2203,6 +3292,21 @@
               "code": "import { Button, Tooltip, TooltipContent, TooltipTrigger } from \"@zedtech/zedkit-ui\";\n<Tooltip>\n  <TooltipTrigger asChild><Button>Save</Button></TooltipTrigger>\n  <TooltipContent>Saves the invoice</TooltipContent>\n</Tooltip>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Tooltip",
+                  "TooltipProps",
+                  "TooltipTrigger",
+                  "TooltipContent",
+                  "TooltipProvider"
+                ]
+              }
+            ]
+          },
           "a11y": "Content is `role=\"tooltip\"` and tied to the trigger. Keep the sentence short. Keyboard focus shows it as well as hover.",
           "seeAlso": [
             "Icon-only actions with a visible name",
@@ -2227,6 +3331,22 @@
               "code": "import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from \"@zedtech/zedkit-ui\";\n<DropdownMenu>\n  <DropdownMenuTrigger asChild><Button variant=\"outline\">Actions</Button></DropdownMenuTrigger>\n  <DropdownMenuContent>\n    <DropdownMenuItem>Duplicate invoice</DropdownMenuItem>\n    <DropdownMenuSeparator />\n    <DropdownMenuItem>Archive invoice</DropdownMenuItem>\n  </DropdownMenuContent>\n</DropdownMenu>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "DropdownMenu",
+                  "DropdownMenuProps",
+                  "DropdownMenuTrigger",
+                  "DropdownMenuContent",
+                  "DropdownMenuItem",
+                  "DropdownMenuSeparator"
+                ]
+              }
+            ]
+          },
           "a11y": "Content is `role=\"menu\"`; items are `role=\"menuitem\"`. Arrow keys move, Enter chooses, Escape closes. The trigger name should say what the menu is (Actions), not a verb that sounds like it already ran.",
           "seeAlso": [
             "Pick one option from a dropdown",
@@ -2252,6 +3372,18 @@
               "code": "import { Calendar } from \"@zedtech/zedkit-ui\";\n<Calendar />"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Calendar",
+                  "CalendarProps"
+                ]
+              }
+            ]
+          },
           "a11y": "Prev/next come from kit messages. Days are buttons in a grid. Pair with a visible heading when the grid is the main task.",
           "seeAlso": [
             "Pick a date from a popover",
@@ -2276,6 +3408,18 @@
               "code": "import { DatePicker, Field, FieldLabel } from \"@zedtech/zedkit-ui\";\nconst [due, setDue] = useState<Date | undefined>();\n<Field>\n  <FieldLabel htmlFor=\"due\">Due date</FieldLabel>\n  <DatePicker id=\"due\" value={due} onValueChange={setDue} />\n</Field>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "DatePicker",
+                  "DatePickerProps"
+                ]
+              }
+            ]
+          },
           "a11y": "The popover is `role=\"dialog\"` and takes its name from the placeholder (kit message by default). Selection is announced in a live region. Pass `disabledDays`, `startMonth`, and `endMonth` for limits.",
           "seeAlso": [
             "Lay out fieldsets, fields, and error lists",
@@ -2301,6 +3445,18 @@
               "code": "import { DateRangePicker, Field, FieldLabel, type DateRangePickerProps } from \"@zedtech/zedkit-ui\";\nconst [span, setSpan] = useState<DateRangePickerProps[\"value\"]>();\n<Field>\n  <FieldLabel htmlFor=\"leave\">Leave</FieldLabel>\n  <DateRangePicker id=\"leave\" value={span} onValueChange={setSpan} />\n</Field>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "DateRangePicker",
+                  "DateRangePickerProps"
+                ]
+              }
+            ]
+          },
           "a11y": "Same dialog name and live region as the single-day picker. Limits use `disabledDays`, `startMonth`, and `endMonth`. The popover stays open until start and end are different days.",
           "seeAlso": [
             "Pick a date from a popover",
@@ -2329,6 +3485,23 @@
               "code": "import { RouteModal, closeRoute } from \"@zedtech/zedkit-ui\";\n<RouteModal title=\"Invoice\" variant=\"dialog\" onClose={() => closeRoute({ ...router, fallback: \"/invoices\" })}>\n  <DetailView />\n</RouteModal>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "RouteModal",
+                  "RouteModalProps",
+                  "RouteModalDirection",
+                  "RouteModalSize",
+                  "RouteModalVariant",
+                  "closeRoute",
+                  "CloseRouteOptions"
+                ]
+              }
+            ]
+          },
           "a11y": "Inherits the Dialog/Drawer focus trap and Escape handling; exit plays before `onClose` navigates (immediate under reduced motion). Widths come from `--container-route-modal-*` tokens; exit timing reads `--motion-slow`/`--motion-base` live. The drawer variant uses `DrawerHandle`, sticky header, `DrawerBody` scroll, and `DrawerCloseButton` (44px). The dialog variant inherits Dialog's visual-viewport cap, sticky chrome, and 44px close.",
           "seeAlso": [
             "Slide in a drawer panel",
@@ -2358,6 +3531,19 @@
               "code": "import { toast } from \"@zedtech/zedkit-ui\";\ntoast.error(\"Upload failed\"); // typed variants: success | error | info | warning"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Toaster",
+                  "ToasterProps",
+                  "toast"
+                ]
+              }
+            ]
+          },
           "registry": "sonner",
           "a11y": "The viewport announces via an `aria-live` polite region — keep toasts short, one outcome each. Styling maps toast slots to theme tokens only.",
           "troubleshooting": "No toast appears — render `<Toaster />` once near the app root, then call `toast()`. Wrong colors — toast slots map to semantic theme tokens, so the theme stylesheet must be loaded.",
@@ -2383,6 +3569,18 @@
               "code": "import { Label, SecretField } from \"@zedtech/zedkit-ui\";\n<Label htmlFor=\"key\">API key (shown once)</Label>\n<SecretField id=\"key\" value={key} />"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "SecretField",
+                  "SecretFieldProps"
+                ]
+              }
+            ]
+          },
           "a11y": "The value is a read-only input (a read-only textarea with `multiline`), so it can be focused and selected with the keyboard. Name it: point a `Label` at `id`, or pass `aria-label`; the kit does not add one. The copy button is a real button named by `copyLabel` (a localized default otherwise). The copied state is a 2-second icon swap only and is not announced, and where the browser has no clipboard API the button does nothing and says nothing, so pair it with your own `aria-live` message for both outcomes.",
           "seeAlso": [
             "Collect text input with a label"
@@ -2418,6 +3616,34 @@
               "code": "import { DataTableToolbar } from \"@zedtech/zedkit-ui\";\nconst [query, setQuery] = useState(\"\");\n<DataTableToolbar value={query} onChange={setQuery} />"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "DataTable",
+                  "DataTableProps",
+                  "DataTableColumn",
+                  "createDataTableColumns",
+                  "DataTablePagination",
+                  "DataTablePaginationProps",
+                  "DataTableEmpty",
+                  "DataTableEmptyProps",
+                  "DataTableToolbar",
+                  "DataTableToolbarProps",
+                  "Table",
+                  "TableHeader",
+                  "TableBody",
+                  "TableFooter",
+                  "TableRow",
+                  "TableHead",
+                  "TableCell",
+                  "TableCaption"
+                ]
+              }
+            ]
+          },
           "a11y": "Native table semantics (column headers associate by position); head/cell/caption spacing comes from `--spacing-table-*` theme tokens.",
           "seeAlso": [
             "Show key-value details and a live indicator"
@@ -2445,6 +3671,20 @@
               "code": "import { AppShell } from \"@zedtech/zedkit-ui\";\n<AppShell sidebar={<OrgNav />}> // topbar is optional\n  <p>Content.</p>\n</AppShell>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "AppShell",
+                  "AppShellProps",
+                  "PageHeader",
+                  "PageHeaderProps"
+                ]
+              }
+            ]
+          },
           "registry": "app-shell",
           "a11y": "Landmark structure (`aside`/`header`/`main`) comes free; sidebar width and main padding come from `--spacing-app-shell-*` theme tokens.",
           "troubleshooting": "Sidebar missing on narrow screens — it renders from the `md` breakpoint up by design. Cramped content — main padding is `p-4` / `md:p-app-shell-padding-md`. `--spacing-app-shell-padding` remains as a deprecated alias.",
@@ -2478,6 +3718,28 @@
               "code": "import { OptionCard } from \"@zedtech/zedkit-ui\";\nconst [solo, setSolo] = useState(false);\n<OptionCard title=\"Solo option\" checked={solo} onChange={() => setSolo(!solo)} />"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "WizardSteps",
+                  "WizardStepsProps",
+                  "Wizard",
+                  "WizardProps",
+                  "WizardStep",
+                  "WizardStepProps",
+                  "WizardStepState",
+                  "OptionCards",
+                  "OptionCardsProps",
+                  "OptionCard",
+                  "OptionCardProps",
+                  "OptionCardData"
+                ]
+              }
+            ]
+          },
           "registry": "wizard-steps",
           "a11y": "List carries `aria-label=\"Progress\"`; current step gets `aria-current=\"step\"`. Cards are native checkboxes in labels.",
           "troubleshooting": "Steps stuck done/todo — `current` is a 0-based index; past the last step everything reads done. Missing connector — composed `WizardStep` rows show one only with `showConnector` (automatic in `WizardSteps`).",
@@ -2507,6 +3769,23 @@
               "code": "import { DetailPanelRow } from \"@zedtech/zedkit-ui\";\n<dl>\n  <DetailPanelRow label=\"Region\" value=\"eu\" />\n</dl>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "DetailPanel",
+                  "DetailPanelProps",
+                  "DetailItem",
+                  "DetailPanelRow",
+                  "DetailPanelRowProps",
+                  "LivePulse",
+                  "LivePulseProps"
+                ]
+              }
+            ]
+          },
           "registry": "detail-panel",
           "a11y": "Native `dl`/`dt`/`dd` semantics; rows read in order.",
           "troubleshooting": "Custom row content — compose `DetailPanelRow` inside your own `<dl>` (see Composed rows); `DetailPanel` only covers the plain `items[]` case. Cramped rows — inline padding is `px-4`; block padding is `py-3`. `--spacing-detail-panel-inline` and `--spacing-detail-panel-block` remain as deprecated aliases.",
@@ -2533,6 +3812,28 @@
               "code": "import { Form, FormField, FormSubmit, Input, useValidatedForm } from \"@zedtech/zedkit-ui\";\nconst form = useValidatedForm<Values>(schemaFromContracts, { defaultValues });\n// <Form {...form}><form onSubmit={form.handleSubmit(save)}>\n// <FormField control={form.control} name=\"name\" render={...} />\n// <FormMessage /> shows the error; <FormSubmit pendingLabel={t.saving}>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Form",
+                  "FormField",
+                  "FormFieldProps",
+                  "FormItem",
+                  "FormLabel",
+                  "FormControl",
+                  "FormDescription",
+                  "FormMessage",
+                  "useFormField",
+                  "useValidatedForm",
+                  "FormSubmit",
+                  "FormSubmitProps"
+                ]
+              }
+            ]
+          },
           "a11y": "`FormLabel` targets the control through `htmlFor`; `FormControl` sets `aria-invalid` and links the description and the error message with `aria-describedby`. `FormMessage` is plain text and is not a live region: after a failed submit react-hook-form moves focus to the first invalid field (`shouldFocusError`, on by default), which is what makes the error reach screen-reader users. `FormSubmit` is disabled while submitting, so do not rely on it for the only error path.",
           "seeAlso": [
             "Lay out fieldsets, fields, and error lists",
@@ -2557,6 +3858,27 @@
               "code": "import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldSet } from \"@zedtech/zedkit-ui\";\n<FieldSet><FieldGroup><Field>\n<FieldLabel>Name</FieldLabel><FieldDescription>Public.</FieldDescription>\n<FieldError errors={[{ message: \"Too short.\" }]} />"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "FieldSet",
+                  "FieldSetProps",
+                  "FieldLegend",
+                  "FieldGroup",
+                  "Field",
+                  "FieldLabel",
+                  "FieldDescription",
+                  "FieldError",
+                  "FieldSeparator",
+                  "FieldContent",
+                  "FieldTitle"
+                ]
+              }
+            ]
+          },
           "a11y": "`FieldError` uses `role=\"alert\"`. Field row gap is `gap-3`; `--spacing-field` remains as a deprecated alias. FieldContent stack gap is `gap-1.5`; `--spacing-field-content` remains as a deprecated alias.",
           "seeAlso": [
             "Build validated forms with labels, errors, and pending state",
@@ -2585,6 +3907,23 @@
               "code": "import { Card, CardContent, CardFooter } from \"@zedtech/zedkit-ui\";\n<Card><CardContent>Body.</CardContent>\n<CardFooter>Actions go here.</CardFooter></Card>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Card",
+                  "CardProps",
+                  "CardHeader",
+                  "CardTitle",
+                  "CardDescription",
+                  "CardContent",
+                  "CardFooter"
+                ]
+              }
+            ]
+          },
           "registry": "card",
           "a11y": "Slots are plain containers — put headings and labels inside. Spacing comes from `--spacing-card-*` theme tokens; elevation is `shadow-md` (`--zk-shadow-md` per identity). `CardSkeleton` mirrors the same tokens so async content lands without shifting.",
           "troubleshooting": "Cramped content — inner padding comes from the `--spacing-card-padding` theme token (`pt-0` on content/footer avoids doubling it). Title not announced as a heading — slots are plain `div`s; put a real heading element inside `CardTitle` when the card needs one.",
@@ -2610,6 +3949,21 @@
               "code": "import { Section, Stack } from \"@zedtech/zedkit-ui\";\n<Section title=\"Team\" description=\"Who can access.\">\n<Stack direction=\"horizontal\" gap={2}>...</Stack>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Stack",
+                  "stackVariants",
+                  "StackProps",
+                  "Section",
+                  "SectionProps"
+                ]
+              }
+            ]
+          },
           "a11y": "`Stack` renders a plain `div` with no role. `Section` renders a `section` landmark named by its string `title`, with that title as a level-2 heading: use one `title` per region, keep heading levels in order, and do not repeat a title that a nearby landmark already uses.",
           "seeAlso": [
             "Render headings and body text without raw tags",
@@ -2635,6 +3989,20 @@
               "code": "import { Container, Section } from \"@zedtech/zedkit-ui\";\n<Section bleed tone=\"muted\" spacing=\"lg\" title=\"Pricing\" description=\"What each plan includes.\">...</Section>\n<Container width=\"wide\">...</Container>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Container",
+                  "containerVariants",
+                  "ContainerProps",
+                  "Section"
+                ]
+              }
+            ]
+          },
           "a11y": "Bleed sections keep the heading outline inside the capped container; do not nest landmarks inside the band. A string `title` names the `<section>` (`aria-label`); a `description` still renders when there is no title.",
           "seeAlso": [
             "Stack content and group titled sections",
@@ -2663,6 +4031,22 @@
               "code": "import { Heading } from \"@zedtech/zedkit-ui\";\n<Heading level={2} asChild>\n  <a href=\"#section\">Section title as a link</a>\n</Heading>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Heading",
+                  "HeadingProps",
+                  "headingVariants",
+                  "Text",
+                  "TextProps",
+                  "textVariants"
+                ]
+              }
+            ]
+          },
           "registry": "typography",
           "a11y": "Keep one `h1` per page; `asChild` merges styles onto the child — keep the outline meaningful.",
           "troubleshooting": "Wrong tag in the outline — `level` picks the size but `as` picks the tag; set both when they differ. Anchor hidden under a sticky header — heading scroll margin comes from the `--spacing-heading-scroll` theme token.",
@@ -2692,6 +4076,21 @@
               "code": "import { Alert, AlertDescription, AlertTitle } from \"@zedtech/zedkit-ui\";\n<Alert asChild>\n  <section aria-label=\"Maintenance notice\">\n    <AlertTitle>Scheduled maintenance</AlertTitle>\n    <AlertDescription>Sunday 02:00–03:00 UTC.</AlertDescription>\n  </section>\n</Alert>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Alert",
+                  "AlertTitle",
+                  "AlertDescription",
+                  "alertVariants",
+                  "AlertProps"
+                ]
+              }
+            ]
+          },
           "registry": "alert",
           "a11y": "Root carries `role=\"alert\"` (announced assertively). Use `asChild` to render another element; keep one title plus one description.",
           "troubleshooting": "Icon misaligned — the svg slot expects one `lucide-react` icon as the first child (positioned with `top-4` / `left-4`). `--spacing-alert-icon-offset` remains as a deprecated alias. Block padding is `py-3`; `--spacing-alert-block` remains as a deprecated alias. Double announcement — one `role=\"alert\"` per notice; repeated renders re-announce.",
@@ -2721,6 +4120,20 @@
               "code": "import { BrandLogo } from \"@zedtech/zedkit-ui\";\n<a href=\"/\" className=\"flex items-center gap-2 text-foreground\">\n  <BrandLogo title=\"\" viewBox=\"0 0 32 24\" className=\"h-6 text-primary\">\n    <path d=\"M16 1 25 15H7Z\" />\n  </BrandLogo>\n  Harbor Studio\n</a>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "BrandLogo",
+                  "BrandLogoProps",
+                  "Logo",
+                  "LogoProps"
+                ]
+              }
+            ]
+          },
           "a11y": "named image (the brand name) when the mark stands alone; pass `title=\"\"` to hide it when the name is written next to it, and let the link text label the link.",
           "seeAlso": [
             "Switch the visual identity with one attribute"
@@ -2744,6 +4157,27 @@
               "code": "import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from \"@zedtech/zedkit-ui\";\nconst items = regions.map((r) => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>);\n<Select onValueChange={setRegion}>\n<SelectTrigger><SelectValue placeholder=\"Pick a region\" /></SelectTrigger>\n<SelectContent>{items.length === 0 ? <SelectItem value=\"none\" disabled>No regions available</SelectItem> : items}</SelectContent>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Select",
+                  "SelectProps",
+                  "SelectTrigger",
+                  "SelectValue",
+                  "SelectContent",
+                  "SelectGroup",
+                  "SelectLabel",
+                  "SelectItem",
+                  "SelectSeparator",
+                  "SelectScrollUpButton",
+                  "SelectScrollDownButton"
+                ]
+              }
+            ]
+          },
           "a11y": "Built on Radix Select: the trigger has `role=\"combobox\"`, opens with Enter, Space, ArrowUp or ArrowDown, and options are chosen with the arrows, typeahead and Enter; Escape closes it and returns focus to the trigger. Typing a letter on the closed trigger changes the value without opening it. The trigger needs a name: pair it with a `Label` whose `htmlFor` matches the trigger `id`, or pass `aria-label`. The list renders in a portal, so inside a scoped theme wrap it in `ThemeScope` to keep its tokens.",
           "seeAlso": [
             "Toggle a checkbox or a switch",
@@ -2768,6 +4202,19 @@
               "code": "import { Combobox, type ComboboxOption } from \"@zedtech/zedkit-ui\";\nconst options: ComboboxOption[] = [{ value: \"eu\", label: \"Europe\" }];\n<Combobox options={options} value={region} onValueChange={setRegion} aria-label=\"Region\" />;"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Combobox",
+                  "ComboboxOption",
+                  "ComboboxProps"
+                ]
+              }
+            ]
+          },
           "a11y": "Text input with listbox popup; arrow keys highlight, Enter selects, Escape closes.",
           "troubleshooting": "Menu stays empty — check `options` labels match the typed filter. Selection does not stick — control `value` and `onValueChange` together.",
           "seeAlso": [
@@ -2793,6 +4240,19 @@
               "code": "import { MultiSelect, type ComboboxOption } from \"@zedtech/zedkit-ui\";\nconst tags: ComboboxOption[] = [{ value: \"docs\", label: \"Docs\" }];\n<MultiSelect options={tags} value={picked} onValueChange={setPicked} aria-label=\"Tags\" />;"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "MultiSelect",
+                  "MultiSelectProps",
+                  "ComboboxOption"
+                ]
+              }
+            ]
+          },
           "a11y": "Selected values appear as chips with remove buttons; listbox behaves like Combobox for adding.",
           "troubleshooting": "Duplicate chips — the same `value` is already selected. Chips missing labels — every option needs a stable `value` and human `label`.",
           "seeAlso": [
@@ -2818,6 +4278,18 @@
               "code": "import { Label, Textarea } from \"@zedtech/zedkit-ui\";\n<Label htmlFor=\"bio\">Bio</Label>\n<Textarea id=\"bio\" placeholder=\"A few words.\" />"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Textarea",
+                  "TextareaProps"
+                ]
+              }
+            ]
+          },
           "a11y": "`min-h-textarea-min-height` from theme tokens; `focus-ring-control` on keyboard focus.",
           "seeAlso": [
             "Collect text input with a label"
@@ -2841,6 +4313,19 @@
               "code": "import { Checkbox, Label, Switch } from \"@zedtech/zedkit-ui\";\n<Checkbox id=\"terms\" />\n<Label htmlFor=\"terms\">Accept the terms</Label>\n<Switch id=\"notify\" aria-label=\"Notify me\" />"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Checkbox",
+                  "CheckboxProps",
+                  "Switch"
+                ]
+              }
+            ]
+          },
           "a11y": "Built on Radix: `Checkbox` has `role=\"checkbox\"` and `Switch` has `role=\"switch\"`, both toggled with Space (Enter also toggles a `Switch`, not a `Checkbox`) and exposing their state through `aria-checked`. Neither has a visible name of its own: pair each with a `Label` using `htmlFor`/`id`, or pass `aria-label`. Use `Switch` only for settings that apply immediately.",
           "seeAlso": [
             "Pick one option from a dropdown"
@@ -2868,6 +4353,21 @@
               "code": "import { Tabs } from \"@zedtech/zedkit-ui\";\n<Tabs value={tab} onValueChange={setTab}> // controlled: you own the state"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Tabs",
+                  "TabsProps",
+                  "TabsList",
+                  "TabsTrigger",
+                  "TabsContent"
+                ]
+              }
+            ]
+          },
           "registry": "tabs",
           "a11y": "Arrow keys move between triggers (Radix roving tabindex); keep trigger text short so accessible names stay clear.",
           "troubleshooting": "Panels not switching — each `TabsTrigger`/`TabsContent` pair shares one `value`; the root needs `defaultValue` (uncontrolled) or `value` + `onValueChange` (controlled). Focus ring missing — triggers use the `focus-ring` utility shipped in the brick css.",
@@ -2905,6 +4405,20 @@
               "code": "import { Heading, ScrollScenes, Stack, Text } from \"@zedtech/zedkit-ui\";\n\nconst plans = [\n  { id: \"solo\", title: \"Solo\", text: \"One person, one project.\", price: \"$0\" },\n  { id: \"crew\", title: \"Crew\", text: \"A small team, one workspace.\", price: \"$29\" },\n  { id: \"studio\", title: \"Studio\", text: \"Every workspace, with SSO.\", price: \"$99\" },\n];\n\n<ScrollScenes\n  className=\"[--zk-scenes-top:4.5rem]\"\n  scenes={plans.map((plan) => ({\n    id: plan.id,\n    caption: (\n      <Stack gap={2}>\n        <Heading level={3}>{plan.title}</Heading>\n        <Text variant=\"muted\">{plan.text}</Text>\n      </Stack>\n    ),\n    children: (\n      <Stack aria-hidden=\"true\" inert>\n        <Text className=\"text-3xl font-semibold\">{plan.price}</Text>\n        <Text variant=\"muted\">per month</Text>\n      </Stack>\n    ),\n  }))}\n/>"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "ScrollScenes",
+                  "ScrollScene",
+                  "ScrollScenesProps",
+                  "SCROLL_SCENES_MAX"
+                ]
+              }
+            ]
+          },
           "a11y": "Captions are real text in a fixed order and are never hidden (opacity only), so put the message in the caption and treat the visual as decoration: mark it `aria-hidden=\"true\"` and `inert` so it adds no tab stop and no duplicate announcement. Under `prefers-reduced-motion: reduce`, in browsers without scroll timelines (Firefox, Safari before 26) and in very short windows, the scenes are plain blocks one under the other with the same content. A decorative progress rail is `aria-hidden`. Give each caption a heading one level under the section title so screen reader users can jump scene by scene.",
           "troubleshooting": "Nothing is pinned — you need two to eight scenes, the browser needs `animation-timeline: view()` and the window at least 34rem tall; otherwise you get the stacked layout by design. Stage hides under a fixed header — set `--zk-scenes-top` to the header height. Scenes change too fast or slowly — set `--zk-scenes-step` (scroll distance per scene, default 60svh). Content cut at the bottom — the stage is one screen tall; shorten the scene or hide secondary parts on small screens. Pinning stops inside a box — a parent with `overflow: hidden` or `auto` becomes the scroll container; keep the component in the normal page flow. The scenes stack in your own preview — `prefers-reduced-motion: reduce` is on in the OS or the browser; this is the intended fallback.",
           "seeAlso": [
@@ -2941,6 +4455,52 @@
               "code": "import { identityPresets, suggestIdentityTokens, tokensToCss } from \"@zedtech/zedkit-ui\";\n\nconst tokens = suggestIdentityTokens(\"calm editorial, rounded, warm\");\nconst css = tokensToCss(tokens, '[data-identity-scope][data-identity=\"draft\"]');\nvoid identityPresets.mist;\nvoid css;"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "IdentityScript",
+                  "IdentityScriptProps",
+                  "IdentitySwitcher",
+                  "IdentitySwitcherProps",
+                  "IdentityPicker",
+                  "IdentityPickerProps",
+                  "IdentityOption",
+                  "identities",
+                  "applyIdentity",
+                  "discardCustomIdentity",
+                  "applyCustomIdentity",
+                  "useIdentity",
+                  "ThemeScope",
+                  "ThemeScopeProps",
+                  "usePortalContainer",
+                  "CUSTOM_IDENTITY_ID",
+                  "IDENTITY_STORAGE_KEY",
+                  "IDENTITY_CUSTOM_STORAGE_KEY",
+                  "IDENTITY_CHANGE_EVENT",
+                  "NAMED_IDENTITY_PREFIX",
+                  "isNamedIdentityId",
+                  "identityTokenSchema",
+                  "IdentityTokens",
+                  "IdentityId",
+                  "identityPresets",
+                  "isPresetId",
+                  "tokensToCss",
+                  "tokensToCssVars",
+                  "parseIdentityTokens",
+                  "suggestIdentityTokens",
+                  "applyIdentityTokenSheet",
+                  "identityContrastWarnings",
+                  "identityContrastTokenLabel",
+                  "withIdentityDarkPair",
+                  "keepIdentityDarkKeys",
+                  "IdentityContrastWarning"
+                ]
+              }
+            ]
+          },
           "a11y": "`IdentitySwitcher` is a native labelled `select` (visible label with `showLabel`, otherwise screen-reader only); `IdentityPicker` is a 44px trigger opening a sheet with a labelled radio group. Both render nothing when there is no identity to choose. While a custom sheet is active they show `Custom` (`CUSTOM_IDENTITY_ID`); a named look (`n-acme`) that is not in `identities` still appears as a selected option (label is the slug after `n-`) so the control never has a value missing from the list. Pass saved looks in `identities` to show their real labels. Picking a built-in look parks the custom sheet — it stays stored, scoped to its look, until `discardCustomIdentity` drops it. A choice applies at once and the new look keeps the kit's contrast pairs in light and dark; announce the change in your own status line (`role=\"status\"`) if you show one. Keep the trigger name stable (`label`), because the current identity is read from the value.",
           "troubleshooting": "The look flashes on load — render `<IdentityScript />` inside `<head>` with the same ids and storage key as the switcher, and `suppressHydrationWarning` on `<html>`. A stored id is ignored — it must be in `ids`. A stored custom sheet (`IDENTITY_CUSTOM_STORAGE_KEY`) wins over a built-in id. Built-in ids: `mist`, `press`, `tide`, `volt`, `maison`, `glass`; pass your own list to the script and the switcher to offer other looks. The whole page changed but you wanted one card — wrap it in `<ThemeScope identity=\"…\" className=\"dark\">` (or put `data-identity-scope` and `data-identity` on that node and add `.dark` on the same node). Dark tokens apply only when `.dark` is on the identity node, not on an ancestor. Overlays (dialog, select, menu, popover, tooltip, toast) portal into the nearest ThemeScope so they keep that identity and mode; without a scope they still mount on `document.body`. Two switchers disagree — give them the same `storageKey`; they follow each other through `IDENTITY_CHANGE_EVENT`. Switching looks parks a custom sheet (it is scoped to one look); call `discardCustomIdentity` to drop it for good.",
           "seeAlso": [
@@ -2965,6 +4525,31 @@
               "code": "import { applyIdentityTokenSheet, identityPresets } from \"@zedtech/zedkit-ui\";\n\napplyIdentityTokenSheet(\n  identityPresets.mist,\n  '[data-identity-scope][data-identity=\"draft\"]',\n);"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "applyIdentityTokenSheet",
+                  "applyCustomIdentity",
+                  "identityPresets",
+                  "parseIdentityTokens",
+                  "suggestIdentityTokens",
+                  "IdentityTokens",
+                  "IdentityId",
+                  "isPresetId",
+                  "isNamedIdentityId",
+                  "NAMED_IDENTITY_PREFIX",
+                  "identityContrastWarnings",
+                  "identityContrastTokenLabel",
+                  "withIdentityDarkPair",
+                  "keepIdentityDarkKeys",
+                  "IdentityContrastWarning"
+                ]
+              }
+            ]
+          },
           "a11y": "Every field has a visible label. Reset, Dark, Suggest, Apply, Discard and Apply to the whole site are named buttons (`aria-pressed` on Dark). The draft card is a live preview of the tokens. Colour fields accept HSL channels (`H S% L%`). Each exportable text pair (body, primary, muted) must reach 4.5:1 against its surface; accent and border need 3:1 against the background — warnings show inline with a Fix that nudges lightness. Copy CSS/JSON stays behind an explicit confirm while any pair fails. Suggest never writes tokens until Apply. While a custom identity is active, a status bar offers Reset to default.",
           "troubleshooting": "The whole docs page changed — Apply to the whole site wrote `:root`; Reset to default clears `IDENTITY_CUSTOM_STORAGE_KEY`; picking a built-in identity only parks the sheet. A field snaps back — the value failed the token schema (HSL, leading, or tracking). A refresh loses the draft — the address bar holds only fields that differ from the chosen look, plus `theme=dark` when the dark preview is on. Suggest shows a keyword match — the HTTP service is off, rate-limited, or the response failed the token schema.",
           "seeAlso": [
