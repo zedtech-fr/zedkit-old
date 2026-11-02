@@ -23,6 +23,7 @@ Each package PR adds its row here, following
 | `@zedtech/zedkit-seo` | robots, sitemaps, JSON-LD, metadata, llms.txt, slugs | [packages/seo/CATALOG.md](../../packages/seo/CATALOG.md) |
 | `@zedtech/zedkit-payload-seo` | Payload SEO group field | [packages/payload-seo/CATALOG.md](../../packages/payload-seo/CATALOG.md) |
 | `@zedtech/zedkit-quality` | UI lint preset, layer boundaries, strict tsconfig | [packages/quality/CATALOG.md](../../packages/quality/CATALOG.md) |
+| `@zedtech/zedkit-brand` | zedkit logos: SVG files, string builder, React component, icon sources | [packages/brand/CATALOG.md](../../packages/brand/CATALOG.md) |
 
 ## Entry format
 
