@@ -5,8 +5,8 @@
 ```ts
 export { loadEnv } from "./load-env.js";
 export { pgErrorCode, pgErrorRetryable } from "./pg-error.js";
-export { MemoryRateLimiter } from "./rate-limit.js";
-export { redactValue } from "./redaction.js";
+export { MemoryRateLimiter, type MemoryRateLimiterOptions } from "./rate-limit.js";
+export { redactValue, type RedactOptions, type RedactValuePattern } from "./redaction.js";
 export { computeBackoffMs } from "./backoff.js";
 export { verifyWebhookSignatureHeader, type VerifyWebhookOptions, webhookSignatureHeader, } from "./webhook-signature.js";
 export { hkdfKey, type HkdfKeyOptions } from "./hkdf.js";
@@ -23,8 +23,10 @@ export declare function loadEnv<S extends z.ZodRawShape>(shape: S, source?: Reco
 
 /**
  * Reads the Postgres error code (`23505` unique, `23503` FK, ...) from a
- * thrown value. Lets callers decide conflict-vs-bug without each
- * keeping its own shape check.
+ * thrown value. When the value has no string `code`, looks one `cause`
+ * level down: ORMs such as drizzle-orm wrap the driver error and keep it
+ * as `cause`. Deeper chains are not followed. Lets callers decide
+ * conflict-vs-bug without each keeping its own shape check.
  */
 export declare function pgErrorCode(error: unknown): string | null;
 /**
@@ -33,14 +35,46 @@ export declare function pgErrorCode(error: unknown): string | null;
  */
 export declare function pgErrorRetryable(error: unknown): boolean | null;
 
+export interface MemoryRateLimiterOptions {
+    /** Window length in milliseconds. Default 60 000 (the limit is per minute). */
+    windowMs?: number | undefined;
+    /** Clock in milliseconds, injectable for tests. Default `Date.now`. */
+    now?: (() => number) | undefined;
+    /**
+     * Tracked-key count past which expired windows are swept (at most once
+     * per window). Live windows are never evicted, so a key spray cannot
+     * reset another client's budget. Default 10 000.
+     */
+    maxKeys?: number | undefined;
+}
 export declare class MemoryRateLimiter {
     private readonly windows;
+    private readonly windowMs;
+    private readonly maxKeys;
+    private readonly clock;
     private lastGc;
+    /** Throws on a non-positive or non-finite `windowMs` / `maxKeys`. */
+    constructor(options?: MemoryRateLimiterOptions);
     allow(key: string, limitPerMinute: number): boolean;
     private maybeGc;
 }
 
-export declare function redactValue(value: unknown, key?: string): unknown;
+/** An extra value pattern: every match is replaced by `replacement`, literally. */
+export interface RedactValuePattern {
+    pattern: RegExp;
+    replacement: string;
+}
+export interface RedactOptions {
+    /**
+     * Extra patterns for credential shapes specific to your system (for
+     * example your own API-key prefix). They run on every string, before the
+     * built-in bearer/basic pattern, in the order given. Matching is always
+     * global, whatever flags the regex carries.
+     */
+    valuePatterns?: readonly RedactValuePattern[] | undefined;
+}
+/** See the module notes above; `options.valuePatterns` adds your own credential shapes. */
+export declare function redactValue(value: unknown, key?: string, options?: RedactOptions): unknown;
 
 /**
  * Retry backoff: 2s x 3^(n-1) with +/-20% jitter, floored at 1s and
