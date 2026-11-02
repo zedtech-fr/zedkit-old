@@ -25,7 +25,9 @@ the docs and flag the code smell to the caller.
    catch-all demo file with a bulk import.
 4. **Examples compile.** Every code example is either extracted from a tested
    source or run by you before delivery. A failing example is fixed, not
-   shipped with a caveat.
+   shipped with a caveat. Install and copy instructions come from one typed
+   source and are replayed in a clean project by a check; never hand-write a
+   snippet that can drift.
 5. **De-drift.** Delete what the code no longer does; rename what the code
    renamed; update counts, paths and commands. Stale docs are worse than
    missing docs: when in doubt, cut.
