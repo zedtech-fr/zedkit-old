@@ -26,7 +26,7 @@ const env = loadEnv({ PORT: z.coerce.number(), DATABASE_URL: z.string().url() })
 
 ## Rate-limit calls per key
 
-- Import: `@zedtech/zedkit-server` — `MemoryRateLimiter`
+- Import: `@zedtech/zedkit-server` — `MemoryRateLimiter`, `MemoryRateLimiterOptions`
 - Wraps: `(none)`
 - Status: stable
 - Short name: Rate limiting
@@ -39,11 +39,14 @@ const env = loadEnv({ PORT: z.coerce.number(), DATABASE_URL: z.string().url() })
 import { MemoryRateLimiter } from "@zedtech/zedkit-server";
 const limiter = new MemoryRateLimiter();
 if (!limiter.allow(clientIp, 100)) return tooManyRequests();
+
+// Optional: another window, a test clock, a different sweep threshold.
+const perTenSeconds = new MemoryRateLimiter({ windowMs: 10_000, now: () => clock.now(), maxKeys: 5_000 });
 ```
 
 ## Redact secrets before logging
 
-- Import: `@zedtech/zedkit-server` — `redactValue`
+- Import: `@zedtech/zedkit-server` — `redactValue`, `RedactOptions`, `RedactValuePattern`
 - Wraps: `(none)`
 - Status: stable
 - Short name: Redaction
@@ -56,6 +59,10 @@ if (!limiter.allow(clientIp, 100)) return tooManyRequests();
 ```ts
 import { redactValue } from "@zedtech/zedkit-server";
 logger.info(redactValue({ user, token, headers }));
+
+// Add your own credential shape (replaces every match, before bearer/basic).
+const valuePatterns = [{ pattern: /\bsk_[A-Za-z0-9_-]{8,}\b/, replacement: "[redacted-key]" }];
+logger.info(redactValue(record, undefined, { valuePatterns }));
 ```
 
 ## Retry with exponential backoff
@@ -100,7 +107,7 @@ if (!verify(secret, rawBody, headers["webhook-signature"], { maxAgeSeconds: 300 
 - Status: stable
 - Short name: Postgres errors
 - Audience: Developers mapping Postgres driver errors to HTTP responses.
-- Purpose: Extract the Postgres error code so unique violations map to 409, not 500.
+- Purpose: Extract the Postgres error code (also from an ORM-wrapped `cause`) so unique violations map to 409, not 500.
 - When to use: Around writes where a conflict is an expected outcome (signup, idempotent creates).
 - When not to use: For query building or migrations — use your ORM or migration tool instead.
 - See also: `Return uniform error bodies`

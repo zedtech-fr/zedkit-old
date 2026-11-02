@@ -9,6 +9,20 @@ describe("pgErrorCode", () => {
     expect(pgErrorCode(null)).toBe(null);
     expect(pgErrorCode("23505")).toBe(null);
   });
+
+  it("reads the code one cause level down (ORM-wrapped driver errors)", () => {
+    const wrapped = new Error("Failed query", { cause: { code: "23505" } });
+    expect(pgErrorCode(wrapped)).toBe("23505");
+    expect(pgErrorRetryable(new Error("x", { cause: { code: "40001" } }))).toBe(true);
+  });
+
+  it("prefers the outer code and stops after one level", () => {
+    expect(pgErrorCode({ code: "40001", cause: { code: "23505" } })).toBe("40001");
+    expect(pgErrorCode({ code: 1, cause: { code: "23505" } })).toBe("23505");
+    expect(pgErrorCode({ cause: { cause: { code: "23505" } } })).toBe(null);
+    expect(pgErrorCode({ cause: "23505" })).toBe(null);
+    expect(pgErrorCode({ cause: null })).toBe(null);
+  });
 });
 
 describe("pgErrorRetryable", () => {
