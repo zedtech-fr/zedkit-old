@@ -65,6 +65,87 @@
         }
       ]
     },
+    "@zedtech/zedkit-brand": {
+      "catalog": "packages/brand/CATALOG.md",
+      "keywords": [
+        "brand",
+        "logo",
+        "svg",
+        "favicon",
+        "open-graph",
+        "react",
+        "typescript"
+      ],
+      "audience": "Teams that show the zedkit mark or wordmark in an app, a site or a document and want one source for it.",
+      "needs": [
+        {
+          "need": "Show the logo in a React app",
+          "import": "`@zedtech/zedkit-brand/react` — `ZedkitLogo`, `ZedkitLogoProps`",
+          "wraps": "`react`",
+          "status": "alpha",
+          "shortName": "ZedkitLogo",
+          "audience": "React apps that put the mark, the wordmark or both in a header, a footer or a sign-in page.",
+          "purpose": "Render the logo as an inline SVG that follows the text colour, so light and dark need no second asset.",
+          "whenToUse": "Any React surface that shows the zedkit brand.",
+          "whenNotToUse": "Your own brand mark — draw it with your own SVG; `@zedtech/zedkit-ui` has `BrandLogo` for that.",
+          "derivedFrom": null,
+          "example": "import { ZedkitLogo } from \"@zedtech/zedkit-brand/react\";\n\nconst header = <ZedkitLogo variant=\"lockup\" height={32} />;",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "import { ZedkitLogo } from \"@zedtech/zedkit-brand/react\";\n\nconst header = <ZedkitLogo variant=\"lockup\" height={32} />;"
+            }
+          ],
+          "seeAlso": [
+            "Get the logo as SVG markup, icon sources or raw shapes"
+          ]
+        },
+        {
+          "need": "Get the logo as SVG markup, icon sources or raw shapes",
+          "import": "`@zedtech/zedkit-brand` — `logoSvg`, `LogoSvgOptions`, `LogoTheme`, `LogoVariant`, `logoAsset`, `LogoAsset`, `LogoAssetKind`, `logoGeometry`, `LogoGeometry`, `LogoShape`, `BRAND_INK`, `BRAND_PAPER`, `BRAND_NAME`",
+          "wraps": "`(none)`",
+          "status": "alpha",
+          "shortName": "logoSvg",
+          "audience": "Servers, build scripts, icon and Open Graph routes, and renderers other than React.",
+          "purpose": "Build a standalone SVG of the mark, wordmark or lockup on light, on dark or in the current colour; get the favicon, apple-touch and 1200x630 social card sources with their pixel size; or read the raw shapes and brand colours to paint them in Vue, canvas or a PDF.",
+          "whenToUse": "Route handlers, emails, static files, image pipelines, and any non-React renderer.",
+          "whenNotToUse": "React markup — use `ZedkitLogo`, which draws the same shapes without a string round trip. A social card with a title or tagline — render those on top of the returned SVG in your own image route.",
+          "derivedFrom": null,
+          "example": "import { logoAsset, logoSvg } from \"@zedtech/zedkit-brand\";\n\nconst mark = logoSvg({ variant: \"mark\", theme: \"on-dark\" });\nconst { svg, width, height } = logoAsset(\"apple-touch\"); // 180 x 180",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "import { logoAsset, logoSvg } from \"@zedtech/zedkit-brand\";\n\nconst mark = logoSvg({ variant: \"mark\", theme: \"on-dark\" });\nconst { svg, width, height } = logoAsset(\"apple-touch\"); // 180 x 180"
+            }
+          ],
+          "seeAlso": [
+            "Show the logo in a React app"
+          ]
+        },
+        {
+          "need": "Use the ready-made SVG files",
+          "import": "`@zedtech/zedkit-brand/assets/*` (for example `@zedtech/zedkit-brand/assets/lockup-on-dark.svg`)",
+          "wraps": "`(none)`",
+          "status": "alpha",
+          "shortName": "SVG files",
+          "audience": "Anyone who wants a file path: a bundler import, an `<img>`, a design tool, a copy step.",
+          "purpose": "Ship the logos as plain SVG files: mark, wordmark and lockup, each on light and on dark, plus favicon, apple-touch and og.",
+          "whenToUse": "Static sites, documents, and anywhere an `<img src>` is enough.",
+          "whenNotToUse": "When the logo must follow the text colour — use `ZedkitLogo` or `logoSvg` with `theme: \"current\"`.",
+          "derivedFrom": null,
+          "example": "// Files: mark | wordmark | lockup, each -on-light.svg or -on-dark.svg, plus favicon, apple-touch, og.\nimport lockupUrl from \"@zedtech/zedkit-brand/assets/lockup-on-dark.svg\";",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "// Files: mark | wordmark | lockup, each -on-light.svg or -on-dark.svg, plus favicon, apple-touch, og.\nimport lockupUrl from \"@zedtech/zedkit-brand/assets/lockup-on-dark.svg\";"
+            }
+          ],
+          "seeAlso": [
+            "Get the logo as SVG markup, icon sources or raw shapes"
+          ]
+        }
+      ]
+    },
     "@zedtech/zedkit-core": {
       "catalog": "packages/core/CATALOG.md",
       "keywords": [
@@ -1091,7 +1172,7 @@
         },
         {
           "need": "Rate-limit calls per key",
-          "import": "`@zedtech/zedkit-server` — `MemoryRateLimiter`",
+          "import": "`@zedtech/zedkit-server` — `MemoryRateLimiter`, `MemoryRateLimiterOptions`",
           "wraps": "`(none)`",
           "status": "stable",
           "shortName": "Rate limiting",
@@ -1100,17 +1181,17 @@
           "whenToUse": "For single-instance services and per-IP/per-user throttling.",
           "whenNotToUse": "Across multiple instances — use a shared-store (Redis) limiter instead.",
           "derivedFrom": null,
-          "example": "import { MemoryRateLimiter } from \"@zedtech/zedkit-server\";\nconst limiter = new MemoryRateLimiter();\nif (!limiter.allow(clientIp, 100)) return tooManyRequests();",
+          "example": "import { MemoryRateLimiter } from \"@zedtech/zedkit-server\";\nconst limiter = new MemoryRateLimiter();\nif (!limiter.allow(clientIp, 100)) return tooManyRequests();\n\n// Optional: another window, a test clock, a different sweep threshold.\nconst perTenSeconds = new MemoryRateLimiter({ windowMs: 10_000, now: () => clock.now(), maxKeys: 5_000 });",
           "examples": [
             {
               "title": "Simple",
-              "code": "import { MemoryRateLimiter } from \"@zedtech/zedkit-server\";\nconst limiter = new MemoryRateLimiter();\nif (!limiter.allow(clientIp, 100)) return tooManyRequests();"
+              "code": "import { MemoryRateLimiter } from \"@zedtech/zedkit-server\";\nconst limiter = new MemoryRateLimiter();\nif (!limiter.allow(clientIp, 100)) return tooManyRequests();\n\n// Optional: another window, a test clock, a different sweep threshold.\nconst perTenSeconds = new MemoryRateLimiter({ windowMs: 10_000, now: () => clock.now(), maxKeys: 5_000 });"
             }
           ]
         },
         {
           "need": "Redact secrets before logging",
-          "import": "`@zedtech/zedkit-server` — `redactValue`",
+          "import": "`@zedtech/zedkit-server` — `redactValue`, `RedactOptions`, `RedactValuePattern`",
           "wraps": "`(none)`",
           "status": "stable",
           "shortName": "Redaction",
@@ -1119,11 +1200,11 @@
           "whenToUse": "On every object logged outside a trusted debug session.",
           "whenNotToUse": "When you need the real values — debug locally, never in shared logs.",
           "derivedFrom": null,
-          "example": "import { redactValue } from \"@zedtech/zedkit-server\";\nlogger.info(redactValue({ user, token, headers }));",
+          "example": "import { redactValue } from \"@zedtech/zedkit-server\";\nlogger.info(redactValue({ user, token, headers }));\n\n// Add your own credential shape (replaces every match, before bearer/basic).\nconst valuePatterns = [{ pattern: /\\bsk_[A-Za-z0-9_-]{8,}\\b/, replacement: \"[redacted-key]\" }];\nlogger.info(redactValue(record, undefined, { valuePatterns }));",
           "examples": [
             {
               "title": "Simple",
-              "code": "import { redactValue } from \"@zedtech/zedkit-server\";\nlogger.info(redactValue({ user, token, headers }));"
+              "code": "import { redactValue } from \"@zedtech/zedkit-server\";\nlogger.info(redactValue({ user, token, headers }));\n\n// Add your own credential shape (replaces every match, before bearer/basic).\nconst valuePatterns = [{ pattern: /\\bsk_[A-Za-z0-9_-]{8,}\\b/, replacement: \"[redacted-key]\" }];\nlogger.info(redactValue(record, undefined, { valuePatterns }));"
             }
           ],
           "seeAlso": [
@@ -1175,7 +1256,7 @@
           "status": "stable",
           "shortName": "Postgres errors",
           "audience": "Developers mapping Postgres driver errors to HTTP responses.",
-          "purpose": "Extract the Postgres error code so unique violations map to 409, not 500.",
+          "purpose": "Extract the Postgres error code (also from an ORM-wrapped `cause`) so unique violations map to 409, not 500.",
           "whenToUse": "Around writes where a conflict is an expected outcome (signup, idempotent creates).",
           "whenNotToUse": "For query building or migrations — use your ORM or migration tool instead.",
           "derivedFrom": null,
