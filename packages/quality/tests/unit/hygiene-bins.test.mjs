@@ -72,6 +72,23 @@ describe("zedkit-check-no-artifacts", () => {
     expect(result.stdout).toContain("dist/out.js");
   });
 
+  it("matches artifact directory names as path segments, not substrings", () => {
+    const dir = gitRepo({
+      "tsconfig.build.json": "{}\n",
+      "coverage.test.ts": "ok\n",
+      "scripts/build-first.test.mjs": "ok\n",
+    });
+    const result = runBin(artifactsBin, dir);
+    expect(result.status, result.stdout + result.stderr).toBe(0);
+  });
+
+  it("still flags a nested build/ directory", () => {
+    const dir = gitRepo({ "packages/app/build/out.js": "x\n" });
+    const result = runBin(artifactsBin, dir);
+    expect(result.status).toBe(1);
+    expect(result.stdout).toContain("packages/app/build/out.js");
+  });
+
   it("fails when a tracked file matches .gitignore (--no-index)", () => {
     const dir = gitRepo({ "keep.txt": "x\n" });
     writeFiles(dir, { ".gitignore": "keep.txt\n" });
