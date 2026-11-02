@@ -19,14 +19,20 @@ export const componentPageCopy = {
     related: "Related",
     troubleshooting: "Troubleshooting",
   },
-  packageManagerTabs: ["pnpm", "npm", "yarn"] as const,
   /** `value` is an id fragment (no spaces: aria-controls would split it); `label` is what readers see. */
   adoptionTabs: [
-    { value: "npm", label: "npm package" },
-    { value: "registry", label: "registry copy" },
+    { value: "package", label: "Install" },
+    { value: "registry", label: "Copy" },
   ] as const,
-  registryCopyLead:
-    "Copy the source into your repo with the shadcn CLI, then import it from your own components folder. No package to install.",
+  /** Second choice under "Copy". */
+  registryTabs: [
+    { value: "cli", label: "Add with CLI (like shadcn)" },
+    { value: "manual", label: "Copy manually" },
+  ] as const,
+  cliLead:
+    "Run the shadcn CLI in your app. It writes the source into your components folder, then you import it from there. No package to install.",
+  sourceLead:
+    "Paste this file into your components folder yourself, then import it from there. It imports cn from @/lib/utils.",
   registryContinuation: "New to shadcn? Set up the CLI and theme tokens first.",
   registryContinuationLink: "Zedkit and shadcn",
   usageImportNote: (registry: string) =>

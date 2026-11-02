@@ -6,7 +6,6 @@ import { Section } from "@zedtech/zedkit-ui";
 import { featuredRegistryBrick } from "@/content/registry-site";
 import { PUBLIC_SITE_URL } from "@/lib/site";
 import { registryShadcnAddCommand } from "@/lib/registry-shadcn-command";
-import { registryShadcnGithubCommand } from "@/lib/registry-shadcn-github-command";
 import { HomeGetStartedCopy } from "@/ui/home/home-get-started-copy";
 import { HOME_MARKETING_ROOT_PROPS, HOME_SECTION_REVEAL_CLASS } from "@/ui/home/home-rhythm";
 import { homeCopy } from "@/ui/home/i18n/home-copy";
@@ -45,6 +44,11 @@ export function HomeGetStartedSection({ npmPackage }: { npmPackage: string }) {
       `home-quickstart/snippets/registry-theme-add.sh must be exactly: ${expectedTheme}`,
     );
   }
+  // The file `shadcn add` writes, shown as-is on the "Copy source" path.
+  const brickSource = readFileSync(
+    join(process.cwd(), "..", "..", "registry", "ui", `${featuredRegistryBrick}.tsx`),
+    "utf8",
+  ).trimEnd();
 
   return (
     <Section
@@ -57,10 +61,7 @@ export function HomeGetStartedSection({ npmPackage }: { npmPackage: string }) {
       className={HOME_SECTION_REVEAL_CLASS}
       {...HOME_MARKETING_ROOT_PROPS}
     >
-      <HomeGetStartedCopy
-        packageInstallCmd={packageInstallCmd}
-        registryInstallCmd={registryShadcnGithubCommand(featuredRegistryBrick)}
-      />
+      <HomeGetStartedCopy packageName={npmPackage} brick={featuredRegistryBrick} source={brickSource} />
     </Section>
   );
 }

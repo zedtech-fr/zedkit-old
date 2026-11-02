@@ -12,7 +12,7 @@ hand-written props or export lists.
 | 0 | Maturity badge + purpose line | Generated props on `ComponentPage` |
 | 1 | Preview / Code | `ComponentPreview` / demo registry (before any install copy) |
 | 2 | Who / Use / Avoid | Catalog guidance once, after the specimen |
-| 3 | Install or copy | npm package path + registry copy path (separate tabs; npm-only omits copy) |
+| 3 | Install or copy | Two tabs: Package (pnpm/npm/yarn install) and Registry copy, which splits into "Add with CLI (like shadcn)" (`dlx` per package manager) and "Copy manually" (the registry file itself). npm-only needs show Package only |
 | 4 | Usage and states | Catalog `examples[]` + collapsed exports |
 | 5 | Props | Kit props first from source types; inherited HTML attrs folded |
 | 6 | Accessibility | Catalog `- A11y:` |
