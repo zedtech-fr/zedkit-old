@@ -142,16 +142,23 @@ export async function readFocusIndicator(control: Locator): Promise<FocusIndicat
     const outlineWidth = Number.parseFloat(focusedStyle.outlineWidth);
     const outlineColor = parse(focusedStyle.outlineColor);
     const focusedLayers = layers(focusedStyle.boxShadow);
-    const outline =
-      outlineWidth > 0 && !["none", "hidden"].includes(focusedStyle.outlineStyle) && outlineColor && outlineColor[3] > 0
-        ? { width: outlineWidth, color: over(outlineColor, background) }
-        : null;
+    const focusedOutline = `${focusedStyle.outlineWidth}|${focusedStyle.outlineStyle}|${focusedStyle.outlineColor}|${focusedStyle.outlineOffset}`;
+    const drawsOutline =
+      outlineWidth > 0 && !["none", "hidden"].includes(focusedStyle.outlineStyle) && outlineColor && outlineColor[3] > 0;
 
     (el as HTMLElement).blur();
     settle();
-    const restingLayers = layers(getComputedStyle(el).boxShadow);
+    const restingStyle = getComputedStyle(el);
+    const restingLayers = layers(restingStyle.boxShadow);
+    const restingOutline = `${restingStyle.outlineWidth}|${restingStyle.outlineStyle}|${restingStyle.outlineColor}|${restingStyle.outlineOffset}`;
     (el as HTMLElement).focus();
     settle();
+
+    // Like a shadow, an outline only counts when focus is what draws it: a permanent one is decoration.
+    const outline =
+      drawsOutline && outlineColor && focusedOutline !== restingOutline
+        ? { width: outlineWidth, color: over(outlineColor, background) }
+        : null;
 
     const ring = focusedLayers
       .filter((layer) => !restingLayers.includes(layer) && !layer.includes("inset"))
@@ -180,6 +187,57 @@ export async function assertFocusVisibleRing(control: Locator): Promise<void> {
   expect(indicator.kind, "focus paints an outline or a ring that blur does not").not.toBe("none");
   expect(indicator.width).toBeGreaterThanOrEqual(2);
   expect(contrastRatio(indicator.color!, indicator.background)).toBeGreaterThanOrEqual(3);
+}
+
+/**
+ * Asserts nothing clips the focus indicator of the focused control: the area it paints
+ * (outline + offset, or the outermost ring spread) must stay inside every ancestor that
+ * clips its overflow. Separate from visibility on purpose: a ring can be present and cut off.
+ */
+export async function assertFocusUnclipped(control: Locator): Promise<void> {
+  await expect(control).toBeFocused();
+  const clipped = await control.evaluate((el) => {
+    const style = getComputedStyle(el);
+    const outline =
+      !["none", "hidden"].includes(style.outlineStyle) && Number.parseFloat(style.outlineWidth) > 0
+        ? Math.max(0, Number.parseFloat(style.outlineOffset) || 0) + Number.parseFloat(style.outlineWidth)
+        : 0;
+    const spread = style.boxShadow
+      .split(/,(?![^(]*\))/)
+      .filter((layer) => layer.trim() && layer.trim() !== "none" && !layer.includes("inset"))
+      .map((layer) => {
+        const lengths = layer.replace(/rgba?\([^)]*\)|color\([^)]*\)|hsla?\([^)]*\)/g, "").trim().split(/\s+/).map(Number.parseFloat);
+        return Math.max(0, lengths[3] ?? 0);
+      })
+      .reduce((max, value) => Math.max(max, value), 0);
+    const reach = Math.max(outline, spread);
+    if (reach === 0) return [];
+    const box = el.getBoundingClientRect();
+    const painted = { left: box.left - reach, top: box.top - reach, right: box.right + reach, bottom: box.bottom + reach };
+    const cuts: string[] = [];
+    for (let node = el.parentElement; node; node = node.parentElement) {
+      const clip = getComputedStyle(node);
+      const clipsX = clip.overflowX !== "visible";
+      const clipsY = clip.overflowY !== "visible";
+      if (!clipsX && !clipsY) continue;
+      const rect = node.getBoundingClientRect();
+      const inner = {
+        left: rect.left + Number.parseFloat(clip.borderLeftWidth),
+        top: rect.top + Number.parseFloat(clip.borderTopWidth),
+        right: rect.right - Number.parseFloat(clip.borderRightWidth),
+        bottom: rect.bottom - Number.parseFloat(clip.borderBottomWidth),
+      };
+      const sides = [
+        clipsX && painted.left < inner.left - 0.5 ? "left" : "",
+        clipsX && painted.right > inner.right + 0.5 ? "right" : "",
+        clipsY && painted.top < inner.top - 0.5 ? "top" : "",
+        clipsY && painted.bottom > inner.bottom + 0.5 ? "bottom" : "",
+      ].filter(Boolean);
+      if (sides.length) cuts.push(`${node.tagName.toLowerCase()}${node.className ? `.${String(node.className).split(" ")[0]}` : ""} (${sides.join(", ")})`);
+    }
+    return cuts;
+  });
+  expect(clipped, `the focus indicator is clipped by: ${clipped.join("; ")}`).toEqual([]);
 }
 
 export const A11Y_GATE_RULES = [
