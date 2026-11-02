@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createServer } from "node:http";
 import { createServer as createNetServer } from "node:net";
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -222,17 +222,14 @@ test("deploy A then B with Caddy already up announces B and uses the new paramet
   const state = join(tmp, "state");
   const remote = join(tmp, "remote");
   const envFile = join(tmp, "suggest.env");
-  const outDir = join(root, "apps/docs/out");
-  const outIndex = join(outDir, "index.html");
-  const createdOut = !existsSync(outIndex);
+  // Its own build output: test files run in parallel, and a shared apps/docs/out is a race.
+  const outDir = join(tmp, "out");
   const upstream = await listenUpstream();
   const suggestPort = await freePort();
   installMocks(bin, state);
   writeFileSync(join(state, "caddy-up"), "");
-  if (createdOut) {
-    mkdirSync(outDir, { recursive: true });
-    writeFileSync(outIndex, "<!doctype html><title>docs</title>");
-  }
+  mkdirSync(outDir, { recursive: true });
+  writeFileSync(join(outDir, "index.html"), "<!doctype html><title>docs</title>");
 
   t.after(async () => {
     const pidFile = join(state, "suggest.pid");
@@ -241,7 +238,6 @@ test("deploy A then B with Caddy already up announces B and uses the new paramet
       if (pid) spawnSync("kill", [pid]);
     }
     await new Promise((resolve) => upstream.server.close(() => resolve()));
-    if (createdOut) await rm(outIndex, { force: true });
     await rm(tmp, { recursive: true, force: true });
   });
 
@@ -270,8 +266,10 @@ test("deploy A then B with Caddy already up announces B and uses the new paramet
         ...process.env,
         PATH: `${bin}:${process.env.PATH}`,
         DEPLOY_SHA: sha,
+        DEPLOY_OUT: outDir,
         DEPLOY_SUGGEST_ENV: envFile,
         DEPLOY_MOCK_REMOTE: remote,
+        DEPLOY_KEEP_RELEASES: "2",
         SUGGEST_PORT: String(suggestPort),
       },
     });
@@ -326,6 +324,17 @@ test("deploy A then B with Caddy already up announces B and uses the new paramet
 
   const log = await readFile(join(state, "docker.log"), "utf8");
   assert.match(log, /compose up -d --no-deps --force-recreate caddy/);
+
+  // The env file holds the provider key: private from the moment it exists, whatever mode the sender's file had.
+  assert.equal(statSync(envFile).mode & 0o044, 0o044, "the sender's file is world-readable, as CI may leave it");
+  assert.equal(statSync(join(remote, "releases/sha-b/suggest.env")).mode & 0o777, 0o600);
+
+  // Old releases (each one holds a key) are pruned; the live one and the one rollback needs stay.
+  deploy("sha-c");
+  deploy("sha-d");
+  const kept = readdirSync(join(remote, "releases")).sort();
+  assert.deepEqual(kept, ["sha-c", "sha-d"], "only the newest releases remain");
+  assert.equal((await readFile(join(remote, ".previous-release"), "utf8")).trim(), "sha-c");
 });
 
 test("--dev gives the dev site its own suggest service and leaves production's alone", async (t) => {

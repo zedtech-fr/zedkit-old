@@ -5,8 +5,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
+import { loadConfig, worstCaseMicro } from "./config.mjs";
+import { buildMessages, inputTokens, worstCaseReferences } from "./prompt.mjs";
+import { listenSuggest, parseRequest } from "./server.mjs";
 import { FONT_STACKS } from "./tokens.mjs";
-import { listenSuggest } from "./server.mjs";
 
 const CURRENT = {
   spacing: "0.25rem",
@@ -300,8 +302,8 @@ test("the same limits hold across a restart and across two instances sharing the
   assert.ok(settled <= 200_000, `spent ${settled} against 200000`);
 });
 
-test("fallback: one refusal tries the second origin once, and both calls are accounted", async () => {
-  const p = provider((call) => (call.url.startsWith("https://primary.test") ? refusal(503) : reply(PATCH, { usage: { prompt_tokens: 1000, completion_tokens: 500 } })));
+test("fallback: a rate-limit refusal tries the second origin once; the refusal did no work, so only the reply is charged", async () => {
+  const p = provider((call) => (call.url.startsWith("https://primary.test") ? refusal(429) : reply(PATCH, { usage: { prompt_tokens: 1000, completion_tokens: 500 } })));
   const env = configured({ IDENTITY_AI_FALLBACK_BASE_URL: "https://fallback.test", IDENTITY_AI_FALLBACK_API_KEY: "sk-fallback", IDENTITY_AI_FALLBACK_MODEL: "fallback-model", IDENTITY_AI_FALLBACK_PRICE_INPUT_USD_PER_MTOK: "1", IDENTITY_AI_FALLBACK_PRICE_OUTPUT_USD_PER_MTOK: "10" });
   await withServer({ env, fetchImpl: p.fetchImpl }, async ({ port, ledger }) => {
     const res = await post(port, body());
@@ -312,8 +314,8 @@ test("fallback: one refusal tries the second origin once, and both calls are acc
   });
 });
 
-test("fallback is bounded: two failures end the request, and a third call never happens", async () => {
-  const p = provider(() => refusal(500));
+test("fallback is bounded: two refusals end the request, and a third call never happens", async () => {
+  const p = provider(() => refusal(429));
   const env = configured({ IDENTITY_AI_FALLBACK_BASE_URL: "https://fallback.test", IDENTITY_AI_FALLBACK_API_KEY: "k", IDENTITY_AI_FALLBACK_MODEL: "m", IDENTITY_AI_FALLBACK_PRICE_INPUT_USD_PER_MTOK: "1", IDENTITY_AI_FALLBACK_PRICE_OUTPUT_USD_PER_MTOK: "10" });
   await withServer({ env, fetchImpl: p.fetchImpl }, async ({ port, ledger }) => {
     const res = await post(port, body());
@@ -496,4 +498,139 @@ test("only POST generates, and only on the exact path", async () => {
     assert.equal((await fetch(`http://127.0.0.1:${port}/api/identity/suggest/version`, { method: "POST" })).status, 405);
   });
   assert.equal(p.calls.length, 0);
+});
+
+/** What one call can cost at most, for a request body, exactly as the service reckons it. */
+function worstOf(env, payload, urls = []) {
+  const config = loadConfig(env);
+  const parsed = parseRequest(payload);
+  assert.ok(parsed.ok, "the test's own request is valid");
+  const tokens = inputTokens(buildMessages({ ...parsed.value, references: worstCaseReferences(urls) }));
+  return worstCaseMicro(config.primary, tokens, config.limits.maxOutputTokens);
+}
+const withFallback = { IDENTITY_AI_FALLBACK_BASE_URL: "https://fallback.test", IDENTITY_AI_FALLBACK_API_KEY: "k", IDENTITY_AI_FALLBACK_MODEL: "m", IDENTITY_AI_FALLBACK_PRICE_INPUT_USD_PER_MTOK: "1", IDENTITY_AI_FALLBACK_PRICE_OUTPUT_USD_PER_MTOK: "10" };
+
+test("a provider server error may have done the work: it is charged at the worst case, then the fallback is tried", async () => {
+  const p = provider((call) => (call.url.startsWith("https://primary.test") ? refusal(504) : reply(PATCH, { usage: { prompt_tokens: 1000, completion_tokens: 500 } })));
+  const env = configured(withFallback);
+  const payload = body();
+  await withServer({ env, fetchImpl: p.fetchImpl }, async ({ port, ledger }) => {
+    assert.equal((await post(port, payload)).status, 200);
+    assert.deepEqual(ledger.today(), { reserved: 0, settled: worstOf(env, payload) + 6_000, requests: 1 });
+  });
+  assert.equal(p.calls.length, 2);
+});
+
+test("two server errors end the request and both are charged: nothing is free once the provider may have worked", async () => {
+  const p = provider(() => refusal(502));
+  const env = configured(withFallback);
+  const payload = body();
+  await withServer({ env, fetchImpl: p.fetchImpl }, async ({ port, ledger }) => {
+    assert.equal((await post(port, payload)).status, 502);
+    assert.equal(ledger.today().settled, 2 * worstOf(env, payload));
+  });
+  assert.equal(p.calls.length, 2);
+});
+
+test("a usage report that cannot be true is not believed: 0 and 0 is charged as the whole reservation", async () => {
+  const p = provider(() => reply(PATCH, { usage: { prompt_tokens: 0, completion_tokens: 0 } }));
+  const env = configured();
+  const payload = body();
+  await withServer({ env, fetchImpl: p.fetchImpl }, async ({ port, ledger }) => {
+    assert.equal((await post(port, payload)).status, 200);
+    assert.equal(ledger.today().settled, worstOf(env, payload));
+  });
+});
+
+test("a missing, negative or implausibly small report is charged in full; a believable one is charged as reported", async () => {
+  const env = configured();
+  const payload = body();
+  const worst = worstOf(env, payload);
+  for (const usage of [null, { prompt_tokens: -1, completion_tokens: 5 }, { prompt_tokens: 1, completion_tokens: 1 }, { prompt_tokens: "many", completion_tokens: 10 }]) {
+    const p = provider(() => reply(PATCH, { usage }));
+    await withServer({ env: configured(), fetchImpl: p.fetchImpl }, async ({ port, ledger }) => {
+      assert.equal((await post(port, { ...payload, requestId: `again-${Math.random().toString(36).slice(2, 10)}` })).status, 200);
+      assert.equal(ledger.today().settled, worst, JSON.stringify(usage));
+    });
+  }
+  const p = provider(() => reply(PATCH, { usage: { prompt_tokens: 1000, completion_tokens: 500 } }));
+  await withServer({ env: configured(), fetchImpl: p.fetchImpl }, async ({ port, ledger }) => {
+    assert.equal((await post(port, body())).status, 200);
+    assert.equal(ledger.today().settled, 6_000);
+  });
+});
+
+test("the reservation covers any language: CJK and emoji reserve more than ASCII of the same length, and pages are covered at their worst", () => {
+  const env = configured();
+  const ascii = worstOf(env, body({ prompt: "a".repeat(1_000) }));
+  assert.ok(worstOf(env, body({ prompt: "中".repeat(1_000) })) > ascii);
+  assert.ok(worstOf(env, body({ prompt: "😀".repeat(500) })) > ascii);
+  const links = ["https://a.example/", "https://b.example/", "https://c.example/"];
+  assert.ok(worstOf(env, body(), links) > worstOf(env, body()), "links raise the reservation before any page is read");
+
+  const bytes = (references) => Buffer.byteLength(buildMessages({ ...parseRequest(body()).value, references }).map((message) => message.content).join(""));
+  const widest = (text) => ({ url: "https://a.example/", title: text(120), description: text(300), themeColor: text(30), fonts: Array.from({ length: 6 }, () => text(40)), text: text(1_500) });
+  const cjk = (n) => "中".repeat(n);
+  assert.ok(bytes(worstCaseReferences(["https://a.example/"])) >= bytes([widest(cjk)]), "the stand-in is never smaller than the widest page a read can produce");
+});
+
+test("a refusal is free and repeatable: the same request id works once the limit has passed, and nothing was written", async () => {
+  const p = provider();
+  const env = configured({ IDENTITY_AI_IP_PER_MINUTE: "1", IDENTITY_AI_BUDGET_DAILY_USD: "1" });
+  let at = Date.UTC(2030, 0, 1, 12, 0, 0);
+  await withServer({ env, fetchImpl: p.fetchImpl, now: () => at }, async ({ port, ledger }) => {
+    assert.equal((await post(port, body())).status, 200);
+    const again = body();
+    const refused = await post(port, again);
+    assert.equal(refused.status, 429);
+    assert.equal(ledger.today().requests, 1, "the refused request wrote no job");
+    at += 61_000;
+    assert.equal((await post(port, again)).status, 200, "the same id is accepted after the refusal");
+    assert.equal((await post(port, again)).status, 409, "an admitted id still cannot be paid for twice");
+  });
+});
+
+test("an IPv6 visitor cannot multiply the allowance by renting /64s inside one /48", async () => {
+  const p = provider();
+  const env = configured({ IDENTITY_AI_TRUSTED_PROXIES: "private", IDENTITY_AI_IP_PER_DAY: "1", IDENTITY_AI_NET_PER_DAY: "3", IDENTITY_AI_GLOBAL_PER_HOUR: "100" });
+  await withServer({ env, fetchImpl: p.fetchImpl, burstPerMinute: 100 }, async ({ port }) => {
+    const statuses = [];
+    for (let i = 1; i <= 6; i += 1) statuses.push((await post(port, body(), { "x-forwarded-for": `2001:db8:abcd:${i}::1` })).status);
+    assert.deepEqual(statuses, [200, 200, 200, 429, 429, 429]);
+    assert.equal((await post(port, body(), { "x-forwarded-for": "2001:db8:ffff:1::1" })).status, 200, "another /48 is another site");
+  });
+});
+
+test("no one actor can spend the whole day in minutes: an hourly ceiling sits under the daily one", async () => {
+  const p = provider();
+  const env = configured({ IDENTITY_AI_TRUSTED_PROXIES: "private", IDENTITY_AI_GLOBAL_PER_DAY: "8", IDENTITY_AI_GLOBAL_PER_HOUR: "2" });
+  let at = Date.UTC(2030, 0, 1, 12, 5, 0);
+  await withServer({ env, fetchImpl: p.fetchImpl, now: () => at, burstPerMinute: 100 }, async ({ port }) => {
+    const first = [];
+    for (let i = 1; i <= 4; i += 1) first.push((await post(port, body(), { "x-forwarded-for": `198.51.100.${i}` })).status);
+    assert.deepEqual(first, [200, 200, 429, 429]);
+    at += 3_600_000;
+    assert.equal((await post(port, body(), { "x-forwarded-for": "198.51.100.9" })).status, 200, "the next hour has its own allowance");
+  });
+});
+
+test("the burst limiter sits just above the per-minute quota, so a flood cannot reach the database", async () => {
+  const p = provider();
+  const env = configured({ IDENTITY_AI_IP_PER_MINUTE: "3", IDENTITY_AI_IP_PER_DAY: "500" });
+  await withServer({ env, fetchImpl: p.fetchImpl }, async ({ port, ledger }) => {
+    const statuses = [];
+    for (let i = 0; i < 12; i += 1) statuses.push((await post(port, body())).status);
+    assert.equal(statuses.filter((status) => status === 200).length, 3);
+    assert.ok(statuses.filter((status) => status === 429).length >= 6);
+    assert.equal(ledger.today().requests, 3);
+  });
+});
+
+test("a request has seconds, not minutes, to arrive, and the number of open connections is capped", async () => {
+  const { server, ledger } = await listenSuggest({ port: 0, host: "127.0.0.1", log: () => {}, env: configured() });
+  assert.equal(server.headersTimeout, 5_000);
+  assert.equal(server.requestTimeout, 10_000);
+  assert.ok(server.maxConnections > 0 && server.maxConnections <= 1_000);
+  ledger.close();
+  await new Promise((done) => server.close(done));
 });

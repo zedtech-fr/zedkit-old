@@ -9,6 +9,9 @@
 // cost. It is then settled to what the provider reports, or kept whole when there is no report (a crash, a cut
 // connection, a timeout). A job that never settles is charged in full once its time is up: nothing ever flows back
 // into the budget except a reservation released before any provider call was made.
+//
+// A refused request writes nothing: a request id is only recorded when a job is admitted (the job row is the
+// record), so a refusal can be retried with the same id and a flood of refusals costs reads, not fsyncs.
 import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
@@ -38,10 +41,11 @@ CREATE TABLE IF NOT EXISTS hits (
   n INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (scope, key, bucket)
 );
-CREATE TABLE IF NOT EXISTS seen (request_id TEXT PRIMARY KEY, at INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS jobs_expires ON jobs (expires);
 `;
 
 const MINUTE = 60_000;
+const HOUR = 3_600_000;
 const DAY = 86_400_000;
 
 function secondsToNextMinute(now) {
@@ -72,8 +76,8 @@ export function openLedger({ dir, now = () => Date.now() }) {
     spendRow: db.prepare("SELECT reserved, settled, requests FROM spend WHERE period = ?"),
     spendInit: db.prepare("INSERT OR IGNORE INTO spend (period) VALUES (?)"),
     spendMove: db.prepare("UPDATE spend SET reserved = reserved + ?, settled = settled + ?, requests = requests + ? WHERE period = ?"),
-    seenInsert: db.prepare("INSERT OR IGNORE INTO seen (request_id, at) VALUES (?, ?)"),
-    seenClean: db.prepare("DELETE FROM seen WHERE at < ?"),
+    jobExists: db.prepare("SELECT 1 AS found FROM jobs WHERE id = ?"),
+    jobsClean: db.prepare("DELETE FROM jobs WHERE state != 'open' AND expires < ?"),
     openAll: db.prepare("SELECT COUNT(*) AS n FROM jobs WHERE state = 'open'"),
     openIp: db.prepare("SELECT COUNT(*) AS n FROM jobs WHERE state = 'open' AND ip = ?"),
     openSession: db.prepare("SELECT COUNT(*) AS n FROM jobs WHERE state = 'open' AND session = ?"),
@@ -81,6 +85,7 @@ export function openLedger({ dir, now = () => Date.now() }) {
     hitBump: db.prepare("INSERT INTO hits (scope, key, bucket, n) VALUES (?, ?, ?, 1) ON CONFLICT (scope, key, bucket) DO UPDATE SET n = n + 1"),
     hitClean: db.prepare("DELETE FROM hits WHERE bucket LIKE 'd:%' AND bucket < ?"),
     hitCleanMinutes: db.prepare("DELETE FROM hits WHERE bucket LIKE 'm:%' AND CAST(substr(bucket, 3) AS INTEGER) < ?"),
+    hitCleanHours: db.prepare("DELETE FROM hits WHERE bucket LIKE 'h:%' AND CAST(substr(bucket, 3) AS INTEGER) < ?"),
     jobInsert: db.prepare("INSERT INTO jobs (id, ip, session, amount, day, month, expires, state) VALUES (?, ?, ?, ?, ?, ?, ?, 'open')"),
     jobRow: db.prepare("SELECT id, amount, day, month, state FROM jobs WHERE id = ?"),
     jobState: db.prepare("UPDATE jobs SET state = ? WHERE id = ?"),
@@ -89,20 +94,20 @@ export function openLedger({ dir, now = () => Date.now() }) {
   // The repo bans raw try/catch, so a transaction is a promise: BEGIN, the work, then COMMIT or ROLLBACK from
   // the outcome. Transactions of this process queue behind one another; other processes wait on SQLite's lock.
   let queue = Promise.resolve();
+  // A rollback with nothing open throws; it is ignored, because the point is only to never leave one open.
+  const rollback = () =>
+    Promise.resolve()
+      .then(() => db.exec("ROLLBACK"))
+      .catch(() => undefined);
   function step(work) {
     db.exec("BEGIN IMMEDIATE");
     return Promise.resolve()
       .then(work)
-      .then(
-        (value) => {
-          db.exec("COMMIT");
-          return value;
-        },
-        (error) => {
-          db.exec("ROLLBACK");
-          throw error;
-        },
-      );
+      .then((value) => {
+        db.exec("COMMIT");
+        return value;
+      })
+      .catch((error) => rollback().then(() => Promise.reject(error)));
   }
   function transaction(work) {
     const result = queue.then(() => step(work));
@@ -129,23 +134,30 @@ export function openLedger({ dir, now = () => Date.now() }) {
   }
 
   const hits = (scope, key, bucket) => q.hitRow.get(scope, key, bucket)?.n ?? 0;
+  let lastClean = 0;
 
   /**
    * Admits one paid job or says why not. Rejections change nothing, so a refused request costs nothing and the
    * caller must not call the provider.
    * @returns {Promise<{ ok: true, id: string } | { ok: false, reason: "duplicate" | "busy" | "rate" | "budget", retryAfterSec: number }>}
    */
-  function reserve({ requestId, ip, session, amountMicro, ttlMs, budget, limits }) {
+  function reserve({ requestId, ip, net = ip, session, amountMicro, ttlMs, budget, limits }) {
     const at = now();
     const day = new Date(at).toISOString().slice(0, 10);
     const month = day.slice(0, 7);
     const minute = Math.floor(at / MINUTE);
+    const hour = Math.floor(at / HOUR);
     return transaction(() => {
       expireStale(at);
-      q.seenClean.run(at - DAY);
-      q.hitClean.run(`d:${new Date(at - 2 * DAY).toISOString().slice(0, 10)}`);
-      q.hitCleanMinutes.run(minute - 10);
-      if (q.seenInsert.run(requestId, at).changes === 0) return { ok: false, reason: "duplicate", retryAfterSec: 1 };
+      // Housekeeping is a handful of full scans, so it runs once a minute, not on every request.
+      if (minute > lastClean) {
+        lastClean = minute;
+        q.jobsClean.run(at - DAY);
+        q.hitClean.run(`d:${new Date(at - 2 * DAY).toISOString().slice(0, 10)}`);
+        q.hitCleanMinutes.run(minute - 10);
+        q.hitCleanHours.run(hour - 3);
+      }
+      if (q.jobExists.get(requestId)) return { ok: false, reason: "duplicate", retryAfterSec: 1 };
 
       if (q.openAll.get().n >= limits.maxConcurrent) return { ok: false, reason: "busy", retryAfterSec: 5 };
       // One paid job at a time per visitor, whichever way they are identified: a double click, a second tab and a
@@ -155,8 +167,12 @@ export function openLedger({ dir, now = () => Date.now() }) {
       if (hits("ip", ip, `m:${minute}`) >= limits.ipPerMinute) return { ok: false, reason: "rate", retryAfterSec: secondsToNextMinute(at) };
       const untilDay = secondsToNextUtcDay(at);
       if (hits("ip", ip, `d:${day}`) >= limits.ipPerDay) return { ok: false, reason: "rate", retryAfterSec: untilDay };
+      // A whole IPv6 site (a /48) shares a wider allowance than one address: renting more /64s does not buy more.
+      if (hits("net", net, `d:${day}`) >= limits.netPerDay) return { ok: false, reason: "rate", retryAfterSec: untilDay };
       if (hits("session", session, `d:${day}`) >= limits.sessionPerDay) return { ok: false, reason: "rate", retryAfterSec: untilDay };
       if (hits("global", "all", `d:${day}`) >= limits.globalPerDay) return { ok: false, reason: "rate", retryAfterSec: untilDay };
+      // No one actor can spend the whole day's allowance in minutes.
+      if (hits("global", "all", `h:${hour}`) >= limits.globalPerHour) return { ok: false, reason: "rate", retryAfterSec: Math.max(1, Math.ceil((HOUR - (at % HOUR)) / 1000)) };
 
       const dayRow = q.spendRow.get(`d:${day}`) ?? { reserved: 0, settled: 0 };
       if (dayRow.reserved + dayRow.settled + amountMicro > budget.dailyMicro) return { ok: false, reason: "budget", retryAfterSec: untilDay };
@@ -171,8 +187,10 @@ export function openLedger({ dir, now = () => Date.now() }) {
       move(day, month, amountMicro, 0, 1);
       q.hitBump.run("ip", ip, `m:${minute}`);
       q.hitBump.run("ip", ip, `d:${day}`);
+      q.hitBump.run("net", net, `d:${day}`);
       q.hitBump.run("session", session, `d:${day}`);
       q.hitBump.run("global", "all", `d:${day}`);
+      q.hitBump.run("global", "all", `h:${hour}`);
       return { ok: true, id: requestId };
     });
   }

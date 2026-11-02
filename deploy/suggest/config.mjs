@@ -30,6 +30,8 @@ const DEFAULTS = Object.freeze({
   ipPerDay: 20,
   sessionPerDay: 12,
   globalPerDay: 300,
+  globalPerHourShare: 4,
+  netPerDayMultiple: 4,
   referenceTimeoutMs: 8_000,
   referenceMaxBytes: 524_288,
 });
@@ -90,6 +92,8 @@ export function loadConfig(env) {
   if (dailyMicro === null) problems.push("IDENTITY_AI_BUDGET_DAILY_USD is required (an approved daily ceiling, in dollars)");
 
   // A fallback that cannot be priced would be spend nobody accounts for: it is switched off instead.
+  const ipPerDay = integer(env.IDENTITY_AI_IP_PER_DAY, { fallback: DEFAULTS.ipPerDay, min: 1, max: 500 });
+  const globalPerDay = integer(env.IDENTITY_AI_GLOBAL_PER_DAY, { fallback: DEFAULTS.globalPerDay, min: 1, max: 10_000 });
   const usableFallback = fallback && fallback.priceInput !== null && fallback.priceOutput !== null ? fallback : null;
 
   return {
@@ -102,9 +106,13 @@ export function loadConfig(env) {
       timeoutMs: integer(env.IDENTITY_AI_TIMEOUT_MS, { fallback: DEFAULTS.timeoutMs, min: 1_000, max: HARD.maxTimeoutMs }),
       maxConcurrent: integer(env.IDENTITY_AI_MAX_CONCURRENT, { fallback: DEFAULTS.maxConcurrent, min: 1, max: HARD.maxConcurrent }),
       ipPerMinute: integer(env.IDENTITY_AI_IP_PER_MINUTE, { fallback: DEFAULTS.ipPerMinute, min: 1, max: 60 }),
-      ipPerDay: integer(env.IDENTITY_AI_IP_PER_DAY, { fallback: DEFAULTS.ipPerDay, min: 1, max: 500 }),
+      ipPerDay,
+      /** A whole IPv6 site (a /48) gets a wider allowance than one address, never an unbounded one. */
+      netPerDay: integer(env.IDENTITY_AI_NET_PER_DAY, { fallback: ipPerDay * DEFAULTS.netPerDayMultiple, min: 1, max: 2_000 }),
       sessionPerDay: integer(env.IDENTITY_AI_SESSION_PER_DAY, { fallback: DEFAULTS.sessionPerDay, min: 1, max: 500 }),
-      globalPerDay: integer(env.IDENTITY_AI_GLOBAL_PER_DAY, { fallback: DEFAULTS.globalPerDay, min: 1, max: 10_000 }),
+      globalPerDay,
+      /** So that no one actor spends the whole day's allowance in minutes. */
+      globalPerHour: integer(env.IDENTITY_AI_GLOBAL_PER_HOUR, { fallback: Math.ceil(globalPerDay / DEFAULTS.globalPerHourShare), min: 1, max: 2_000 }),
       referenceTimeoutMs: integer(env.IDENTITY_AI_REFERENCE_TIMEOUT_MS, { fallback: DEFAULTS.referenceTimeoutMs, min: 1_000, max: 15_000 }),
       referenceMaxBytes: DEFAULTS.referenceMaxBytes,
     },
@@ -116,6 +124,9 @@ export function loadConfig(env) {
   };
 }
 
+/** No token is longer than this in practice; it turns a text length into the fewest tokens a report can honestly claim. */
+const MAX_BYTES_PER_TOKEN = 16;
+
 /** The most one provider call can cost, in micro-dollars: every input token, plus a full output allowance. */
 export function worstCaseMicro(provider, inputTokens, outputTokens) {
   const input = Math.ceil((inputTokens * provider.priceInput) / 1_000_000);
@@ -124,12 +135,15 @@ export function worstCaseMicro(provider, inputTokens, outputTokens) {
 }
 
 /**
- * The actual cost from the provider's own usage report. Without a usable report the reservation stands (the
- * worst case). With one, the truth is recorded even if it is above the reservation: accounting does not flatter.
+ * The actual cost from the provider's own usage report. A report is believed only when it is plausible: a prompt of
+ * `inputBytes` bytes cannot be fewer than `inputBytes / 16` tokens (the longest tokens are a few bytes), and an answer
+ * that was produced cannot cost no output. A report below that (0 and 0, or a typo) is treated as no report at all, and
+ * the reservation stands. A believable report is recorded even above the reservation: accounting does not flatter.
  */
-export function actualMicro(provider, usage, reservedMicro) {
+export function actualMicro(provider, usage, reservedMicro, { inputBytes = 0, outputBytes = 0 } = {}) {
   const input = Number(usage?.prompt_tokens);
   const output = Number(usage?.completion_tokens);
   if (!Number.isFinite(input) || !Number.isFinite(output) || input < 0 || output < 0) return reservedMicro;
+  if (input < Math.ceil(inputBytes / MAX_BYTES_PER_TOKEN) || output < Math.max(1, Math.ceil(outputBytes / MAX_BYTES_PER_TOKEN))) return reservedMicro;
   return worstCaseMicro(provider, input, output);
 }

@@ -3,6 +3,17 @@
 # /api/identity/suggest (POST), /version and /status go to Suggest. Caddy sets X-Forwarded-For from the real
 # peer and drops any value a client sent, which is what the service's trusted-proxy rule relies on.
 
+{
+	# A request to this site is small. Whoever has not sent theirs in seconds is holding a connection open, and the
+	# suggest service sits behind this proxy with no other protection against it.
+	servers {
+		timeouts {
+			read_header 5s
+			read_body 10s
+		}
+	}
+}
+
 www.zedkit.app {
 	redir https://zedkit.app{uri} permanent
 }
@@ -12,6 +23,9 @@ zedkit.app {
 	encode zstd gzip
 
 	handle /api/identity/suggest* {
+		request_body {
+			max_size 32KB
+		}
 		reverse_proxy suggest:3001
 	}
 
@@ -58,6 +72,9 @@ dev.zedkit.app {
 	header X-Robots-Tag "noindex, nofollow"
 
 	handle /api/identity/suggest* {
+		request_body {
+			max_size 32KB
+		}
 		reverse_proxy suggest-dev:3001
 	}
 

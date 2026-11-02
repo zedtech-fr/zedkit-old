@@ -59,6 +59,8 @@ reason (`disabled`, `not-configured`, `unavailable` or `killed`), and
 | `IDENTITY_AI_TIMEOUT_MS` | Provider time per request | 45000, never above 60000 |
 | `IDENTITY_AI_MAX_CONCURRENT` | Paid jobs running at once, across instances | 2, never above 8 |
 | `IDENTITY_AI_IP_PER_MINUTE`, `_IP_PER_DAY`, `_SESSION_PER_DAY`, `_GLOBAL_PER_DAY` | Request limits per visitor address (an IPv6 visitor is its /64), per session cookie, and overall | 3, 20, 12, 300 |
+| `IDENTITY_AI_NET_PER_DAY` | Per day for a whole IPv6 site (a /48): renting more /64s inside it buys nothing | 4 times the per-address day limit, never above 2000 |
+| `IDENTITY_AI_GLOBAL_PER_HOUR` | Overall per hour, so no one actor spends the day's allowance in minutes | a quarter of the day limit, never above 2000 |
 | `IDENTITY_AI_TRUSTED_PROXIES` | `private` or a comma list of IPs and CIDRs whose `X-Forwarded-For` is believed | none (compose sets `private`) |
 | `IDENTITY_AI_STATE_DIR` | Where the ledger lives (a volume) | `/data` |
 
@@ -69,7 +71,13 @@ How it holds, and where to look:
   admitted only after a reservation at its worst case commits atomically, so
   restarts and instances sharing the volume share one budget. A reservation
   is settled to the provider's reported usage, or kept whole when there is no
-  report (timeout, cancelled visitor, crash). Instances must share the same
+  report (timeout, cancelled visitor, crash) or when the report cannot be true
+  (a prompt cannot cost fewer tokens than its bytes allow). The reservation
+  counts UTF-8 bytes, which no tokenizer exceeds, so CJK and emoji are covered;
+  the surplus goes back at settlement. A provider 5xx or 408 may have done the
+  work, so it is charged; a 4xx or 429 did none. A refused request writes
+  nothing, so the same request id can be retried once the limit has passed.
+  Instances must share the same
   host volume; a multi-host deployment needs a network store behind the same
   interface.
 - **Kill switch:** create the file `DISABLED` in the state volume
@@ -83,7 +91,19 @@ How it holds, and where to look:
   custom ports or IP literals, every resolved address must be public (checked
   inside the socket's own lookup, so a rebinding answer is refused at connect
   time), redirects re-checked, no cookies, no compression, byte and time caps.
-  Pages are read as text and are never visually analysed.
+  IPv6 is public only inside `2000::/3`. Pages are read as text in one linear
+  pass (a page built to be slow costs time in proportion to its size) and are
+  never visually analysed.
+- **Connections:** the service gives a request 5 s for its headers and 10 s in
+  all, and caps open connections; Caddy caps the body of a suggest request at
+  32 KB and applies the same read deadlines. Containers run read-only with no
+  capabilities, no new privileges, 512 MB and 256 processes.
+- **Secrets on the host:** each `releases/<sha>/suggest.env` is created
+  `0600`, and all but the newest five releases (never the live one nor the one
+  `--rollback` needs) are removed after a deploy (`DEPLOY_KEEP_RELEASES`).
+  Known limit: a dev deploy still writes the Caddyfile into `current/`, because
+  Caddy mounts that one path; it is validated first, and a rollback restores the
+  release's own copy.
 - **The schema** the service validates (`suggest/tokens.mjs`) is a port of
   `identityTokenSchema`; `tokens.parity.test.mjs` runs both on a seeded fuzz and
   fails on any disagreement. Run it after `pnpm --filter @zedtech/zedkit-ui build`.

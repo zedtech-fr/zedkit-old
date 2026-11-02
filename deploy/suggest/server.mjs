@@ -16,8 +16,8 @@ import { fileURLToPath } from "node:url";
 
 import { HARD, actualMicro, loadConfig, worstCaseMicro } from "./config.mjs";
 import { openLedgerSafely } from "./ledger.mjs";
-import { clientKey, trustedList } from "./network.mjs";
-import { buildMessages, inputTokens } from "./prompt.mjs";
+import { clientKey, networkOf, trustedList } from "./network.mjs";
+import { buildMessages, inputBytes, inputTokens, worstCaseReferences } from "./prompt.mjs";
 import { callProvider, parseJson } from "./provider.mjs";
 import { fetchReferences } from "./references.mjs";
 import { fontsAllowed, mergePatch, validateTokens } from "./tokens.mjs";
@@ -175,11 +175,14 @@ function attempt(provider, args, { client, deadline, now, fetchImpl, limits }) {
   return callProvider(provider, { ...args, maxTokens: limits.maxOutputTokens, signal, fetchImpl, effort: provider.effort });
 }
 
-/** What the call cost. A reply is charged at its reported usage; a failure at the worst case only if it may have run. */
-function costOf(provider, result, worst) {
-  if (result.ok) return actualMicro(provider, result.usage, worst);
+/** What the call cost. A reply is charged at its (believable) reported usage; a failure at the worst case only if it may have run. */
+function costOf(provider, result, worst, sizes) {
+  if (result.ok) return actualMicro(provider, result.usage, worst, { inputBytes: sizes.inputBytes, outputBytes: Buffer.byteLength(result.content) });
   return result.billable ? worst : 0;
 }
+
+/** The primary, then the fallback if there is one: never more than the hard ceiling of calls. */
+const providersOf = (config) => [config.primary, ...(config.fallback ? [config.fallback] : [])].slice(0, HARD.maxProviderCalls);
 
 /** A refusal or a transport failure can try the fallback once. Invalid output, or the visitor leaving, cannot. */
 function mayFallBack(result) {
@@ -192,8 +195,9 @@ function mayFallBack(result) {
 async function generate(ctx, request, references) {
   const { config, fetchImpl, now, client, deadline } = ctx;
   const messages = buildMessages({ ...request, references: references.filter((item) => item.ok) });
-  const providers = [config.primary, ...(config.fallback ? [config.fallback] : [])];
+  const providers = providersOf(config);
   const tokens = inputTokens(messages);
+  const sizes = { inputBytes: inputBytes(messages) };
   let spent = 0;
   let called = 0;
   let last = null;
@@ -201,7 +205,7 @@ async function generate(ctx, request, references) {
     const worst = worstCaseMicro(provider, tokens, config.limits.maxOutputTokens);
     const result = await attempt(provider, { messages }, { client, deadline, now, fetchImpl, limits: config.limits });
     called += 1;
-    spent += costOf(provider, result, worst);
+    spent += costOf(provider, result, worst, sizes);
     last = { result, provider };
     if (result.ok || !mayFallBack(result)) break;
   }
@@ -248,13 +252,13 @@ async function suggest(ctx, req, res) {
     ? { "set-cookie": `${COOKIE}=${session.id}.${session.sign(session.id)}; Path=/api/identity; Max-Age=2592000; HttpOnly; SameSite=Lax${req.headers["x-forwarded-proto"] === "https" ? "; Secure" : ""}` }
     : {};
 
-  const tokens = inputTokens(buildMessages({ ...request, references: request.references.map((url) => ({ url, title: "", description: "", themeColor: "", fonts: [], text: "x".repeat(HARD.maxReferenceChars) })) }));
-  const providers = [config.primary, ...(config.fallback ? [config.fallback] : [])];
-  const amountMicro = providers.reduce((sum, provider) => sum + worstCaseMicro(provider, tokens, config.limits.maxOutputTokens), 0);
+  const tokens = inputTokens(buildMessages({ ...request, references: worstCaseReferences(request.references) }));
+  const amountMicro = providersOf(config).reduce((sum, provider) => sum + worstCaseMicro(provider, tokens, config.limits.maxOutputTokens), 0);
   const admitted = await ledger
     .reserve({
     requestId: request.requestId,
     ip: key,
+    net: networkOf(key),
     session: session.id,
     amountMicro,
     ttlMs: config.limits.timeoutMs + config.limits.referenceTimeoutMs + 15_000,
@@ -375,7 +379,7 @@ export function listenSuggest(options = {}) {
       log,
       fetchImpl: options.fetchImpl ?? globalThis.fetch,
       trusted: trustedList(config.network.trustedProxies),
-      burst: burstLimiter(options.burstPerMinute ?? 40, now),
+      burst: burstLimiter(options.burstPerMinute ?? Math.max(6, config.limits.ipPerMinute * 2), now),
       sessionSecret: config.network.sessionSecret || randomBytes(32).toString("hex"),
       release: versionPayload(config, releaseId(env)),
       ...(options.resolve ? { resolve: options.resolve } : {}),
@@ -386,6 +390,12 @@ export function listenSuggest(options = {}) {
         if (!res.headersSent) refuse(res, 500, "internal");
       });
     });
+    // A request is at most a few kilobytes: whoever has not sent it within seconds is holding a socket, not asking.
+    // (Node's defaults are 60 s for headers and 300 s for the whole request, with no cap on connections.)
+    server.headersTimeout = 5_000;
+    server.requestTimeout = 10_000;
+    server.keepAliveTimeout = 5_000;
+    server.maxConnections = 256;
     return new Promise((done, fail) => {
       server.once("error", fail);
       server.listen(options.port ?? 0, options.host ?? "127.0.0.1", () => {

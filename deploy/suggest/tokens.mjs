@@ -56,7 +56,7 @@ function isCss(value) {
     typeof value === "string" &&
     value.length > 0 &&
     value.length <= 400 &&
-    !/[{};<>@\\]|\/\*|url\s*\(/i.test(value) &&
+    !/[{};<>@\\]|\p{Cc}|\/\*|url\s*\(/iu.test(value) &&
     isBalanced(value)
   );
 }

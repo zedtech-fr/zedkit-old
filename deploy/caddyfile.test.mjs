@@ -109,3 +109,21 @@ test("each site proxies the suggest API to its own instance: dev never depends o
   assert.match(dev, /reverse_proxy suggest-dev:3001/);
   assert.doesNotMatch(dev, /reverse_proxy suggest:3001/);
 });
+
+test("the suggest routes cap the request body and every connection has seconds to send its request", () => {
+  const result = spawnSync(
+    "docker",
+    ["run", "--rm", "-v", `${here}/Caddyfile:/etc/caddy/Caddyfile:ro`, "caddy:2", "caddy", "adapt", "--config", "/etc/caddy/Caddyfile"],
+    { encoding: "utf8" },
+  );
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const config = JSON.parse(result.stdout.slice(result.stdout.indexOf("{")));
+  const [server] = Object.values(config.apps.http.servers);
+  assert.equal(server.read_header_timeout, 5_000_000_000);
+  assert.equal(server.read_timeout, 10_000_000_000);
+
+  const text = JSON.stringify(config);
+  const proxies = [...text.matchAll(/"handler":"reverse_proxy"[^]*?"dial":"(suggest(?:-dev)?:3001)"/g)].map((match) => match[1]);
+  assert.deepEqual(proxies.sort(), ["suggest-dev:3001", "suggest:3001"]);
+  assert.equal([...text.matchAll(/"handler":"request_body","max_size":32000/g)].length, 2, "a body cap in front of each proxy");
+});

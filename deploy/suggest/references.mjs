@@ -49,9 +49,14 @@ for (const [net, prefix] of [
   ["fe80::", 10],
   ["fec0::", 10],
   ["ff00::", 8],
+  ["3fff::", 20],
 ]) {
   BLOCKED.addSubnet(net, prefix, "ipv6");
 }
+
+/** The only IPv6 space handed out as global unicast. Anything outside it is not a public address, listed or not. */
+const GLOBAL_V6 = new BlockList();
+GLOBAL_V6.addSubnet("2000::", 3, "ipv6");
 
 /**
  * True only for a globally routable unicast address. Translated and tunnelled IPv6 forms are refused outright, and an
@@ -64,6 +69,7 @@ export function isPublicAddress(address) {
   const mapped = family === 6 ? /^::ffff:(\d+\.\d+\.\d+\.\d+)$/i.exec(address) : null;
   if (mapped) return isPublicAddress(mapped[1]);
   if (family === 6 && /^::ffff:/i.test(address)) return false;
+  if (family === 6 && !GLOBAL_V6.check(address, "ipv6")) return false;
   return !BLOCKED.check(address, family === 6 ? "ipv6" : "ipv4");
 }
 
@@ -171,46 +177,142 @@ function decodeEntities(text) {
     .replace(/&#(\d{1,6});/g, (_m, code) => (Number(code) < 0x110000 ? String.fromCodePoint(Number(code)) : " "));
 }
 
-const squash = (text) => decodeEntities(text).replace(/\s+/g, " ").trim();
+// Well-formed and free of control characters, so that a field costs at most 3 bytes per UTF-16 unit once serialised
+// (a lone surrogate or a control character would be escaped to six). The reservation relies on that bound.
+const squash = (text) => decodeEntities(text).toWellFormed().replace(/\p{Cc}/gu, " ").replace(/\s+/g, " ").trim();
 const clip = (text, max) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
 
-function meta(html, names) {
-  for (const name of names) {
-    const pattern = new RegExp(`<meta\\b[^>]*(?:name|property)=["']${name}["'][^>]*>`, "i");
-    const tag = pattern.exec(html)?.[0];
-    const value = tag ? /content=["']([^"']*)["']/i.exec(tag)?.[1] : undefined;
-    if (value) return squash(value);
+const RAW_TEXT = new Set(["script", "style", "noscript", "template", "svg", "iframe"]);
+const MAX_STYLE_CHARS = 20_000;
+
+/** The attributes of one tag's text, scanned once, names lowercased. Linear in the tag's length. */
+function attributes(tag) {
+  const found = {};
+  let i = tag.search(/[\s/]/);
+  while (i !== -1 && i < tag.length) {
+    while (i < tag.length && /[\s/]/.test(tag[i])) i += 1;
+    let j = i;
+    while (j < tag.length && !/[\s=/>]/.test(tag[j])) j += 1;
+    const name = tag.slice(i, j).toLowerCase();
+    i = j;
+    while (i < tag.length && /\s/.test(tag[i])) i += 1;
+    if (tag[i] !== "=") {
+      if (name) found[name] ??= "";
+      continue;
+    }
+    i += 1;
+    while (i < tag.length && /\s/.test(tag[i])) i += 1;
+    const quote = tag[i] === '"' || tag[i] === "'" ? tag[i] : "";
+    if (quote) i += 1;
+    let end = i;
+    while (end < tag.length && (quote ? tag[end] !== quote : !/[\s>]/.test(tag[end]))) end += 1;
+    if (name) found[name] ??= tag.slice(i, end);
+    i = end + (quote ? 1 : 0);
   }
-  return "";
+  return found;
 }
 
-/** Font family names a page asks for: from Google Fonts links and inline `font-family`, never fetched. */
-function fontNames(html) {
-  const found = new Set();
-  for (const link of html.matchAll(/fonts\.googleapis\.com\/css2?\?([^"'\s>]+)/gi)) {
-    // URLSearchParams decodes without throwing on a malformed escape.
-    for (const family of new URLSearchParams(link[1].replace(/&amp;/g, "&")).getAll("family")) found.add(family.split(":")[0] ?? "");
+/** The index just past the closing tag of a raw-text element (`</script`), or -1. Case-insensitive, one pass. */
+function closeOf(html, name, from) {
+  for (let at = html.indexOf("</", from); at !== -1; at = html.indexOf("</", at + 2)) {
+    if (html.slice(at + 2, at + 2 + name.length).toLowerCase() === name) return html.indexOf(">", at) === -1 ? html.length : html.indexOf(">", at) + 1;
   }
-  for (const rule of html.matchAll(/font-family\s*:\s*([^;}"]+)/gi)) {
+  return -1;
+}
+
+/**
+ * A page read once, front to back. Every position is looked at a bounded number of times, so a page built to be
+ * slow (a million `<`, an unclosed `<meta`) costs time in proportion to its size and no more. This runs on the
+ * service's own thread after a reservation: an extractor that could take minutes would stop every other request.
+ */
+function scan(html) {
+  const metas = {};
+  const hrefs = [];
+  const style = [];
+  const text = [];
+  let title = "";
+  let titleSeen = false;
+  let i = 0;
+  while (i < html.length) {
+    const lt = html.indexOf("<", i);
+    if (lt === -1) {
+      text.push(html.slice(i));
+      break;
+    }
+    text.push(html.slice(i, lt));
+    if (html.startsWith("<!--", lt)) {
+      const end = html.indexOf("-->", lt + 4);
+      i = end === -1 ? html.length : end + 3;
+      continue;
+    }
+    const gt = html.indexOf(">", lt);
+    if (gt === -1) {
+      // No `>` anywhere after this point, so no tag can close: the rest is text. Looking again at every later `<`
+      // would re-scan the whole remainder each time.
+      text.push(html.slice(lt).replace(/</g, " "));
+      break;
+    }
+    const tag = html.slice(lt + 1, gt);
+    const name = /^\/?([a-zA-Z][a-zA-Z0-9-]*)/.exec(tag)?.[1]?.toLowerCase() ?? "";
+    i = gt + 1;
+    text.push(" ");
+    if (tag.startsWith("/") || name === "") continue;
+    const attrs = attributes(tag);
+    if (attrs.style) style.push(attrs.style);
+    if (name === "meta") {
+      const key = (attrs.name || attrs.property || "").toLowerCase();
+      if (key && attrs.content && metas[key] === undefined) metas[key] = attrs.content;
+    } else if (name === "link" && attrs.href) {
+      hrefs.push(attrs.href);
+    }
+    if (name === "title" && !titleSeen) {
+      titleSeen = true;
+      const end = closeOf(html, "title", i);
+      const body = html.slice(i, end === -1 ? Math.min(html.length, i + 400) : end);
+      title = body.slice(0, body.indexOf("<") === -1 ? body.length : body.indexOf("<"));
+      i = end === -1 ? i : end;
+      continue;
+    }
+    if (RAW_TEXT.has(name)) {
+      const end = closeOf(html, name, i);
+      if (name === "style") style.push(html.slice(i, Math.min(end === -1 ? html.length : end, i + MAX_STYLE_CHARS)));
+      i = end === -1 ? html.length : end;
+    }
+  }
+  return { title, metas, hrefs, style: style.join(";\n").slice(0, MAX_STYLE_CHARS), text: text.join("") };
+}
+
+/** Font family names a page asks for: from Google Fonts links and `font-family`, never fetched. */
+function fontNames({ hrefs, style }) {
+  const found = new Set();
+  for (const href of hrefs) {
+    if (!/^https?:\/\/fonts\.googleapis\.com\/css2?\?/i.test(href)) continue;
+    // URLSearchParams decodes without throwing on a malformed escape.
+    for (const family of new URLSearchParams(href.slice(href.indexOf("?") + 1).replace(/&amp;/g, "&")).getAll("family")) found.add(family.split(":")[0] ?? "");
+  }
+  for (const rule of style.matchAll(/font-family\s*:\s*([^;}"]{1,200})/gi)) {
     const first = rule[1].split(",")[0]?.replace(/["']/g, "").trim();
     if (first && !/^(inherit|initial|unset|serif|sans-serif|monospace|system-ui|var\(.*)$/i.test(first)) found.add(first);
   }
-  return [...found].map((name) => name.replace(/[^\w .-]/g, "").slice(0, 40)).filter(Boolean).slice(0, 6);
+  return [...found].map((name) => name.replace(/[^\w .-]/g, "").slice(0, FIELD_MAX.fontChars)).filter(Boolean).slice(0, FIELD_MAX.fonts);
 }
+
+/** The longest each field of a read page can be, in UTF-16 units: the worst case a reservation has to cover. */
+export const FIELD_MAX = Object.freeze({ title: 120, description: 300, themeColor: 30, fonts: 6, fontChars: 40 });
 
 /** The text of a page and a few hints, bounded. Scripts, styles and markup never reach the model. */
 export function extractReference(html, maxChars) {
-  const title = squash(/<title\b[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1] ?? "");
-  const body = html
-    .replace(/<!--[\s\S]*?-->/g, " ")
-    .replace(/<(script|style|noscript|template|svg|iframe|head)\b[\s\S]*?<\/\1>/gi, " ")
-    .replace(/<[^>]*>/g, " ");
+  const page = scan(html);
+  const pick = (...names) => {
+    for (const name of names) if (page.metas[name]) return squash(page.metas[name]);
+    return "";
+  };
   return {
-    title: clip(title, 120),
-    description: clip(meta(html, ["description", "og:description"]), 300),
-    themeColor: clip(meta(html, ["theme-color"]), 30),
-    fonts: fontNames(html),
-    text: clip(squash(body), maxChars),
+    title: clip(squash(page.title), FIELD_MAX.title),
+    description: clip(pick("description", "og:description"), FIELD_MAX.description),
+    themeColor: clip(pick("theme-color"), FIELD_MAX.themeColor),
+    fonts: fontNames(page),
+    text: clip(squash(page.text), maxChars),
   };
 }
 

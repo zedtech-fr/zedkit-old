@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { performance } from "node:perf_hooks";
 import test from "node:test";
 import { createServer } from "node:net";
 
@@ -184,4 +185,52 @@ test("a response is cut at the byte cap and says so", async () => {
   const got = await fetchReference("https://big.example.org/", { ...OPTIONS, transport });
   assert.equal(got.ok, true);
   assert.equal(got.truncated, true);
+});
+
+test("a page built to be slow costs time in proportion to its size: no input takes the service's thread for seconds", () => {
+  const size = 524_288;
+  const hostile = {
+    "a wall of <": "<".repeat(size),
+    "unclosed meta": "<meta ".repeat(size / 6),
+    "unclosed comments": "<!--".repeat(size / 4),
+    "unclosed scripts": "<script>".repeat(size / 8),
+    "unclosed titles": "<title>".repeat(size / 7),
+    "tags that never end": `${"<a ".repeat(size / 3)}>`,
+    "many tiny tags": "<b>x</b>".repeat(size / 8),
+    "long attribute": `<meta name="description" content="${"x".repeat(size)}">`,
+    "spaces in a font rule": `<style>${"font-family ".repeat(size / 12)}</style>`,
+    "closers without openers": "</script>".repeat(size / 9),
+  };
+  for (const [label, html] of Object.entries(hostile)) {
+    const started = performance.now();
+    extractReference(html, 1_500);
+    const ms = performance.now() - started;
+    assert.ok(ms < 1_000, `${label}: ${Math.round(ms)} ms for ${html.length} characters`);
+  }
+});
+
+test("the page is read front to back: title, meta, links and text survive odd markup", () => {
+  const got = extractReference(
+    `<HTML><HEAD><TITLE>  A &amp; B </TITLE><META NAME=description CONTENT='Quiet'><link rel=stylesheet href='https://fonts.googleapis.com/css2?family=Inter:wght@400'></HEAD>
+     <body style="font-family: 'Newsreader', serif"><P>One<br>two</p><SCRIPT>if (a < b) {}</SCRIPT><style>h1{font-family:Jost}</style><p>three</p></body></HTML>`,
+    300,
+  );
+  assert.equal(got.title, "A & B");
+  assert.equal(got.description, "Quiet");
+  assert.deepEqual(got.fonts.sort(), ["Inter", "Jost", "Newsreader"]);
+  assert.equal(got.text, "One two three");
+});
+
+test("IPv6 is public only inside 2000::/3, minus documentation space", () => {
+  for (const address of ["::7f00:1", "5f00::1", "3fff::1", "4000::1", "8000::1", "fe80::1", "::2"]) assert.equal(isPublicAddress(address), false, address);
+  for (const address of ["2606:4700:4700::1111", "2a00:1450:4007:80f::200e", "2001:4860:4860::8888"]) assert.equal(isPublicAddress(address), true, address);
+});
+
+test("what reaches the model is well-formed and free of control characters, so its size is bounded in bytes", () => {
+  const got = extractReference(`<title>a&#55357;b\u0001c\u0000d</title><meta name=description content="x&#55357;y&#7;z"><p>one&#55357;two\u0002three</p>`, 300);
+  for (const value of [got.title, got.description, got.text]) {
+    assert.equal(value, value.toWellFormed(), "no lone surrogate");
+    assert.doesNotMatch(value, /\p{Cc}/u, "no control character");
+    assert.ok(Buffer.byteLength(JSON.stringify(value)) <= value.length * 3 + 2, "at most 3 bytes per unit once serialised");
+  }
 });

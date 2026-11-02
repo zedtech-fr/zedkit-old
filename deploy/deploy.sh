@@ -34,6 +34,17 @@ github_out() {
   fi
 }
 
+# A secret file, created private (0600) from the first byte: `scp` would keep the sender's mode, which may be world-readable.
+put_secret() {
+  ssh "$target" "umask 077; cat > '$2'" < "$1"
+}
+
+# Release directories hold a provider key each. Keep the newest few, never the live one or the one rollback needs.
+keep_releases="${DEPLOY_KEEP_RELEASES:-5}"
+prune_releases() {
+  ssh "$target" "cd '$remote' && keep=\"\$(basename \"\$(readlink current)\") \$(cat .previous-release 2>/dev/null || true)\" && ls -1t releases | tail -n +$((keep_releases + 1)) | while read -r old; do case \" \$keep \" in *\" \$old \"*) ;; *) rm -rf \"releases/\$old\" ;; esac; done"
+}
+
 # Every file the service runs from, and its env: a change to any of them recreates the container.
 suggest_fingerprint() {
   local dir="$1"
@@ -50,7 +61,7 @@ deploy_suggest_dev() {
   scp -q "$root/deploy/compose.dev.yaml" "$target:$remote/compose.dev.yaml"
   local env_file="${DEPLOY_SUGGEST_DEV_ENV:-$root/deploy/suggest-dev.env}"
   if [ -f "$env_file" ]; then
-    scp -q "$env_file" "$target:$dev_dir/suggest.env"
+    put_secret "$env_file" "$dev_dir/suggest.env"
   else
     ssh "$target" "umask 077; : > '$dev_dir/suggest.env'"
   fi
@@ -128,7 +139,7 @@ if [ "$mode" = "prod" ]; then
 
   suggest_env="${DEPLOY_SUGGEST_ENV:-$root/deploy/suggest.env}"
   if [ -f "$suggest_env" ]; then
-    scp -q "$suggest_env" "$target:$release_dir/suggest.env"
+    put_secret "$suggest_env" "$release_dir/suggest.env"
   else
     ssh "$target" "umask 077; : > '$release_dir/suggest.env'"
   fi
@@ -152,6 +163,7 @@ if [ "$mode" = "prod" ]; then
   # mounts the new target.
   recreate_caddy
   reconcile_suggest "$fp"
+  prune_releases
   github_out "switched=true"
 else
   branch="${DEV_BRANCH:-}"

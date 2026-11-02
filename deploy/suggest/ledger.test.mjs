@@ -8,7 +8,7 @@ import test from "node:test";
 
 import { openLedger } from "./ledger.mjs";
 
-const LIMITS = { maxConcurrent: 100, ipPerMinute: 1000, ipPerDay: 1000, sessionPerDay: 1000, globalPerDay: 10_000 };
+const LIMITS = { maxConcurrent: 100, ipPerMinute: 1000, ipPerDay: 1000, sessionPerDay: 1000, netPerDay: 1000, globalPerDay: 10_000, globalPerHour: 10_000 };
 const BUDGET = { dailyMicro: 1_000_000, monthlyMicro: null };
 
 let n = 0;
@@ -192,4 +192,43 @@ test("the kill switch is a file every instance reads on each request", () => {
   writeFileSync(join(dir, "DISABLED"), "");
   assert.equal(l.killed(), true);
   assert.equal(openLedger({ dir }).killed(), true);
+});
+
+test("a refused request leaves no trace: the same id is admitted later, and nothing counts it as spent", async () => {
+  let at = Date.UTC(2030, 0, 1, 12, 0, 0);
+  const { ledger: l } = ledger({ now: () => at });
+  const first = ask({ ip: "4:1.1.1.1", limits: { ...LIMITS, ipPerMinute: 1 } });
+  assert.equal((await l.reserve(first)).ok, true);
+  await l.settle(first.requestId, 10_000);
+  const second = ask({ ip: "4:1.1.1.1", limits: { ...LIMITS, ipPerMinute: 1 } });
+  assert.equal((await l.reserve(second)).reason, "rate");
+  assert.equal((await l.reserve(second)).reason, "rate", "asking again is refused again, not called a duplicate");
+  at += 61_000;
+  assert.equal((await l.reserve(second)).ok, true);
+  assert.equal((await l.reserve(second)).reason, "duplicate");
+});
+
+test("finished jobs are forgotten after a day, so an id never trips over an old row", async () => {
+  let at = Date.UTC(2030, 0, 1, 12, 0, 0);
+  const { ledger: l } = ledger({ now: () => at });
+  const request = ask();
+  assert.equal((await l.reserve(request)).ok, true);
+  await l.settle(request.requestId, 1_000);
+  at += 25 * 3_600_000;
+  assert.equal((await l.reserve({ ...request })).ok, true, "reused after a day, with no constraint error");
+});
+
+test("a whole IPv6 site and an hour are limited apart from the visitor and the day", async () => {
+  let at = Date.UTC(2030, 0, 1, 12, 5, 0);
+  const { ledger: l } = ledger({ now: () => at });
+  const limits = { ...LIMITS, netPerDay: 2, globalPerHour: 3 };
+  assert.equal((await l.reserve(ask({ limits, ip: "6:a:b:c:1", net: "6:a:b:c" }))).ok, true);
+  assert.equal((await l.reserve(ask({ limits, ip: "6:a:b:c:2", net: "6:a:b:c" }))).ok, true);
+  assert.equal((await l.reserve(ask({ limits, ip: "6:a:b:c:3", net: "6:a:b:c" }))).reason, "rate", "a third /64 in the same /48");
+  assert.equal((await l.reserve(ask({ limits, ip: "6:a:b:d:1", net: "6:a:b:d" }))).ok, true, "another site, third of the hour");
+  const over = await l.reserve(ask({ limits, ip: "4:2.2.2.2" }));
+  assert.equal(over.reason, "rate");
+  assert.ok(over.retryAfterSec >= 1 && over.retryAfterSec <= 3_600, "the retry time is within the hour");
+  at += 3_600_000;
+  assert.equal((await l.reserve(ask({ limits, ip: "4:2.2.2.2" }))).ok, true);
 });

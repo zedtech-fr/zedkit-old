@@ -34,7 +34,7 @@ function prng(seed) {
 const HOSTILE = [
   undefined, null, "", " ", "x", "0 0% 0%", "360 100% 50%", "240 10% 3.9", "240  10%  3.9%", "0 0% 100% / 0.5", "0 0% 100%\n", "1.5", ".5", "5.", "1e3",
   "-0.02em", "0.5em", "-.5em", "0.5rem", "1px", "calc(1px + 2px)", "}", "{", ";", "a;b", "url(x)", "URL (x)", "@import", "\\", "/* c */", "<b>", '"unclosed',
-  "'single", "(unbalanced", "[x]", "((x))", "x)(", "x".repeat(400), "x".repeat(401), 12, true, {}, [], ["a"], "1 2% 3%", "-1 2% 3%", "1 2 3",
+  "'single", "'a\nb'", "a\tb", "a\u0000b", "\u007f", "a\rb", "(unbalanced", "[x]", "((x))", "x)(", "x".repeat(400), "x".repeat(401), 12, true, {}, [], ["a"], "1 2% 3%", "-1 2% 3%", "1 2 3",
 ];
 
 const clone = (value) => JSON.parse(JSON.stringify(value));

@@ -60,6 +60,11 @@ export function visitorKey(address) {
   return `6:${groups.slice(0, 4).map((g) => Number.parseInt(g || "0", 16).toString(16)).join(":")}`;
 }
 
+/** The wider network a visitor key belongs to: an IPv6 /64 sits in a /48 (one site), an IPv4 address is its own network. */
+export function networkOf(key) {
+  return key.startsWith("6:") ? key.split(":").slice(0, 4).join(":") : key;
+}
+
 /**
  * @param {{ socket: { remoteAddress?: string }, headers: Record<string, string | string[] | undefined> }} req
  * @param {BlockList} trusted

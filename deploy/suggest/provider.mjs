@@ -34,7 +34,7 @@ export function parseJson(text) {
  *   | { ok: true, content: string, usage: object | undefined }
  *   | { ok: false, kind: "http" | "timeout" | "aborted" | "network" | "shape", status?: number, billable: boolean }
  * >}
- * `billable` says whether the provider may have charged for the call: a refusal (an HTTP error) or a refused
+ * `billable` says whether the provider may have charged for the call: a refusal (a 4xx) or a refused
  * connection did no work; a timeout, a cut connection or a malformed answer may have.
  */
 export function callProvider(provider, { messages, maxTokens, signal, fetchImpl, effort }) {
@@ -51,7 +51,9 @@ export function callProvider(provider, { messages, maxTokens, signal, fetchImpl,
   })
     .then((res) => res.text().then((text) => ({ res, text })))
     .then(({ res, text }) => {
-      if (!res.ok) return { ok: false, kind: "http", status: res.status, billable: false };
+      // A gateway can time out after the work was done: a server error (5xx) or a 408 may have been charged. A
+      // refusal (4xx, 429) did no work.
+      if (!res.ok) return { ok: false, kind: "http", status: res.status, billable: res.status >= 500 || res.status === 408 };
       return parseJson(text).then((outer) => {
         const content = outer.ok ? contentText(outer.value?.choices?.[0]?.message?.content) : "";
         if (!content) return { ok: false, kind: "shape", billable: true };

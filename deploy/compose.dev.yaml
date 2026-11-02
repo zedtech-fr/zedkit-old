@@ -19,8 +19,21 @@ services:
       PORT: "3001"
       IDENTITY_AI_STATE_DIR: /data
       IDENTITY_AI_TRUSTED_PROXIES: private
+      # Reference pages are fetched by name: a slow DNS answer holds a thread each, and libuv has four by default.
+      UV_THREADPOOL_SIZE: "16"
     expose:
       - "3001"
+    # The service reads one volume and talks to one proxy: it needs no privileges, no writable image, and no
+    # more than a few hundred megabytes.
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    pids_limit: 256
 
 volumes:
   suggest_dev_data:
