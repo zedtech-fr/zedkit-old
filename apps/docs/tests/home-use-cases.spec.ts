@@ -79,7 +79,7 @@ test("Display preview mode reaches the table without a toolbar select", async ({
   await expect(card.getByText(/No apps yet/)).toBeVisible();
 });
 
-test("identity looks offers six identity tabs", async ({ page }) => {
+test("identity looks has one example tab per identity", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/");
   const looks = page.locator("[data-home-identity-looks]");

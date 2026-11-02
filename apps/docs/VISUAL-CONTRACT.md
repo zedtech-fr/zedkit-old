@@ -76,7 +76,9 @@ Only to explain a change or keep context (overlay in/out, panel following focus,
 
 ## Home
 
-Promise and one working example (hero: the proposition beside a tablist of three examples, no scroll pinning), then the same task in six looks (one fair form, plus a second specimen in its own frame for the looks that have something the form cannot show), then adoption (npm or copy source, one command), then finding a component by family, then the rest of the kit. Each band has one focal point, one next action and a different shape from its neighbours. A band that repeats another (two blocks about coding agents) is removed.
+Promise and one working example (hero: the proposition beside a tablist of three examples, no scroll pinning), then each look doing the job it suits (one product screen per identity, built from the same components, never one page restyled six times), then adoption (npm or copy source, one command), then finding a component by family, then the rest of the kit. Each band has one focal point, one next action and a different shape from its neighbours. A band that repeats another (two blocks about coding agents) is removed.
+
+Identity examples sell what the kit builds, not how many identities it ships: no count in the title or copy, and each identity shows its own product screen (Maison a bag shop, Press a newsroom, Glass a SaaS app), never one page restyled per identity. Each example uses live kit components and keeps its own identity in full.
 
 ## Component page
 

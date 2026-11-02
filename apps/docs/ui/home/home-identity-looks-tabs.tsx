@@ -30,7 +30,7 @@ export function HomeIdentityLooksTabs({
     >
       <TabsList
         aria-label={homeIdentityLooksCopy.tabsAriaLabel}
-        // Phones: a 3x2 grid, so all six names stay visible and the chosen one never scrolls out of sight.
+        // Phones: a 3x2 grid, so every name stays visible and the chosen one never scrolls out of sight.
         className="grid h-auto! min-h-11 w-full min-w-0 grid-cols-3 gap-1 sm:flex sm:snap-x sm:snap-mandatory sm:justify-start sm:overflow-x-auto"
       >
         {IDENTITY_IDS.map((id) => (
@@ -40,7 +40,8 @@ export function HomeIdentityLooksTabs({
             className="min-h-11 shrink-0 snap-start flex-col gap-1 px-2 py-2 sm:flex-row sm:gap-2 sm:px-3 sm:py-1"
           >
             <HomeIdentityPaletteDots identity={id} mode={mode} tokens={TAB_DOTS} />
-            {HOME_IDENTITY_FACTS[id].label}
+            <span data-tab-label="">{homeIdentityLooksCopy.products[id]}</span>
+            <span className="text-xs font-normal text-muted-foreground">{HOME_IDENTITY_FACTS[id].label}</span>
           </TabsTrigger>
         ))}
       </TabsList>

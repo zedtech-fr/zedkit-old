@@ -1,18 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore, type ComponentType } from "react";
 import { useTheme } from "next-themes";
 import { Button, Stack, TabsContent, Text, ThemeScope } from "@zedtech/zedkit-ui";
 import { IDENTITY_EDITOR_HREF } from "@/lib/site-links.mjs";
 import { HOME_IDENTITY_FACTS, isIdentityId, type IdentityId } from "@/ui/home/home-identity-facts";
 import { homeIdentityLooksCopy } from "@/ui/home/home-identity-looks-copy";
+import { HomeIdentityExampleGlass } from "@/ui/home/home-identity-example-glass";
+import { HomeIdentityExampleMaison } from "@/ui/home/home-identity-example-maison";
+import { HomeIdentityExampleMist } from "@/ui/home/home-identity-example-mist";
+import { HomeIdentityExamplePress } from "@/ui/home/home-identity-example-press";
+import { HomeIdentityExampleTide } from "@/ui/home/home-identity-example-tide";
+import { HomeIdentityExampleVolt } from "@/ui/home/home-identity-example-volt";
 import { HomeIdentityLooksFacts } from "@/ui/home/home-identity-looks-facts";
-import { HomeIdentityLooksStage } from "@/ui/home/home-identity-looks-stage";
 import { HomeIdentityLooksTabs } from "@/ui/home/home-identity-looks-tabs";
 import { HOME_METADATA_TEXT_CLASS } from "@/ui/home/home-rhythm";
 
 const noop = () => () => {};
+
+/** One product screen per identity: each look is shown doing the job it suits, not the same page restyled. */
+const EXAMPLES: Record<IdentityId, ComponentType> = {
+  mist: HomeIdentityExampleMist,
+  press: HomeIdentityExamplePress,
+  tide: HomeIdentityExampleTide,
+  volt: HomeIdentityExampleVolt,
+  maison: HomeIdentityExampleMaison,
+  glass: HomeIdentityExampleGlass,
+};
 
 export function HomeIdentityLooks() {
   const [identity, setIdentity] = useState<IdentityId>("mist");
@@ -51,6 +66,7 @@ function HomeIdentityLooksFrame({
   mode: "light" | "dark";
   facts: (typeof HOME_IDENTITY_FACTS)[IdentityId];
 }) {
+  const Example = EXAMPLES[identity];
   return (
     <Stack gap={3} className="min-w-0">
       <div className="grid min-w-0 gap-4 lg:grid-cols-3">
@@ -61,7 +77,7 @@ function HomeIdentityLooksFrame({
             data-home-identity-stage=""
             className="min-w-0 rounded-xl bg-background p-2 sm:p-4"
           >
-            <HomeIdentityLooksStage identity={identity} />
+            <Example />
           </ThemeScope>
         </div>
         <aside className="hidden min-w-0 lg:block">

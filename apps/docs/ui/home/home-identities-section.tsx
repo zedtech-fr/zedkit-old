@@ -7,7 +7,7 @@ import {
   HOME_SECTION_CONTENT_GAP,
 } from "@/ui/home/home-rhythm";
 
-/** Comparison: one task in six looks, right after the proof, before the visitor decides how to adopt. */
+/** Comparison: a different product in each look, right after the proof and before the visitor decides how to adopt. */
 export function HomeIdentitiesSection() {
   return (
     <Section
