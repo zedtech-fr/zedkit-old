@@ -62,11 +62,29 @@ function secondsToNextUtcMonth(now) {
   return Math.max(1, Math.ceil((next - now) / 1000));
 }
 
+function isSqliteBusy(error) {
+  return error?.code === "ERR_SQLITE_ERROR" && error?.errcode === 5;
+}
+
+/** Concurrent openLedger calls can race on first WAL; busy_timeout applies after it is set. */
+function execBusyRetry(db, sql, attempts = 50) {
+  for (let i = 0; i < attempts; i += 1) {
+    try {
+      db.exec(sql);
+      return;
+    } catch (error) {
+      if (!isSqliteBusy(error) || i === attempts - 1) {
+        throw error;
+      }
+    }
+  }
+}
+
 export function openLedger({ dir, now = () => Date.now() }) {
   mkdirSync(dir, { recursive: true });
   const db = new DatabaseSync(join(dir, "ledger.sqlite"));
-  db.exec("PRAGMA journal_mode = WAL;");
   db.exec("PRAGMA busy_timeout = 5000;");
+  execBusyRetry(db, "PRAGMA journal_mode = WAL;");
   db.exec("PRAGMA synchronous = FULL;");
   db.exec(SCHEMA);
 

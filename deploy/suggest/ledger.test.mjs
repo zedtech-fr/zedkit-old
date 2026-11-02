@@ -108,7 +108,18 @@ test("separate processes racing for the last dollars cannot overspend the ceilin
           let out = "";
           child.stdout.on("data", (chunk) => (out += chunk));
           child.on("error", reject);
-          child.on("close", () => resolve(Number(/ADMITTED (\d+)/.exec(out)?.[1] ?? "NaN")));
+          child.on("close", (code) => {
+            if (code !== 0) {
+              reject(new Error(`worker ${id} exited ${code ?? "unknown"} (output: ${out.trim() || "(empty)"})`));
+              return;
+            }
+            const match = /ADMITTED (\d+)/.exec(out);
+            if (!match) {
+              reject(new Error(`worker ${id} missing ADMITTED line (output: ${out.trim() || "(empty)"})`));
+              return;
+            }
+            resolve(Number(match[1]));
+          });
         }),
     ),
   );
