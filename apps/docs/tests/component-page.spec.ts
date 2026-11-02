@@ -30,7 +30,8 @@ test("confirm-dialog preview precedes install (#R2 template)", async ({ page }) 
 test("registry brick label has no decorative icon", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(CONFIRM_DIALOG_DOC, { waitUntil: "networkidle" });
-  await page.getByRole("tab", { name: "registry copy" }).click();
+  await page.getByRole("tab", { name: "Copy", exact: true }).click();
+  await page.getByRole("tab", { name: "Copy manually" }).click();
   const brick = page.locator("[data-registry-brick]");
   await brick.scrollIntoViewIfNeeded();
   await expect(brick.getByText("confirm-dialog", { exact: true })).toBeVisible();
@@ -80,20 +81,38 @@ test("component page TOC lists the live sections", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "At a glance" })).toHaveCount(0);
 });
 
-test("dialog page offers registry copy on the same anatomy", async ({ page }) => {
+test("dialog page offers a package, or a registry copy by CLI or by hand, on the same anatomy", async ({ page }) => {
   await page.goto("/docs/ui/open-modal-dialogs", { waitUntil: "networkidle" });
-  await expect(page.getByRole("tab", { name: "registry copy" })).toBeVisible();
+  const adoption = page.locator("#install-or-copy");
+  await expect(adoption.getByRole("tab", { name: "Install", exact: true })).toBeVisible();
+  await expect(adoption).toContainText("getting started");
   await expect(page.getByRole("heading", { name: "At a glance" })).toHaveCount(0);
   await expect(page.locator("[data-component-preview]").first()).toBeVisible();
   await expect(page.locator("#usage-and-states")).toContainText("DialogClose");
-  await expect(page.locator("#install-or-copy")).toContainText("getting started");
+  await adoption.getByRole("tab", { name: "Copy", exact: true }).click();
+  await expect(adoption.getByRole("tab", { name: "Add with CLI (like shadcn)" })).toBeVisible();
+  await expect(adoption.getByRole("tab", { name: "Copy manually" })).toBeVisible();
 });
 
-test("button registry tab shows the local import", async ({ page }) => {
+test("button registry copy adds it with the CLI: local import and a command per package manager", async ({ page }) => {
   await page.goto(BUTTON_DOC, { waitUntil: "networkidle" });
-  await page.getByRole("tab", { name: "registry copy" }).click();
+  const adoption = page.locator("#install-or-copy");
+  await adoption.getByRole("tab", { name: "Copy", exact: true }).click();
   await expect(page.getByText('import { Button } from "@/components/ui/button"')).toBeVisible();
+  await expect(adoption.getByText("pnpm dlx shadcn@latest add")).toBeVisible();
+  await adoption.getByRole("tab", { name: "npm", exact: true }).click();
+  await expect(adoption.getByText("npx shadcn@latest add")).toBeVisible();
   await expect(page.locator("#example")).not.toContainText("saveRef");
+});
+
+test("button registry copy by hand shows the file the CLI writes", async ({ page }) => {
+  await page.goto(BUTTON_DOC, { waitUntil: "networkidle" });
+  const adoption = page.locator("#install-or-copy");
+  await adoption.getByRole("tab", { name: "Copy", exact: true }).click();
+  await adoption.getByRole("tab", { name: "Copy manually" }).click();
+  await expect(adoption).toContainText("components/ui/button.tsx");
+  await expect(adoption).toContainText("const buttonVariants = cva(");
+  await expect(adoption).not.toContainText("shadcn@latest add");
 });
 
 test.describe("registry brick name light/dark (#769)", () => {
@@ -106,7 +125,8 @@ test.describe("registry brick name light/dark (#769)", () => {
         localStorage.setItem("theme", theme);
       }, mode);
       await page.goto(CONFIRM_DIALOG_DOC, { waitUntil: "networkidle" });
-      await page.getByRole("tab", { name: "registry copy" }).click();
+      await page.getByRole("tab", { name: "Copy", exact: true }).click();
+      await page.getByRole("tab", { name: "Copy manually" }).click();
       const brick = page.locator("[data-registry-brick]");
       await brick.scrollIntoViewIfNeeded();
       await expect(brick).toBeVisible();

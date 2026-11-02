@@ -5,18 +5,17 @@ import { HOME_SECTION_CONTENT_GAP } from "@/ui/home/home-rhythm";
 import { Stack } from "@zedtech/zedkit-ui";
 
 export function HomeGetStartedCopy({
-  packageInstallCmd,
-  registryInstallCmd,
+  packageName,
+  brick,
+  source,
 }: {
-  packageInstallCmd: string;
-  registryInstallCmd: string;
+  packageName: string;
+  brick: string;
+  source: string;
 }) {
   return (
     <Stack gap={HOME_SECTION_CONTENT_GAP} className="w-full min-w-0">
-      <HomeGetStartedAdoptionResult
-        packageInstallCmd={packageInstallCmd}
-        registryInstallCmd={registryInstallCmd}
-      />
+      <HomeGetStartedAdoptionResult packageName={packageName} brick={brick} source={source} />
     </Stack>
   );
 }

@@ -2,28 +2,23 @@ import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import Link from "next/link";
-import { highlight } from "fumadocs-core/highlight";
-import { CodeBlock, Pre } from "fumadocs-ui/components/codeblock";
-import {
-  Heading,
-  Section,
-  Stack,
-  Tabs as KitTabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  Text,
-} from "@zedtech/zedkit-ui";
+import { Heading, Section, Stack, Tabs as KitTabs, TabsContent, Text } from "@zedtech/zedkit-ui";
 import { registryBrickNames } from "../content/registry-site";
 import { docsSite } from "../lib/site";
-import { symbolsFromImport } from "../lib/import-symbols";
+import { packageAddCommand } from "../lib/package-manager-commands";
 import { componentPageSections } from "../lib/component-page-sections.mjs";
 import { DEFAULT_PROPS_PRIORITY } from "../lib/props-priority.mjs";
 import { ComponentPreview } from "./component-preview";
 import { ComponentWrapsLine } from "./component-wraps-line";
 import { MaturityBadge } from "./maturity-badge";
 import { PropsTable } from "./props-table";
-import { RegistryBrickInlineName } from "./registry-brick-name";
+import {
+  adoptionTabsList,
+  highlightedTs,
+  importSnippet,
+  packageManagerTabs,
+  registryCopyTabs,
+} from "./component-page-install";
 import { componentPageCopy } from "@/components/i18n/component-page-copy";
 
 export interface CatalogExample {
@@ -66,39 +61,9 @@ function inlineCode(text: string) {
   return text.split(/`([^`]+)`/).map((part, index) => (index % 2 === 1 ? <code key={index}>{part}</code> : part));
 }
 
-async function highlightedTs(code: string, title?: string) {
-  const highlighted = await highlight(code, { lang: "tsx", components: { pre: Pre } });
-  return (
-    <CodeBlock
-      {...(title ? { title } : {})}
-      allowCopy
-    >
-      {highlighted}
-    </CodeBlock>
-  );
-}
-
 function registrySourcePath(registry: string): string | null {
   const path = join(process.cwd(), "..", "..", "registry", "ui", `${registry}.tsx`);
   return existsSync(path) ? path : null;
-}
-
-function importSnippet(importLine: string): string {
-  const symbols = symbolsFromImport(importLine);
-  const pkg = importLine.match(/`([^`]+)`/)?.[1] ?? "@zedtech/zedkit-ui";
-  const types = symbols.filter((name) => name.endsWith("Props"));
-  const values = symbols.filter((name) => !name.endsWith("Props"));
-  return [
-    values.length > 0 ? `import { ${values.join(", ")} } from "${pkg}";` : "",
-    types.length > 0 ? `import type { ${types.join(", ")} } from "${pkg}";` : "",
-  ]
-    .filter(Boolean)
-    .join("\n");
-}
-
-function registryImportSnippet(importLine: string, registry: string): string {
-  const name = symbolsFromImport(importLine).find((symbol) => !symbol.endsWith("Props") && !symbol.endsWith("Variants"));
-  return `import { ${name ?? "Button"} } from "@/components/ui/${registry}";`;
 }
 
 export async function ComponentPage({
@@ -124,13 +89,12 @@ export async function ComponentPage({
   related,
 }: ComponentPageProps) {
   const site = docsSite.url.replace(/\/$/, "");
-  const shadcnAdd = `npx shadcn@latest add ${site}/r/${registry}.json`;
   const sourcePath = registrySourcePath(registry);
   const source = sourcePath ? await readFile(sourcePath, "utf8") : null;
   const hasProps = Boolean(propsFile && propsName);
   const sections = componentPageSections({ hasProps, a11y, related, troubleshooting });
   const copyable =
-    registry.length > 0 && registryBrickNames.includes(registry) && sourcePath !== null;
+    registry.length > 0 && registryBrickNames.includes(registry) && source !== null;
   const npmInstall = (
     <Stack gap={3}>
       <Text variant="muted" className="text-sm">
@@ -146,28 +110,7 @@ export async function ComponentPage({
           componentPageCopy.npmOnlyLead
         )}
       </Text>
-      <KitTabs defaultValue="pnpm" className="flex min-w-0 flex-col gap-2">
-        <TabsList className="h-auto w-fit gap-1 rounded-none bg-transparent p-0">
-          {componentPageCopy.packageManagerTabs.map((manager) => (
-            <TabsTrigger
-              key={manager}
-              value={manager}
-              className="h-8 rounded-md px-3 text-sm text-muted-foreground data-[state=active]:bg-muted data-[state=active]:text-foreground data-[state=active]:shadow-none"
-            >
-              {manager}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-        <TabsContent value="pnpm" className="mt-0">
-          {await highlightedTs(`pnpm add ${packageName}`)}
-        </TabsContent>
-        <TabsContent value="npm" className="mt-0">
-          {await highlightedTs(`npm install ${packageName}`)}
-        </TabsContent>
-        <TabsContent value="yarn" className="mt-0">
-          {await highlightedTs(`yarn add ${packageName}`)}
-        </TabsContent>
-      </KitTabs>
+      {await packageManagerTabs((pm) => packageAddCommand(pm, packageName))}
       {await highlightedTs(importSnippet(importLine))}
       <Text variant="muted" className="text-xs">
         {componentPageCopy.packageVersionLine(version)}
@@ -198,41 +141,13 @@ export async function ComponentPage({
       <Section title={componentPageCopy.sections.installOrCopy} id="install-or-copy" className="space-y-3">
         <Stack gap={3}>
           {copyable ? (
-            <KitTabs defaultValue="npm" className="flex flex-col gap-3">
-              <TabsList className="h-auto w-fit gap-1 rounded-none bg-transparent p-0">
-                {componentPageCopy.adoptionTabs.map(({ value, label }) => (
-                  <TabsTrigger
-                    key={value}
-                    value={value}
-                    className="h-9 rounded-md px-3 text-sm text-muted-foreground data-[state=active]:bg-muted data-[state=active]:text-foreground data-[state=active]:shadow-none"
-                  >
-                    {label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              <TabsContent value="npm" className="mt-0">
+            <KitTabs defaultValue="package" className="flex flex-col gap-3">
+              {adoptionTabsList(componentPageCopy.adoptionTabs)}
+              <TabsContent value="package" className="mt-0">
                 {npmInstall}
               </TabsContent>
               <TabsContent value="registry" className="mt-0">
-                <Stack gap={3}>
-                  <Text variant="muted" className="text-sm">
-                    {componentPageCopy.registryCopyLead}
-                  </Text>
-                  {await highlightedTs(shadcnAdd)}
-                  {await highlightedTs(registryImportSnippet(importLine, registry))}
-                  <Text variant="muted" className="text-sm">
-                    {componentPageCopy.registryContinuation}{" "}
-                    <Link href="/docs/zedkit-and-shadcn" className="text-primary underline underline-offset-4 hover:no-underline">
-                      {componentPageCopy.registryContinuationLink}
-                    </Link>
-                  </Text>
-                  {source ? (
-                    <Stack gap={3}>
-                      <RegistryBrickInlineName name={registry} />
-                      {await highlightedTs(source, `${registry}.tsx`)}
-                    </Stack>
-                  ) : null}
-                </Stack>
+                {await registryCopyTabs({ site, registry, importLine, source })}
               </TabsContent>
             </KitTabs>
           ) : (
