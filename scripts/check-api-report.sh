@@ -131,6 +131,7 @@ if probe.returncode != 0:
 
 reports = [
     ("packages/ai/etc/zedkit-ai.api.md", "@zedtech/zedkit-ai"),
+    ("packages/brand/etc/zedkit-brand.api.md", "@zedtech/zedkit-brand"),
     ("packages/core/etc/zedkit-core.api.md", "@zedtech/zedkit-core"),
     ("packages/devtools/etc/zedkit-devtools.api.md", "@zedtech/zedkit-devtools"),
     ("packages/flags/etc/zedkit-flags.api.md", "@zedtech/zedkit-flags"),
