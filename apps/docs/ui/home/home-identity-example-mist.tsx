@@ -15,13 +15,11 @@ import {
   Stack,
   Text,
 } from "@zedtech/zedkit-ui";
-import { HomeIdentityLooksControls } from "@/ui/home/home-identity-looks-controls";
-import { HomeIdentityLooksExpression } from "@/ui/home/home-identity-looks-expression";
-import type { IdentityId } from "@/ui/home/home-identity-facts";
-import { HomeIdentityLooksMembers } from "@/ui/home/home-identity-looks-members";
-import { homeIdentityLooksCopy } from "@/ui/home/home-identity-looks-copy";
+import { homeIdentityExamplesCopy } from "@/ui/home/home-identity-examples-copy";
+import { HomeIdentityExampleMistControls } from "@/ui/home/home-identity-example-mist-controls";
+import { HomeIdentityExampleMistMembers } from "@/ui/home/home-identity-example-mist-members";
 
-const copy = homeIdentityLooksCopy.stage;
+const copy = homeIdentityExamplesCopy.mist;
 
 type Settings = { workspace: string; region: string; alerts: boolean };
 
@@ -90,7 +88,7 @@ function DeleteProject({ deleted, onDeleted }: { deleted: boolean; onDeleted: (v
   );
 }
 
-export function HomeIdentityLooksStage({ identity }: { identity: IdentityId }) {
+export function HomeIdentityExampleMist() {
   const workspaceId = useId();
   const regionId = useId();
   const alertsId = useId();
@@ -112,7 +110,7 @@ export function HomeIdentityLooksStage({ identity }: { identity: IdentityId }) {
       </CardHeader>
       <CardContent>
         <Stack gap={4} className="min-w-0">
-          <HomeIdentityLooksControls
+          <HomeIdentityExampleMistControls
             workspaceId={workspaceId}
             regionId={regionId}
             alertsId={alertsId}
@@ -127,12 +125,11 @@ export function HomeIdentityLooksStage({ identity }: { identity: IdentityId }) {
           <Text variant="muted" role="status" data-home-identity-status="">
             {deleted ? copy.deletedMessage : settings.message}
           </Text>
-          <HomeIdentityLooksMembers />
+          <HomeIdentityExampleMistMembers />
           <Alert>
             <AlertTitle>{copy.alertTitle}</AlertTitle>
             <AlertDescription>{copy.alertBody}</AlertDescription>
           </Alert>
-          <HomeIdentityLooksExpression identity={identity} />
           <DeleteProject deleted={deleted} onDeleted={setDeleted} />
         </Stack>
       </CardContent>

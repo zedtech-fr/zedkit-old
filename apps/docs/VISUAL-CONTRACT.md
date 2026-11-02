@@ -53,6 +53,8 @@ Only to explain a change or keep context (overlay in/out, panel following focus,
 
 Proposition + one working fragment (a compact record list the visitor can use), one adoption choice (npm or copy source) with one command, then family discovery. Other packages, agents and identities follow as a short, distinct section each. No repeated card grids; every section has one focal point and a different shape from its neighbors.
 
+Identity examples sell what the kit builds, not how many identities it ships: no count in the title or copy, and each identity shows its own product screen (Maison a bag shop, Press a newsroom, Glass a SaaS app), never one page restyled per identity. Each example uses live kit components and keeps its own identity in full.
+
 ## Component page
 
 Title, one purpose sentence, status, example, install (npm or source, both when available), usage, states, behavior and accessibility, kit props first, inherited attributes collapsed, related. Contents list every section.
