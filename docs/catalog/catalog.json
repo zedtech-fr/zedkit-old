@@ -1136,7 +1136,7 @@
         },
         {
           "need": "Rate-limit calls per key",
-          "import": "`@zedtech/zedkit-server` — `MemoryRateLimiter`",
+          "import": "`@zedtech/zedkit-server` — `MemoryRateLimiter`, `MemoryRateLimiterOptions`",
           "wraps": "`(none)`",
           "status": "stable",
           "shortName": "Rate limiting",
@@ -1145,17 +1145,17 @@
           "whenToUse": "For single-instance services and per-IP/per-user throttling.",
           "whenNotToUse": "Across multiple instances — use a shared-store (Redis) limiter instead.",
           "derivedFrom": null,
-          "example": "import { MemoryRateLimiter } from \"@zedtech/zedkit-server\";\nconst limiter = new MemoryRateLimiter();\nif (!limiter.allow(clientIp, 100)) return tooManyRequests();",
+          "example": "import { MemoryRateLimiter } from \"@zedtech/zedkit-server\";\nconst limiter = new MemoryRateLimiter();\nif (!limiter.allow(clientIp, 100)) return tooManyRequests();\n\n// Optional: another window, a test clock, a different sweep threshold.\nconst perTenSeconds = new MemoryRateLimiter({ windowMs: 10_000, now: () => clock.now(), maxKeys: 5_000 });",
           "examples": [
             {
               "title": "Simple",
-              "code": "import { MemoryRateLimiter } from \"@zedtech/zedkit-server\";\nconst limiter = new MemoryRateLimiter();\nif (!limiter.allow(clientIp, 100)) return tooManyRequests();"
+              "code": "import { MemoryRateLimiter } from \"@zedtech/zedkit-server\";\nconst limiter = new MemoryRateLimiter();\nif (!limiter.allow(clientIp, 100)) return tooManyRequests();\n\n// Optional: another window, a test clock, a different sweep threshold.\nconst perTenSeconds = new MemoryRateLimiter({ windowMs: 10_000, now: () => clock.now(), maxKeys: 5_000 });"
             }
           ]
         },
         {
           "need": "Redact secrets before logging",
-          "import": "`@zedtech/zedkit-server` — `redactValue`",
+          "import": "`@zedtech/zedkit-server` — `redactValue`, `RedactOptions`, `RedactValuePattern`",
           "wraps": "`(none)`",
           "status": "stable",
           "shortName": "Redaction",
@@ -1164,11 +1164,11 @@
           "whenToUse": "On every object logged outside a trusted debug session.",
           "whenNotToUse": "When you need the real values — debug locally, never in shared logs.",
           "derivedFrom": null,
-          "example": "import { redactValue } from \"@zedtech/zedkit-server\";\nlogger.info(redactValue({ user, token, headers }));",
+          "example": "import { redactValue } from \"@zedtech/zedkit-server\";\nlogger.info(redactValue({ user, token, headers }));\n\n// Add your own credential shape (replaces every match, before bearer/basic).\nconst valuePatterns = [{ pattern: /\\bsk_[A-Za-z0-9_-]{8,}\\b/, replacement: \"[redacted-key]\" }];\nlogger.info(redactValue(record, undefined, { valuePatterns }));",
           "examples": [
             {
               "title": "Simple",
-              "code": "import { redactValue } from \"@zedtech/zedkit-server\";\nlogger.info(redactValue({ user, token, headers }));"
+              "code": "import { redactValue } from \"@zedtech/zedkit-server\";\nlogger.info(redactValue({ user, token, headers }));\n\n// Add your own credential shape (replaces every match, before bearer/basic).\nconst valuePatterns = [{ pattern: /\\bsk_[A-Za-z0-9_-]{8,}\\b/, replacement: \"[redacted-key]\" }];\nlogger.info(redactValue(record, undefined, { valuePatterns }));"
             }
           ],
           "seeAlso": [
@@ -1220,7 +1220,7 @@
           "status": "stable",
           "shortName": "Postgres errors",
           "audience": "Developers mapping Postgres driver errors to HTTP responses.",
-          "purpose": "Extract the Postgres error code so unique violations map to 409, not 500.",
+          "purpose": "Extract the Postgres error code (also from an ORM-wrapped `cause`) so unique violations map to 409, not 500.",
           "whenToUse": "Around writes where a conflict is an expected outcome (signup, idempotent creates).",
           "whenNotToUse": "For query building or migrations — use your ORM or migration tool instead.",
           "derivedFrom": null,
