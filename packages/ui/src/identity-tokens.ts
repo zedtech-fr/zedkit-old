@@ -4,6 +4,23 @@ import { applyCustomIdentityCss } from "./identity-custom-sheet.js";
 import { IDENTITY_STORAGE_KEY } from "./identity-data.js";
 
 const hsl = z.string().regex(/^\d+(\.\d+)?\s+\d+(\.\d+)?%\s+\d+(\.\d+)?%$/);
+/** An open bracket or quote swallows the rest of the stylesheet, so every one must be closed. */
+function isBalanced(value: string): boolean {
+  const closers: string[] = [];
+  let quote: string | null = null;
+  for (const char of value) {
+    if (quote) {
+      if (char === quote) quote = null;
+    } else if (char === '"' || char === "'") quote = char;
+    else if (char === "(") closers.push(")");
+    else if (char === "[") closers.push("]");
+    else if (char === ")" || char === "]") {
+      if (closers.pop() !== char) return false;
+    }
+  }
+  return quote === null && closers.length === 0;
+}
+
 /**
  * One declaration value, written verbatim into a stylesheet, and read back from pasted JSON and shared links.
  * It must not be able to end its declaration or rule, open a comment, or fetch anything.
@@ -12,8 +29,8 @@ const cssValue = z
   .string()
   .min(1)
   .max(400)
-  .refine((value) => !/[{};<>@\\]|\/\*|url\s*\(/i.test(value), {
-    message: "Not a plain CSS value (no braces, semicolons, comments, at-rules or url())",
+  .refine((value) => !/[{};<>@\\]|\/\*|url\s*\(/i.test(value) && isBalanced(value), {
+    message: "Not a plain CSS value (no braces, semicolons, comments, at-rules, url(), or unbalanced brackets and quotes)",
   });
 const leading = z.string().regex(/^\d+(\.\d+)?$/);
 const tracking = z.string().regex(/^-?\d+(\.\d+)?em$/);

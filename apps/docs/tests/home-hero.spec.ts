@@ -241,3 +241,20 @@ for (const width of [320, 360, 390]) {
     expect(readable.clipped).toBe(false);
   });
 }
+
+test("390px: the three Display controls share one row, none stranded alone", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(BASE, { waitUntil: "networkidle" });
+  const rects = await page.locator("[data-hero-demo-display] [role='combobox']").evaluateAll((nodes) =>
+    nodes.map((node) => {
+      const box = node.getBoundingClientRect();
+      return { top: Math.round(box.top), width: Math.round(box.width), right: Math.round(box.right) };
+    }),
+  );
+  expect(rects).toHaveLength(3);
+  expect(new Set(rects.map((rect) => rect.top)).size, "one row").toBe(1);
+  for (const rect of rects) {
+    expect(rect.width).toBeGreaterThanOrEqual(100);
+    expect(rect.right).toBeLessThanOrEqual(390);
+  }
+});

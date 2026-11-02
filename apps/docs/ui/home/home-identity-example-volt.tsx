@@ -18,7 +18,7 @@ function IncidentRow({ incident, acked, onAck }: { incident: Incident; acked: bo
       {acked ? (
         <span className="shrink-0 text-muted-foreground">{copy.acked}</span>
       ) : (
-        <Button type="button" variant="outline" className="hit-target h-auto! px-2 py-0 text-xs" aria-label={copy.ackAria(incident.event)} onClick={onAck}>
+        <Button type="button" variant="outline" className="hit-target h-auto! px-2 py-0 text-sm" aria-label={copy.ackAria(incident.event)} onClick={onAck}>
           {copy.ack}
         </Button>
       )}
@@ -69,7 +69,7 @@ export function HomeIdentityExampleVolt() {
       {visible.length === 0 ? (
         <Text variant="muted">{copy.empty}</Text>
       ) : (
-        <ul aria-label={copy.listAriaLabel} className="m-0 grid list-none p-0 font-mono text-xs">
+        <ul aria-label={copy.listAriaLabel} className="m-0 grid list-none p-0 font-mono text-sm">
           {visible.map((incident) => (
             <IncidentRow
               key={incident.id}

@@ -46,7 +46,7 @@ function TokenField({
   const colour = swatch && HSL_TRIPLET.test(draft.trim()) ? `hsl(${draft.trim()})` : null;
   return (
     // shortcut: 7rem clears the docs header; the draft lives in its own column on desktop and is compact on a phone.
-    <Field className="min-w-0 scroll-mt-28">
+    <Field className="min-w-0">
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
       <Stack direction="horizontal" gap={2} className="min-w-0">
         {swatch ? (
@@ -61,7 +61,9 @@ function TokenField({
         <Input
           id={id}
           value={draft}
-          className="min-w-0 flex-1"
+          // The focused input is what the browser scrolls into view, so the margin lives here: 7rem clears the
+          // docs header, and a phone with a pinned preview card also clears the card (about 237px).
+          className="min-w-0 flex-1 scroll-mt-28 max-lg:[@media(min-height:48rem)]:scroll-mt-80"
           onChange={(event) => {
             setDraft(event.target.value);
             onChange(event.target.value);

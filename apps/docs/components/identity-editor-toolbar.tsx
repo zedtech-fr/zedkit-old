@@ -167,15 +167,15 @@ function IdentityEditorKeepBar({
         </Button>
         <DeleteLook disabled={!namedSelected} onDelete={onDelete} />
       </Row>
-      <Text id="identity-editor-name-hint" variant="muted" className="text-xs">
-        {name.trim() === "" ? copy.nameHint : "\u00a0"}
+      <Text id="identity-editor-name-hint" variant="muted" className="min-h-5 text-sm">
+        {name.trim() === "" ? copy.nameHint : null}
       </Text>
       <Row>
         <Button type="button" variant="outline" onClick={onApplySite}>
           {copy.applySite}
         </Button>
       </Row>
-      <Text variant="muted" className="text-xs">
+      <Text variant="muted" className="text-sm">
         {copy.applyHint}
       </Text>
     </Stack>

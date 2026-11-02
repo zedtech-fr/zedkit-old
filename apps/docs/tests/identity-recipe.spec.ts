@@ -116,6 +116,7 @@ test.describe("the editor link carries the whole recipe", () => {
       "Georgia /* open",
       "url(https://evil.test/font.woff2)",
       "<style>",
+      "calc(",
     ]) {
       const restored = parseIdentityEditorSearch(`?identity=mist&fontSans=${encodeURIComponent(hostile)}`);
       expect(restored.tokens.fontSans).toBe(identityPresets.mist.fontSans);

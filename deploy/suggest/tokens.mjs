@@ -18,8 +18,31 @@ const SCALAR = [
 ];
 const COLOUR = ["background", "foreground", "primary", "accent", "border"];
 
+// Mirrors cssValue in packages/ui/src/identity-tokens.ts: a plain value that cannot leave its declaration.
+function isBalanced(value) {
+  const closers = [];
+  let quote = null;
+  for (const char of value) {
+    if (quote) {
+      if (char === quote) quote = null;
+    } else if (char === '"' || char === "'") quote = char;
+    else if (char === "(") closers.push(")");
+    else if (char === "[") closers.push("]");
+    else if (char === ")" || char === "]") {
+      if (closers.pop() !== char) return false;
+    }
+  }
+  return quote === null && closers.length === 0;
+}
+
 function isCss(value) {
-  return typeof value === "string" && value.length > 0;
+  return (
+    typeof value === "string" &&
+    value.length > 0 &&
+    value.length <= 400 &&
+    !/[{};<>@\\]|\/\*|url\s*\(/i.test(value) &&
+    isBalanced(value)
+  );
 }
 
 function colourPair(pair) {

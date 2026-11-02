@@ -127,7 +127,7 @@ export const homeIdentityExamplesCopy = {
     dueOn: (date: string) => `Due ${date}`,
     paidOn: (date: string) => `Paid ${date}`,
     remind: "Send reminder",
-    remindAria: (client: string) => `Send a reminder to ${client}`,
+    remindAria: (client: string) => `Send reminder: ${client}`,
     reminded: "Reminder sent",
     remindedMessage: (client: string) => `Reminder to ${client} marked as sent. This demo sends no email.`,
     invoices: [

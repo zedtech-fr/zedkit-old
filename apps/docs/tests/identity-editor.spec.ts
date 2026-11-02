@@ -724,3 +724,23 @@ test.describe("identity editor: choose, see, adjust, then keep", () => {
     expect(after).toBe(before);
   });
 });
+
+test("on a phone the pinned preview card never covers the field that has focus", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(PAGE, { waitUntil: "networkidle" });
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  for (const label of ["Radius", "Border width", "Spacing"]) {
+    await page.getByLabel(label, { exact: true }).focus();
+    await page.waitForTimeout(150);
+    const gap = await page.evaluate((name) => {
+      const card = document.querySelector('[data-slot="identity-editor-preview"]')!.getBoundingClientRect();
+      const input = [...document.querySelectorAll("input")].find((el) => el.labels?.[0]?.textContent?.trim() === name)!;
+      const box = input.getBoundingClientRect();
+      const pinned = getComputedStyle(document.querySelector('[data-slot="identity-editor-preview"]')!).position === "sticky";
+      return { pinned, clearance: box.top - card.bottom, inView: box.bottom <= innerHeight };
+    }, label);
+    // Pinned or not, the focused field is on screen and not under the card (WCAG 2.4.11).
+    expect(gap.inView, `${label} on screen`).toBe(true);
+    if (gap.pinned) expect(gap.clearance, `${label} clear of the pinned card`).toBeGreaterThanOrEqual(0);
+  }
+});

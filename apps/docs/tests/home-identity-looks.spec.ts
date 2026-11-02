@@ -6,7 +6,7 @@ import { assertA11yGate } from "./a11y-helpers";
 const IDENTITIES = [
   { id: "mist", name: "Mist", product: "Dev console", heading: "Project settings", action: "Save changes" },
   { id: "press", name: "Press", product: "Newsroom", heading: "Today's desk", action: "Publish" },
-  { id: "tide", name: "Tide", product: "Invoicing", heading: "Invoices", action: "Send a reminder to Studio Nord" },
+  { id: "tide", name: "Tide", product: "Invoicing", heading: "Invoices", action: "Send reminder: Studio Nord" },
   { id: "volt", name: "Volt", product: "Incidents", heading: "Incidents", action: "Acknowledge: p95 latency 1.8 s for 5 min" },
   { id: "maison", name: "Maison", product: "Bag shop", heading: "The autumn collection", action: "Save piece" },
   { id: "glass", name: "Glass", product: "SaaS app", heading: "Usage", action: "Invite teammate" },
@@ -244,9 +244,9 @@ test("Invoicing: totals follow the data, the filter narrows the list, a reminder
   await expect(list.getByRole("listitem")).toHaveCount(6);
   await stage.getByRole("button", { name: "Overdue", exact: true }).click();
   await expect(list.getByRole("listitem")).toHaveCount(2);
-  await stage.getByRole("button", { name: "Send a reminder to Studio Nord" }).click();
+  await stage.getByRole("button", { name: "Send reminder: Studio Nord" }).click();
   await expect(stage.locator("[data-home-identity-status]")).toContainText("Reminder to Studio Nord marked as sent");
-  await expect(stage.getByRole("button", { name: "Send a reminder to Studio Nord" })).toHaveCount(0);
+  await expect(stage.getByRole("button", { name: "Send reminder: Studio Nord" })).toHaveCount(0);
   await expect(list.getByText("Reminder sent")).toHaveCount(1);
 });
 
@@ -338,4 +338,17 @@ test("Delete project: the dialog traps focus, Cancel and Escape return it, Confi
   await restore.click();
   await expect(stage.getByRole("button", { name: "Delete project" })).toBeVisible();
   await expect(stage.getByText("Active", { exact: true }).first()).toBeVisible();
+});
+
+test("Volt's incident log keeps the 13px floor: density comes from the rhythm, not from small type", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const { looks } = await openLooks(page);
+  await pick(looks, "Incidents");
+  const sizes = await looks.locator("[data-home-identity-stage] ul li *").evaluateAll((nodes) =>
+    nodes
+      .filter((node) => (node.textContent ?? "").trim() && node.children.length === 0)
+      .map((node) => Number.parseFloat(getComputedStyle(node).fontSize)),
+  );
+  expect(sizes.length).toBeGreaterThan(0);
+  for (const size of sizes) expect(size).toBeGreaterThanOrEqual(13);
 });

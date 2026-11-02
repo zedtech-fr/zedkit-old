@@ -56,10 +56,8 @@ export function HomeSecondarySection({
     >
       <Stack gap={HOME_SECTION_CONTENT_GAP}>
         <HomeSecondaryEntryLinks entryPoints={entryPoints} />
-        <Stack gap={2} className="border-t border-border pt-6">
-          <Text className="font-medium">{homeCopy.secondary.optionalAgentsHeading}</Text>
-          <HomeGetStartedAiBlock initCommand={initCommand} />
-        </Stack>
+        {/* The agents row above names the job; its commands follow it directly, with no second heading. */}
+        <HomeGetStartedAiBlock initCommand={initCommand} />
       </Stack>
     </Section>
   );

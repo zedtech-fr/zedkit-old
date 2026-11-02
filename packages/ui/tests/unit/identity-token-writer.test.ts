@@ -66,6 +66,11 @@ describe("identity token schema", () => {
         "<style>",
         "a\\3b b",
         "x".repeat(401),
+        "calc(",
+        "x)",
+        "[a",
+        '"Georgia, serif',
+        "rgb(0 0 0 / 0.2",
       ]) {
         expect(parseIdentityTokens({ ...identityPresets.mist, [key]: value }).success, `${key}: ${value}`).toBe(false);
       }
@@ -77,6 +82,7 @@ describe("identity token schema", () => {
       ...identityPresets.mist,
       fontSans: '"Test Sans", ui-sans-serif, sans-serif',
       shadowSm: "0 1px 2px 0 rgb(0 0 0 / 0.2), 0 0 8px -2px hsl(10 70% 50% / 0.18)",
+      radius: "calc(var(--spacing) * 2)",
     });
     expect(result.success).toBe(true);
   });

@@ -31,7 +31,7 @@ export function HomeIdentityLooksTabs({
       <TabsList
         aria-label={homeIdentityLooksCopy.tabsAriaLabel}
         // Phones: a 3x2 grid, so every name stays visible and the chosen one never scrolls out of sight.
-        className="grid h-auto! min-h-11 w-full min-w-0 grid-cols-3 gap-1 sm:flex sm:snap-x sm:snap-mandatory sm:justify-start sm:overflow-x-auto"
+        className="grid h-auto! min-h-11 w-full min-w-0 grid-cols-3 gap-1 xl:flex xl:snap-x xl:snap-mandatory xl:justify-start xl:overflow-x-auto"
       >
         {IDENTITY_IDS.map((id) => (
           <TabsTrigger

@@ -42,7 +42,7 @@ export function HomeHeroCalendarScene() {
   const [day, setDay] = useState<Date | undefined>(DAY);
   return (
     <Stack gap={HOME_CARD_CONTENT_GAP} className="min-w-0 items-center p-3 sm:p-4">
-      <Text variant="muted" className={DOCS_TYPE_LABEL_CLASS}>
+      <Text variant="muted" role="status" className={DOCS_TYPE_LABEL_CLASS}>
         {day ? copy.calendarChosen(DAY_LABEL.format(day)) : copy.calendarCaption}
       </Text>
       <Calendar mode="single" defaultMonth={MONTH} today={DAY} selected={day} onSelect={setDay} />
