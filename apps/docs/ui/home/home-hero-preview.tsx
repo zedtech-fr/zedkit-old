@@ -27,43 +27,55 @@ function isExample(value: string): value is HeroExampleId {
   return homeCopy.heroExamples.some((example) => example.id === value);
 }
 
-/** The three examples, one grid cell: the frame keeps the height of the tallest, so the page below never moves. */
-function HeroExamples({ preview, onPreview }: { preview: PreviewMode; onPreview: (mode: PreviewMode) => void }) {
+/** The row of real tabs above the specimen: site chrome, not part of the specimen's look. */
+function HeroExampleToolbar() {
   return (
-    <>
-      {homeCopy.heroExamples.map((item) => (
-        <TabsContent
-          key={item.id}
-          value={item.id}
-          forceMount
-          // Inactive panels stay mounted (the table keeps its rows) but invisible, which also takes them out
-          // of the tab order and the accessibility tree.
-          className="col-start-1 row-start-1 mt-0 min-w-0 data-[state=inactive]:invisible"
-          data-hero-example={item.id}
-        >
-          {item.id === "table" ? (
-            <HomeAdminDashboardDemo
-              label={homeCopy.heroPreview.demoLabel}
-              preview={preview}
-              onPreviewChange={onPreview}
-              variant="home"
-            />
-          ) : item.id === "panel" ? (
-            <HomeHeroDrawerScene />
-          ) : (
-            <HomeHeroCalendarScene />
-          )}
-        </TabsContent>
-      ))}
-    </>
+    <div className="border-b border-border px-3 py-2.5 sm:px-4" data-home-specimen-toolbar="">
+      <TabsList
+        aria-label={homeCopy.heroPreview.examplesAriaLabel}
+        className="grid h-auto! min-h-11 w-full grid-cols-3 gap-1 sm:inline-grid sm:w-auto"
+        data-home-hero-examples=""
+      >
+        {homeCopy.heroExamples.map((item) => (
+          <TabsTrigger key={item.id} value={item.id} className="min-h-9 px-2 sm:px-4">
+            {item.label}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </div>
   );
+}
+
+function HeroExampleVisual({
+  id,
+  preview,
+  onPreviewChange,
+}: {
+  id: HeroExampleId;
+  preview: PreviewMode;
+  onPreviewChange: (value: PreviewMode) => void;
+}) {
+  if (id === "table") {
+    return (
+      <HomeAdminDashboardDemo
+        label={homeCopy.heroPreview.demoLabel}
+        preview={preview}
+        onPreviewChange={onPreviewChange}
+        variant="home"
+      />
+    );
+  }
+  return id === "panel" ? <HomeHeroDrawerScene /> : <HomeHeroCalendarScene />;
 }
 
 /**
  * Hero specimen: one frame, three examples chosen with real tabs.
  *
  * The frame (tabs above, Display row below) is site chrome. The ThemeScope between them is the
- * specimen: it wears the look chosen in the Display row and nothing from the page.
+ * specimen: it wears the look chosen in the Display row and nothing from the page. The panels
+ * share one grid cell, so the frame keeps the height of the tallest example and the page below
+ * does not move when the example changes; every panel stays mounted, so rows added in the table
+ * are still there when the visitor comes back to it.
  */
 export function HomeHeroPreview() {
   const [look, setLook] = useState(DEFAULT_IDENTITY);
@@ -72,7 +84,8 @@ export function HomeHeroPreview() {
   const [example, setExample] = useState<HeroExampleId>("table");
   const { resolvedTheme } = useTheme();
   const mounted = useSyncExternalStore(noop, () => true, () => false);
-  const dark = resolveHeroDemoDark(modePin, mounted && resolvedTheme === "dark");
+  const siteDark = mounted && resolvedTheme === "dark";
+  const dark = resolveHeroDemoDark(modePin, siteDark);
 
   return (
     <Tabs
@@ -90,26 +103,26 @@ export function HomeHeroPreview() {
         "flex max-w-full min-w-0 scroll-mt-24 flex-col rounded-xl border border-border bg-card",
       )}
     >
-      <div className="border-b border-border px-3 py-2.5 sm:px-4" data-home-specimen-toolbar="">
-        <TabsList
-          aria-label={homeCopy.heroPreview.examplesAriaLabel}
-          className="grid h-auto! min-h-11 w-full grid-cols-3 gap-1 sm:inline-grid sm:w-auto"
-          data-home-hero-examples=""
-        >
-          {homeCopy.heroExamples.map((item) => (
-            <TabsTrigger key={item.id} value={item.id} className="min-h-9 px-2 sm:px-4">
-              {item.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </div>
+      <HeroExampleToolbar />
       <ThemeScope
         identity={look}
         mode={dark ? "dark" : "light"}
         className="grid min-h-0 min-w-0 bg-background"
         data-home-hero-visuals=""
       >
-        <HeroExamples preview={preview} onPreview={setPreview} />
+        {homeCopy.heroExamples.map((item) => (
+          <TabsContent
+            key={item.id}
+            value={item.id}
+            forceMount
+            // One grid cell: the frame is as tall as the tallest example. Inactive panels are invisible,
+            // which also takes them out of the tab order and the accessibility tree.
+            className="col-start-1 row-start-1 mt-0 min-w-0 data-[state=inactive]:invisible"
+            data-hero-example={item.id}
+          >
+            <HeroExampleVisual id={item.id} preview={preview} onPreviewChange={setPreview} />
+          </TabsContent>
+        ))}
       </ThemeScope>
       <div className="border-t border-border px-3 py-2.5 sm:px-4" data-home-specimen-footer="">
         <HeroDemoStyleControl
