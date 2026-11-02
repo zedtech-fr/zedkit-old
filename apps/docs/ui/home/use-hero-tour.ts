@@ -1,4 +1,4 @@
-import { useEffect, useRef, type RefObject } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type RefObject } from "react";
 import { DEFAULT_IDENTITY } from "@/lib/default-identity";
 
 /**
@@ -32,30 +32,67 @@ function centreOf(root: HTMLElement, target: Element) {
   return { x: box.left - frame.left + Math.min(box.width * 0.5, 28), y: box.top - frame.top + box.height * 0.55 };
 }
 
+/** A cursor only makes sense with a pointer and room for the sidebar; a phone keeps the page still. */
+const TOUR_QUERY = "(min-width: 48rem) and (hover: hover) and (pointer: fine)";
+
+function subscribeTourQuery(onChange: () => void) {
+  const list = window.matchMedia(TOUR_QUERY);
+  list.addEventListener("change", onChange);
+  return () => list.removeEventListener("change", onChange);
+}
+
+/** Whether this visitor can have a tour at all: motion allowed, a pointer, room for the sidebar. False on the server. */
+export function useHeroTourAvailable(motionOk: boolean): boolean {
+  const room = useSyncExternalStore(subscribeTourQuery, () => window.matchMedia(TOUR_QUERY).matches, () => false);
+  return motionOk && room;
+}
+
+/** Whether the tour is playing, and the three things that change it: the visitor taking over, pausing, playing again. */
+export function useHeroTourState(motionOk: boolean) {
+  const available = useHeroTourAvailable(motionOk);
+  const [playing, setPlaying] = useState(true);
+  return { available, playing, takeover: () => setPlaying(false), toggle: () => setPlaying((value) => !value) };
+}
+
+/** The control that pauses or replays the tour carries this attribute: pressing it is not a takeover. */
+export const TOUR_CONTROL_ATTRIBUTE = "data-hero-tour-control";
+
 /**
- * Plays the tour while the window is on screen and the visitor has not touched it. Any pointer, key or
- * touch event inside the frame ends the tour for good: from then on the window only does what the visitor asks.
+ * Plays the tour while `playing`, the window is on screen and the visitor has not touched it. Any pointer, key
+ * or touch event inside the frame (except the tour's own control) is a takeover: `onTakeover` is called and the
+ * tour stops until the visitor asks for it again. It never restarts by itself.
  * Off the screen or in a hidden tab it waits; nothing runs without motion allowed.
  */
 export function useHeroTour({
   rootRef,
   enabled,
+  playing,
+  onTakeover,
   onLook,
 }: {
   rootRef: RefObject<HTMLElement | null>;
   enabled: boolean;
+  playing: boolean;
+  onTakeover: () => void;
   onLook: (id: string) => void;
 }) {
   const lookRef = useRef(onLook);
+  const takeoverRef = useRef(onTakeover);
+  /** True once a lap has begun: a replay then starts at the first page instead of resuming the load animation. */
+  const started = useRef(false);
   useEffect(() => {
     lookRef.current = onLook;
+    takeoverRef.current = onTakeover;
   });
   useEffect(() => {
     const root = rootRef.current;
-    // A cursor only makes sense with a pointer and room for the sidebar; a phone keeps the page still.
-    if (!enabled || !root || !window.matchMedia("(min-width: 48rem) and (hover: hover) and (pointer: fine)").matches) return;
+    if (!enabled || !root || !window.matchMedia(TOUR_QUERY).matches) return;
     const cursor = root.querySelector<HTMLElement>("[data-hero-cursor]");
     if (!cursor) return;
+    if (!playing) {
+      root.dataset.tour = "off";
+      return;
+    }
 
     let stopped = false;
     let onScreen = false;
@@ -75,16 +112,18 @@ export function useHeroTour({
     observer.observe(root);
     document.addEventListener("visibilitychange", resume);
 
-    const stop = () => {
+    const takeover = (event: Event) => {
       if (stopped) return;
+      if (event.target instanceof Element && event.target.closest(`[${TOUR_CONTROL_ATTRIBUTE}]`)) return;
       stopped = true;
       root.dataset.tour = "off";
       wake?.();
+      takeoverRef.current();
     };
-    // The whole frame counts, so using the Display row under the window also ends the tour.
+    // The whole frame counts, so using the Display row under the window is a takeover too.
     const touchArea = root.closest("[data-home-hero-preview]") ?? root;
     const events = ["pointerdown", "keydown", "touchstart"] as const;
-    for (const name of events) touchArea.addEventListener(name, stop, { passive: true });
+    for (const name of events) touchArea.addEventListener(name, takeover, { passive: true });
 
     /** Waits `ms`, then holds while the window is off screen or the tab is hidden. */
     const beat = async (ms: number) => {
@@ -127,7 +166,8 @@ export function useHeroTour({
       await beat(START_MS);
       if (stopped) return;
       park();
-      let first = true;
+      let first = !started.current;
+      started.current = true;
       while (!stopped) {
         for (const step of LAP) {
           if (stopped) return;
@@ -135,7 +175,8 @@ export function useHeroTour({
           // The sidebar is gone when the window narrows below md: nothing left to point at.
           if (!nav || nav.getBoundingClientRect().width === 0) return;
           root.dataset.tour = "on";
-          if (step.page !== "overview" || cursor.dataset.placed) await press(nav);
+          // The first Overview is the page shown on load; every later one is a real press (a replay starts here).
+          if (step.page !== "overview" || cursor.dataset.placed !== undefined) await press(nav);
           cursor.dataset.placed = "";
           await beat(first && step.page === "overview" ? 0 : SETTLE_MS);
           if (stopped) return;
@@ -158,8 +199,8 @@ export function useHeroTour({
       wake?.();
       observer.disconnect();
       document.removeEventListener("visibilitychange", resume);
-      for (const name of events) touchArea.removeEventListener(name, stop);
-      delete root.dataset.tour;
+      for (const name of events) touchArea.removeEventListener(name, takeover);
+      root.dataset.tour = "off";
     };
-  }, [rootRef, enabled]);
+  }, [rootRef, enabled, playing]);
 }

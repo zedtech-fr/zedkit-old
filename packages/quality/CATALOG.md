@@ -74,7 +74,8 @@ export default [
 
 ## Share one strict TypeScript base
 
-- Import: `@zedtech/zedkit-quality/tsconfig`
+- Import: `@zedtech/zedkit-quality/tsconfig` (tsconfig preset, not a JavaScript module)
+- Extends: `@zedtech/zedkit-quality/tsconfig`
 - Wraps: `(none)`
 - Status: stable
 - Short name: TsconfigBase

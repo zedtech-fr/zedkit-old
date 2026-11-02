@@ -1,8 +1,8 @@
 # Publishing
 
-Packages ship publicly on npmjs.org as `@zedtech/zedkit-*`, versions
-`0.x` (maturity per need lives in the catalog `Status` field, not in
-the version). Releases run on Changesets; nothing publishes by hand.
+Packages ship publicly on npmjs.org as `@zedtech/zedkit-*` (versions in
+the root README table; maturity per need lives in the catalog `Status`
+field). Releases run on Changesets; nothing publishes by hand.
 
 ## How a release flows
 

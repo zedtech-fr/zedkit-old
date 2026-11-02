@@ -63,32 +63,89 @@ function httpMessage(exception: HttpException): string {
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
 
+  /**
+   * When true, string-response HttpException 400/413/415 (Nest wrapping
+   * a body-parser failure) map to the uniform parser-failure body instead
+   * of echoing the driver text. Default false: today's public body.
+   * Subclass and set true to opt in.
+   */
+  protected sanitizeStringHttpExceptions = false;
+
+  /**
+   * Shape for body-parser failures other than 413 (malformed JSON and
+   * friends). Apps whose contract says otherwise override this one
+   * method instead of reimplementing the filter.
+   */
+  protected unknownBodyParseError(): { status: number; code: string; message: string } {
+    return { status: 400, code: "invalid_input", message: "invalid request body" };
+  }
+
+  /**
+   * Maps any thrown value to status + body. Apps with domain errors
+   * subclass the filter and override this: map first, else `super`.
+   */
+  protected toStatusBody(exception: unknown): {
+    status: number;
+    code: string;
+    message: string;
+  } {
+    if (exception instanceof HttpException) {
+      const status = exception.getStatus();
+      if (
+        this.sanitizeStringHttpExceptions &&
+        (status === 400 || status === 413 || status === 415) &&
+        typeof exception.getResponse() === "string"
+      ) {
+        if (status === 413) {
+          return {
+            status: 413,
+            code: "payload_too_large",
+            message: "body exceeds the configured limit",
+          };
+        }
+        return this.unknownBodyParseError();
+      }
+      const message =
+        status >= 500
+          ? (STATUS_5XX_MESSAGES[status] ?? "internal error")
+          : httpMessage(exception);
+      return { status, code: STATUS_CODES[status] ?? `http_${status}`, message };
+    }
+    const bodyStatus = fastifyBodyErrorStatus(exception);
+    if (bodyStatus === 413) {
+      return {
+        status: 413,
+        code: "payload_too_large",
+        message: "body exceeds the configured limit",
+      };
+    }
+    if (bodyStatus === 415) {
+      return {
+        status: 415,
+        code: "unsupported_media_type",
+        message: "unsupported media type",
+      };
+    }
+    if (bodyStatus === 400) return this.unknownBodyParseError();
+    return { status: 500, code: "internal", message: "internal error" };
+  }
+
+  /**
+   * Final error body. Apps whose contract fixes the shape override
+   * this (the id stays available as the `x-request-id` header, which
+   * this filter always sets, so correlation never depends on the body).
+   */
+  protected formatBody(body: ErrorBody): unknown {
+    return body;
+  }
+
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const req = ctx.getRequest<FastifyRequest>();
     const reply = ctx.getResponse<FastifyReply>();
     const requestId = typeof req.id === "string" ? req.id : "unknown";
 
-    let status: number;
-    let message: string;
-    if (exception instanceof HttpException) {
-      status = exception.getStatus();
-      message =
-        status >= 500
-          ? (STATUS_5XX_MESSAGES[status] ?? "internal error")
-          : httpMessage(exception);
-    } else {
-      const bodyStatus = fastifyBodyErrorStatus(exception);
-      status = bodyStatus ?? 500;
-      message =
-        status === 413
-          ? "body exceeds the configured limit"
-          : status === 415
-            ? "unsupported media type"
-            : status === 400
-              ? "invalid request body"
-              : "internal error";
-    }
+    const { status, code, message } = this.toStatusBody(exception);
     if (status >= 500) {
       this.logger.error(
         `Unhandled error on ${req.method} ${req.url}: ${String(exception)}`,
@@ -98,8 +155,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     // A streaming handler that throws after the first flush already sent
     // the reply: sending again would raise inside the filter itself.
     if (reply.sent) return;
-    const code = STATUS_CODES[status] ?? `http_${status}`;
     reply.header(REQUEST_ID_HEADER, requestId);
-    reply.status(status).send({ code, message, requestId } satisfies ErrorBody);
+    reply.status(status).send(this.formatBody({ code, message, requestId }));
   }
 }

@@ -30,6 +30,18 @@
 //   - Status: beta (planned|alpha|beta|stable|deprecated; new entries
 //     start at alpha — see docs/catalog/README.md for the promotion
 //     criteria)
+//     The Import line is for JavaScript only: `module` — `Export`, ... (join
+//     several modules with `;`). A need that is not a JavaScript import types
+//     itself with these optional lines instead, and the docs generator writes
+//     each part in its own language:
+//   - CSS import: `pkg/styles.css` (a stylesheet; the specifier ends in .css)
+//   - CSS directive: `@source "..."` (a full at-rule for the app's stylesheet)
+//   - Also install: `next-themes` (peer packages the need relies on)
+//   - Utilities: `animate-fade-up`, `stagger-*` (class names, not imports)
+//   - Attributes: `data-reveal` (markup attributes, not imports)
+//   - Extends: `pkg/tsconfig` (a shared config file to extend, not import)
+//   - Example file: `src/app/layout.tsx` (the first example is a whole file
+//     at this path, not a fragment the page wraps in a component)
 //   - Short name: ShortName (compact display: sidebars, cards)
 //   - Audience: Who the need is for, in plain words.
 //   - Purpose: The problem it solves, in one sentence.
@@ -98,8 +110,8 @@ function readIfExists(path) {
 // Parse `## <need>` sections: Import / Wraps / Status fields + first ts example.
 const STATUSES = ["planned", "alpha", "beta", "stable", "deprecated"];
 
-/** Expected live need counts — Option B catalog (117 needs). */
-export const CATALOG_MATURITY_TARGETS = { stable: 60, beta: 39, alpha: 18 };
+/** Expected live need counts — Option B catalog (118 needs). */
+export const CATALOG_MATURITY_TARGETS = { stable: 60, beta: 39, alpha: 19 };
 
 /** Maturity definitions — keep aligned with docs/catalog/README.md#maturity. */
 export const MATURITY_DEFINITIONS = {
@@ -112,6 +124,56 @@ export const MATURITY_DEFINITIONS = {
     "Tested through the public API, accessible for UI, documented, API frozen under semver. No badge on the docs site.",
   deprecated: "Do not adopt; names a replacement and will be removed in a future major.",
 };
+
+function backticked(value) {
+  return value ? [...value.matchAll(/`([^`]+)`/g)].map((m) => m[1].trim()).filter(Boolean) : [];
+}
+
+const JS_IMPORT_GROUP = /^`([^`]+)`\s+—\s+(`[^`]+`(?:,\s*`[^`]+`)*)$/;
+
+/**
+ * The typed adoption contract of one need: what a person writes to start using it, per language.
+ * `js` lists the exports of one or more modules; `css` is a stylesheet import plus directives, utilities and
+ * attributes; `config` extends a shared config file. Prose in the Import line is never read for names:
+ * a line that is none of these is an error, so a generator cannot guess an export out of a sentence.
+ */
+export function parseAdoption(need, importLine, field, catalogPath, errors) {
+  if (!importLine) return null;
+  const where = `${catalogPath}: need "${need}"`;
+  const cssImports = backticked(field("CSS import"));
+  const directives = backticked(field("CSS directive"));
+  const extendsOf = backticked(field("Extends"));
+  if (extendsOf.length > 0) {
+    if (extendsOf.length > 1 || cssImports.length > 0) {
+      errors.push(`${where} declares "Extends" with one config path and no "CSS import".`);
+    }
+    return { kind: "config", extends: extendsOf[0] };
+  }
+  if (cssImports.length > 0) {
+    for (const specifier of cssImports) {
+      if (!specifier.endsWith(".css")) errors.push(`${where} has CSS import \`${specifier}\` (want a specifier ending in .css).`);
+    }
+    for (const directive of directives) {
+      if (!directive.startsWith("@")) errors.push(`${where} has CSS directive \`${directive}\` (want an at-rule starting with @).`);
+    }
+    return {
+      kind: "css",
+      imports: cssImports,
+      directives,
+      install: backticked(field("Also install")),
+      utilities: backticked(field("Utilities")),
+      attributes: backticked(field("Attributes")),
+    };
+  }
+  const modules = importLine.split(/;\s*/).map((group) => JS_IMPORT_GROUP.exec(group.trim()));
+  if (modules.some((match) => !match)) {
+    errors.push(
+      `${where} has an Import line that is not \`module\` — \`Export\`, … (groups joined by ;). Declare "CSS import" (stylesheet) or "Extends" (config) so each part is typed.`,
+    );
+    return null;
+  }
+  return { kind: "js", modules: modules.map((match) => ({ from: match[1], exports: backticked(match[2]) })) };
+}
 
 function parseCatalog(text, catalogPath, errors) {
   const needs = [];
@@ -155,6 +217,10 @@ function parseCatalog(text, catalogPath, errors) {
       ...(block.lang !== "ts" ? { lang: block.lang } : {}),
       code: block.code,
     }));
+    const adoption = parseAdoption(need, entry.import, field, catalogPath, errors);
+    if (adoption) entry.adoption = adoption;
+    const exampleFile = backticked(field("Example file"))[0];
+    if (exampleFile) entry.exampleFile = exampleFile;
     const registry = field("Registry");
     if (registry) entry.registry = registry;
     const a11y = field("A11y");

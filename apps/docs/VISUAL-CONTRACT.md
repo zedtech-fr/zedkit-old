@@ -87,8 +87,6 @@ Promise and one working example (hero: the proposition beside one small working 
 
 Identity examples sell what the kit builds, not how many identities it ships: no count in the title or copy, and each identity shows its own product screen (Maison a bag shop, Press a newsroom, Glass a SaaS app), never one page restyled per identity. Each example uses live kit components and keeps its own identity in full.
 
-Identity examples sell what the kit builds, not how many identities it ships: no count in the title or copy, and each identity shows its own product screen (Maison a bag shop, Press a newsroom, Glass a SaaS app), never one page restyled per identity. Each example uses live kit components and keeps its own identity in full.
-
 ## Component page
 
 Title, one purpose sentence, status, example, install (npm or source, both when available), usage, states, behavior and accessibility, kit props first, inherited attributes collapsed, related. Contents list every section.

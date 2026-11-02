@@ -1,0 +1,39 @@
+# The dev site's own identity suggest service. Started by `deploy.sh --dev` with
+#   docker compose -f compose.yaml -f compose.override.yaml -f compose.dev.yaml up -d suggest-dev
+# so it joins the same network as Caddy (dev.zedkit.app proxies to suggest-dev:3001) and nothing else changes.
+# It has its own code directory, its own env file and its own ledger volume: dev spend is counted apart from
+# production and is off until the dev environment sets a budget.
+services:
+  suggest-dev:
+    image: node:22-alpine
+    restart: unless-stopped
+    working_dir: /app
+    command: ["node", "server.mjs"]
+    volumes:
+      - ./suggest-dev/code:/app:ro
+      - suggest_dev_data:/data
+    env_file:
+      - path: suggest-dev/suggest.env
+        required: false
+    environment:
+      PORT: "3001"
+      IDENTITY_AI_STATE_DIR: /data
+      IDENTITY_AI_TRUSTED_PROXIES: private
+      # Reference pages are fetched by name: a slow DNS answer holds a thread each, and libuv has four by default.
+      UV_THREADPOOL_SIZE: "16"
+    expose:
+      - "3001"
+    # The service reads one volume and talks to one proxy: it needs no privileges, no writable image, and no
+    # more than a few hundred megabytes.
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    pids_limit: 256
+
+volumes:
+  suggest_dev_data:

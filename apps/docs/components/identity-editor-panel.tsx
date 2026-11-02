@@ -21,19 +21,23 @@ import {
 import { identityEditorCopy } from "@/components/i18n/identity-editor-copy";
 import { ContrastChips, DRAFT_SELECTOR, DraftCard, EditorFields } from "@/components/identity-editor-fields";
 import { IdentityEditorExport } from "@/components/identity-editor-export";
-import { IdentityEditorSuggest } from "@/components/identity-editor-suggest";
+import { IdentityAssistant } from "@/components/identity-assistant";
 import { IdentityEditorKeepBar, IdentityEditorPreviewBar } from "@/components/identity-editor-toolbar";
 import { DEFAULT_IDENTITY } from "@/lib/default-identity";
 import { useDraftTokens } from "@/lib/identity-editor-draft";
 import {
   deleteNamedIdentity,
   namedIdentityOptions,
+  readLibrarySnapshot,
   readNamedIdentities,
   renameNamedIdentity,
   saveNamedIdentity,
   subscribeNamedIdentities,
   type NamedIdentity,
 } from "@/lib/named-identities";
+import { freeLabel } from "@/lib/identity-library";
+import { saveStatus, type SaveStatus } from "@/lib/identity-save-status";
+import { clearDocsSiteIdentity } from "@/lib/site-identity-storage";
 import { parseIdentityEditorSearch, serializeIdentityEditorSearch } from "@/lib/identity-editor-search";
 
 type EditorBodyProps = {
@@ -45,14 +49,18 @@ type EditorBodyProps = {
   darkPreview: boolean;
   onIdentity: (id: string) => void;
   onName: (value: string) => void;
-  onSave: () => void;
+  onSave: (replace?: boolean) => void;
+  onSaveAsNew: () => void;
   onRename: () => void;
   onDelete: () => void;
+  onRemoveFromSite: () => void;
+  saveStatus: SaveStatus | null;
+  libraryProblem: "unavailable" | "corrupt" | undefined;
   onDark: () => void;
   onReset: () => void;
   onPatch: (key: string, value: string) => void;
   onFix: (warning: IdentityContrastWarning) => void;
-  onSuggestApply: (next: IdentityTokens, toSite: boolean) => void;
+  onUse: (next: IdentityTokens) => void;
   onUndo: () => void;
   onLoad: (tokens: IdentityTokens, darkKept: readonly string[]) => void;
   onApplySite: () => void;
@@ -73,28 +81,37 @@ function bindNamedLooks(
   setIdentity: (id: string) => void,
   setName: (label: string) => void,
   remember: (next: IdentityTokens, keep?: readonly string[]) => void,
+  setStatus: (status: SaveStatus | null) => void,
+  detachSite: () => void,
 ) {
+  const save = (label: string, replace: boolean) => {
+    const result = saveNamedIdentity(label, tokens, { replace });
+    setStatus(saveStatus(result, named));
+    if (!result.ok) return;
+    setIdentity(result.item.id);
+    setName(result.item.label);
+  };
   return {
     looks: [...identities, ...namedIdentityOptions(named)],
     namedSelected: isNamedIdentityId(identity),
     onIdentity(id: string) {
       setIdentity(id);
+      setStatus(null);
       const next = tokensForLook(id, named);
       if (next) remember(next, []);
       setName(named.find((item) => item.id === id)?.label ?? name);
     },
-    onSave() {
-      const saved = saveNamedIdentity(name, tokens);
-      if (!saved) return;
-      setIdentity(saved.id);
-      setName(saved.label);
-    },
+    onSave: (replace = false) => save(name, replace),
+    // A name that is taken is never replaced silently: the visitor chose "save as new", so it gets a free one.
+    onSaveAsNew: () => save(freeLabel(named, name), false),
     onRename() {
-      const saved = renameNamedIdentity(identity, name);
-      if (saved) setName(saved.label);
+      const result = renameNamedIdentity(identity, name);
+      setStatus(saveStatus(result, named, "renamed"));
+      if (result.ok) setName(result.item.label);
     },
     onDelete() {
       deleteNamedIdentity(identity);
+      setStatus(null);
       setIdentity("mist");
       remember(identityPresets.mist, []);
       setName("");
@@ -105,6 +122,13 @@ function bindNamedLooks(
     },
     onReset() {
       remember(tokensForLook(identity, named) ?? identityPresets.mist, []);
+    },
+    /** Undo "apply to the whole site": the site goes back to its own look, and this editor stops driving it. */
+    onRemoveFromSite() {
+      clearDocsSiteIdentity();
+      discardCustomIdentity();
+      applyIdentity(DEFAULT_IDENTITY);
+      detachSite();
     },
   };
 }
@@ -133,10 +157,14 @@ function IdentityEditorBody(props: EditorBodyProps) {
           <Text>{identityEditorCopy.panel.hint}</Text>
           {props.appliedSite ? <Text role="status">{identityEditorCopy.panel.applied}</Text> : null}
         </Stack>
-        <Stack className="empty:hidden max-lg:order-4">
+        {/* A folded row on a phone: pulled up to the card above it so the first adjustment stays on the first screen. */}
+        <Stack className="max-lg:order-4 max-lg:-mt-2">
+          <IdentityAssistant tokens={props.tokens} onUse={props.onUse} />
+        </Stack>
+        <Stack className="empty:hidden max-lg:order-5">
           <ContrastChips warnings={identityContrastWarnings(props.tokens)} onFix={props.onFix} />
         </Stack>
-        <Stack className="max-lg:order-5">
+        <Stack className="max-lg:order-6">
           <EditorFields
             tokens={props.tokens}
             scheme={scheme}
@@ -147,15 +175,17 @@ function IdentityEditorBody(props: EditorBodyProps) {
                 namedSelected={props.namedSelected}
                 onName={props.onName}
                 onSave={props.onSave}
+                onSaveAsNew={props.onSaveAsNew}
                 onRename={props.onRename}
                 onDelete={props.onDelete}
                 onApplySite={props.onApplySite}
+                onRemoveFromSite={props.onRemoveFromSite}
+                appliedSite={props.appliedSite}
+                status={props.saveStatus}
+                problem={props.libraryProblem}
               />
             }
           />
-        </Stack>
-        <Stack className="max-lg:order-6">
-          <IdentityEditorSuggest tokens={props.tokens} onApply={props.onSuggestApply} />
         </Stack>
         <Stack className="max-lg:order-7">
           <IdentityEditorExport tokens={props.tokens} onLoad={props.onLoad} />
@@ -210,13 +240,16 @@ function useFollowSiteIdentity(args: FollowSiteIdentityArgs) {
 
 function IdentityEditorPanel() {
   const named = useSyncExternalStore(subscribeNamedIdentities, readNamedIdentities, readNamedIdentities);
+  // Read as a store, with no server value: what storage holds is only known in the browser, so the first paint agrees.
+  const libraryProblem = useSyncExternalStore(subscribeNamedIdentities, () => readLibrarySnapshot().problem, () => undefined);
   const [identity, setIdentity] = useState("mist");
   const draft = useDraftTokens(identityPresets.mist, identity);
   const [name, setName] = useState("");
+  const [status, setStatus] = useState<SaveStatus | null>(null);
   const [darkPreview, setDarkPreview] = useState(false);
   const [ready, setReady] = useState(false);
   const { tokens, darkKept, remember, undo, applySite, detachSite, appliedSite, past, load, patch, fix, applySuggest } = draft;
-  const bound = bindNamedLooks(named, identity, name, tokens, setIdentity, setName, remember);
+  const bound = bindNamedLooks(named, identity, name, tokens, setIdentity, setName, remember, setStatus, detachSite);
 
   useLayoutEffect(() => {
     const parsed = parseIdentityEditorSearch(window.location.search);
@@ -251,7 +284,9 @@ function IdentityEditorPanel() {
       onDark={() => setDarkPreview(!darkPreview)}
       onPatch={(key, value) => patch(key, value, darkPreview ? "dark" : "light")}
       onFix={fix}
-      onSuggestApply={applySuggest}
+      saveStatus={status}
+      libraryProblem={libraryProblem}
+      onUse={(next) => applySuggest(next, false)}
       onUndo={undo}
       onLoad={remember}
       onApplySite={applySite}

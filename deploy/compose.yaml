@@ -7,13 +7,31 @@ services:
     command: ["node", "server.mjs"]
     volumes:
       - ./current/suggest:/app:ro
+      # The spend ledger and rate counters. They outlive the container, and instances that share this
+      # volume share one budget.
+      - suggest_data:/data
     env_file:
       - path: current/suggest.env
         required: false
     environment:
       PORT: "3001"
+      IDENTITY_AI_STATE_DIR: /data
+      IDENTITY_AI_TRUSTED_PROXIES: private
+      # Reference pages are fetched by name: a slow DNS answer holds a thread each, and libuv has four by default.
+      UV_THREADPOOL_SIZE: "16"
     expose:
       - "3001"
+    # The service reads one volume and talks to one proxy: it needs no privileges, no writable image, and no
+    # more than a few hundred megabytes.
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    pids_limit: 256
   caddy:
     image: caddy:2
     restart: unless-stopped
@@ -31,5 +49,6 @@ services:
       - caddy_config:/config
 
 volumes:
+  suggest_data:
   caddy_data:
   caddy_config:
