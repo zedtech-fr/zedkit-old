@@ -35,13 +35,22 @@ pieces and returns the app ready to `listen()`:
 - Request-id JSON logs (`nestjs-pino`): honors `x-request-id`,
   generates a UUID otherwise; one id across logs and error bodies.
   `Authorization` and cookies are redacted from logs by default.
+  Optional `logger.serializers`, `logger.customLogLevel`, and
+  `logger.transformLine` pass through to pino-http / wrap the sink
+  (`compactRequestSerializers` and `createRequestLogLevel({ quietPaths })`
+  are the compact-line helpers). Unset, today's logger is unchanged.
 - Strict global `ValidationPipe` (whitelist, forbid non-whitelisted,
   transform; implicit conversion off — see below). Relax per app with
   `validation: { whitelist: false, forbidNonWhitelisted: false }`.
 - One global error shape: `{ code, message, requestId }` (+ status).
   4xx carries the safe message; 5xx never leaks internals. Every response
   echoes `x-request-id` (interceptor on handled routes, filter otherwise).
-  Apps with domain errors pass their own filter via `exceptionFilter`.
+  Apps with domain errors subclass `AllExceptionsFilter` and override
+  `toStatusBody` / `unknownBodyParseError` / `formatBody`, then pass the
+  subclass via `exceptionFilter`. String-response HttpException 400/413/415
+  still echo the driver text unless the subclass sets
+  `sanitizeStringHttpExceptions = true` (opt-in; making that the default
+  is a later decision).
 - Optional global throttler (`@nestjs/throttler`, default 100/min;
   in-memory, single process — set `trustProxy` before running behind a
   proxy or every client shares one bucket).
