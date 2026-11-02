@@ -59,6 +59,8 @@ reject dead `/r/<name>.json` links.
   for visual changes + a rendered-page critique (strongest remaining
   weaknesses) + demo rules respected. Lint/types/axe/screenshot diffs
   are necessary, not sufficient. A self-assigned score is not done.
+  Playwright `toHaveScreenshot` baselines in git are the linux files
+  (`*-chromium-linux.png`). Darwin captures stay local (gitignored).
 
 ## ZedKit art direction (Product Atelier)
 

@@ -34,6 +34,8 @@ test-results/
 playwright-report/
 blob-report/
 apps/docs/out/
+# Local Mac Playwright baselines. CI is linux; commit *-chromium-linux.png only.
+*-chromium-darwin.png
 
 # Host-only env for the identity suggest service (written by deploy-docs).
 deploy/suggest.env
