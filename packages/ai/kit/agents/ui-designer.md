@@ -29,7 +29,8 @@ already has — search it first.
    split one per file behind a registry.
 3. **Owner.** For every fix or workaround, name the layer that owns the wrong
    value (token, primitive, composed component, docs shell, identity scope,
-   page; table in `apps/docs/VISUAL-CONTRACT.md`). Ask whether another place
+   page; the project's ownership table is authoritative, zedkit's is
+   `apps/docs/VISUAL-CONTRACT.md`). Ask whether another place
    has the same problem; if so the fix belongs at the shared layer and the
    local patch is a finding. Check what is invariant across identities (size
    table, 13px floor for text read to act, targets, focus, contrast) and what
@@ -55,30 +56,21 @@ already has — search it first.
    - Bad: `!important`, a page-id selector or a `[class*=]` selector to beat a
      broken token contract. Fix at the token or primitive, not with a
      selector override.
-   - Bad: a site rule on `#home-page h3` that also resizes headings inside
-     specimens. Good: site rules skip scopes (`:not([data-identity-scope] *)`).
    - Bad: a phone rule that shrinks a look's spacing and type so one hero
      fits. Good: recompose the hero.
    - Bad: the same 3-column card grid in every section. Good: one focal
      specimen per section; the rest recede.
-   - Bad: `min-h-svh` AppShell inside a 40rem preview. Good: `h-full min-h-0`;
-     the frame owns height.
-   - Bad: a blurred overlay that leaves the panel sampling the scrim. Good: the
-     scrim keeps the page readable as dimmed, and a look that frosts puts the
-     blur on the panel because the overlay is a sibling. Opaque or frosted is a
-     choice of the look; the readable page and the unblurred panel text are
-     the goal.
-   - Bad: `tbody tr:hover` on a calendar `role="grid"`. Good: hover `.rdp-day`.
    - Bad: trusting the class list when geometry looks wrong. Good: read the
      computed height/display/size of the element; class merging can leave two
      conflicting utilities when one is a custom token.
    - Bad: a destructive action as a solid button beside Save. Good: one primary,
      the destructive action outlined and apart, solid only in its confirmation.
-   - Bad: `overflow-hidden` on a ScrollScenes ancestor, or a `100svh`
-     centered hero stage. Good: `overflow-clip`, stage height follows content.
-   - Bad: a toast, bar or menu inside an animated subtree (an animated
-     translate or transform, even to none, makes it the containing block of
-     its fixed children). Good: animate opacity, or keep fixed content outside.
+   - Bad: a known trap of the project's visual contract (zedkit:
+     `apps/docs/VISUAL-CONTRACT.md`, Traps; its fix is the Good): `min-h-svh` inside a bounded preview, an
+     overlay blurred while the overlay is a sibling of its panel, `tbody tr:hover`
+     on a calendar grid (hover `.rdp-day`), `overflow-hidden` above a pinned
+     scene (`overflow-clip`), fixed content inside an animated subtree, a site
+     rule that reaches specimens. Cite the entry; do not restate it.
 5. **States.** Ask what the task is. A view that loads, saves or can come
    back empty needs loading, empty and error states, each named and
    recoverable; a form needs disabled and invalid. A reading page, a code
@@ -107,8 +99,10 @@ already has — search it first.
 8. **Motion.** Animate when motion explains a transition or preserves
    context (overlay entry/exit, list reorder, focus-following panel). Instant
    is fine for small feedback (toggle, checkbox, inline validation). Not
-   required on every state change. When used: ~150-250ms, ease-out in /
-   ease-in out, transform/opacity only, no layout shift. `prefers-reduced-motion`
+   required on every state change. When used: the project's durations if its
+   contract sets them (zedkit: 120-160ms feedback, 180-220ms panels), else
+   ~150-250ms; ease-out in / ease-in out, transform/opacity only, no layout
+   shift. `prefers-reduced-motion`
    respected everywhere: fade or instant, never displacement. Scope: overlays,
    reordering, and panels that would otherwise hide what changed. Exception:
    reduced-motion, or a change so small that motion would delay feedback.
