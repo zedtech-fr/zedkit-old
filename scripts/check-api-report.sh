@@ -16,6 +16,7 @@ fail=0
 # pkg|types-entry|report file  (quality has a second export path)
 entries=(
   "ai|dist/index.d.ts|zedkit-ai.api.md"
+  "brand|dist/index.d.ts|zedkit-brand.api.md"
   "core|dist/index.d.ts|zedkit-core.api.md"
   "devtools|dist/index.d.ts|zedkit-devtools.api.md"
   "flags|dist/index.d.ts|zedkit-flags.api.md"

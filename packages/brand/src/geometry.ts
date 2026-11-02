@@ -1,0 +1,109 @@
+/**
+ * Raw geometry of the zedkit logos. Plain data, no framework: every renderer
+ * (the string builder, the React component, a canvas, a PDF) reads the same
+ * shapes, so there is one place to change a curve.
+ */
+
+/** Brand ink: the dark colour, used on light surfaces. */
+export const BRAND_INK = "#0f1a2b";
+/** Brand paper: the light colour, used on dark surfaces. */
+export const BRAND_PAPER = "#f5f2ed";
+/** The brand name as written beside the mark. */
+export const BRAND_NAME = "zedkit";
+
+export type LogoVariant = "mark" | "wordmark" | "lockup";
+
+export interface LogoShape {
+  /** SVG path data, in the coordinate space of the variant's `viewBox`. */
+  d: string;
+  /** Outline width in user units. `0` means fill only. */
+  strokeWidth: number;
+  /** Set on the wordmark inside a lockup: places and scales the letters. */
+  transform?: string;
+}
+
+export interface LogoGeometry {
+  variant: LogoVariant;
+  /** `x y width height`, ready for an SVG `viewBox` attribute. */
+  viewBox: string;
+  width: number;
+  height: number;
+  shapes: readonly LogoShape[];
+}
+
+/** Two fine waves joined by a hairline: the zedkit mark. */
+const WAVES = [
+  "M86.5 181.5C109.17 150.49 131.83 128.02 154.5 111.09C176.17 94.91 197.83 83.79 219.5 77.72C262.83 65.58 306.17 73.61 349.5 92.26C371.17 101.59 392.83 113.57 414.5 120.8C436.17 128.02 457.83 130.5 479.5 126.62C501.17 122.74 522.83 112.51 544.5 96.1C566.83 79.19 589.17 55.72 611.5 26.5L611.5 26.5C567.5 96.17 523.5 134.27 479.5 146.8C436.17 159.14 392.83 146.68 349.5 127.58C327.83 118.03 306.17 106.82 284.5 100.55C262.83 94.28 241.17 92.96 219.5 96.7C175.17 104.36 130.83 133.22 86.5 181.5Z",
+  "M28.5 453.5C62.5 420.63 96.5 396.5 130.5 376.9C152.83 364.02 175.17 353.1 197.5 346.23C241.83 332.59 286.17 334.91 330.5 351.91C374.83 368.9 419.17 400.57 463.5 402.7C485.83 403.77 508.17 397.35 530.5 385.83C541.5 380.15 552.5 373.23 563.5 365.06C575.83 355.9 588.17 345.15 600.5 334.5L600.5 334.5C554.83 385.68 509.17 418.75 463.5 424.07C419.17 429.23 374.83 408.24 330.5 388.41C308.5 378.57 286.5 369.01 264.5 364.16C242.17 359.23 219.83 359.15 197.5 362.84C175.17 366.54 152.83 374.01 130.5 384.18C96.5 399.66 62.5 421.38 28.5 453.5Z",
+] as const;
+const HAIRLINE =
+  "M28.5 453.5C36.47 444.84 45.58 437.41 54.79 430.13C62.49 424.05 70.27 418.07 77.65 411.63C81.71 408.09 85.64 404.42 89.58 400.74C93.42 397.16 97.25 393.57 101.13 390.03C107.68 384.03 114.34 378.16 121.07 372.38C146.6 350.44 173.18 329.71 200.87 310.57C222.9 295.35 245.64 281.13 269.01 268.06C278.46 262.77 288.02 257.67 297.68 252.75C302.21 250.45 306.75 248.19 311.32 245.98C314.95 244.23 318.59 242.51 322.23 240.79C380.32 213.3 438.31 184.67 491.69 148.73C516.35 132.13 540.02 113.98 561.62 93.54C567.15 88.3 572.55 82.91 577.56 77.18C581.89 72.23 585.92 67.02 589.67 61.61C593.88 55.52 597.73 49.17 601.54 42.81C604.83 37.35 608.09 31.88 611.5 26.5L611.5 26.5C604.22 38.17 594.57 47.95 584.82 57.54C580.24 62.06 575.63 66.53 571.04 71.05C565.75 76.27 560.5 81.55 555.1 86.67C533.93 106.77 510.58 124.45 486.28 140.63C460.3 157.93 433.24 173.52 405.64 188.08C391.32 195.64 376.86 202.92 362.33 210.07C355.46 213.44 348.59 216.79 341.67 220.06C333.72 223.81 325.72 227.46 317.76 231.19C299.48 239.77 281.41 248.81 263.72 258.55C239.96 271.63 216.89 285.98 194.5 301.31C166.4 320.57 139.37 341.39 113.51 363.57C106.7 369.41 99.96 375.35 93.27 381.34C89.32 384.88 85.38 388.44 81.48 392.05C77.49 395.76 73.55 399.52 69.81 403.46C63.01 410.62 56.87 418.38 50.83 426.21C43.63 435.52 36.57 444.92 28.5 453.5Z";
+
+/** The letters "zedkit", outlined from Inter SemiBold (SIL OFL 1.1). Font units, y down, baseline at 0. */
+const WORDMARK =
+  "M122 0L122 -166L699 -892L699 -901L140 -901L140 -1118L1018 -1118L1018 -938L468 -226L468 -217L1037 -217L1037 0Z M1790.7 23Q1621.7 23 1500.2 -48Q1378.7 -119 1313.2 -248Q1247.7 -377 1247.7 -552Q1247.7 -725 1312.2 -855Q1376.7 -985 1495.2 -1058.5Q1613.7 -1132 1773.7 -1132Q1875.7 -1132 1968.2 -1099Q2060.7 -1066 2132.2 -997Q2203.7 -928 2244.2 -821.5Q2284.7 -715 2284.7 -568L2284.7 -486L1370.7 -486L1370.7 -663L2155.7 -663L2033.7 -611Q2033.7 -705 2004.7 -776.5Q1975.7 -848 1918.2 -888Q1860.7 -928 1774.7 -928Q1688.7 -928 1628.7 -887.5Q1568.7 -847 1537.2 -779.5Q1505.7 -712 1505.7 -629L1505.7 -507Q1505.7 -401 1541.7 -328Q1577.7 -255 1642.7 -218Q1707.7 -181 1793.7 -181Q1850.7 -181 1897.2 -197.5Q1943.7 -214 1977.7 -246.5Q2011.7 -279 2028.7 -326L2267.7 -277Q2240.7 -187 2175.7 -119.5Q2110.7 -52 2013.2 -14.5Q1915.7 23 1790.7 23Z M2920 20Q2788 20 2683.5 -47.5Q2579 -115 2519 -244Q2459 -373 2459 -557Q2459 -743 2520.5 -871.5Q2582 -1000 2686.5 -1066Q2791 -1132 2919 -1132Q3019 -1132 3082.5 -1098.5Q3146 -1065 3183.5 -1019Q3221 -973 3240 -933L3251 -933L3251 -1490L3511 -1490L3511 0L3256 0L3256 -177L3240 -177Q3220 -137 3181.5 -91Q3143 -45 3080 -12.5Q3017 20 2920 20ZM2991 -194Q3076 -194 3135 -239.5Q3194 -285 3225 -367Q3256 -449 3256 -558Q3256 -667 3225.5 -747.5Q3195 -828 3135.5 -873Q3076 -918 2991 -918Q2903 -918 2844 -871.5Q2785 -825 2755 -743.5Q2725 -662 2725 -558Q2725 -454 2755 -371.5Q2785 -289 2844.5 -241.5Q2904 -194 2991 -194Z M4024.5 -352L4024.5 -667L4065.5 -667L4468.5 -1118L4773.5 -1118L4279.5 -567L4225.5 -567ZM3786.5 0L3786.5 -1490L4046.5 -1490L4046.5 0ZM4487.5 0L4121.5 -509L4297.5 -693L4799.5 0Z M4953 0L4953 -1118L5213 -1118L5213 0ZM5083 -1276Q5021 -1276 4976.5 -1318Q4932 -1360 4932 -1418Q4932 -1478 4976.5 -1519.5Q5021 -1561 5083 -1561Q5146 -1561 5190.5 -1519.5Q5235 -1478 5235 -1419Q5235 -1360 5190.5 -1318Q5146 -1276 5083 -1276Z M6005.5 -1118L6005.5 -914L5370.5 -914L5370.5 -1118ZM5529.5 -1384L5789.5 -1384L5789.5 -315Q5789.5 -254 5815.5 -225.5Q5841.5 -197 5900.5 -197Q5918.5 -197 5948 -201.5Q5977.5 -206 5995.5 -210L6036.5 -9Q5993.5 4 5948.5 9.5Q5903.5 15 5862.5 15Q5701.5 15 5615.5 -65Q5529.5 -145 5529.5 -293Z";
+
+const MARK_BOX = { x: 20, y: 18, width: 600, height: 444 } as const;
+const WORD_BOX = { x: 122, y: -1561, width: 5915, height: 1584 } as const;
+
+/** Wordmark height as a share of the mark height inside a lockup. */
+const LOCKUP_WORD_SCALE = 0.15;
+/** Space between the mark and the wordmark inside a lockup, in mark units. */
+const LOCKUP_GAP = 56;
+
+const round = (n: number) => Math.round(n * 100) / 100;
+const box = (b: { x: number; y: number; width: number; height: number }) =>
+  `${round(b.x)} ${round(b.y)} ${round(b.width)} ${round(b.height)}`;
+
+const markShapes: readonly LogoShape[] = [
+  ...WAVES.map((d) => ({ d, strokeWidth: 4 })),
+  { d: HAIRLINE, strokeWidth: 0 },
+];
+
+const wordWidth = WORD_BOX.width * LOCKUP_WORD_SCALE;
+const wordHeight = WORD_BOX.height * LOCKUP_WORD_SCALE;
+const wordX = MARK_BOX.x + MARK_BOX.width + LOCKUP_GAP;
+const wordY = MARK_BOX.y + (MARK_BOX.height - wordHeight) / 2;
+const lockupWord: LogoShape = {
+  d: WORDMARK,
+  strokeWidth: 0,
+  transform: `translate(${round(wordX - WORD_BOX.x * LOCKUP_WORD_SCALE)} ${round(
+    wordY - WORD_BOX.y * LOCKUP_WORD_SCALE,
+  )}) scale(${LOCKUP_WORD_SCALE})`,
+};
+
+const LOCKUP_BOX = {
+  x: MARK_BOX.x,
+  y: MARK_BOX.y,
+  width: MARK_BOX.width + LOCKUP_GAP + wordWidth,
+  height: MARK_BOX.height,
+};
+
+const GEOMETRY: Record<LogoVariant, LogoGeometry> = {
+  mark: {
+    variant: "mark",
+    viewBox: box(MARK_BOX),
+    width: MARK_BOX.width,
+    height: MARK_BOX.height,
+    shapes: markShapes,
+  },
+  wordmark: {
+    variant: "wordmark",
+    viewBox: box(WORD_BOX),
+    width: WORD_BOX.width,
+    height: WORD_BOX.height,
+    shapes: [{ d: WORDMARK, strokeWidth: 0 }],
+  },
+  lockup: {
+    variant: "lockup",
+    viewBox: box(LOCKUP_BOX),
+    width: round(LOCKUP_BOX.width),
+    height: LOCKUP_BOX.height,
+    shapes: [...markShapes, lockupWord],
+  },
+};
+
+/** The shapes and `viewBox` of one logo variant: the mark, the wordmark, or both side by side. */
+export function logoGeometry(variant: LogoVariant): LogoGeometry {
+  return GEOMETRY[variant];
+}
