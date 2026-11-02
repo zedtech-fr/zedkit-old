@@ -1,5 +1,16 @@
 # @zedtech/zedkit-quality
 
+## 1.1.0
+
+### Minor Changes
+
+- a521431: Ship `zedkit-sync-env`, `zedkit-check-no-artifacts`, and `zedkit-check-no-secrets` as package bins. Artifact dirs/files/allowlist are parameterized (`--dirs` / `--files` / `--allow`); the ignore check uses `--no-index` so ignored-but-tracked files fail. Existing eslint/tsconfig exports are unchanged.
+
+### Patch Changes
+
+- 3061a0a: Group `zedkit-check-no-artifacts` directory names so they match path segments (`build/`, `coverage/`), not substrings in filenames like `tsconfig.build.json`.
+- 2fde8ae: Catalog entries for Theme, Motion and the TypeScript base now type their adoption (CSS import, CSS directive, utilities, attributes, extended config) instead of listing prose as exports. No code change; the install steps on the docs site are generated from these lines.
+
 ## 1.0.0
 
 ### Major Changes

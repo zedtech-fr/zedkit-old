@@ -1,5 +1,12 @@
 # @zedtech/zedkit-server
 
+## 1.2.0
+
+### Minor Changes
+
+- e2ff1da: Add `checkEndpointUrl` and `isPrivateHostname`: an SSRF guard for URLs your server calls on someone else's behalf. It allows http and https only and refuses loopback, private, link-local (cloud metadata), CGNAT, reserved and special-use hosts, including decimal, octal and hex IPv4 spellings and IPv6 with an embedded IPv4. It does not resolve DNS, so DNS rebinding is not covered. New exports only; the need starts at alpha.
+- 11de855: `redactValue` accepts a third `options` argument with `valuePatterns` (extra `{ pattern, replacement }` credential shapes, applied before the bearer/basic pattern). `pgErrorCode` (and so `pgErrorRetryable`) also reads the code from `error.cause` one level down, which ORM-wrapped driver errors need. `new MemoryRateLimiter({ windowMs?, now?, maxKeys? })` is optional; the defaults match the previous behavior. The only result that changes: `pgErrorCode` now returns the code for wrapped errors that returned `null` before.
+
 ## 1.1.0
 
 ### Minor Changes

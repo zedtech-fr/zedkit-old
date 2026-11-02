@@ -119,9 +119,14 @@ done
 python3 - <<'PY'
 import subprocess
 import sys
+import os
 from pathlib import Path
 
 root = Path(".")
+head = os.environ.get("GITHUB_HEAD_REF", "")
+if head == "changeset-release/main":
+    print("api-report: skip changeset gate on version PR")
+    sys.exit(0)
 base = "origin/main"
 probe = subprocess.run(
     ["git", "rev-parse", "--verify", base], capture_output=True, text=True
