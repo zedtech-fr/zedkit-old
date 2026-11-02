@@ -55,7 +55,7 @@ export function DataTableDemo() {
   const [view, setView] = useState<View>("Orders");
   return (
     <Stack gap={4}>
-      <Stack direction="horizontal" gap={2} role="group" aria-label={dataTableCopy.demo.stateGroupAriaLabel}>
+      <Stack direction="horizontal" gap={2} className="flex-wrap" role="group" aria-label={dataTableCopy.demo.stateGroupAriaLabel}>
         {VIEWS.map((name) => (
           <Button
             key={name}
