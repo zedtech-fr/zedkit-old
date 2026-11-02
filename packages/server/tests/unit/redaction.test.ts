@@ -113,4 +113,51 @@ describe("redactValue", () => {
     expect(redactValue("x".repeat(511) + "😀")).toBe("x".repeat(511) + "😀");
     expect(redactValue("x".repeat(512) + "😀")).toBe(`${"x".repeat(512)}…`);
   });
+  describe("valuePatterns", () => {
+    const valuePatterns = [{ pattern: /\bacme_[A-Za-z0-9_-]{8,}\b/, replacement: "[redacted-key]" }];
+
+    it("replaces every match, even without the g flag", () => {
+      const out = redactValue({ note: "a acme_abcdefgh1 b acme_zzzzzzzz2" }, undefined, { valuePatterns });
+      expect(out).toEqual({ note: "a [redacted-key] b [redacted-key]" });
+    });
+
+    it("reaches human-text fields, nested values, arrays, and Maps", () => {
+      const out = redactValue(
+        { message: "bad key acme_abcdefgh1", list: ["acme_abcdefgh1"], m: new Map([["k", "acme_abcdefgh1"]]) },
+        undefined,
+        { valuePatterns },
+      ) as { message: string; list: string[]; m: Map<string, string> };
+      expect(out.message).toBe("bad key [redacted-key]");
+      expect(out.list).toEqual(["[redacted-key]"]);
+      expect(out.m.get("k")).toBe("[redacted-key]");
+    });
+
+    it("runs before the bearer pattern, in the given order", () => {
+      const out = redactValue("Bearer acme_abcdefgh1", undefined, { valuePatterns });
+      // The custom replacement wins: the bearer pattern no longer matches the token.
+      expect(out).toBe("Bearer [redacted-key]");
+      const ordered = redactValue("x1", undefined, {
+        valuePatterns: [
+          { pattern: /x1/, replacement: "y2" },
+          { pattern: /y2/, replacement: "z3" },
+        ],
+      });
+      expect(ordered).toBe("z3");
+    });
+
+    it("keeps replacements literal and leaves defaults unchanged", () => {
+      const literal = redactValue("secret1234", undefined, {
+        valuePatterns: [{ pattern: /secret\d+/, replacement: "$&-$1" }],
+      });
+      expect(literal).toBe("$&-$1");
+      expect(redactValue("acme_abcdefgh1")).toBe("acme_abcdefgh1");
+      expect(redactValue("acme_abcdefgh1", undefined, {})).toBe("acme_abcdefgh1");
+    });
+
+    it("is stateless across calls for sticky and global regexes", () => {
+      const options = { valuePatterns: [{ pattern: /acme_[a-z0-9]{8}/gy, replacement: "[k]" }] };
+      expect(redactValue("acme_abcdefg1", undefined, options)).toBe("[k]");
+      expect(redactValue("acme_abcdefg1", undefined, options)).toBe("[k]");
+    });
+  });
 });

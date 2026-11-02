@@ -647,6 +647,7 @@ const CATALOG_AREA_BY_FOLDER = {
   observability: "backend",
   quality: "backend",
   i18n: "ui",
+  brand: "ui",
 };
 
 function catalogAreaForFolder(folder) {

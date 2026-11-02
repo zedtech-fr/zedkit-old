@@ -25,7 +25,7 @@ function entryPackagesFromScript() {
 
 test("check-api-report.sh lists every packages/* workspace package", () => {
   const want = packageDirs();
-  assert.equal(want.length, 13, "update this test if the workspace package count changes");
+  assert.equal(want.length, 14, "update this test if the workspace package count changes");
   const have = entryPackagesFromScript();
   assert.deepEqual(
     have,

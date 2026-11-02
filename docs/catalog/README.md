@@ -28,6 +28,7 @@ Each package PR adds its row here, following
 | `@zedtech/zedkit-i18n` | message templates, typed React messages context | [packages/i18n/CATALOG.md](../../packages/i18n/CATALOG.md) |
 | `@zedtech/zedkit-observability` | logger and tracker ports, adapters, React hooks | [packages/observability/CATALOG.md](../../packages/observability/CATALOG.md) |
 | `@zedtech/zedkit-storage` | S3 config, safe object keys, presigned URLs | [packages/storage/CATALOG.md](../../packages/storage/CATALOG.md) |
+| `@zedtech/zedkit-brand` | zedkit logos: SVG files, string builder, React component, icon sources | [packages/brand/CATALOG.md](../../packages/brand/CATALOG.md) |
 
 ## Entry format
 
