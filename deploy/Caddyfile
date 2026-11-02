@@ -1,6 +1,7 @@
 # Static docs site served by Caddy (automatic HTTPS via Let's Encrypt).
 # The build output of apps/docs is mounted read-only at /srv/site.
-# POST /api/identity/suggest and GET /api/identity/suggest/version go to Suggest.
+# /api/identity/suggest (POST), /version and /status go to Suggest. Caddy sets X-Forwarded-For from the real
+# peer and drops any value a client sent, which is what the service's trusted-proxy rule relies on.
 
 www.zedkit.app {
 	redir https://zedkit.app{uri} permanent
@@ -47,13 +48,18 @@ zedkit.app {
 	}
 }
 
-# Dev site: same static export, no indexing, no suggest proxy.
+# Dev site: same static export, no indexing. Its identity creator talks to its OWN suggest instance
+# (suggest-dev: separate state, separate budget, off until configured), never to the production one.
 # robots.txt comes from the dev build stamp (deploy.sh --dev writes it).
 dev.zedkit.app {
 	root * /srv/site-dev
 	encode zstd gzip
 
 	header X-Robots-Tag "noindex, nofollow"
+
+	handle /api/identity/suggest* {
+		reverse_proxy suggest-dev:3001
+	}
 
 	handle /docs/ui/design-your-identity {
 		redir * /features/identity-editor permanent

@@ -67,7 +67,9 @@ test("Caddyfile declares each site host exactly once", () => {
   const dev = JSON.stringify(devRoute);
   assert.ok(dev.includes('"root":"/srv/site-dev"'), dev);
   assert.ok(dev.includes("noindex, nofollow"), dev);
-  assert.ok(!dev.includes("reverse_proxy"), dev);
+  // The dev site proxies the suggest API, and only to its own instance: never to production's.
+  const dials = [...dev.matchAll(/"dial":"([^"]+)"/g)].map((match) => match[1]);
+  assert.deepEqual(dials, ["suggest-dev:3001"], dev);
 });
 
 test("Caddyfile validates on Caddy 2.6 (host floor, no newer syntax)", () => {
@@ -88,4 +90,22 @@ test("Caddyfile validates on Caddy 2.6 (host floor, no newer syntax)", () => {
   );
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.match(result.stdout + result.stderr, /Valid configuration/);
+});
+
+test("each site proxies the suggest API to its own instance: dev never depends on production", async () => {
+  const { readFileSync } = await import("node:fs");
+  const text = readFileSync(`${here}/Caddyfile`, "utf8");
+  const block = (host) => {
+    const start = text.indexOf(`\n${host} {`);
+    assert.notEqual(start, -1, `${host} block`);
+    const next = text.indexOf("\n}\n", start);
+    return text.slice(start, next);
+  };
+  const prod = block("zedkit.app");
+  const dev = block("dev.zedkit.app");
+  assert.match(prod, /reverse_proxy suggest:3001/);
+  assert.doesNotMatch(prod, /suggest-dev/);
+  assert.match(dev, /handle \/api\/identity\/suggest\*/);
+  assert.match(dev, /reverse_proxy suggest-dev:3001/);
+  assert.doesNotMatch(dev, /reverse_proxy suggest:3001/);
 });

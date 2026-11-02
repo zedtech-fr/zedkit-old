@@ -7,11 +7,16 @@ services:
     command: ["node", "server.mjs"]
     volumes:
       - ./current/suggest:/app:ro
+      # The spend ledger and rate counters. They outlive the container, and instances that share this
+      # volume share one budget.
+      - suggest_data:/data
     env_file:
       - path: current/suggest.env
         required: false
     environment:
       PORT: "3001"
+      IDENTITY_AI_STATE_DIR: /data
+      IDENTITY_AI_TRUSTED_PROXIES: private
     expose:
       - "3001"
   caddy:
@@ -31,5 +36,6 @@ services:
       - caddy_config:/config
 
 volumes:
+  suggest_data:
   caddy_data:
   caddy_config:
