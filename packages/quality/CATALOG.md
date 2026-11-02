@@ -96,7 +96,8 @@ export default [
 
 ## Keep .env complete without overwriting local values
 
-- Import: `@zedtech/zedkit-quality` — `zedkit-sync-env`
+- Import: `@zedtech/zedkit-quality` (CLI bin, not a JavaScript module)
+- Bin: `zedkit-sync-env`
 - Wraps: `(none)`
 - Status: alpha
 - Short name: SyncEnv
@@ -117,7 +118,8 @@ export default [
 
 ## Fail CI when build artifacts are tracked
 
-- Import: `@zedtech/zedkit-quality` — `zedkit-check-no-artifacts`
+- Import: `@zedtech/zedkit-quality` (CLI bin, not a JavaScript module)
+- Bin: `zedkit-check-no-artifacts`
 - Wraps: `(none)`
 - Status: alpha
 - Short name: CheckNoArtifacts
@@ -138,7 +140,8 @@ export default [
 
 ## Fail CI when secrets are tracked
 
-- Import: `@zedtech/zedkit-quality` — `zedkit-check-no-secrets`
+- Import: `@zedtech/zedkit-quality` (CLI bin, not a JavaScript module)
+- Bin: `zedkit-check-no-secrets`
 - Wraps: `(none)`
 - Status: alpha
 - Short name: CheckNoSecrets

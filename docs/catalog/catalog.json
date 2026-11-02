@@ -1484,7 +1484,7 @@
         },
         {
           "need": "Keep .env complete without overwriting local values",
-          "import": "`@zedtech/zedkit-quality` — `zedkit-sync-env`",
+          "import": "`@zedtech/zedkit-quality` (CLI bin, not a JavaScript module)",
           "wraps": "`(none)`",
           "status": "alpha",
           "shortName": "SyncEnv",
@@ -1501,14 +1501,9 @@
             }
           ],
           "adoption": {
-            "kind": "js",
-            "modules": [
-              {
-                "from": "@zedtech/zedkit-quality",
-                "exports": [
-                  "zedkit-sync-env"
-                ]
-              }
+            "kind": "bin",
+            "commands": [
+              "zedkit-sync-env"
             ]
           },
           "seeAlso": [
@@ -1517,7 +1512,7 @@
         },
         {
           "need": "Fail CI when build artifacts are tracked",
-          "import": "`@zedtech/zedkit-quality` — `zedkit-check-no-artifacts`",
+          "import": "`@zedtech/zedkit-quality` (CLI bin, not a JavaScript module)",
           "wraps": "`(none)`",
           "status": "alpha",
           "shortName": "CheckNoArtifacts",
@@ -1534,14 +1529,9 @@
             }
           ],
           "adoption": {
-            "kind": "js",
-            "modules": [
-              {
-                "from": "@zedtech/zedkit-quality",
-                "exports": [
-                  "zedkit-check-no-artifacts"
-                ]
-              }
+            "kind": "bin",
+            "commands": [
+              "zedkit-check-no-artifacts"
             ]
           },
           "seeAlso": [
@@ -1550,7 +1540,7 @@
         },
         {
           "need": "Fail CI when secrets are tracked",
-          "import": "`@zedtech/zedkit-quality` — `zedkit-check-no-secrets`",
+          "import": "`@zedtech/zedkit-quality` (CLI bin, not a JavaScript module)",
           "wraps": "`(none)`",
           "status": "alpha",
           "shortName": "CheckNoSecrets",
@@ -1567,14 +1557,9 @@
             }
           ],
           "adoption": {
-            "kind": "js",
-            "modules": [
-              {
-                "from": "@zedtech/zedkit-quality",
-                "exports": [
-                  "zedkit-check-no-secrets"
-                ]
-              }
+            "kind": "bin",
+            "commands": [
+              "zedkit-check-no-secrets"
             ]
           },
           "seeAlso": [

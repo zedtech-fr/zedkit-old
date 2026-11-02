@@ -331,7 +331,7 @@ function packageMode({ need, packageName, example }) {
   const steps = [
     {
       id: "install",
-      blocks: [command((pm) => addCommand(pm, packagesFor(packageName, adoption, extra), { dev: adoption.kind === "config" }))],
+      blocks: [command((pm) => addCommand(pm, packagesFor(packageName, adoption, extra), { dev: adoption.kind === "config" || adoption.kind === "bin" }))],
     },
   ];
   if (isUi) {

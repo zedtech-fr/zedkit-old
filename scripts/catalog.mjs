@@ -134,8 +134,9 @@ const JS_IMPORT_GROUP = /^`([^`]+)`\s+—\s+(`[^`]+`(?:,\s*`[^`]+`)*)$/;
 /**
  * The typed adoption contract of one need: what a person writes to start using it, per language.
  * `js` lists the exports of one or more modules; `css` is a stylesheet import plus directives, utilities and
- * attributes; `config` extends a shared config file. Prose in the Import line is never read for names:
- * a line that is none of these is an error, so a generator cannot guess an export out of a sentence.
+ * attributes; `config` extends a shared config file; `bin` names package CLI commands. Prose in the Import
+ * line is never read for names: a line that is none of these is an error, so a generator cannot guess an
+ * export out of a sentence.
  */
 export function parseAdoption(need, importLine, field, catalogPath, errors) {
   if (!importLine) return null;
@@ -143,6 +144,13 @@ export function parseAdoption(need, importLine, field, catalogPath, errors) {
   const cssImports = backticked(field("CSS import"));
   const directives = backticked(field("CSS directive"));
   const extendsOf = backticked(field("Extends"));
+  const bins = backticked(field("Bin"));
+  if (bins.length > 0) {
+    if (extendsOf.length > 0 || cssImports.length > 0) {
+      errors.push(`${where} declares "Bin" with no "Extends" and no "CSS import".`);
+    }
+    return { kind: "bin", commands: bins };
+  }
   if (extendsOf.length > 0) {
     if (extendsOf.length > 1 || cssImports.length > 0) {
       errors.push(`${where} declares "Extends" with one config path and no "CSS import".`);
