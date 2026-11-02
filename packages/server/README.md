@@ -51,6 +51,21 @@ see `@zedtech/zedkit-core` instead.
   preserved. `options.valuePatterns` (`{ pattern, replacement }[]`) adds
   your own credential shapes: matches are replaced literally on every
   string, before the bearer/basic pattern.
+- `hkdfKey(masterKey, info, { salt?, length? })` — derive a purpose-bound
+  key (default 32 bytes) from one master secret with HKDF-SHA256. Same
+  inputs, same key; `info` separates purposes. An empty master throws.
+- `sealSecret(masterKey, info, plaintext)` / `openSecret(masterKey, info,
+  sealed)` — AES-256-GCM envelope (12-byte IV, ciphertext, 16-byte tag)
+  for credentials you must read back. The key comes from `hkdfKey`.
+  `openSecret` throws on a wrong master or `info`, tampering, or
+  truncation. Rotating the master means re-sealing stored values.
+- `checkoutSuffix(cwd)` / `suffixedDatabaseUrl(baseUrl, cwd)` /
+  `databaseNameFromUrl(url)` — per-checkout test database names so parallel
+  checkouts do not drop each other's database; the last one throws on any
+  name outside `[A-Za-z0-9_]`.
+- `clientKeyFromForwardedFor(header, fallback = "local")` — rate-limit
+  key from `X-Forwarded-For`: the last entry (appended by your proxy),
+  never the spoofable first. Correct behind exactly one trusted proxy.
 - `computeBackoffMs(attemptNo, random?)` — exponential retry backoff
   (2s × 3^(n-1), ±20% jitter, 1s floor, 1h cap).
 - `webhookSignatureHeader(secret, body, timestamp)` /
