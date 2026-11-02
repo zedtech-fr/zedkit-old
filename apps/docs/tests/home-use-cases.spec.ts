@@ -52,10 +52,10 @@ test("Display scopes identity without touching the site shell", async ({ page })
   expect(await page.locator("html").getAttribute("data-identity")).toBe(shellBefore ?? DEFAULT_IDENTITY);
 });
 
-test("the secondary band links to the demo editor and no-code route (#1092)", async ({ page }) => {
+test("the identities band links to the demo editor and no-code route (#1092)", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/");
-  const section = page.locator("#entry-points");
+  const section = page.locator("#identities");
   await section.scrollIntoViewIfNeeded();
   const identities = section.locator("#use-cases");
   await identities.scrollIntoViewIfNeeded();

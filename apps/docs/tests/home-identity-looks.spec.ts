@@ -123,6 +123,7 @@ test("the demo keeps its promises: Discard restores, Save keeps, Delete confirms
   await expect(stage.getByRole("button", { name: "Delete project" })).toBeVisible();
 });
 
+/** Looks that show a second specimen, in its own frame beside (not inside) the shared settings card. */
 const EXPRESSION: Record<string, string | null> = {
   Mist: null,
   Press: "Editorial reading",
@@ -143,15 +144,28 @@ for (const width of [320, 1280]) {
       const stage = looks.locator("[data-home-identity-stage]");
       // The shared task is always there, so looks stay comparable.
       await expect(stage.getByRole("button", { name: "Save changes" })).toBeVisible();
-      if (label) await expect(stage.getByText(label, { exact: true })).toBeVisible();
-      else await expect(stage.getByText(/Editorial reading|Dense workspace|Layered surfaces/)).toHaveCount(0);
+      if (label) {
+        await expect(stage.getByText(label, { exact: true })).toBeVisible();
+        // Its own frame: the specimen is not a child of the settings card, so Delete stays with project settings.
+        const placement = await stage.evaluate((node) => {
+          const card = node.querySelector("[data-slot='card']")!;
+          const scene = node.querySelector("[data-home-identity-scene]")!;
+          const remove = [...node.querySelectorAll("button")].find((b) => b.textContent?.trim() === "Delete project")!;
+          return {
+            sceneOutsideCard: !card.contains(scene),
+            deleteInCard: card.contains(remove),
+            sceneAfterCard: Boolean(card.compareDocumentPosition(scene) & Node.DOCUMENT_POSITION_FOLLOWING),
+          };
+        });
+        expect(placement, `${name}`).toEqual({ sceneOutsideCard: true, deleteInCard: true, sceneAfterCard: true });
+      } else await expect(stage.getByText(/Editorial reading|Dense workspace|Layered surfaces/)).toHaveCount(0);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       expect(overflow, `${width}px ${name}`).toBeLessThanOrEqual(1);
     }
   });
 }
 
-test("Volt's dense list reads as dense: its rows are tighter than the shared table's", async ({ page }) => {
+test("Volt's dense list reads as dense without small type: rows tighter than the table's, text at the 13px floor", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/", { waitUntil: "networkidle" });
   const looks = page.locator("[data-home-identity-looks]");
@@ -162,6 +176,12 @@ test("Volt's dense list reads as dense: its rows are tighter than the shared tab
   });
   expect(heights.dense).toBeGreaterThan(0);
   expect(heights.dense).toBeLessThan(heights.table);
+  // Event text is what a reader acts on, so it keeps the dense-UI floor; density comes from the rhythm.
+  const sizes = await looks.locator("ul[aria-label='Recent activity'] li span").evaluateAll((spans) =>
+    spans.filter((span) => (span.textContent ?? "").trim()).map((span) => Number.parseFloat(getComputedStyle(span).fontSize)),
+  );
+  expect(sizes.length).toBeGreaterThan(0);
+  for (const size of sizes) expect(size).toBeGreaterThanOrEqual(13);
 });
 
 test("Delete project: the dialog traps focus, Cancel and Escape return it, Confirm completes and Restore undoes it", async ({ page }) => {

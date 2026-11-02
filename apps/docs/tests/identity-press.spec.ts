@@ -52,7 +52,7 @@ test.describe("press identity", () => {
       await page.setViewportSize(viewport);
       await openAsIdentity(page, HOME, "press", "light");
       if (viewport.width >= 768) {
-        const card = page.locator('#home-page #entry-points:not(.sr-only) [data-slot="card"]').first();
+        const card = page.locator('#home-page #identities:not(.sr-only) [data-slot="card"]').first();
         await expect(card).toBeVisible({ timeout: 20_000 });
         const cardBorder = await card.evaluate((el) => Number.parseFloat(getComputedStyle(el).borderTopWidth));
         expect(cardBorder).toBeLessThanOrEqual(1.01);

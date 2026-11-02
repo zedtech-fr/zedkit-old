@@ -34,7 +34,7 @@ export function HomeIdentityLooksFacts({
     >
       <Stack gap={4} className="min-w-0">
         <Stack gap={1} className="min-w-0">
-          <Heading level={3} className="font-(family-name:--zk-font-display) text-balance">
+          <Heading level={3} className="font-(family-name:--zk-font-display) text-lg text-balance">
             {facts.label}
           </Heading>
           <Text variant="muted" className="text-sm">

@@ -86,14 +86,18 @@
   color: hsl(var(--muted-foreground));
 }
 
-#home-page [data-slot="section"] h2[data-slot="heading"] {
+/*
+ * Site headings only. A heading inside a specimen (`ThemeScope`) is the specimen's: its size, weight and
+ * tracking come from the kit and the look it wears, never from the page around it.
+ */
+#home-page [data-slot="section"] h2[data-slot="heading"]:not([data-identity-scope] *) {
   font-size: var(--zk-type-h2-size);
   font-weight: var(--zk-type-h2-weight);
   line-height: var(--zk-type-h2-leading);
   letter-spacing: -0.02em;
 }
 
-#home-page h3[data-slot="heading"] {
+#home-page h3[data-slot="heading"]:not([data-identity-scope] *) {
   font-size: var(--zk-type-h3-size);
   font-weight: var(--zk-type-h3-weight);
   line-height: var(--zk-type-h3-leading);

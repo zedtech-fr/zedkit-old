@@ -55,7 +55,7 @@ test.describe("maison identity", () => {
       await openAsIdentity(page, HOME, "maison", "light");
       expect(await probe(page, "border-top-width", "var(--zk-border-width)")).toBe("1px");
       if (viewport.width >= 768) {
-        const card = page.locator('#home-page #entry-points:not(.sr-only) [data-slot="card"]').first();
+        const card = page.locator('#home-page #identities:not(.sr-only) [data-slot="card"]').first();
         await expect(card).toBeVisible({ timeout: 20_000 });
         const cardBorder = await card.evaluate((el) => Number.parseFloat(getComputedStyle(el).borderTopWidth));
         expect(cardBorder).toBeLessThanOrEqual(1.01);

@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 const BASE = "http://127.0.0.1:3100";
 const WIDTHS = [390, 768, 1280] as const;
 
-const SECTION_IDS = ["get-started", "components", "entry-points"];
+const SECTION_IDS = ["identities", "get-started", "components", "entry-points"];
 
 test.describe("home layout rhythm (#387)", () => {
   for (const width of WIDTHS) {

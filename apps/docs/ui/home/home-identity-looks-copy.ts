@@ -20,6 +20,7 @@ export const homeIdentityLooksCopy = {
   expression: {
     editorial: {
       label: "Editorial reading",
+      point: "Long text is where this look earns its keep: a capped measure, generous leading, a headline with a voice.",
       title: "A quiet week at Harbor",
       lead: "Two deploys, one rollback, and a region that finally stopped paging at night.",
       body: "Long lines stay readable here: the measure is capped, the leading is generous, and the headline carries the voice of the look.",
@@ -27,6 +28,7 @@ export const homeIdentityLooksCopy = {
     },
     dense: {
       label: "Dense workspace",
+      point: "Many short rows at once. Tight rhythm, still 13px, still scannable.",
       rows: [
         { time: "09:41", event: "deploy console@4.8.2", tone: "success" as const },
         { time: "09:38", event: "migrate eu-1 schema", tone: "active" as const },
@@ -38,6 +40,7 @@ export const homeIdentityLooksCopy = {
     },
     layered: {
       label: "Layered surfaces",
+      point: "Three surfaces over a coloured ground. Each stays readable through the one above it.",
       back: "Background",
       card: "Card above the background",
       overlay: "Popover above the card",

@@ -3,7 +3,6 @@ import { Button, Section, Stack, Text } from "@zedtech/zedkit-ui";
 import { DocsActionLabel } from "@/components/docs-action-label";
 import type { HomeEntryPoint } from "@/content/home-entry-points";
 import { HomeGetStartedAiBlock } from "@/ui/home/home-get-started-ai-block";
-import { HomeSecondaryIdentitiesBlock } from "@/ui/home/home-secondary-identities-block";
 import {
   HOME_METADATA_TEXT_CLASS,
   HOME_SECTION_CONTENT_GAP,
@@ -37,7 +36,7 @@ function HomeSecondaryEntryLinks({ entryPoints }: { entryPoints: HomeEntryPoint[
   );
 }
 
-/** Packages, agents, and identities — one quiet band after the main path. */
+/** Packages and agents: one quiet band after the main path. */
 export function HomeSecondarySection({
   entryPoints,
   initCommand,
@@ -57,7 +56,6 @@ export function HomeSecondarySection({
     >
       <Stack gap={HOME_SECTION_CONTENT_GAP}>
         <HomeSecondaryEntryLinks entryPoints={entryPoints} />
-        <HomeSecondaryIdentitiesBlock />
         <Stack gap={2} className="border-t border-border pt-6">
           <Text className="font-medium">{homeCopy.secondary.optionalAgentsHeading}</Text>
           <HomeGetStartedAiBlock initCommand={initCommand} />

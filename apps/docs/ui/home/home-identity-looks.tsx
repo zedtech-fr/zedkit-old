@@ -10,7 +10,7 @@ import { homeIdentityLooksCopy } from "@/ui/home/home-identity-looks-copy";
 import { HomeIdentityLooksFacts } from "@/ui/home/home-identity-looks-facts";
 import { HomeIdentityLooksStage } from "@/ui/home/home-identity-looks-stage";
 import { HomeIdentityLooksTabs } from "@/ui/home/home-identity-looks-tabs";
-import { HOME_CARD_TITLE_CLASS, HOME_METADATA_TEXT_CLASS, HOME_PERSUASION_TEXT_CLASS } from "@/ui/home/home-rhythm";
+import { HOME_METADATA_TEXT_CLASS } from "@/ui/home/home-rhythm";
 
 const noop = () => () => {};
 
@@ -23,10 +23,6 @@ export function HomeIdentityLooks() {
 
   return (
     <Stack gap={3} className="min-w-0 scroll-mt-24" data-home-identity-looks="">
-      <Text className={HOME_CARD_TITLE_CLASS}>{homeIdentityLooksCopy.title}</Text>
-      <Text variant="muted" className={HOME_PERSUASION_TEXT_CLASS}>
-        {homeIdentityLooksCopy.body}
-      </Text>
       <Text variant="muted" className={HOME_METADATA_TEXT_CLASS}>
         {homeIdentityLooksCopy.liveNote}
       </Text>

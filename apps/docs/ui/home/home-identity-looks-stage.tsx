@@ -90,7 +90,8 @@ function DeleteProject({ deleted, onDeleted }: { deleted: boolean; onDeleted: (v
   );
 }
 
-export function HomeIdentityLooksStage({ identity }: { identity: IdentityId }) {
+/** The shared task: identical in all six looks, which is what makes the comparison fair. */
+function ProjectSettings() {
   const workspaceId = useId();
   const regionId = useId();
   const alertsId = useId();
@@ -102,7 +103,7 @@ export function HomeIdentityLooksStage({ identity }: { identity: IdentityId }) {
       <CardHeader>
         <Stack direction="horizontal" gap={2} className="items-start justify-between">
           <Stack gap={1} className="min-w-0">
-            <Heading level={3} className="font-(family-name:--zk-font-display) text-balance">
+            <Heading level={3} className="font-(family-name:--zk-font-display) text-lg text-balance">
               {copy.heading}
             </Heading>
             <Text variant="muted">{copy.description}</Text>
@@ -132,10 +133,19 @@ export function HomeIdentityLooksStage({ identity }: { identity: IdentityId }) {
             <AlertTitle>{copy.alertTitle}</AlertTitle>
             <AlertDescription>{copy.alertBody}</AlertDescription>
           </Alert>
-          <HomeIdentityLooksExpression identity={identity} />
           <DeleteProject deleted={deleted} onDeleted={setDeleted} />
         </Stack>
       </CardContent>
     </Card>
+  );
+}
+
+/** The shared task, then (for the looks that have one) a second specimen in its own frame. */
+export function HomeIdentityLooksStage({ identity }: { identity: IdentityId }) {
+  return (
+    <Stack gap={4} className="min-w-0">
+      <ProjectSettings />
+      <HomeIdentityLooksExpression identity={identity} />
+    </Stack>
   );
 }
