@@ -19,6 +19,59 @@ import { useIdentity } from "./identity-helpers";
 const TOKENS = ["--background", "--foreground", "--primary", "--card", "--border", "--radius", "--zk-font-sans"];
 const DERIVED = ["--zk-shadow-md", "--zk-shadow-lg"];
 
+/**
+ * Two scopes of different identities, then a hand-written `.dark` section: the nearest scope owns it,
+ * whichever identity file the bundle happens to load last (Tide → Press → dark used to resolve to Tide).
+ * The reference is the same inner identity pinned dark on its own node, outside any other scope.
+ */
+for (const siteMode of ["light", "dark"] as const) {
+  test(`scope in scope (${siteMode} site): a plain dark section follows the nearest scope, not the outer one`, async ({ page }) => {
+    await page.goto("/docs/ui/trigger-actions-with-buttons", { waitUntil: "networkidle" });
+    await useIdentity(page, "tide", siteMode);
+    const result = await page.evaluate(
+      ({ tokens, ids }) => {
+        const main = document.querySelector("main")!;
+        const read = (node: Element) =>
+          Object.fromEntries(
+            tokens.map((name) => [name, getComputedStyle(node).getPropertyValue(name).replace(/\s+/g, " ").trim()]),
+          );
+        const scopeNode = (id: string, dark: boolean) => {
+          const node = document.createElement("div");
+          node.setAttribute("data-identity-scope", "");
+          node.setAttribute("data-identity", id);
+          if (dark) node.className = "dark";
+          return node;
+        };
+        const mismatches: string[] = [];
+        for (const outerId of ids) {
+          for (const innerId of ids) {
+            const outer = scopeNode(outerId, false);
+            const inner = scopeNode(innerId, false);
+            const plain = document.createElement("div");
+            plain.className = "dark";
+            inner.append(plain);
+            outer.append(inner);
+            const reference = scopeNode(innerId, true);
+            main.append(outer, reference);
+            const got = read(plain);
+            const want = read(reference);
+            for (const name of tokens) {
+              if (got[name] !== want[name]) {
+                mismatches.push(`${outerId} → ${innerId} → dark: ${name} is ${got[name]}, ${innerId} dark has ${want[name]}`);
+              }
+            }
+            outer.remove();
+            reference.remove();
+          }
+        }
+        return mismatches;
+      },
+      { tokens: TOKENS, ids: [...DOCS_SHIPPED_IDENTITIES] },
+    );
+    expect(result).toEqual([]);
+  });
+}
+
 for (const root of DOCS_SHIPPED_IDENTITIES) {
   for (const siteMode of ["light", "dark"] as const) {
     test(`root ${root} (${siteMode}): a dark section keeps the nearer identity`, async ({ page }) => {

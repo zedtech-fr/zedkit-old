@@ -173,20 +173,22 @@
   }
 }
 
-/* Each scene owns one slice of the pinned scroll: fade in, hold, fade out (the next one starts after). */
+/*
+ * Each scene owns one slice of the pinned scroll: fade in, hold, fade out (the next one starts after).
+ *
+ * Opacity only. A scene must never animate `transform`, `translate`, `filter` or the like, not even
+ * to the value `none` or `0`: Chromium treats an element with a running animation of those
+ * properties as the containing block of its `position: fixed` descendants, so a toast or a floating
+ * bar inside the visible scene would sit against the scene card, over the controls it reports on.
+ */
 @keyframes zk-scene-fade {
-  0% {
+  0%,
+  100% {
     opacity: 0;
-    translate: 0 0.75rem;
   }
   25%,
   75% {
     opacity: 1;
-    translate: 0 0;
-  }
-  100% {
-    opacity: 0;
-    translate: 0 -0.75rem;
   }
 }
 
@@ -195,11 +197,9 @@
   0%,
   75% {
     opacity: 1;
-    translate: 0 0;
   }
   100% {
     opacity: 0;
-    translate: 0 -0.75rem;
   }
 }
 
@@ -207,12 +207,10 @@
 @keyframes zk-scene-fade-last {
   0% {
     opacity: 0;
-    translate: 0 0.75rem;
   }
   25%,
   100% {
     opacity: 1;
-    translate: 0 0;
   }
 }
 

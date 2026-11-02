@@ -96,4 +96,11 @@ describe("scroll-scenes.css", () => {
     const keyframes = css.slice(css.indexOf("@keyframes zk-scene-fade"), css.indexOf("@keyframes zk-scene-dot"));
     expect(keyframes).not.toMatch(/\b(top|left|margin|padding|height|width)\s*:/);
   });
+
+  it("fades scenes with opacity alone: a transform-like animation would capture position: fixed descendants", () => {
+    const keyframes = css.slice(css.indexOf("@keyframes zk-scene-fade"), css.indexOf("@keyframes zk-scene-dot"));
+    const properties = new Set([...keyframes.matchAll(/([a-z-]+)\s*:/g)].map((match) => match[1]));
+    // The browser-level proof (a toast in the held hero scene stays in the viewport) lives in the docs e2e suite.
+    expect([...properties]).toEqual(["opacity"]);
+  });
 });
