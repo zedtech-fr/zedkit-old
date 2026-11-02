@@ -1864,6 +1864,18 @@
               "code": "import { hkdfKey } from \"@zedtech/zedkit-server\";\nconst cookieKey = hkdfKey(process.env.MASTER_KEY!, \"app/session-cookie/v1\");\nconst perTenantKey = hkdfKey(process.env.MASTER_KEY!, \"app/export/v1\", { salt: tenantId });"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-server",
+                "exports": [
+                  "hkdfKey",
+                  "HkdfKeyOptions"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Store secrets you must read back",
             "Sign and verify webhook deliveries"
@@ -1887,6 +1899,18 @@
               "code": "import { openSecret, sealSecret } from \"@zedtech/zedkit-server\";\nconst sealed = sealSecret(masterKey, \"app/storage-credentials/v1\", secretAccessKey);\nconst plain = openSecret(masterKey, \"app/storage-credentials/v1\", sealed);"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-server",
+                "exports": [
+                  "sealSecret",
+                  "openSecret"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Derive purpose-bound keys from one master secret"
           ]
@@ -1908,7 +1932,20 @@
               "title": "Simple",
               "code": "import { databaseNameFromUrl, suffixedDatabaseUrl } from \"@zedtech/zedkit-server\";\nconst url = suffixedDatabaseUrl(process.env.TEST_DATABASE_URL!, process.cwd());\nconst name = databaseNameFromUrl(url); // safe to interpolate into DROP/CREATE"
             }
-          ]
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-server",
+                "exports": [
+                  "checkoutSuffix",
+                  "suffixedDatabaseUrl",
+                  "databaseNameFromUrl"
+                ]
+              }
+            ]
+          }
         },
         {
           "need": "Key rate limits by client address behind a proxy",
@@ -1928,6 +1965,17 @@
               "code": "import { clientKeyFromForwardedFor, MemoryRateLimiter } from \"@zedtech/zedkit-server\";\nconst limiter = new MemoryRateLimiter();\nconst key = clientKeyFromForwardedFor(request.headers.get(\"x-forwarded-for\"));\nif (!limiter.allow(key, 30)) return tooManyRequests();"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-server",
+                "exports": [
+                  "clientKeyFromForwardedFor"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Rate-limit calls per key"
           ]
