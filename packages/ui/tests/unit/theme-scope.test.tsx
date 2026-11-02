@@ -147,6 +147,59 @@ describe("ThemeScope consumer refs", () => {
   });
 });
 
+describe("ThemeScope nested scopes, opposite modes and portals", () => {
+  it("opens an overlay in the nearest scope: the nested look, its own mode, refs intact", async () => {
+    const user = userEvent.setup();
+    const outerRef = createRef<HTMLDivElement>();
+    const seen: Array<HTMLElement | null> = [];
+    const { unmount } = render(
+      <ThemeScope identity="tide" mode="dark" ref={outerRef} data-label="outer">
+        <ThemeScope
+          identity="press"
+          ref={(node) => {
+            seen.push(node);
+          }}
+          data-label="press"
+        >
+          <ThemeScope mode="dark" data-label="press-dark">
+            <ThemeScope mode="light" data-label="press-light-again">
+              <OpenDialog />
+            </ThemeScope>
+          </ThemeScope>
+        </ThemeScope>
+      </ThemeScope>,
+    );
+    await user.click(screen.getByRole("button", { name: "Open" }));
+    const host = screen.getByRole("dialog").closest("[data-slot='theme-scope']");
+    // Nearest scope: Press again in light, although Tide dark encloses everything.
+    expect(host?.getAttribute("data-label")).toBe("press-light-again");
+    expect(host?.getAttribute("data-identity")).toBe("press");
+    expect(host?.classList.contains("dark")).toBe(false);
+    expect(outerRef.current?.getAttribute("data-identity")).toBe("tide");
+    expect(outerRef.current?.classList.contains("dark")).toBe(true);
+    expect(seen[0]?.getAttribute("data-identity")).toBe("press");
+    unmount();
+    expect(outerRef.current).toBeNull();
+    expect(seen.at(-1)).toBeNull();
+  });
+
+  it("an overlay opened in a dark section keeps that section's identity and mode", async () => {
+    const user = userEvent.setup();
+    render(
+      <ThemeScope identity="tide">
+        <ThemeScope identity="maison" mode="dark" data-label="maison-dark">
+          <OpenDialog />
+        </ThemeScope>
+      </ThemeScope>,
+    );
+    await user.click(screen.getByRole("button", { name: "Open" }));
+    const host = screen.getByRole("dialog").closest("[data-slot='theme-scope']");
+    expect(host?.getAttribute("data-label")).toBe("maison-dark");
+    expect(host?.getAttribute("data-identity")).toBe("maison");
+    expect(host?.classList.contains("dark")).toBe(true);
+  });
+});
+
 describe("ThemeScope nested identity", () => {
   const host = (container: HTMLElement, label: string) => container.querySelector(`[data-label='${label}']`);
 

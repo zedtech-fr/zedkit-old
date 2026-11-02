@@ -55,6 +55,32 @@ describe("identity token schema", () => {
     expect(result.success).toBe(false);
   });
 
+  it("keeps a value inside its declaration: nothing that ends it, opens a comment or fetches", () => {
+    for (const key of ["spacing", "radius", "shadowSm", "fontSans", "fontDisplay"] as const) {
+      for (const value of [
+        "x; } body { display: none",
+        "Georgia } @import 'x.css'",
+        "Georgia /* open",
+        "url(https://evil.test/a.woff2)",
+        "URL (x)",
+        "<style>",
+        "a\\3b b",
+        "x".repeat(401),
+      ]) {
+        expect(parseIdentityTokens({ ...identityPresets.mist, [key]: value }).success, `${key}: ${value}`).toBe(false);
+      }
+    }
+  });
+
+  it("still takes real font stacks and shadows, quoted names, commas and slashes included", () => {
+    const result = parseIdentityTokens({
+      ...identityPresets.mist,
+      fontSans: '"Test Sans", ui-sans-serif, sans-serif',
+      shadowSm: "0 1px 2px 0 rgb(0 0 0 / 0.2), 0 0 8px -2px hsl(10 70% 50% / 0.18)",
+    });
+    expect(result.success).toBe(true);
+  });
+
   it("rejects a preset with no dark pair", () => {
     expect(parseIdentityTokens({ ...identityPresets.press, dark: undefined }).success).toBe(false);
   });
