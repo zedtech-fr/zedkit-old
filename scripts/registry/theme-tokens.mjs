@@ -30,26 +30,6 @@ function themeInlineBlock(css) {
   return blockBefore(css, "@theme inline", "\n@layer");
 }
 
-function normalizeBoxShadow(value) {
-  return value.replace(/\s+/g, " ").trim();
-}
-
-function expectedFocusRingCss(css) {
-  const utility = blockBefore(css, "@utility focus-ring", "\n@utility focus-ring-control");
-  const outlineMatch = utility.match(/outline:\s*([^;]+);/);
-  const outline = outlineMatch ? outlineMatch[1].trim() : "none";
-  const shadowMatch = utility.match(/box-shadow:\s*([\s\S]*?);/);
-  if (!shadowMatch) throw new Error("styles.css: @utility focus-ring missing box-shadow");
-  return {
-    "@utility focus-ring": {
-      "&:focus-visible": {
-        outline,
-        "box-shadow": normalizeBoxShadow(shadowMatch[1]),
-      },
-    },
-  };
-}
-
 function keyframesBlock(css, name) {
   const opener = `@keyframes ${name}`;
   const start = css.indexOf(opener);
@@ -140,6 +120,10 @@ function utilityCss(css, name, endMarker) {
       [pseudo]: props,
     },
   };
+}
+
+function expectedFocusRingCss(css) {
+  return utilityCss(css, "focus-ring", "\n@utility dialog-center");
 }
 
 function expectedFocusRingControlCss(css) {
