@@ -69,6 +69,7 @@ deploy_suggest_dev() {
   fp="$(ssh "$target" "cd '$dev_dir' && { find code -type f ! -name release.json | sort | xargs sha256sum; sha256sum suggest.env; } 2>/dev/null | sha256sum | awk '{print \$1}'")"
   local release_file
   release_file="$(mktemp)"
+  chmod 644 "$release_file"  # suggest runs with cap_drop ALL: root cannot read a 0600 file it does not own
   printf '{"id":"%s","fingerprint":"%s"}\n' "$sha" "$fp" > "$release_file"
   scp -q "$release_file" "$target:$dev_dir/code/release.json"
   rm -f "$release_file"
@@ -146,6 +147,7 @@ if [ "$mode" = "prod" ]; then
 
   fp="$(suggest_fingerprint "$release_dir")"
   release_file="$(mktemp)"
+  chmod 644 "$release_file"  # suggest runs with cap_drop ALL: root cannot read a 0600 file it does not own
   printf '{"id":"%s","fingerprint":"%s"}\n' "$release_id" "$fp" > "$release_file"
   scp -q "$release_file" "$target:$release_dir/suggest/release.json"
   rm -f "$release_file"
