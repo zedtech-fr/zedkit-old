@@ -2133,6 +2133,28 @@
           "seeAlso": [
             "Rate-limit calls per key"
           ]
+        },
+        {
+          "need": "Refuse private targets before calling a customer URL",
+          "import": "`@zedtech/zedkit-server` — `checkEndpointUrl`, `isPrivateHostname`, `EndpointCheckOptions`, `EndpointCheckResult`",
+          "wraps": "`(none)`",
+          "status": "alpha",
+          "shortName": "SSRF guard",
+          "audience": "Developers whose server sends requests to URLs that users or customers supply (webhooks, callbacks).",
+          "purpose": "Reject non-http(s) URLs and loopback, private, link-local, cloud-metadata and special-use hosts before any request is made.",
+          "whenToUse": "When saving or sending to a user-supplied URL; keep `allowPrivate` for local development only.",
+          "whenNotToUse": "As your only defense. It does not resolve DNS, so DNS rebinding is not covered; also pin the resolved address, or send through an egress proxy.",
+          "derivedFrom": null,
+          "example": "import { checkEndpointUrl } from \"@zedtech/zedkit-server\";\nconst check = checkEndpointUrl(input, { allowPrivate: process.env.NODE_ENV !== \"production\" });\nif (!check.ok) return badRequest(check.error.message);",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "import { checkEndpointUrl } from \"@zedtech/zedkit-server\";\nconst check = checkEndpointUrl(input, { allowPrivate: process.env.NODE_ENV !== \"production\" });\nif (!check.ok) return badRequest(check.error.message);"
+            }
+          ],
+          "seeAlso": [
+            "Sign and verify webhook deliveries"
+          ]
         }
       ]
     },
