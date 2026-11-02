@@ -225,7 +225,7 @@ test("on load the lead rises block by block and the window assembles, then every
     .toEqual(Array(5).fill("1 none"));
 });
 
-test("a guided cursor tours the pages by itself, and stops for good the moment the visitor touches the example", async ({ page }) => {
+test("a guided cursor tours the pages by itself, and stops the moment the visitor touches the example", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(BASE, { waitUntil: "networkidle" });
   const current = () => nav(page).locator("[aria-current='page']").innerText();
@@ -270,6 +270,78 @@ test("the tour also changes the look in the Display row, and a look the visitor 
   await page.waitForTimeout(6000);
   await expect(select).toHaveText("Glass");
   await expect(scope).toHaveAttribute("data-identity", "glass");
+});
+
+const tourControl = (page: Page) => page.locator("#demo").getByRole("button", { name: /^(Pause|Play) tour$/ });
+
+test("the tour has a visible Pause control; paused it stays put, and Play starts again from the first page", async ({ page }) => {
+  test.setTimeout(45_000);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(BASE, { waitUntil: "networkidle" });
+  const current = () => nav(page).locator("[aria-current='page']").innerText();
+
+  await expect(windowOf(page)).toHaveAttribute("data-tour", "on", { timeout: 2500 });
+  await expect(tourControl(page)).toHaveText("Pause tour");
+  await expect.poll(current, { timeout: 5000 }).toBe("Apps");
+
+  // Pausing is not taking over: the label flips and the cursor stops, with the example where it was.
+  await tourControl(page).click();
+  await expect(tourControl(page)).toHaveText("Play tour");
+  await expect(windowOf(page)).toHaveAttribute("data-tour", "off");
+  const parked = await current();
+  await page.waitForTimeout(6000);
+  expect(await current()).toBe(parked);
+
+  // Play is deliberate. The tour begins again at Overview and goes on from there.
+  await tourControl(page).click();
+  await expect(tourControl(page)).toHaveText("Pause tour");
+  await expect(windowOf(page)).toHaveAttribute("data-tour", "on");
+  await expect.poll(current, { timeout: 4000 }).toBe("Overview");
+  await expect.poll(current, { timeout: 6000 }).toBe("Apps");
+});
+
+test("touching the example takes it over, and the tour never restarts by itself", async ({ page }) => {
+  test.setTimeout(45_000);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(BASE, { waitUntil: "networkidle" });
+  const current = () => nav(page).locator("[aria-current='page']").innerText();
+  await expect(windowOf(page)).toHaveAttribute("data-tour", "on", { timeout: 2500 });
+  await go(page, "Calendar");
+  await expect(tourControl(page)).toHaveText("Play tour");
+  await expect(windowOf(page)).toHaveAttribute("data-tour", "off");
+  await page.waitForTimeout(8000);
+  expect(await current()).toBe("Calendar");
+  await expect(windowOf(page)).toHaveAttribute("data-tour", "off");
+  // Leaving the page and coming back is not a reason to restart either.
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await page.waitForTimeout(500);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(3000);
+  expect(await current()).toBe("Calendar");
+});
+
+test("the tour control can be used from the keyboard", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(BASE, { waitUntil: "networkidle" });
+  await expect(windowOf(page)).toHaveAttribute("data-tour", "on", { timeout: 2500 });
+  await tourControl(page).focus();
+  await page.keyboard.press("Enter");
+  await expect(tourControl(page)).toHaveText("Play tour");
+  await expect(tourControl(page)).toBeFocused();
+  await page.keyboard.press("Space");
+  await expect(tourControl(page)).toHaveText("Pause tour");
+  await expect(windowOf(page)).toHaveAttribute("data-tour", "on");
+});
+
+test("with no tour to control (reduced motion, a phone), there is no tour button", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(BASE, { waitUntil: "networkidle" });
+  await expect(tourControl(page)).toHaveCount(0);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.reload({ waitUntil: "networkidle" });
+  await expect(tourControl(page)).toHaveCount(0);
 });
 
 test("the guided tour waits while the example is off screen and carries on when it is back", async ({ page }) => {

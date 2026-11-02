@@ -6,6 +6,11 @@ export const homeHeroCopy = {
     sub: "Everything in this app is a zedkit component. Click through the pages, add an app, change the look.",
     facts: "What you see installs from npm or copies as source · MIT · React 19 · Tailwind 4",
   },
+  /** The tour is the cursor that clicks through the example. It can be paused, and replayed on purpose. */
+  heroTour: {
+    pause: "Pause tour",
+    play: "Play tour",
+  },
   heroActions: {
     getStarted: "Get started",
     browseCatalog: "Browse catalog",

@@ -4,6 +4,7 @@ import { useTheme } from "next-themes";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { ThemeScope, cn } from "@zedtech/zedkit-ui";
 import { HeroDemoStyleControl } from "@/components/hero-demo-style-control";
+import { HeroTourControl } from "@/components/hero-tour-control";
 import type { PreviewMode } from "@/components/admin-dashboard-demo-app";
 import { resolveHeroDemoDark, type HeroDemoModePin } from "@/components/hero-demo-style-fields";
 import { DEFAULT_IDENTITY } from "@/lib/default-identity";
@@ -13,12 +14,62 @@ import { HOME_HERO_PREVIEW_SHELL_CLASS } from "@/ui/home/home-rhythm";
 import type { HeroPageId } from "@/ui/home/i18n/home-hero-copy";
 import { useLookFade } from "@/ui/home/use-look-fade";
 import { usePointerParallax } from "@/ui/home/use-pointer-parallax";
+import { useHeroTourState } from "@/ui/home/use-hero-tour";
 import { useMotionOk } from "@/ui/home/use-motion-ok";
 
 const noop = () => () => {};
 
 /** How long the first assembly of the window lasts; after it, changing page is quicker. */
 const INTRO_MS = 1800;
+
+/** True for the first moments after load, while the window assembles. */
+function useIntro(): boolean {
+  const [intro, setIntro] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => setIntro(false), INTRO_MS);
+    return () => clearTimeout(timer);
+  }, []);
+  return intro;
+}
+
+/** The Display row under the window and, when there is a tour to control, its Pause / Play button. */
+function HeroPreviewFooter({
+  look,
+  modePin,
+  preview,
+  showPreview,
+  onLook,
+  onModePin,
+  onPreview,
+  tour,
+}: {
+  look: string;
+  modePin: HeroDemoModePin;
+  preview: PreviewMode;
+  showPreview: boolean;
+  onLook: (id: string) => void;
+  onModePin: (pin: HeroDemoModePin) => void;
+  onPreview: (mode: string) => void;
+  tour: { playing: boolean; onToggle: () => void } | null;
+}) {
+  return (
+    <div
+      className="flex flex-col gap-2 border-t border-border px-3 py-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:px-4"
+      data-home-specimen-footer=""
+    >
+      <HeroDemoStyleControl
+        look={look}
+        modePin={modePin}
+        preview={preview}
+        showPreview={showPreview}
+        onLook={onLook}
+        onModePin={onModePin}
+        onPreview={onPreview}
+      />
+      {tour ? <HeroTourControl playing={tour.playing} onToggle={tour.onToggle} /> : null}
+    </div>
+  );
+}
 
 /**
  * Hero specimen: one small product the visitor can use, in a frame with a Display row under it.
@@ -32,19 +83,16 @@ export function HomeHeroPreview() {
   const [modePin, setModePin] = useState<HeroDemoModePin>("follow");
   const [preview, setPreview] = useState<PreviewMode>("ready");
   const [page, setPage] = useState<HeroPageId>("overview");
-  const [intro, setIntro] = useState(true);
+  const intro = useIntro();
   const frame = useRef<HTMLDivElement>(null);
   const scope = useRef<HTMLDivElement>(null);
   const motionOk = useMotionOk();
+  const tour = useHeroTourState(motionOk);
   const { resolvedTheme } = useTheme();
   const mounted = useSyncExternalStore(noop, () => true, () => false);
   const siteDark = mounted && resolvedTheme === "dark";
   const dark = resolveHeroDemoDark(modePin, siteDark);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setIntro(false), INTRO_MS);
-    return () => clearTimeout(timer);
-  }, []);
   usePointerParallax(frame, motionOk);
 
   useLookFade(scope, look, motionOk);
@@ -69,20 +117,27 @@ export function HomeHeroPreview() {
         className="relative min-h-0 min-w-0 rounded-t-xl bg-background"
         data-home-hero-visuals=""
       >
-        <HomeHeroApp page={page} onPage={setPage} intro={intro} preview={preview} onPreviewChange={setPreview} onLook={setLook} />
+        <HomeHeroApp
+          page={page}
+          onPage={setPage}
+          intro={intro}
+          preview={preview}
+          onPreviewChange={setPreview}
+          onLook={setLook}
+          tour={{ playing: tour.playing, onTakeover: tour.takeover }}
+        />
         <HomeHeroSatellites />
       </ThemeScope>
-      <div className="border-t border-border px-3 py-2.5 sm:px-4" data-home-specimen-footer="">
-        <HeroDemoStyleControl
-          look={look}
-          modePin={modePin}
-          preview={preview}
-          showPreview={page === "apps"}
-          onLook={setLook}
-          onModePin={setModePin}
-          onPreview={(value) => setPreview(value as PreviewMode)}
-        />
-      </div>
+      <HeroPreviewFooter
+        look={look}
+        modePin={modePin}
+        preview={preview}
+        showPreview={page === "apps"}
+        onLook={setLook}
+        onModePin={setModePin}
+        onPreview={(value) => setPreview(value as PreviewMode)}
+        tour={tour.available ? { playing: tour.playing, onToggle: tour.toggle } : null}
+      />
     </div>
   );
 }
