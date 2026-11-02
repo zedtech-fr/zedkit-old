@@ -1,5 +1,6 @@
 import { Section, Stack, Text } from "@zedtech/zedkit-ui";
 import { HomeIdentityLooks } from "@/ui/home/home-identity-looks";
+import { HomeYoursScene } from "@/ui/home/home-yours-scene";
 import { homeIdentityLooksCopy } from "@/ui/home/home-identity-looks-copy";
 import {
   HOME_MARKETING_ROOT_PROPS,
@@ -24,6 +25,7 @@ export function HomeIdentitiesSection() {
           {homeIdentityLooksCopy.body}
         </Text>
         <HomeIdentityLooks />
+        <HomeYoursScene />
       </Stack>
     </Section>
   );

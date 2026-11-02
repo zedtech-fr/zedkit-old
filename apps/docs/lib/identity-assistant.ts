@@ -1,0 +1,176 @@
+import { parseIdentityTokens } from "@zedtech/zedkit-ui";
+import type { IdentityTokens } from "@zedtech/zedkit-ui";
+
+import { LIMITS } from "./identity-assistant-limits.ts";
+
+/**
+ * The page's side of the identity suggest service (`deploy/suggest`). One function sends a brief and gets back one
+ * of a fixed set of outcomes; nothing here throws, and nothing partial ever leaves it: an answer is either a whole
+ * identity the shared schema accepts or a named failure. Words for each outcome live in the page's copy.
+ */
+
+export const ASSISTANT_URL = "/api/identity/suggest";
+export { LIMITS };
+
+export type ReferenceReport = {
+  url: string;
+  status: "used" | "failed";
+  /** Only ever "text-only": the service reads a page's text; it never looks at the page. */
+  analysis?: "text-only";
+  reason?: string;
+  host?: string;
+  title?: string;
+  chars?: number;
+  hints?: { themeColor?: string; fonts?: string[] };
+};
+
+export type Turn = { role: "user" | "assistant"; text: string };
+
+export type AssistantInput = {
+  requestId: string;
+  prompt: string;
+  history: readonly Turn[];
+  references: readonly string[];
+  current: IdentityTokens;
+};
+
+export type Unavailable = "disabled" | "not-configured" | "unavailable" | "killed" | "unreachable";
+
+export type AssistantResult =
+  | { kind: "ok"; requestId: string; tokens: IdentityTokens; summary: string; changed: string[]; references: ReferenceReport[] }
+  | { kind: "unavailable"; reason: Unavailable }
+  | { kind: "quota" | "rate" | "busy"; retryAfterSec?: number }
+  | { kind: "duplicate" | "too-large" | "network" | "aborted" }
+  | { kind: "invalid-input"; field: string }
+  | { kind: "invalid-output" | "upstream" | "timeout"; references: ReferenceReport[] };
+
+export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
+
+const UNAVAILABLE = new Set<string>(["disabled", "not-configured", "unavailable", "killed"]);
+
+/** A request id the service accepts: 8 to 64 characters of letters, digits, dash and underscore. */
+export function newRequestId(): string {
+  const random = globalThis.crypto?.randomUUID?.();
+  return random ?? `r${Date.now().toString(36)}${Math.random().toString(36).slice(2, 12)}`;
+}
+
+/** The limits the service enforces, checked here too so a visitor is told before anything is sent. */
+export function checkInput(input: Pick<AssistantInput, "prompt" | "references">): "ok" | "empty" | "too-long" | "too-many-references" {
+  const prompt = input.prompt.trim();
+  if (prompt === "") return "empty";
+  if (prompt.length > LIMITS.prompt) return "too-long";
+  if (input.references.length > LIMITS.references) return "too-many-references";
+  return "ok";
+}
+
+/** The last turns the service accepts, each cut to its limit. */
+export function trimHistory(turns: readonly Turn[]): Turn[] {
+  return turns.slice(-LIMITS.history).map((turn) => ({ role: turn.role, text: turn.text.trim().slice(0, LIMITS.turn) }));
+}
+
+function referencesOf(value: unknown): ReferenceReport[] {
+  if (!Array.isArray(value)) return [];
+  const out: ReferenceReport[] = [];
+  for (const row of value) {
+    if (!row || typeof row !== "object") continue;
+    const ref = row as Record<string, unknown>;
+    if (typeof ref.url !== "string" || (ref.status !== "used" && ref.status !== "failed")) continue;
+    out.push({
+      url: ref.url,
+      status: ref.status,
+      ...(ref.status === "used" ? { analysis: "text-only" as const } : {}),
+      ...(typeof ref.reason === "string" ? { reason: ref.reason } : {}),
+      ...(typeof ref.host === "string" ? { host: ref.host } : {}),
+      ...(typeof ref.title === "string" && ref.title ? { title: ref.title } : {}),
+      ...(typeof ref.chars === "number" ? { chars: ref.chars } : {}),
+    });
+  }
+  return out;
+}
+
+function retryAfter(res: Response, body: Record<string, unknown>): number | undefined {
+  const fromBody = typeof body.retryAfterSec === "number" ? body.retryAfterSec : Number(res.headers.get("retry-after"));
+  return Number.isFinite(fromBody) && fromBody > 0 ? Math.ceil(fromBody) : undefined;
+}
+
+function readJson(res: Response): Promise<Record<string, unknown>> {
+  return res
+    .text()
+    .then((text) => JSON.parse(text) as unknown)
+    .then((value) => (value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {}))
+    .catch(() => ({}));
+}
+
+function failure(res: Response, body: Record<string, unknown>): AssistantResult {
+  const error = typeof body.error === "string" ? body.error : "";
+  const references = referencesOf(body.references);
+  if (res.status === 503) {
+    const reason = typeof body.reason === "string" && UNAVAILABLE.has(body.reason) ? (body.reason as Unavailable) : "unavailable";
+    return { kind: "unavailable", reason };
+  }
+  if (res.status === 429) {
+    const kind = error === "quota" ? "quota" : error === "busy" ? "busy" : "rate";
+    const after = retryAfter(res, body);
+    return after === undefined ? { kind } : { kind, retryAfterSec: after };
+  }
+  if (res.status === 409) return { kind: "duplicate" };
+  if (res.status === 413) return { kind: "too-large" };
+  if (res.status === 400) return { kind: "invalid-input", field: typeof body.field === "string" ? body.field : "body" };
+  if (res.status === 504) return { kind: "timeout", references };
+  if (res.status === 502) return { kind: error === "invalid-output" ? "invalid-output" : "upstream", references };
+  return { kind: "network" };
+}
+
+/**
+ * Sends one brief. The identity in an `ok` answer has passed `parseIdentityTokens`, the same schema the service
+ * and the saved library use; an answer that does not is `invalid-output`, whatever else it says.
+ */
+export function requestIdentity(input: AssistantInput, { fetchImpl = globalThis.fetch.bind(globalThis), signal }: { fetchImpl?: FetchLike; signal?: AbortSignal } = {}): Promise<AssistantResult> {
+  const checked = checkInput(input);
+  if (checked !== "ok") return Promise.resolve({ kind: "invalid-input", field: checked === "too-many-references" ? "references" : "prompt" });
+  return fetchImpl(ASSISTANT_URL, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    credentials: "same-origin",
+    ...(signal ? { signal } : {}),
+    body: JSON.stringify({
+      requestId: input.requestId,
+      prompt: input.prompt.trim(),
+      history: trimHistory(input.history),
+      references: input.references,
+      current: input.current,
+    }),
+  })
+    .then((res) =>
+      readJson(res).then((body): AssistantResult => {
+        if (res.status !== 200) return failure(res, body);
+        const references = referencesOf(body.references);
+        const parsed = parseIdentityTokens(body.tokens);
+        if (!parsed.success) return { kind: "invalid-output", references };
+        return {
+          kind: "ok",
+          requestId: typeof body.requestId === "string" ? body.requestId : input.requestId,
+          tokens: parsed.data,
+          summary: typeof body.summary === "string" ? body.summary.trim().slice(0, 600) : "",
+          changed: Array.isArray(body.changed) ? body.changed.filter((path): path is string => typeof path === "string").slice(0, 40) : [],
+          references,
+        };
+      }),
+    )
+    .catch((error: unknown) => ((error as { name?: string } | null)?.name === "AbortError" ? { kind: "aborted" } : { kind: "network" }));
+}
+
+export type AssistantStatus = { available: true } | { available: false; reason: Unavailable };
+
+/** Free: asks whether generation is on. Never starts any paid work, so a page may call it at any time. */
+export function fetchAssistantStatus({ fetchImpl = globalThis.fetch.bind(globalThis), signal }: { fetchImpl?: FetchLike; signal?: AbortSignal } = {}): Promise<AssistantStatus> {
+  return fetchImpl(`${ASSISTANT_URL}/status`, { ...(signal ? { signal } : {}), headers: { accept: "application/json" } })
+    .then((res) => (res.ok ? readJson(res) : Promise.resolve<Record<string, unknown> | null>(null)))
+    .then((body): AssistantStatus => {
+      if (!body) return { available: false, reason: "unreachable" };
+      if (body.available === true) return { available: true };
+      const reason = typeof body.reason === "string" && UNAVAILABLE.has(body.reason) ? (body.reason as Unavailable) : "unavailable";
+      return { available: false, reason };
+    })
+    .catch(() => ({ available: false, reason: "unreachable" }));
+}

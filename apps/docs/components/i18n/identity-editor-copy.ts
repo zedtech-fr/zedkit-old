@@ -77,6 +77,28 @@ export const identityEditorCopy = {
     hint: "Change spacing first, then watch the card. Preview dark changes the card only.",
     applied: "Applied to the whole site.",
   },
+  library: {
+    heading: "Save and apply",
+    hint: "Saved on this device, in this browser. Nothing is uploaded.",
+    saved: (label: string) => `Saved on this device as “${label}”.`,
+    renamed: (label: string) => `Renamed to “${label}”.`,
+    exists: (label: string) => `“${label}” is already saved on this device.`,
+    replace: "Replace it",
+    saveAsNew: (free: string) => `Save as “${free}”`,
+    failed: {
+      unavailable: "This browser is blocking storage, so nothing can be saved here. You can still export the recipe below.",
+      full: "This browser has no room left to save. Delete a saved look, or export the recipe below.",
+      invalid: "Give the look a name first.",
+      limit: "You can keep up to 50 looks on this device. Delete one first.",
+      missing: "That saved look is no longer there.",
+    },
+    problem: {
+      unavailable: "Saved looks cannot be read here: this browser is blocking storage.",
+      corrupt: "Saved looks on this device could not be read, so none are listed. A copy was kept aside in this browser.",
+    },
+    removeFromSite: "Remove from the whole site",
+    siteRestored: "This site is back to its own look.",
+  },
   suggest: {
     noChanges: "No token changes.",
     diffRow: (path: string, from: string, to: string) => `${path}: ${from} → ${to}`,

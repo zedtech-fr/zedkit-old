@@ -14,6 +14,7 @@ import {
   type IdentityOption,
 } from "@zedtech/zedkit-ui";
 import { identityEditorCopy } from "@/components/i18n/identity-editor-copy";
+import type { SaveStatus } from "@/lib/identity-save-status";
 
 function LookSelect({
   identity,
@@ -124,12 +125,63 @@ type KeepBarProps = {
   name: string;
   namedSelected: boolean;
   onName: (value: string) => void;
-  onSave: () => void;
+  onSave: (replace?: boolean) => void;
+  onSaveAsNew: () => void;
   onRename: () => void;
   onDelete: () => void;
   onApplySite: () => void;
+  onRemoveFromSite: () => void;
+  appliedSite: boolean;
+  status: SaveStatus | null;
+  problem: "unavailable" | "corrupt" | undefined;
   className?: string;
 };
+
+/** What a save told the visitor: done, a clash to settle, or why it could not happen. Spoken as a status. */
+function SaveFeedback({ status, onSave, onSaveAsNew }: { status: SaveStatus | null; onSave: (replace?: boolean) => void; onSaveAsNew: () => void }) {
+  const copy = identityEditorCopy.library;
+  if (!status) return <Text role="status" className="min-h-5 text-sm" />;
+  if (status.kind === "exists") {
+    return (
+      <Stack gap={2} role="alert" data-slot="identity-editor-clash">
+        <Text className="text-sm">{copy.exists(status.label)}</Text>
+        <Row>
+          <Button type="button" variant="outline" onClick={() => onSave(true)}>
+            {copy.replace}
+          </Button>
+          <Button type="button" variant="outline" onClick={onSaveAsNew}>
+            {copy.saveAsNew(status.free)}
+          </Button>
+        </Row>
+      </Stack>
+    );
+  }
+  if (status.kind === "failed") return <Text role="alert" className="text-sm text-destructive">{copy.failed[status.reason]}</Text>;
+  return (
+    <Text role="status" className="text-sm">
+      {status.kind === "saved" ? copy.saved(status.label) : copy.renamed(status.label)}
+    </Text>
+  );
+}
+
+function LibraryHeading({ id, problem }: { id: string; problem: "unavailable" | "corrupt" | undefined }) {
+  const library = identityEditorCopy.library;
+  return (
+    <>
+      <Text as="span" id={id} className="text-sm font-semibold text-foreground">
+        {library.heading}
+      </Text>
+      <Text variant="muted" className="text-sm">
+        {library.hint}
+      </Text>
+      {problem ? (
+        <Text role="status" className="text-sm text-destructive">
+          {library.problem[problem]}
+        </Text>
+      ) : null}
+    </>
+  );
+}
 
 /** Name, save, rename or delete a look, and apply it to this site: what you do once you like the card. */
 function IdentityEditorKeepBar({
@@ -137,18 +189,22 @@ function IdentityEditorKeepBar({
   namedSelected,
   onName,
   onSave,
+  onSaveAsNew,
   onRename,
   onDelete,
   onApplySite,
+  onRemoveFromSite,
+  appliedSite,
+  status,
+  problem,
   className,
 }: KeepBarProps) {
   const copy = identityEditorCopy.toolbar;
+  const library = identityEditorCopy.library;
   const titleId = useId();
   return (
     <Stack gap={2} role="group" aria-labelledby={titleId} className={cn("min-w-0", className)} data-slot="identity-editor-keep">
-      <Text as="span" id={titleId} className="text-sm font-semibold text-foreground">
-        {copy.groups.keep}
-      </Text>
+      <LibraryHeading id={titleId} problem={problem} />
       <Row>
         <Field className="w-full min-w-36 sm:w-56">
           <FieldLabel htmlFor="identity-editor-name">{copy.name}</FieldLabel>
@@ -159,7 +215,7 @@ function IdentityEditorKeepBar({
             onChange={(event) => onName(event.target.value)}
           />
         </Field>
-        <Button type="button" onClick={onSave} disabled={name.trim() === ""}>
+        <Button type="button" onClick={() => onSave()} disabled={name.trim() === ""}>
           {copy.saveLook}
         </Button>
         <Button type="button" variant="outline" onClick={onRename} disabled={!namedSelected || name.trim() === ""}>
@@ -170,10 +226,16 @@ function IdentityEditorKeepBar({
       <Text id="identity-editor-name-hint" variant="muted" className="min-h-5 text-sm">
         {name.trim() === "" ? copy.nameHint : null}
       </Text>
+      <SaveFeedback status={status} onSave={onSave} onSaveAsNew={onSaveAsNew} />
       <Row>
         <Button type="button" variant="outline" onClick={onApplySite}>
           {copy.applySite}
         </Button>
+        {appliedSite ? (
+          <Button type="button" variant="outline" onClick={onRemoveFromSite}>
+            {library.removeFromSite}
+          </Button>
+        ) : null}
       </Row>
       <Text variant="muted" className="text-sm">
         {copy.applyHint}

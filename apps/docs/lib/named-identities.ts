@@ -1,106 +1,82 @@
 import { tryCatch } from "@zedtech/zedkit-core";
 import {
   IDENTITY_CHANGE_EVENT,
-  NAMED_IDENTITY_PREFIX,
   applyCustomIdentity,
   isNamedIdentityId,
-  parseIdentityTokens,
   type IdentityOption,
   type IdentityTokens,
 } from "@zedtech/zedkit-ui";
 
 import {
-  DOCS_SITE_IDENTITY_STORAGE_KEY,
-  isDocsSiteIdentityOptIn,
-} from "@/lib/site-identity-storage";
+  LEGACY_KEY,
+  LIBRARY_KEY,
+  deleteIdentity,
+  readLibrary,
+  renameIdentity,
+  saveIdentity,
+  type IdentitySource,
+  type LibraryRead,
+  type SaveResult,
+  type SavedIdentity,
+} from "@/lib/identity-library";
+import { DOCS_SITE_IDENTITY_STORAGE_KEY, isDocsSiteIdentityOptIn } from "@/lib/site-identity-storage";
 
-const NAMED_STORAGE_KEY = "zk-identity-named";
+/**
+ * The saved identities as the editor and the header read them: a live view over the versioned library
+ * (`identity-library.ts`), in browser storage, with a change event so every reader follows a save or a delete.
+ */
 const NAMED_CHANGE_EVENT = "zk-identity-named-change";
-const EMPTY_NAMED: NamedIdentity[] = [];
+const EMPTY: NamedIdentity[] = [];
+const EMPTY_READ: LibraryRead = { items: EMPTY, dropped: 0 };
 
-type NamedIdentity = { id: string; label: string; tokens: IdentityTokens };
+type NamedIdentity = SavedIdentity;
 
-let snapshotRaw: string | null | undefined;
-let snapshot: NamedIdentity[] = EMPTY_NAMED;
+let snapshotKey: string | undefined;
+let snapshot: LibraryRead = EMPTY_READ;
 
-function slugId(label: string): string {
-  const slug = label
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-  return `${NAMED_IDENTITY_PREFIX}${slug || "look"}`;
+function storage(): Storage | undefined {
+  if (typeof window === "undefined") return undefined;
+  const found = tryCatch(() => window.localStorage);
+  return found.ok ? found.value : undefined;
 }
 
-function parseNamedIdentities(raw: string | null): NamedIdentity[] {
-  if (!raw) return EMPTY_NAMED;
-  const parsed = tryCatch(() => JSON.parse(raw) as unknown);
-  if (!parsed.ok || !Array.isArray(parsed.value)) return EMPTY_NAMED;
-  const out: NamedIdentity[] = [];
-  for (const item of parsed.value) {
-    if (!item || typeof item !== "object") continue;
-    const row = item as { id?: unknown; label?: unknown; tokens?: unknown };
-    if (typeof row.id !== "string" || !row.id.startsWith(NAMED_IDENTITY_PREFIX)) continue;
-    if (typeof row.label !== "string" || row.label.trim() === "") continue;
-    const tokens = parseIdentityTokens(row.tokens);
-    if (!tokens.success) continue;
-    out.push({ id: row.id, label: row.label.trim(), tokens: tokens.data });
-  }
-  return out.length === 0 ? EMPTY_NAMED : out;
-}
-
-function readNamedIdentities(): NamedIdentity[] {
-  if (typeof window === "undefined") return EMPTY_NAMED;
-  const raw = window.localStorage.getItem(NAMED_STORAGE_KEY);
-  if (raw === snapshotRaw) return snapshot;
-  snapshotRaw = raw;
-  snapshot = parseNamedIdentities(raw);
+/** The library as it is stored now. The same object is returned until storage changes, as a store snapshot must. */
+function readLibrarySnapshot(): LibraryRead {
+  const store = storage();
+  if (!store) return snapshotKey === undefined ? EMPTY_READ : snapshot;
+  const key = tryCatch(() => `${store.getItem(LIBRARY_KEY)}|${store.getItem(LEGACY_KEY)}`);
+  const next = key.ok ? key.value : "unreadable";
+  if (next === snapshotKey) return snapshot;
+  snapshotKey = next;
+  const read = readLibrary(store);
+  snapshot = read.items.length === 0 && !read.problem && read.dropped === 0 ? EMPTY_READ : read;
   return snapshot;
 }
 
-function writeNamedIdentities(list: NamedIdentity[]) {
-  const raw = JSON.stringify(list);
-  window.localStorage.setItem(NAMED_STORAGE_KEY, raw);
-  snapshotRaw = raw;
-  snapshot = list.length === 0 ? EMPTY_NAMED : list;
-  window.dispatchEvent(new Event(NAMED_CHANGE_EVENT));
+function readNamedIdentities(): NamedIdentity[] {
+  return readLibrarySnapshot().items;
 }
 
-function saveNamedIdentity(label: string, tokens: IdentityTokens): NamedIdentity | undefined {
-  const trimmed = label.trim();
-  const parsed = parseIdentityTokens(tokens);
-  if (trimmed === "" || !parsed.success) return undefined;
-  const list = readNamedIdentities();
-  const existing = list.find((item) => item.label.toLowerCase() === trimmed.toLowerCase());
-  const saved: NamedIdentity = {
-    id: existing?.id ?? uniqueId(list, slugId(trimmed)),
-    label: trimmed,
-    tokens: parsed.data,
-  };
-  writeNamedIdentities(existing ? list.map((item) => (item.id === saved.id ? saved : item)) : [...list, saved]);
-  return saved;
+function changed(result: SaveResult | string): void {
+  if (typeof window === "undefined") return;
+  if (typeof result === "string" || result.ok) window.dispatchEvent(new Event(NAMED_CHANGE_EVENT));
 }
 
-function uniqueId(list: NamedIdentity[], base: string): string {
-  if (!list.some((item) => item.id === base)) return base;
-  let n = 2;
-  while (list.some((item) => item.id === `${base}-${n}`)) n += 1;
-  return `${base}-${n}`;
+/** Saves under a name. A name another saved identity holds is not replaced unless `replace` says so. */
+function saveNamedIdentity(label: string, tokens: IdentityTokens, options: { replace?: boolean; source?: IdentitySource } = {}): SaveResult {
+  const result = saveIdentity(storage(), { label, tokens, ...options });
+  changed(result);
+  return result;
 }
 
-function renameNamedIdentity(id: string, label: string): NamedIdentity | undefined {
-  const trimmed = label.trim();
-  if (trimmed === "") return undefined;
-  const list = readNamedIdentities();
-  const current = list.find((item) => item.id === id);
-  if (!current) return undefined;
-  const saved = { ...current, label: trimmed };
-  writeNamedIdentities(list.map((item) => (item.id === id ? saved : item)));
-  return saved;
+function renameNamedIdentity(id: string, label: string): SaveResult {
+  const result = renameIdentity(storage(), id, label);
+  changed(result);
+  return result;
 }
 
-function deleteNamedIdentity(id: string) {
-  writeNamedIdentities(readNamedIdentities().filter((item) => item.id !== id));
+function deleteNamedIdentity(id: string): void {
+  changed(deleteIdentity(storage(), id));
 }
 
 function namedIdentityOptions(list: NamedIdentity[]): IdentityOption[] {
@@ -128,9 +104,10 @@ function restoreNamedIdentity() {
 }
 
 export {
-  NAMED_STORAGE_KEY,
+  LIBRARY_KEY as NAMED_STORAGE_KEY,
   deleteNamedIdentity,
   namedIdentityOptions,
+  readLibrarySnapshot,
   readNamedIdentities,
   renameNamedIdentity,
   restoreNamedIdentity,
