@@ -66,7 +66,7 @@ function ThemeScope({ identity, mode, className, children, ref, ...props }: Them
       className={cn(
         "font-sans text-foreground",
         // `dark` is the mode marker the `dark:` variant and identity CSS key on.
-        // eslint-disable-next-line better-tailwindcss/no-unknown-classes
+         
         mode === "dark" && "dark",
         className,
       )}
