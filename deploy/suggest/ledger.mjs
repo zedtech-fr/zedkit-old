@@ -16,6 +16,8 @@ import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
+import { tryCatch } from "@zedtech/zedkit-core";
+
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS spend (
   period TEXT PRIMARY KEY,
@@ -69,13 +71,14 @@ function isSqliteBusy(error) {
 /** Concurrent openLedger calls can race on first WAL; busy_timeout applies after it is set. */
 function execBusyRetry(db, sql, attempts = 50) {
   for (let i = 0; i < attempts; i += 1) {
-    try {
+    const result = tryCatch(() => {
       db.exec(sql);
+    });
+    if (result.ok) {
       return;
-    } catch (error) {
-      if (!isSqliteBusy(error) || i === attempts - 1) {
-        throw error;
-      }
+    }
+    if (!isSqliteBusy(result.error) || i === attempts - 1) {
+      throw result.error;
     }
   }
 }
