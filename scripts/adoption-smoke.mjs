@@ -15,6 +15,7 @@
 //   `drawer-manual-incomplete` is the negative control: it replays the Drawer recipe as it was before the
 //   registry graph fed it (one file, no companions, no packages) and passes only if the build fails.
 // Needs network (create-next-app, npm) and Chromium (pnpm exec playwright install chromium).
+/* global document, getComputedStyle -- page.evaluate callbacks run in the browser. */
 import { execFileSync, spawn } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, appendFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -189,41 +190,44 @@ async function runCase(name, template, tarball, chromium) {
   console.log(`\nadoption-smoke: ${name} ok`);
 }
 
-async function runCaseOnce(name, spec, template, tarball, chromium) {
+function runCaseOnce(name, spec, template, tarball, chromium) {
   const project = mkdtempSync(join(tmpdir(), `zedkit-adoption-${name}-`));
-  try {
-    cpSync(template, project, { recursive: true });
-    if (tarball) overridePackage(project, tarball);
-    sh("pnpm install", project);
-    const built = spec.plan();
-    const mode = built.modes.find((item) => item.id === spec.mode);
-    if (!mode) throw new Error(`${name}: the plan has no ${spec.mode} mode`);
-    runMode(project, mode);
-    if (tarball && mode.id === "package") {
-      const installed = JSON.parse(readFileSync(join(project, "node_modules/@zedtech/zedkit-ui/package.json"), "utf8")).version;
-      const local = JSON.parse(readFileSync(join(ROOT, "packages/ui/package.json"), "utf8")).version;
-      assert(installed === local, `the kit resolved to ${installed}, not this checkout's ${local}`);
-    }
-    sh("pnpm exec next build", project);
-    const server = await serve(project);
-    const browser = await chromium.launch();
-    try {
-      const context = await browser.newContext();
-      const page = await context.newPage();
-      const problems = [];
-      page.on("pageerror", (error) => problems.push(error.message));
-      page.on("console", (message) => message.type() === "error" && problems.push(message.text()));
-      await page.goto(server.url);
-      await spec.check({ page, context, url: server.url });
-      assert(problems.length === 0, `console errors: ${problems.join(" | ")}`);
-    } finally {
-      await browser.close();
-      server.stop();
-    }
-  } finally {
+  return buildAndCheck(name, spec, project, template, tarball, chromium).finally(() => {
     if (!process.env.ADOPTION_KEEP) rmSync(project, { recursive: true, force: true });
     else console.log(`kept ${project}`);
+  });
+}
+
+async function buildAndCheck(name, spec, project, template, tarball, chromium) {
+  cpSync(template, project, { recursive: true });
+  if (tarball) overridePackage(project, tarball);
+  sh("pnpm install", project);
+  const built = spec.plan();
+  const mode = built.modes.find((item) => item.id === spec.mode);
+  if (!mode) throw new Error(`${name}: the plan has no ${spec.mode} mode`);
+  runMode(project, mode);
+  if (tarball && mode.id === "package") {
+    const installed = JSON.parse(readFileSync(join(project, "node_modules/@zedtech/zedkit-ui/package.json"), "utf8")).version;
+    const local = JSON.parse(readFileSync(join(ROOT, "packages/ui/package.json"), "utf8")).version;
+    assert(installed === local, `the kit resolved to ${installed}, not this checkout's ${local}`);
   }
+  sh("pnpm exec next build", project);
+  const server = await serve(project);
+  const browser = await chromium.launch();
+  const inBrowser = async () => {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    const problems = [];
+    page.on("pageerror", (error) => problems.push(error.message));
+    page.on("console", (message) => message.type() === "error" && problems.push(message.text()));
+    await page.goto(server.url);
+    await spec.check({ page, context, url: server.url });
+    assert(problems.length === 0, `console errors: ${problems.join(" | ")}`);
+  };
+  await inBrowser().finally(async () => {
+    await browser.close();
+    server.stop();
+  });
 }
 
 async function main() {
@@ -245,12 +249,10 @@ async function main() {
   const { chromium } = await import("@playwright/test");
   const failures = [];
   for (const name of names) {
-    try {
-      await runCase(name, template, tarball, chromium);
-    } catch (error) {
+    await runCase(name, template, tarball, chromium).catch((error) => {
       failures.push(`${name}: ${error.message}`);
       console.error(`\nadoption-smoke: ${name} FAILED: ${error.message}`);
-    }
+    });
   }
   rmSync(work, { recursive: true, force: true });
   if (failures.length > 0) {
