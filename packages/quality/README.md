@@ -4,8 +4,8 @@
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/zedtech-fr/zedkit/blob/main/LICENSE)
 
 Shared quality setup: UI lint preset, route/view/data layer boundaries,
-and one strict TypeScript base. Consume it from any repo — do not copy
-it. Original work by the same author.
+one strict TypeScript base, and repo hygiene bins. Consume it from any
+repo — do not copy it. Original work by the same author.
 
 ## Install
 
@@ -43,12 +43,23 @@ export default [
 }
 ```
 
+```jsonc
+// package.json — hygiene bins (optional extra --dirs/--files/--allow)
+{
+  "scripts": {
+    "dev": "zedkit-sync-env && next dev",
+    "check": "zedkit-check-no-artifacts && zedkit-check-no-secrets"
+  }
+}
+```
+
 ## When to use
 
 Reach for this package when several repos must enforce the same gates:
-UI lint rules, layer boundaries, one strict `tsconfig` base. One import
-per need, versioned updates everywhere. For AI agent setup (skills,
-subagents, commands) see `@zedtech/zedkit-ai` instead.
+UI lint rules, layer boundaries, one strict `tsconfig` base, and the
+same artifact / secret / `.env` hygiene. One import (or bin) per need,
+versioned updates everywhere. For AI agent setup (skills, subagents,
+commands) see `@zedtech/zedkit-ai` instead.
 
 ## API
 
@@ -75,6 +86,15 @@ subagents, commands) see `@zedtech/zedkit-ai` instead.
 - `@zedtech/zedkit-quality/tsconfig` — the strict base (`strict`,
   `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`,
   `noUnusedLocals`, and more). Extend it, do not copy it.
+- `zedkit-sync-env [root]` — copy `.env.example` to `.env` when missing;
+  otherwise append keys the example gained. Existing values stay.
+- `zedkit-check-no-artifacts` — fail if tracked files match the default
+  artifact list (build/cache dirs, `*.tsbuildinfo`, Playwright
+  reports…), match `.gitignore` (uses `--no-index` so ignored-but-tracked
+  files are caught), or exceed 200KB. `--dirs` / `--files` / `--allow`
+  (repeatable) append to the defaults; `--max-bytes` changes the cap.
+- `zedkit-check-no-secrets` — fail if a tracked `.env` other than
+  `.env.example` or a high-signal token/key pattern is in git.
 
 Find helpers by need in [CATALOG.md](CATALOG.md).
 

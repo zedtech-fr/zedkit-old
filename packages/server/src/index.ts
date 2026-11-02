@@ -12,3 +12,9 @@ export { hkdfKey, type HkdfKeyOptions } from "./hkdf.js";
 export { openSecret, sealSecret } from "./secret-box.js";
 export { checkoutSuffix, databaseNameFromUrl, suffixedDatabaseUrl } from "./test-db.js";
 export { clientKeyFromForwardedFor } from "./forwarded-for.js";
+export {
+  checkEndpointUrl,
+  isPrivateHostname,
+  type EndpointCheckOptions,
+  type EndpointCheckResult,
+} from "./endpoint-url.js";

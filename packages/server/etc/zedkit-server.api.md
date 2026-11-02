@@ -13,6 +13,7 @@ export { hkdfKey, type HkdfKeyOptions } from "./hkdf.js";
 export { openSecret, sealSecret } from "./secret-box.js";
 export { checkoutSuffix, databaseNameFromUrl, suffixedDatabaseUrl } from "./test-db.js";
 export { clientKeyFromForwardedFor } from "./forwarded-for.js";
+export { checkEndpointUrl, isPrivateHostname, type EndpointCheckOptions, type EndpointCheckResult, } from "./endpoint-url.js";
 
 import { z } from "zod";
 /**
@@ -159,4 +160,36 @@ export declare function databaseNameFromUrl(url: string): string;
  * A missing or blank header returns `fallback`.
  */
 export declare function clientKeyFromForwardedFor(header: string | null | undefined, fallback?: string): string;
+
+/**
+ * True when the hostname must never receive outbound traffic: loopback,
+ * private, link-local, reserved ranges, or special-use names. Accepts a
+ * bare host or a bracketed IPv6 literal (`[::1]`). Ordinary DNS names return
+ * false here WITHOUT resolving them: DNS rebinding (a name that resolves to
+ * a private address at send time) is NOT covered, so pin the resolved
+ * address when you connect if that matters to you.
+ *
+ * Dependency-free on purpose: the parser handles decimal, octal and hex
+ * IPv4 parts, short forms, and IPv6 with embedded IPv4 (mapped,
+ * compatible, NAT64, 6to4).
+ */
+export declare function isPrivateHostname(hostname: string): boolean;
+export interface EndpointCheckOptions {
+    /** Allow private/loopback targets (dev and tests, behind an explicit flag). */
+    allowPrivate?: boolean | undefined;
+}
+export type EndpointCheckResult = {
+    ok: true;
+    value: undefined;
+} | {
+    ok: false;
+    error: Error;
+};
+/**
+ * Validate an outbound delivery URL: http or https only, a hostname, and
+ * (unless `allowPrivate`) a public host per `isPrivateHostname`. Failures
+ * explain the rule violated. The URL is parsed with the WHATWG parser, so
+ * `http://2130706433/` and `http://0x7f.1/` are judged as 127.0.0.1.
+ */
+export declare function checkEndpointUrl(rawUrl: string, options?: EndpointCheckOptions): EndpointCheckResult;
 ```

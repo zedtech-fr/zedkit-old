@@ -1,9 +1,11 @@
 # AGENTS.md — @zedtech/zedkit-quality
 
 1. Config-only package: an ESLint entry (`.mjs` + hand-written `.d.mts`,
-   shipped as source) and a strict `tsconfig.base.json`. No build step
-   (`"zedkit": { "noBuild": true }`, exempt from the pack gate's dist
-   requirement); config must be consumable with zero build.
+   shipped as source), a strict `tsconfig.base.json`, and hygiene bins
+   under `src/bin` (`zedkit-sync-env`, `zedkit-check-no-artifacts`,
+   `zedkit-check-no-secrets`). No build step (`"zedkit": { "noBuild":
+   true }`, exempt from the pack gate's dist requirement); config and
+   bins must be consumable with zero build.
 2. Node 22, pnpm, ESM. Deps use `catalog:` only. Peer deps (`eslint`,
    `eslint-plugin-jsx-a11y`, `eslint-plugin-better-tailwindcss`,
    `typescript-eslint`) are also devDeps so the tests load the real plugins.
@@ -11,7 +13,8 @@
    exports); the `.d.mts` files mirror them and `tests/types/usage.ts`
    proves they typecheck.
 4. TypeScript strict applies to `tests/types` and the fixtures; unit tests
-   are `.mjs` (no spawns: the tsconfig smoke uses the TypeScript API).
+   are `.mjs`. The tsconfig smoke uses the TypeScript API (no `tsc`
+   spawn). Hygiene-bin tests spawn the scripts in a throwaway git repo.
 5. No `eslint-disable`, `@ts-ignore`, `@ts-expect-error`, or `any`
    without a one-line reason. No skipped tests.
 6. Every export and subpath needs a CATALOG.md entry; regenerate
