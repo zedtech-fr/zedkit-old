@@ -74,8 +74,6 @@ deploy_suggest_dev() {
   scp -q "$release_file" "$target:$dev_dir/code/release.json"
   rm -f "$release_file"
   ssh "$target" "cd '$remote' && prev=\$(cat .suggest-dev-fingerprint 2>/dev/null || true) && running=\$($compose ps --status running -q suggest-dev || true) && if [ \"\$prev\" != '$fp' ] || [ -z \"\$running\" ]; then $compose up -d --no-deps --force-recreate suggest-dev; fi && printf '%s\n' '$fp' > .suggest-dev-fingerprint"
-  # TEMP DIAG (not for main): model-list size from the host and from the container, counts only.
-  ssh "$target" "cd '$dev_dir' && K=\$(sed -n 's/^IDENTITY_AI_API_KEY=//p' suggest.env) && for f in -4 -6; do printf 'host%s ' \$f; curl \$f -s -m 15 -H \"Authorization: Bearer \$K\" https://api.meta.ai/v1/models | grep -o '\"id\"' | wc -l; done; hostname; uname -n; ip -6 route show default 2>/dev/null | head -1; cd '$remote' && $compose exec -T suggest-dev sh -c 'wget -qO- --header \"Authorization: Bearer \$IDENTITY_AI_API_KEY\" https://api.meta.ai/v1/models | grep -o \"\\\"id\\\"\" | wc -l; getent hosts api.meta.ai'" || true
 }
 
 reconcile_suggest() {
