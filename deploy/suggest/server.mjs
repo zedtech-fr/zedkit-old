@@ -307,7 +307,8 @@ async function suggest(ctx, req, res) {
 
   const base = { ms: now() - started, refs: references.length, costMicro: outcome.spent, calls: outcome.called };
   if (!outcome.result.ok) {
-    log({ outcome: `upstream-${outcome.result.kind}`, ...base });
+    // The provider's HTTP status is not a secret and is the first thing an operator needs.
+    log({ outcome: `upstream-${outcome.result.kind}`, ...base, ...(outcome.result.status ? { status: outcome.result.status } : {}) });
     if (outcome.result.kind === "aborted") return;
     return send(res, outcome.result.kind === "timeout" ? 504 : 502, { error: outcome.result.kind === "timeout" ? "timeout" : "upstream", references: referenceReport(references) }, setCookie);
   }
