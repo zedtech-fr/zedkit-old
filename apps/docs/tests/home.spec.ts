@@ -340,9 +340,11 @@ test("home has no nested interactive elements", async ({ page }) => {
   expect(nested).toEqual([]);
 });
 
-test("home get-started npm tab exposes the package install command", async ({ page }) => {
+test("home get-started opens on the package install command", async ({ page }) => {
   await page.goto(`${BASE}#get-started`, { waitUntil: "networkidle" });
-  await expect(page.getByRole("region", { name: "Package install command" })).toBeVisible();
+  await expect(page.locator("#install-or-copy [data-adoption-step='install']").getByRole("region", { name: "Terminal" })).toContainText(
+    "pnpm add @zedtech/zedkit-ui",
+  );
 });
 
 test("home install section has no registry brick grid; catalog link lives in families", async ({ page }) => {

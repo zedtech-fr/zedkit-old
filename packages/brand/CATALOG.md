@@ -44,7 +44,7 @@ const { svg, width, height } = logoAsset("apple-touch"); // 180 x 180
 
 ## Use the ready-made SVG files
 
-- Import: `@zedtech/zedkit-brand/assets/*` (for example `@zedtech/zedkit-brand/assets/lockup-on-dark.svg`)
+- Import: `@zedtech/zedkit-brand/assets/lockup-on-dark.svg` — `default`
 - Wraps: `(none)`
 - Status: alpha
 - Short name: SVG files
@@ -55,6 +55,6 @@ const { svg, width, height } = logoAsset("apple-touch"); // 180 x 180
 - See also: `Get the logo as SVG markup, icon sources or raw shapes`
 
 ```ts
-// Files: mark | wordmark | lockup, each -on-light.svg or -on-dark.svg, plus favicon, apple-touch, og.
+// Files in `@zedtech/zedkit-brand/assets/*`: mark | wordmark | lockup, each -on-light.svg or -on-dark.svg, plus favicon, apple-touch, og.
 import lockupUrl from "@zedtech/zedkit-brand/assets/lockup-on-dark.svg";
 ```

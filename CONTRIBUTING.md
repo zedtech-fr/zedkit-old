@@ -26,17 +26,18 @@ Rules:
 - Adding a helper? Read [docs/contributing.md](docs/contributing.md)
   first: generic only, one domain, tests, catalog entry, thin wrappers.
 
-## Versioning (0.x, published)
+## Versioning (published)
 
-Breaking changes are allowed but never silent:
+The catalog `Status` field of a need is the promise: `alpha`/`beta` may
+change in a minor, `stable` follows semver strictly. A package below 1.0
+breaks in a minor; at 1.0 and above, breaking a `stable` need is a major.
+Breaking changes are never silent:
 
-1. Ship them as a `minor` changeset with a one-line migration note
-   (`OldThing -> NewThing`).
+1. Ship them as a `minor` changeset (`major` for a `stable` need) with a
+   one-line migration note (`OldThing -> NewThing`).
 2. Never remove outright: first mark the export `deprecated` in its
    package catalog status (name the replacement).
-3. Consumers pin `~0.x.y` and bump deliberately; the catalog `Status`
-   field is the promise — `alpha`/`beta` may change freely, `stable`
-   follows semver strictly.
+3. Consumers pin `~x.y.z` and bump deliberately.
 
 Label such PRs `breaking`: CI fails the PR unless it carries a
 minor-or-major changeset with a migration note

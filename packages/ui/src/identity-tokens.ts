@@ -23,14 +23,15 @@ function isBalanced(value: string): boolean {
 
 /**
  * One declaration value, written verbatim into a stylesheet, and read back from pasted JSON and shared links.
- * It must not be able to end its declaration or rule, open a comment, or fetch anything.
+ * It must not be able to end its declaration or rule, open a comment, or fetch anything. A control character is
+ * refused too: a newline ends a quoted string in CSS, and the declaration after it would be lost.
  */
 const cssValue = z
   .string()
   .min(1)
   .max(400)
-  .refine((value) => !/[{};<>@\\]|\/\*|url\s*\(/i.test(value) && isBalanced(value), {
-    message: "Not a plain CSS value (no braces, semicolons, comments, at-rules, url(), or unbalanced brackets and quotes)",
+  .refine((value) => !/[{};<>@\\]|\p{Cc}|\/\*|url\s*\(/iu.test(value) && isBalanced(value), {
+    message: "Not a plain CSS value (no braces, semicolons, comments, control characters, at-rules, url(), or unbalanced brackets and quotes)",
   });
 const leading = z.string().regex(/^\d+(\.\d+)?$/);
 const tracking = z.string().regex(/^-?\d+(\.\d+)?em$/);

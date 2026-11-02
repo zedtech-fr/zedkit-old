@@ -22,20 +22,15 @@ components (same import a consumer writes), inside one shared frame.
 
 ## Demo rules (blocking — the `ui` lens fails the review otherwise)
 
-1. One demo = one file in `components/demos/<name>.tsx` (or
-   colocated with its doc). Never a grab-bag module. Feature-folder
-   examples live under `features/<name>/`, not under `components/demos`;
-   they are not kit demos and skip the shared frame and demo registry.
-2. Every demo renders inside the shared frame (title, description,
-   light/dark preview, shown source, props link) and registers in
-   the demo registry (key -> demo). Doc pages import the registry,
-   never dozens of components directly.
-3. Doc pages stay thin: load content + doc layout only.
-4. Zero raw structural HTML, zero ad-hoc styles (`div flex gap…`):
-   `Stack`/`Section`/`Heading`/`Text` from the kit, tokens only.
-   The same bar as `packages/ui` applies here.
-5. The bulk-import ban (lint rule or test) must fail on the grab-bag
-   it replaces and pass after — keep that proof green.
+The rules are Frontend rules 1-5 in `packages/ai/kit/skills/review/lenses.md`
+(one demo per file, shared frame and registry, thin pages, kit layout
+modules and tokens only, no bulk imports); they are not restated here.
+`apps/docs/scripts/check.mjs` enforces them (`pnpm catalog:check`): pages
+import demos only through `components/demos/registry`, no namespace imports,
+no raw `<div>`/`<span>` in demos or the frame. Demos live in
+`components/demos/<name>.tsx` or beside their doc. Feature-folder examples
+live under `features/<name>/`: they are not kit demos and skip the shared
+frame and the demo registry.
 
 ## Registry (`/r/*.json`)
 
@@ -53,8 +48,24 @@ reject dead `/r/<name>.json` links.
 ## Work on it
 
 - `pnpm --filter @zedtech/zedkit-docs dev` (or root `pnpm dev`, :3100).
-- Gates: `typecheck`, `lint`, `build` on the filter; docs check runs
-  in CI (`docs: ok (N pages cover N needs)`).
+- Gates: `typecheck`, `lint`, `build` on the filter, then root
+  `pnpm catalog:check` (`docs: ok (N pages cover N needs)`; needs built
+  sibling packages, see the root Commands).
+- Browser tests run against the static export, as CI does. Many specs
+  hard-code `http://127.0.0.1:3100`, so stop `pnpm dev` first: `serve` moves
+  to another port without failing when 3100 is taken (read its
+  "Accepting connections" line):
+
+  ```sh
+  pnpm exec turbo run build --filter=@zedtech/zedkit-docs   # writes apps/docs/out
+  pnpm dlx serve@14.2.6 apps/docs/out -l 3100 &
+  pnpm exec playwright install chromium
+  pnpm --filter @zedtech/zedkit-docs run smoke              # or run e2e
+  ```
+
+  CI splits `e2e` in three (`DOCS_E2E_SHARD=1..3`, `DOCS_E2E_SHARD_TOTAL=3`).
+  A new spec must be listed in the `smoke` or `e2e` script
+  (`scripts/check-e2e-registered.sh`). Screenshots land in `test-results/`.
 - Done = gates green + manifest/check in sync + examined screenshots
   for visual changes + a rendered-page critique (strongest remaining
   weaknesses) + demo rules respected. Lint/types/axe/screenshot diffs
@@ -63,8 +74,37 @@ reject dead `/r/<name>.json` links.
   (`*-chromium-linux.png`). Darwin captures stay local (gitignored).
   Reproduce CI exactly with the Playwright image of the lockfile version
   (`docker run --ipc=host -v $PWD:/work -w /work/apps/docs mcr.microsoft.com/playwright:v<version>-noble`
-  serving `out/`), read every failing diff, classify it (defect, unstable
-  test, intended change) and only then regenerate, there.
+  serving `out/`). Open expected, actual and diff, classify each (defect,
+  unstable test, intended change) and only then regenerate, there; a
+  baseline nobody has opened and judged is not a reference
+  ([VISUAL-CONTRACT.md](./VISUAL-CONTRACT.md), "Verifying the render").
+
+## Install and copy instructions
+
+Never hand-write an install or copy snippet in a page, prose file or
+component. They come from the typed adoption contract: the catalog `adoption`
+field (`docs/catalog/README.md`) feeding `apps/docs/lib/adoption-plan.mjs`,
+which the home and every component page render, and
+`scripts/adoption-smoke.mjs` replays the result in a clean Next.js project.
+A stylesheet or config need says so in its catalog entry, not in prose.
+Guide snippets (`prose/guides/snippets/`) are run by the `verify-*-tutorial.mjs`
+scripts inside `pnpm catalog:check`.
+
+## Identity editor and creator
+
+- Identity data is constrained tokens, never code: no executable code, free
+  CSS or HTML. One schema (`parseIdentityTokens`,
+  `packages/ui/src/identity-tokens.ts`) validates in the browser and in the
+  suggest service ([deploy/AGENTS.md](../../deploy/AGENTS.md)).
+  Parse whatever the service returns and fall back to the keyword match
+  (`lib/identity-editor-suggest.ts`).
+- Saved looks are local recipes (`lib/named-identities.ts`): re-validated on
+  every read, no server copy. Changing the stored shape needs a version and a
+  migration.
+- Applying a look to the whole site is the visitor's explicit choice and
+  reversible (`lib/site-identity-storage.ts`: opt-in key, `clearDocsSiteIdentity`).
+  Quotas, references and cost controls are server rules; the client never
+  works around them.
 
 ## ZedKit art direction (Product Atelier)
 
@@ -87,14 +127,16 @@ must match a kit primitive's own look.
 - Always: demo rules above, manifest keys matching catalog needs.
 - Ask first: new docs deps, new preview harness, deployment changes.
 - Never: component logic here; unexported types promised in props
-  tables; weakening the docs check or the bulk-import ban to fit.
+  tables; weakening the docs check to fit.
 
 ## Related
 
 - Root [AGENTS.md](../../AGENTS.md), kit [CATALOG.md](../../packages/ui/CATALOG.md).
 - Visual contract: [VISUAL-CONTRACT.md](./VISUAL-CONTRACT.md).
 - Lens registry: `packages/ai/kit/skills/review/lenses.md`
-  (Frontend rules section — same text, reviewer side).
+  (Frontend rules: the authoritative demo rules).
+- Page layouts: [PAGE-TEMPLATE.md](./PAGE-TEMPLATE.md),
+  [COMPONENT-PAGE.md](./COMPONENT-PAGE.md).
 
 <!-- BEGIN:nextjs-agent-rules -->
 

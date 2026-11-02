@@ -162,7 +162,7 @@ test("rollback restores content, service, and config to one sha", async (t) => {
   const bin = join(tmp, "bin");
   const state = join(tmp, "state");
   const remote = join(tmp, "remote");
-  const outDir = join(root, "apps/docs/out");
+  const outDir = join(tmp, "out");
   const envPath = join(root, "deploy/suggest.env");
   const savedEnv = existsSync(envPath) ? await readFile(envPath) : null;
   const suggestPort = await freePort();
@@ -182,8 +182,6 @@ test("rollback restores content, service, and config to one sha", async (t) => {
     }
     if (savedEnv === null) await rm(envPath, { force: true });
     else writeFileSync(envPath, savedEnv);
-    await rm(join(outDir, "index.html"), { force: true });
-    await rm(join(outDir, "release.txt"), { force: true });
     await rm(tmp, { recursive: true, force: true });
   });
 
@@ -208,6 +206,7 @@ test("rollback restores content, service, and config to one sha", async (t) => {
         ...process.env,
         PATH: `${bin}:${process.env.PATH}`,
         DEPLOY_SHA: sha,
+        DEPLOY_OUT: outDir,
         GITHUB_OUTPUT: output,
         SUGGEST_PORT: String(suggestPort),
       },

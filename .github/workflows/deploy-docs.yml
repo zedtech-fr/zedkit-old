@@ -34,6 +34,13 @@ jobs:
       - run: pnpm --filter @zedtech/zedkit-docs build
       - name: Write suggest env
         env:
+          IDENTITY_AI_ENABLED: ${{ secrets.IDENTITY_AI_ENABLED }}
+          IDENTITY_AI_BUDGET_DAILY_USD: ${{ secrets.IDENTITY_AI_BUDGET_DAILY_USD }}
+          IDENTITY_AI_BUDGET_MONTHLY_USD: ${{ secrets.IDENTITY_AI_BUDGET_MONTHLY_USD }}
+          IDENTITY_AI_PRICE_INPUT_USD_PER_MTOK: ${{ secrets.IDENTITY_AI_PRICE_INPUT_USD_PER_MTOK }}
+          IDENTITY_AI_PRICE_OUTPUT_USD_PER_MTOK: ${{ secrets.IDENTITY_AI_PRICE_OUTPUT_USD_PER_MTOK }}
+          IDENTITY_AI_FALLBACK_PRICE_INPUT_USD_PER_MTOK: ${{ secrets.IDENTITY_AI_FALLBACK_PRICE_INPUT_USD_PER_MTOK }}
+          IDENTITY_AI_FALLBACK_PRICE_OUTPUT_USD_PER_MTOK: ${{ secrets.IDENTITY_AI_FALLBACK_PRICE_OUTPUT_USD_PER_MTOK }}
           IDENTITY_AI_BASE_URL: ${{ secrets.IDENTITY_AI_BASE_URL }}
           IDENTITY_AI_API_KEY: ${{ secrets.IDENTITY_AI_API_KEY }}
           IDENTITY_AI_MODEL: ${{ secrets.IDENTITY_AI_MODEL }}
@@ -45,6 +52,14 @@ jobs:
         run: |
           umask 077
           : > deploy/suggest.env
+          # Generation is off unless IDENTITY_AI_ENABLED is 1 and an approved budget and the prices are set.
+          printf '%s=%s\n' IDENTITY_AI_ENABLED "$IDENTITY_AI_ENABLED" >> deploy/suggest.env
+          printf '%s=%s\n' IDENTITY_AI_BUDGET_DAILY_USD "$IDENTITY_AI_BUDGET_DAILY_USD" >> deploy/suggest.env
+          printf '%s=%s\n' IDENTITY_AI_BUDGET_MONTHLY_USD "$IDENTITY_AI_BUDGET_MONTHLY_USD" >> deploy/suggest.env
+          printf '%s=%s\n' IDENTITY_AI_PRICE_INPUT_USD_PER_MTOK "$IDENTITY_AI_PRICE_INPUT_USD_PER_MTOK" >> deploy/suggest.env
+          printf '%s=%s\n' IDENTITY_AI_PRICE_OUTPUT_USD_PER_MTOK "$IDENTITY_AI_PRICE_OUTPUT_USD_PER_MTOK" >> deploy/suggest.env
+          printf '%s=%s\n' IDENTITY_AI_FALLBACK_PRICE_INPUT_USD_PER_MTOK "$IDENTITY_AI_FALLBACK_PRICE_INPUT_USD_PER_MTOK" >> deploy/suggest.env
+          printf '%s=%s\n' IDENTITY_AI_FALLBACK_PRICE_OUTPUT_USD_PER_MTOK "$IDENTITY_AI_FALLBACK_PRICE_OUTPUT_USD_PER_MTOK" >> deploy/suggest.env
           printf '%s=%s\n' IDENTITY_AI_BASE_URL "$IDENTITY_AI_BASE_URL" >> deploy/suggest.env
           printf '%s=%s\n' IDENTITY_AI_API_KEY "$IDENTITY_AI_API_KEY" >> deploy/suggest.env
           printf '%s=%s\n' IDENTITY_AI_MODEL "$IDENTITY_AI_MODEL" >> deploy/suggest.env

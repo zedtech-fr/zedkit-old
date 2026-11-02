@@ -1,24 +1,16 @@
-import { readFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
-import { join } from "node:path";
 import Link from "next/link";
-import { Heading, Section, Stack, Tabs as KitTabs, TabsContent, Text } from "@zedtech/zedkit-ui";
+import { Heading, Section, Stack, Text } from "@zedtech/zedkit-ui";
 import { registryBrickNames } from "../content/registry-site";
-import { docsSite } from "../lib/site";
-import { packageAddCommand } from "../lib/package-manager-commands";
 import { componentPageSections } from "../lib/component-page-sections.mjs";
 import { DEFAULT_PROPS_PRIORITY } from "../lib/props-priority.mjs";
 import { ComponentPreview } from "./component-preview";
 import { ComponentWrapsLine } from "./component-wraps-line";
 import { MaturityBadge } from "./maturity-badge";
 import { PropsTable } from "./props-table";
-import {
-  adoptionTabsList,
-  highlightedTs,
-  packageInstallFrame,
-  registryCopyPanels,
-} from "./component-page-install";
+import { AdoptionPanelView, adoptionPlanFor } from "./adoption-panel-view";
+import { highlightedTs } from "./highlighted-code";
 import { componentPageCopy } from "@/components/i18n/component-page-copy";
+import type { AdoptionPlan } from "@/lib/adoption-types";
 
 export interface CatalogExample {
   title: string;
@@ -30,7 +22,16 @@ export interface RelatedLink {
   href: string;
 }
 
+/** The typed adoption contract the catalog declares for the need (JavaScript, stylesheet or config). */
+type CatalogAdoption = Parameters<typeof adoptionPlanFor>[0]["need"]["adoption"];
+
 export interface ComponentPageProps {
+  /** Catalog heading of the need. */
+  needName: string;
+  shortName: string;
+  adoption: CatalogAdoption;
+  /** When the first example is a whole file, where it goes (for instance `src/app/layout.tsx`). */
+  exampleFile?: string;
   packageName: string;
   version: string;
   status: string;
@@ -38,7 +39,6 @@ export interface ComponentPageProps {
   audience: string;
   whenToUse: string;
   whenNotToUse: string;
-  importLine: string;
   wraps: string;
   registry: string;
   demo: string;
@@ -60,12 +60,11 @@ function inlineCode(text: string) {
   return text.split(/`([^`]+)`/).map((part, index) => (index % 2 === 1 ? <code key={index}>{part}</code> : part));
 }
 
-function registrySourcePath(registry: string): string | null {
-  const path = join(process.cwd(), "..", "..", "registry", "ui", `${registry}.tsx`);
-  return existsSync(path) ? path : null;
-}
-
 export async function ComponentPage({
+  needName,
+  shortName,
+  adoption,
+  exampleFile,
   packageName,
   version,
   status,
@@ -73,7 +72,6 @@ export async function ComponentPage({
   audience,
   whenToUse,
   whenNotToUse,
-  importLine,
   wraps,
   registry,
   demo,
@@ -87,34 +85,13 @@ export async function ComponentPage({
   troubleshooting,
   related,
 }: ComponentPageProps) {
-  const site = docsSite.url.replace(/\/$/, "");
-  const sourcePath = registrySourcePath(registry);
-  const source = sourcePath ? await readFile(sourcePath, "utf8") : null;
   const hasProps = Boolean(propsFile && propsName);
   const sections = componentPageSections({ hasProps, a11y, related, troubleshooting });
-  const copyable =
-    registry.length > 0 && registryBrickNames.includes(registry) && source !== null;
-  const npmInstall = (
-    <Stack gap={4}>
-      <Text variant="muted" className="text-sm">
-        {copyable ? (
-          <>
-            {componentPageCopy.npmInstallLeadBeforeLink}{" "}
-            <Link href="/docs/getting-started#ui-button" className="text-primary underline underline-offset-4 hover:no-underline">
-              {componentPageCopy.npmInstallLeadLink}
-            </Link>
-            {componentPageCopy.npmInstallLeadAfterLink}
-          </>
-        ) : (
-          componentPageCopy.npmOnlyLead
-        )}
-      </Text>
-      {await packageInstallFrame({ command: (pm) => packageAddCommand(pm, packageName), importLine })}
-      <Text variant="muted" className="text-xs">
-        {componentPageCopy.packageVersionLine(version)}
-      </Text>
-    </Stack>
-  );
+  const copyable = registry.length > 0 && registryBrickNames.includes(registry);
+  const plan: AdoptionPlan = adoptionPlanFor({
+    need: { need: needName, shortName, adoption, examples, registry: copyable ? registry : "", ...(exampleFile ? { exampleFile } : {}) },
+    packageName,
+  });
 
   return (
     <Stack gap={8}>
@@ -137,19 +114,12 @@ export async function ComponentPage({
       </dl>
 
       <Section title={componentPageCopy.sections.installOrCopy} id="install-or-copy" className="space-y-3">
-        {copyable ? (
-          <KitTabs defaultValue="package" className="flex flex-col gap-4">
-            {adoptionTabsList(componentPageCopy.adoptionTabs)}
-            <TabsContent value="package" className="mt-0">
-              {npmInstall}
-            </TabsContent>
-            <TabsContent value="registry" className="mt-0">
-              {await registryCopyPanels({ site, registry, importLine, source })}
-            </TabsContent>
-          </KitTabs>
-        ) : (
-          npmInstall
-        )}
+        <Stack gap={3}>
+          <AdoptionPanelView plan={plan} />
+          <Text variant="muted" className="text-xs">
+            {componentPageCopy.packageVersionLine(version)}
+          </Text>
+        </Stack>
       </Section>
 
       <Section title={componentPageCopy.sections.usageAndStates} id="usage-and-states" className="space-y-3">

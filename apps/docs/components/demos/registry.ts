@@ -61,6 +61,7 @@ import { RouteModalDemo } from "./route-modal-demo";
 import { RouteModalDialogDemo } from "./route-modal-dialog-demo";
 import { InputDemo } from "./input-demo";
 import { LabelDemo } from "./label-demo";
+import { LabelNativeDemo } from "./label-native-demo";
 import { LabelRequiredDemo } from "./label-required-demo";
 import { LoadingZonesDemo } from "./loading-zones-demo";
 import { MotionDemo } from "./motion-demo";
@@ -195,6 +196,7 @@ export const demoRegistry = {
   HomeAdminDashboardDemo: { Demo: HomeAdminDashboardDemo, file: "home-admin-dashboard-demo.tsx" },
   InputDemo: { Demo: InputDemo, file: "input-demo.tsx" },
   LabelDemo: { Demo: LabelDemo, file: "label-demo.tsx" },
+  LabelNativeDemo: { Demo: LabelNativeDemo, file: "label-native-demo.tsx" },
   LabelRequiredDemo: { Demo: LabelRequiredDemo, file: "label-required-demo.tsx" },
   LoadingZonesDemo: { Demo: LoadingZonesDemo, file: "loading-zones-demo.tsx" },
   MotionDemo: { Demo: MotionDemo, file: "motion-demo.tsx" },

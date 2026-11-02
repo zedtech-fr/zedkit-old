@@ -34,6 +34,8 @@ type AppProps = {
   onPreviewChange: (mode: PreviewMode) => void;
   /** The tour changes the look through this, the way the Display row does. */
   onLook: (id: string) => void;
+  /** Whether the guided tour runs, and what to do when the visitor takes the example over. */
+  tour: { playing: boolean; onTakeover: () => void };
 };
 
 /** One page. All five stay mounted in a single grid cell: the window is as tall as the tallest, and what the visitor did stays. */
@@ -49,7 +51,7 @@ function Page({ id, page, children }: { id: HeroPageId; page: HeroPageId; childr
   );
 }
 
-function Pages({ page, preview, onPreviewChange, motionOk }: Omit<AppProps, "onPage" | "intro" | "onLook"> & { motionOk: boolean }) {
+function Pages({ page, preview, onPreviewChange, motionOk }: Pick<AppProps, "page" | "preview" | "onPreviewChange"> & { motionOk: boolean }) {
   const [day, setDay] = useState<Date | undefined>(HERO_FIRST_DAY);
   const [person, setPerson] = useState<string>(projectTrackerDemoCopy.people.maya);
   return (
@@ -77,10 +79,10 @@ function Pages({ page, preview, onPreviewChange, motionOk }: Omit<AppProps, "onP
  * The hero's example: one small product built from kit components. Its pages are the samples.
  * Until the visitor touches the frame, a cursor tours the pages and uses real controls (`use-hero-tour.ts`).
  */
-export function HomeHeroApp({ page, onPage, intro, preview, onPreviewChange, onLook }: AppProps) {
+export function HomeHeroApp({ page, onPage, intro, preview, onPreviewChange, onLook, tour }: AppProps) {
   const motionOk = useMotionOk();
   const root = useRef<HTMLDivElement>(null);
-  useHeroTour({ rootRef: root, enabled: motionOk, onLook });
+  useHeroTour({ rootRef: root, enabled: motionOk, playing: tour.playing, onTakeover: tour.onTakeover, onLook });
   return (
     <div ref={root} role="region" aria-label={copy.label} data-hero-window="" data-intro={intro ? "" : undefined} className="relative min-w-0">
       <HeroShell sidebar={<HeroSidebar page={page} onPage={onPage} />} topbar={<HeroTopBar page={page} onPage={onPage} />}>

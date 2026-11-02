@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Container, Heading, Stack, Text } from "@zedtech/zedkit-ui";
 
 import { identityEditorCopy } from "@/app/i18n/identity-editor-copy";
@@ -16,6 +17,9 @@ export default function IdentityEditorFeaturePage() {
     <Container width="wide" className="py-section-lg">
       <Stack gap={6}>
         <Stack gap={2}>
+          <Link href="/#identities" className="w-fit text-sm text-primary underline underline-offset-4 hover:no-underline" data-editor-back="">
+            {identityEditorCopy.back}
+          </Link>
           <Heading level={1}>{identityEditorCopy.heading}</Heading>
           <Text variant="muted">{identityEditorCopy.body}</Text>
         </Stack>

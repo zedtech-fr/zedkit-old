@@ -2,7 +2,7 @@
 
 export const homeIdentityLooksCopy = {
   title: "Same components, different products",
-  body: "A bag shop, a newsroom, a SaaS app: each example is built from the same zedkit components. Only the identity changes, and type, shape, density and color change together.",
+  body: "A bag shop, a newsroom, a SaaS app: each example is built from the same zedkit components, composed for its product. The identity sets type, shape, density and color together. To see one task in every identity, use Display under the app above.",
   liveNote: "Live components, not screenshots.",
   scrollHint: "Keep scrolling to change the example, or pick one.",
   tabsAriaLabel: "Examples",
