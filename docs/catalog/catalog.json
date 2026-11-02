@@ -2252,6 +2252,20 @@
               "code": "import { checkEndpointUrl } from \"@zedtech/zedkit-server\";\nconst check = checkEndpointUrl(input, { allowPrivate: process.env.NODE_ENV !== \"production\" });\nif (!check.ok) return badRequest(check.error.message);"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-server",
+                "exports": [
+                  "checkEndpointUrl",
+                  "isPrivateHostname",
+                  "EndpointCheckOptions",
+                  "EndpointCheckResult"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Sign and verify webhook deliveries"
           ]
