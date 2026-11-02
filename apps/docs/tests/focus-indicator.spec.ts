@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 import { assertFocusUnclipped, assertFocusVisibleRing, focusWithKeyboard, readFocusIndicator } from "./a11y-helpers";
 
@@ -127,6 +127,27 @@ test.describe("controls whose own styles used to hide the ring", () => {
     await focusWithKeyboard(preview);
     await assertFocusVisibleRing(preview);
   });
+
+  // Each one is a control inside a container that scrolls or clips: the ring must be drawn, and drawn whole.
+  const UNCLIPPED: { name: string; path: string; viewport?: number; find: (page: Page) => Locator }[] = [
+    { name: "hero example tab", path: "/", find: (page) => page.locator("[data-home-hero-examples]").getByRole("tab", { name: "Detail panel" }) },
+    { name: "identity example tab", path: "/", find: (page) => page.locator("[data-home-identity-looks]").getByRole("tab", { name: /Dev console/ }) },
+    { name: "docs Preview tab", path: "/docs/ui/trigger-actions-with-buttons", find: (page) => page.getByRole("tab", { name: "Preview" }).first() },
+    { name: "editor Look select", path: "/features/identity-editor", find: (page) => page.getByLabel("Look", { exact: true }) },
+    { name: "editor Preview dark", path: "/features/identity-editor", find: (page) => page.getByRole("button", { name: "Preview dark" }) },
+    { name: "hero example tab on a phone", path: "/", viewport: 390, find: (page) => page.locator("[data-home-hero-examples]").getByRole("tab", { name: "Date picker" }) },
+  ];
+  for (const target of UNCLIPPED) {
+    test(`${target.name}: focus shows and nothing clips it`, async ({ page }) => {
+      await page.setViewportSize({ width: target.viewport ?? 1280, height: 900 });
+      await page.goto(target.path, { waitUntil: "networkidle" });
+      const control = target.find(page);
+      await control.scrollIntoViewIfNeeded();
+      await focusWithKeyboard(control);
+      await assertFocusVisibleRing(control);
+      await assertFocusUnclipped(control);
+    });
+  }
 
   test("forced colors keep drawing the focus outline", async ({ page }) => {
     await page.emulateMedia({ forcedColors: "active" });

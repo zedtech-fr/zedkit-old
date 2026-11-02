@@ -5,3 +5,5 @@
 The nearest identity scope owns a plain `.dark` section: inside a scope of another look, an outer scope's dark rule no longer wins by file order (Tide → Press → dark used to resolve to Tide). `ScrollScenes` fades scenes with opacity only: an animated `translate` made the scene the containing block of its `position: fixed` content, so a toast inside it was laid out against the scene. `parseIdentityTokens` now rejects values that could leave their declaration (braces, semicolons, comments, at-rules, `url()`), which matters because recipes arrive from pasted JSON and shared links.
 
 `SecretField` with `multiline` now wraps, as its docs always said: it was `white-space: nowrap` inside a textarea that scrolled sideways, so a long install command did not read in full on a phone.
+
+`TabsTrigger` draws its focus ring inside the trigger: `TabsList` scrolls sideways, which clipped a ring drawn outside its 4px padding (the Preview and Code tabs of every docs example lost two pixels of it).
