@@ -20,6 +20,16 @@ async function expectOverlayChromeMatchesPanel(page: Page): Promise<void> {
   expect(ok).toBe(true);
 }
 
+/**
+ * The click that opens a dialog leaves the pointer where the trigger was, and the dialog then opens
+ * under it: whichever button lands there is painted hovered. That depends on page layout, not on the
+ * dialog, so a captured surface is taken with the pointer parked outside it. Hover has its own checks.
+ */
+async function parkPointer(page: Page): Promise<void> {
+  await page.mouse.move(0, 0);
+  await expect.poll(() => page.evaluate(() => document.querySelectorAll('[role="dialog"] :hover').length)).toBe(0);
+}
+
 for (const identity of DOCS_SHIPPED_IDENTITIES) {
   for (const mode of ["light", "dark"] as const) {
     for (const [device, width, height] of [
@@ -35,6 +45,7 @@ for (const identity of DOCS_SHIPPED_IDENTITIES) {
         const dialog = page.getByRole("dialog");
         await expect(dialog).toBeVisible({ timeout: 10_000 });
         await page.waitForTimeout(400);
+        await parkPointer(page);
         await expectOverlayChromeMatchesPanel(page);
         await expect(dialog).toHaveScreenshot(`dialog-${identity}-${mode}-${device}.png`, {
           animations: "disabled",
@@ -52,6 +63,7 @@ for (const identity of DOCS_SHIPPED_IDENTITIES) {
         const dialog = page.getByRole("dialog");
         await expect(dialog).toBeVisible({ timeout: 10_000 });
         await page.waitForTimeout(400);
+        await parkPointer(page);
         await expectOverlayChromeMatchesPanel(page);
         await expect(dialog).toHaveScreenshot(`confirm-${identity}-${mode}-${device}.png`, {
           animations: "disabled",

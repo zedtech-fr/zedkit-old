@@ -52,12 +52,4 @@
     --text-4xl: 2rem;
   }
 
-  :root[data-identity="tide"] [data-identity-scope][data-identity="tide"] {
-    --spacing: 0.2rem;
-    --text-xs: 0.75rem;
-    --text-sm: 0.875rem;
-    --text-xl: 1.25rem;
-    --text-2xl: 1.375rem;
-  }
-
 }

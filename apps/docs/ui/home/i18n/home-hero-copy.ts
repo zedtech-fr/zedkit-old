@@ -9,10 +9,15 @@ export const homeHeroCopy = {
     getStarted: "Get started",
     browseCatalog: "Browse catalog",
   },
-  /** One short label per pinned example; the same order as the scenes. */
-  heroSteps: ["Data table", "Detail panel", "Date picker"],
+  /** The three examples the hero specimen switches between (a real tablist: pointer and keyboard). */
+  heroExamples: [
+    { id: "table", label: "Data table" },
+    { id: "panel", label: "Detail panel" },
+    { id: "calendar", label: "Date picker" },
+  ],
   heroPreview: {
     demoLabel: "Interactive admin dashboard demo in the hero",
+    examplesAriaLabel: "Kit examples",
   },
   heroScenes: {
     drawerTitle: "Task details",
@@ -24,7 +29,9 @@ export const homeHeroCopy = {
     dueValue: "30 October",
     status: "Status",
     statusValue: "In review",
-    save: "Save",
     calendarCaption: "Pick a day",
+    calendarChosen: (label: string) => `Chosen: ${label}`,
   },
 } as const;
+
+export type HeroExampleId = (typeof homeHeroCopy.heroExamples)[number]["id"];

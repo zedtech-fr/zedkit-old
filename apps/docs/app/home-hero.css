@@ -1,0 +1,25 @@
+/*
+ * Home hero: the proposition beside one working example.
+ *
+ * The example is chosen with real tabs and the page scrolls normally: nothing is pinned, faded or
+ * clipped, so overlays raised inside the example (toasts, menus, dialogs) land where they say.
+ * Below `lg` the lead comes first and the example follows at the full measure.
+ */
+#home-page [data-home-hero] {
+  min-width: 0;
+}
+
+#home-page [data-home-hero] [data-home-hero-lead],
+#home-page [data-home-hero] [data-home-hero-preview] {
+  min-width: 0;
+}
+
+@media (min-width: 64rem) {
+  #home-page [data-home-hero] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+    align-items: center;
+    column-gap: 2.5rem;
+    padding-block: 1.5rem 2rem;
+  }
+}
