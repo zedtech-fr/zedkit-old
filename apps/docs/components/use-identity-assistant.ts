@@ -6,11 +6,11 @@ import { initialSession, sessionReducer } from "@/lib/identity-creator-session";
 
 /**
  * The assistant for one editor: the conversation (`sessionReducer`), whether the service is on (a free status
- * call, made once, never generating anything), and the two things a visitor can do: send a brief, or cancel it.
- * Generation happens only inside `submit`, which is only called by a deliberate press. Typing, focus, scrolling and
- * mounting never reach it.
+ * call, made once, and only once the visitor has opened the assistant: a page that merely shows the editor asks
+ * nothing of the network), and the two things a visitor can do: send a brief, or cancel it. Generation happens only
+ * inside `submit`, which is only called by a deliberate press. Typing, focus, scrolling and mounting never reach it.
  */
-export function useIdentityAssistant(current: IdentityTokens) {
+export function useIdentityAssistant(current: IdentityTokens, opened: boolean) {
   const [session, dispatch] = useReducer(sessionReducer, initialSession);
   const [status, setStatus] = useState<AssistantStatus | null>(null);
   const live = useRef({ current, thread: session.thread });
@@ -23,13 +23,13 @@ export function useIdentityAssistant(current: IdentityTokens) {
   });
 
   useEffect(() => {
+    if (!opened) return;
     const stop = new AbortController();
     void fetchAssistantStatus({ signal: stop.signal }).then(setStatus);
-    return () => {
-      stop.abort();
-      controller.current?.abort();
-    };
-  }, []);
+    return () => stop.abort();
+  }, [opened]);
+
+  useEffect(() => () => controller.current?.abort(), []);
 
   const submit = useCallback((prompt: string, references: readonly string[]) => {
     if (inflight.current) return;

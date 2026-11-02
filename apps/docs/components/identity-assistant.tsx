@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Stack, Text, type IdentityTokens } from "@zedtech/zedkit-ui";
 
 import { identityAssistantCopy as copy } from "@/components/i18n/identity-assistant-copy";
@@ -21,9 +21,13 @@ import { linksInText } from "@/lib/identity-links-in-text";
  * or with `#create` opens it. On a phone the conversation and the preview take turns.
  */
 export function IdentityAssistant({ tokens, onUse }: { tokens: IdentityTokens; onUse: (tokens: IdentityTokens) => void }) {
-  const { session, status, dispatch, submit, cancel } = useIdentityAssistant(tokens);
+  const [opened, setOpened] = useState(false);
+  const { session, status, dispatch, submit, cancel } = useIdentityAssistant(tokens, opened);
   const [brief, setBrief] = useState("");
   const ui = useAssistantView({ proposalId: session.proposal?.requestId, onBrief: setBrief });
+  useEffect(() => {
+    if (ui.open) setOpened(true);
+  }, [ui.open]);
   const busy = session.pending !== null;
   const off = status !== null && !status.available ? status.reason : null;
 
