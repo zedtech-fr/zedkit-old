@@ -43,7 +43,7 @@ export function IdentityAssistant({ tokens, onUse }: { tokens: IdentityTokens; o
       <details open={ui.open} onToggle={(event) => ui.setOpen(event.currentTarget.open)} className="group min-w-0">
         <summary
           id="identity-assistant-title"
-          className="flex min-h-control-height cursor-pointer list-none items-center justify-between gap-2 rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground shadow-sm hover:bg-muted focus-ring-control [&::-webkit-details-marker]:hidden"
+          className="flex min-h-control-height cursor-pointer list-none items-center justify-between gap-2 rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground shadow-sm focus-ring-control hover:bg-muted [&::-webkit-details-marker]:hidden"
         >
           {copy.open}
           <ChevronDown aria-hidden="true" className="size-4 shrink-0 transition-transform group-open:rotate-180 motion-reduce:transition-none" />
