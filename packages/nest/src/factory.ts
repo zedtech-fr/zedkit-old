@@ -21,12 +21,18 @@ import {
   ThrottlerModule,
   type ThrottlerStorage,
 } from "@nestjs/throttler";
+import { tryCatch } from "@zedtech/zedkit-core";
 import type { FastifyBodyParser, FastifyServerOptions } from "fastify";
 import { Logger as PinoLogger, LoggerModule } from "nestjs-pino";
-import type { DestinationStream } from "pino";
+import type {
+  DestinationStream,
+  LevelWithSilent,
+  LoggerOptions as PinoLoggerOptions,
+} from "pino";
 import { randomUUID } from "node:crypto";
+import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Http2ServerRequest } from "node:http2";
-import type { IncomingMessage } from "node:http";
+import { Writable } from "node:stream";
 import { AllExceptionsFilter } from "./all-exceptions.filter.js";
 import { REQUEST_ID_HEADER } from "./request-id.js";
 import { RequestIdInterceptor } from "./request-id.interceptor.js";
@@ -72,6 +78,26 @@ export interface LoggerOptions {
   redact?: string[] | undefined;
   /** Log destination (pino passthrough). Defaults to stdout. */
   stream?: DestinationStream | undefined;
+  /**
+   * pino serializers. Defaults to pino's own (req/res include headers).
+   * Pass `compactRequestSerializers()` to keep only id, method, url, status.
+   */
+  serializers?: PinoLoggerOptions["serializers"] | undefined;
+  /**
+   * pino-http level picker. Defaults to pino-http's own mapping.
+   * Pass `createRequestLogLevel({ quietPaths })` to hush success on chosen paths.
+   */
+  customLogLevel?:
+    | ((req: IncomingMessage, res: ServerResponse, error?: Error) => LevelWithSilent)
+    | undefined;
+  /**
+   * Called with each parsed log object before the line is written.
+   * The package stays dependency-free of any scrubber: the caller passes
+   * the transform (e.g. a redaction function). Unparseable lines and
+   * transform failures are replaced by a marker, never emitted raw.
+   * Defaults to off: lines go to stdout or `stream` unchanged.
+   */
+  transformLine?: ((obj: unknown) => unknown) | undefined;
 }
 
 export interface ValidationOptions {
@@ -128,7 +154,7 @@ export interface NestBootstrapOptions {
   validation?: ValidationOptions | undefined;
   /**
    * Global error filter. Defaults to AllExceptionsFilter; apps with
-   * domain errors pass their own filter class here.
+   * domain errors pass a subclass overriding `toStatusBody`.
    */
   exceptionFilter?: Type<object> | undefined;
   /**
@@ -173,6 +199,54 @@ function pinoReqId(req: IncomingMessage): string {
   return requestIdOf(req);
 }
 
+const DROPPED_LINE = '{"level":60,"msg":"[unparseable log line dropped]"}';
+
+function applyTransform(line: string, transformLine: (obj: unknown) => unknown): string {
+  const parsed = tryCatch(() => JSON.parse(line) as unknown);
+  if (!parsed.ok) return DROPPED_LINE;
+  const encoded = tryCatch(() => JSON.stringify(transformLine(parsed.value)));
+  if (!encoded.ok || typeof encoded.value !== "string") return DROPPED_LINE;
+  return encoded.value;
+}
+
+function transformSink(
+  transformLine: (obj: unknown) => unknown,
+  dest: DestinationStream,
+): Writable {
+  let tail = "";
+  return new Writable({
+    write(chunk, _encoding, done): void {
+      tail += chunk.toString();
+      const parts = tail.split("\n");
+      tail = parts.pop() ?? "";
+      for (const part of parts) {
+        if (part.length === 0) continue;
+        dest.write(`${applyTransform(part, transformLine)}\n`);
+      }
+      done();
+    },
+  });
+}
+
+function pinoHttpBindings(logger: LoggerOptions | undefined) {
+  return {
+    level: logger?.level ?? "info",
+    genReqId: (req: IncomingMessage) => pinoReqId(req),
+    redact: logger?.redact ?? DEFAULT_LOG_REDACT,
+    ...(logger?.serializers === undefined ? {} : { serializers: logger.serializers }),
+    ...(logger?.customLogLevel === undefined
+      ? {}
+      : { customLogLevel: logger.customLogLevel }),
+  };
+}
+
+function pinoHttpDestination(logger: LoggerOptions | undefined): DestinationStream | undefined {
+  if (logger?.transformLine !== undefined) {
+    return transformSink(logger.transformLine, logger.stream ?? process.stdout);
+  }
+  return logger?.stream;
+}
+
 /**
  * Generic Nest bootstrap shared by every app. Wires only standard pieces:
  * Fastify platform, validated env (`@nestjs/config`), request-id JSON logs
@@ -186,6 +260,8 @@ export async function createNestApp(
 ): Promise<NestFastifyApplication> {
   const throttle = options.throttle === undefined ? DEFAULT_THROTTLE : options.throttle;
   const schema = options.envSchema;
+  const loggerBindings = pinoHttpBindings(options.logger);
+  const loggerDest = pinoHttpDestination(options.logger);
 
   @Module({
     imports: [
@@ -200,20 +276,7 @@ export async function createNestApp(
       LoggerModule.forRoot({
         // nestjs-pino takes the destination as a tuple, not an option key.
         pinoHttp:
-          options.logger?.stream === undefined
-            ? {
-                level: options.logger?.level ?? "info",
-                genReqId: (req) => pinoReqId(req as IncomingMessage),
-                redact: options.logger?.redact ?? DEFAULT_LOG_REDACT,
-              }
-            : [
-                {
-                  level: options.logger.level ?? "info",
-                  genReqId: (req) => pinoReqId(req as IncomingMessage),
-                  redact: options.logger.redact ?? DEFAULT_LOG_REDACT,
-                },
-                options.logger.stream,
-              ],
+          loggerDest === undefined ? loggerBindings : [loggerBindings, loggerDest],
       }),
       ...(throttle
         ? [

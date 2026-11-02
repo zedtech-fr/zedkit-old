@@ -34,13 +34,36 @@ await app.listen(3000);
 - Purpose: Request logging with auth headers and cookies redacted by default.
 - When to use: Whenever request logs leave the process (files, collectors, consoles).
 - When not to use: For full-fidelity debug of auth flows — reproduce locally with redaction off instead.
-- See also: `Bootstrap a Nest app`, `Redact secrets before logging`
+- See also: `Bootstrap a Nest app`, `Redact secrets before logging`, `Keep request logs compact and silence chosen paths`
 
 ```ts
 import { createNestApp } from "@zedtech/zedkit-nest";
 const app = await createNestApp({
   module: AppModule,
   logger: { level: "info" }, // default: auth header + cookies redacted
+});
+```
+
+## Keep request logs compact and silence chosen paths
+
+- Import: `@zedtech/zedkit-nest` — `compactRequestSerializers`, `createRequestLogLevel`, `LoggerOptions`
+- Wraps: `pino-http`
+- Status: alpha
+- Short name: Compact request logs
+- Audience: API developers who want one line per request without headers, and to hush noisy success paths.
+- Purpose: Pass compact req/res serializers and a quiet-path log level through the bootstrap logger options. An optional `transformLine` runs on each parsed object so the caller can scrub without the package depending on a scrubber.
+- When to use: When request logs must not carry headers or sockets, and health polls should stay silent on success.
+- When not to use: When you need pino's full request serializer for debugging — omit `serializers` and `customLogLevel`.
+- See also: `Ship request logs without leaking credentials`, `Bootstrap a Nest app`
+
+```ts
+import { compactRequestSerializers, createNestApp, createRequestLogLevel } from "@zedtech/zedkit-nest";
+const app = await createNestApp({
+  module: AppModule,
+  logger: {
+    serializers: compactRequestSerializers(),
+    customLogLevel: createRequestLogLevel({ quietPaths: ["/health"] }),
+  },
 });
 ```
 
@@ -51,15 +74,18 @@ const app = await createNestApp({
 - Status: stable
 - Short name: Error bodies
 - Audience: API developers who want one error shape for every failure.
-- Purpose: A global exception filter that returns the same error body for all failures.
+- Purpose: A global exception filter that returns the same error body for all failures. Subclass and override `toStatusBody`, `unknownBodyParseError`, or `formatBody` to map domain errors without rewriting the filter.
 - When to use: As the last-resort error mapper in front of API clients.
 - When not to use: For domain validation errors with field detail — return those from the handler instead.
 - See also: `Bootstrap a Nest app`, `Start a safe NestJS API`
 
 ```ts
-import { AllExceptionsFilter } from "@zedtech/zedkit-nest";
-// wired globally by createNestApp; reuse standalone:
-app.useGlobalFilters(new AllExceptionsFilter());
+import { AllExceptionsFilter, type ErrorBody } from "@zedtech/zedkit-nest";
+class AppFilter extends AllExceptionsFilter {
+  protected override formatBody(body: ErrorBody) {
+    return { code: body.code, message: body.message };
+  }
+}
 ```
 
 ## Start a safe NestJS API

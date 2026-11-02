@@ -536,7 +536,31 @@
           ],
           "seeAlso": [
             "Bootstrap a Nest app",
-            "Redact secrets before logging"
+            "Redact secrets before logging",
+            "Keep request logs compact and silence chosen paths"
+          ]
+        },
+        {
+          "need": "Keep request logs compact and silence chosen paths",
+          "import": "`@zedtech/zedkit-nest` — `compactRequestSerializers`, `createRequestLogLevel`, `LoggerOptions`",
+          "wraps": "`pino-http`",
+          "status": "alpha",
+          "shortName": "Compact request logs",
+          "audience": "API developers who want one line per request without headers, and to hush noisy success paths.",
+          "purpose": "Pass compact req/res serializers and a quiet-path log level through the bootstrap logger options. An optional `transformLine` runs on each parsed object so the caller can scrub without the package depending on a scrubber.",
+          "whenToUse": "When request logs must not carry headers or sockets, and health polls should stay silent on success.",
+          "whenNotToUse": "When you need pino's full request serializer for debugging — omit `serializers` and `customLogLevel`.",
+          "derivedFrom": null,
+          "example": "import { compactRequestSerializers, createNestApp, createRequestLogLevel } from \"@zedtech/zedkit-nest\";\nconst app = await createNestApp({\n  module: AppModule,\n  logger: {\n    serializers: compactRequestSerializers(),\n    customLogLevel: createRequestLogLevel({ quietPaths: [\"/health\"] }),\n  },\n});",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "import { compactRequestSerializers, createNestApp, createRequestLogLevel } from \"@zedtech/zedkit-nest\";\nconst app = await createNestApp({\n  module: AppModule,\n  logger: {\n    serializers: compactRequestSerializers(),\n    customLogLevel: createRequestLogLevel({ quietPaths: [\"/health\"] }),\n  },\n});"
+            }
+          ],
+          "seeAlso": [
+            "Ship request logs without leaking credentials",
+            "Bootstrap a Nest app"
           ]
         },
         {
@@ -546,15 +570,15 @@
           "status": "stable",
           "shortName": "Error bodies",
           "audience": "API developers who want one error shape for every failure.",
-          "purpose": "A global exception filter that returns the same error body for all failures.",
+          "purpose": "A global exception filter that returns the same error body for all failures. Subclass and override `toStatusBody`, `unknownBodyParseError`, or `formatBody` to map domain errors without rewriting the filter.",
           "whenToUse": "As the last-resort error mapper in front of API clients.",
           "whenNotToUse": "For domain validation errors with field detail — return those from the handler instead.",
           "derivedFrom": null,
-          "example": "import { AllExceptionsFilter } from \"@zedtech/zedkit-nest\";\n// wired globally by createNestApp; reuse standalone:\napp.useGlobalFilters(new AllExceptionsFilter());",
+          "example": "import { AllExceptionsFilter, type ErrorBody } from \"@zedtech/zedkit-nest\";\nclass AppFilter extends AllExceptionsFilter {\n  protected override formatBody(body: ErrorBody) {\n    return { code: body.code, message: body.message };\n  }\n}",
           "examples": [
             {
               "title": "Simple",
-              "code": "import { AllExceptionsFilter } from \"@zedtech/zedkit-nest\";\n// wired globally by createNestApp; reuse standalone:\napp.useGlobalFilters(new AllExceptionsFilter());"
+              "code": "import { AllExceptionsFilter, type ErrorBody } from \"@zedtech/zedkit-nest\";\nclass AppFilter extends AllExceptionsFilter {\n  protected override formatBody(body: ErrorBody) {\n    return { code: body.code, message: body.message };\n  }\n}"
             }
           ],
           "seeAlso": [

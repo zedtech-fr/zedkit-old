@@ -92,4 +92,136 @@ describe("AllExceptionsFilter", () => {
   it("names the request unknown when the id is not a string", () => {
     expect(catchWith(new Error("x"), 12).body.requestId).toBe("unknown");
   });
+
+  it("echoes string-response 400/413/415 driver text by default", () => {
+    expect(catchWith(new HttpException("Unexpected token o", 400)).body.message).toBe(
+      "Unexpected token o",
+    );
+    expect(catchWith(new HttpException("Payload Too Large", 413)).body.message).toBe(
+      "Payload Too Large",
+    );
+    expect(catchWith(new HttpException("Unsupported Media Type", 415)).body.message).toBe(
+      "Unsupported Media Type",
+    );
+  });
+
+  it("maps string-response 400/413/415 to the uniform parser body when opted in", () => {
+    class SanitizingFilter extends AllExceptionsFilter {
+      protected override sanitizeStringHttpExceptions = true;
+    }
+    const caught = (exception: unknown) => {
+      vi.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+      const filter = new SanitizingFilter();
+      let status = 0;
+      let body: ErrorBody | undefined;
+      const reply = {
+        sent: false,
+        header(): void {
+          return undefined;
+        },
+        status(code: number) {
+          status = code;
+          return {
+            send(next: ErrorBody) {
+              body = next;
+            },
+          };
+        },
+      };
+      filter.catch(
+        exception,
+        {
+          switchToHttp: () => ({
+            getRequest: () => ({ id: "req-1", method: "GET", url: "/" }),
+            getResponse: () => reply,
+          }),
+        } as never,
+      );
+      return { status, body };
+    };
+    expect(caught(new HttpException("Unexpected token o", 400))).toEqual({
+      status: 400,
+      body: { code: "invalid_input", message: "invalid request body", requestId: "req-1" },
+    });
+    expect(caught(new HttpException("Payload Too Large", 413))).toEqual({
+      status: 413,
+      body: {
+        code: "payload_too_large",
+        message: "body exceeds the configured limit",
+        requestId: "req-1",
+      },
+    });
+    expect(caught(new HttpException("Unsupported Media Type", 415))).toEqual({
+      status: 400,
+      body: { code: "invalid_input", message: "invalid request body", requestId: "req-1" },
+    });
+  });
+
+  it("lets a subclass replace the parser-failure body and the final shape", () => {
+    class AppFilter extends AllExceptionsFilter {
+      protected override sanitizeStringHttpExceptions = true;
+      protected override unknownBodyParseError() {
+        return { status: 422, code: "unprocessable", message: "request body must be valid JSON" };
+      }
+      protected override formatBody(body: ErrorBody) {
+        return { code: body.code, message: body.message };
+      }
+    }
+    vi.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+    const filter = new AppFilter();
+    let sent: unknown;
+    filter.catch(new HttpException("Unexpected token o", 400), {
+      switchToHttp: () => ({
+        getRequest: () => ({ id: "req-1", method: "POST", url: "/" }),
+        getResponse: () => ({
+          sent: false,
+          header(): void {
+            return undefined;
+          },
+          status: () => ({
+            send(next: unknown) {
+              sent = next;
+            },
+          }),
+        }),
+      }),
+    } as never);
+    expect(sent).toEqual({ code: "unprocessable", message: "request body must be valid JSON" });
+  });
+
+  it("lets a subclass map domain errors before falling through", () => {
+    class AppFilter extends AllExceptionsFilter {
+      protected override toStatusBody(exception: unknown) {
+        if (exception instanceof Error && exception.message === "gone") {
+          return { status: 404, code: "not_found", message: "missing" };
+        }
+        return super.toStatusBody(exception);
+      }
+    }
+    vi.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
+    const filter = new AppFilter();
+    let status = 0;
+    let body: ErrorBody | undefined;
+    filter.catch(new Error("gone"), {
+      switchToHttp: () => ({
+        getRequest: () => ({ id: "req-1", method: "GET", url: "/" }),
+        getResponse: () => ({
+          sent: false,
+          header(): void {
+            return undefined;
+          },
+          status(code: number) {
+            status = code;
+            return {
+              send(next: ErrorBody) {
+                body = next;
+              },
+            };
+          },
+        }),
+      }),
+    } as never);
+    expect(status).toBe(404);
+    expect(body).toEqual({ code: "not_found", message: "missing", requestId: "req-1" });
+  });
 });

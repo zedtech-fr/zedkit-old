@@ -43,6 +43,9 @@
   "files": [
     "dist"
   ],
+  "dependencies": {
+    "@zedtech/zedkit-core": "workspace:*"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "test": "vitest run",
@@ -66,7 +69,6 @@
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
-    "@zedtech/zedkit-core": "workspace:*",
     "@zedtech/zedkit-quality": "workspace:*",
     "@fastify/static": "catalog:",
     "@nestjs/common": "catalog:",
