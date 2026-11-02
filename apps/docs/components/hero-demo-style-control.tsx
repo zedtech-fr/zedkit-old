@@ -44,11 +44,11 @@ export function HeroDemoStyleControl({
       <Text id={labelId} variant="muted" className={`${HOME_METADATA_TEXT_CLASS} shrink-0`}>
         {heroDemoStyleCopy.display}
       </Text>
-      <div className="grid min-w-0 grid-cols-[repeat(auto-fit,minmax(6.25rem,1fr))] gap-2 sm:flex sm:flex-wrap sm:items-center">
+      <Stack gap={2} className="grid min-w-0 grid-cols-[repeat(auto-fit,minmax(6.25rem,1fr))] sm:flex sm:flex-row sm:flex-wrap sm:items-center">
         <HeroDemoIdentitySelect look={look} onLook={onLook} />
         <HeroDemoModeSelect modePin={modePin} onModePin={onModePin} />
         {showPreview ? <HeroDemoPreviewSelect preview={preview} onPreview={onPreview} className="shrink-0" /> : null}
-      </div>
+      </Stack>
     </Stack>
   );
 }

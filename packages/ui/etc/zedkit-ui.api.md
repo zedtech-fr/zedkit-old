@@ -1446,7 +1446,7 @@ export function TabsList(input: React_2.ComponentProps<typeof TabsPrimitive.List
 // @public (undocumented)
 export type TabsProps = React_2.ComponentProps<typeof TabsPrimitive.Root>;
 
-// @public (undocumented)
+// @public
 export function TabsTrigger(input: React_2.ComponentProps<typeof TabsPrimitive.Trigger>): React_2.JSX.Element;
 
 // @public (undocumented)
