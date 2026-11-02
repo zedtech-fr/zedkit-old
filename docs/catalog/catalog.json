@@ -1187,6 +1187,92 @@
           "seeAlso": [
             "Tell a Postgres conflict from a bug"
           ]
+        },
+        {
+          "need": "Derive purpose-bound keys from one master secret",
+          "import": "`@zedtech/zedkit-server` — `hkdfKey`, `HkdfKeyOptions`",
+          "wraps": "`(none)`",
+          "status": "alpha",
+          "shortName": "HKDF keys",
+          "audience": "Node developers who hold one master secret and need separate keys for cookies, tokens, or signing.",
+          "purpose": "Derive unrelated 32-byte keys per purpose from a single master with HKDF-SHA256, so rotation is a version bump.",
+          "whenToUse": "When two features must not share key bytes but you only want to manage one secret.",
+          "whenNotToUse": "For passwords or low-entropy input — use a password hash (argon2, scrypt) instead.",
+          "derivedFrom": null,
+          "example": "import { hkdfKey } from \"@zedtech/zedkit-server\";\nconst cookieKey = hkdfKey(process.env.MASTER_KEY!, \"app/session-cookie/v1\");\nconst perTenantKey = hkdfKey(process.env.MASTER_KEY!, \"app/export/v1\", { salt: tenantId });",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "import { hkdfKey } from \"@zedtech/zedkit-server\";\nconst cookieKey = hkdfKey(process.env.MASTER_KEY!, \"app/session-cookie/v1\");\nconst perTenantKey = hkdfKey(process.env.MASTER_KEY!, \"app/export/v1\", { salt: tenantId });"
+            }
+          ],
+          "seeAlso": [
+            "Store secrets you must read back",
+            "Sign and verify webhook deliveries"
+          ]
+        },
+        {
+          "need": "Store secrets you must read back",
+          "import": "`@zedtech/zedkit-server` — `sealSecret`, `openSecret`",
+          "wraps": "`(none)`",
+          "status": "alpha",
+          "shortName": "Secret box",
+          "audience": "Node developers who keep third-party credentials (API keys, storage keys) in their own database.",
+          "purpose": "Encrypt a secret with AES-256-GCM under a key derived from your master, and open it again later.",
+          "whenToUse": "For credentials you must present to another service, so hashing is not an option.",
+          "whenNotToUse": "For user passwords (hash them) or when a managed secret store is available.",
+          "derivedFrom": null,
+          "example": "import { openSecret, sealSecret } from \"@zedtech/zedkit-server\";\nconst sealed = sealSecret(masterKey, \"app/storage-credentials/v1\", secretAccessKey);\nconst plain = openSecret(masterKey, \"app/storage-credentials/v1\", sealed);",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "import { openSecret, sealSecret } from \"@zedtech/zedkit-server\";\nconst sealed = sealSecret(masterKey, \"app/storage-credentials/v1\", secretAccessKey);\nconst plain = openSecret(masterKey, \"app/storage-credentials/v1\", sealed);"
+            }
+          ],
+          "seeAlso": [
+            "Derive purpose-bound keys from one master secret"
+          ]
+        },
+        {
+          "need": "Give each checkout its own test database",
+          "import": "`@zedtech/zedkit-server` — `checkoutSuffix`, `suffixedDatabaseUrl`, `databaseNameFromUrl`",
+          "wraps": "`(none)`",
+          "status": "alpha",
+          "shortName": "Test DB names",
+          "audience": "Developers whose test suites drop and recreate a Postgres database.",
+          "purpose": "Derive a stable per-checkout database name and refuse unsafe names before they reach DROP.",
+          "whenToUse": "When several checkouts or worktrees run tests against one Postgres server.",
+          "whenNotToUse": "For production database naming, or when each test run gets a throwaway container.",
+          "derivedFrom": null,
+          "example": "import { databaseNameFromUrl, suffixedDatabaseUrl } from \"@zedtech/zedkit-server\";\nconst url = suffixedDatabaseUrl(process.env.TEST_DATABASE_URL!, process.cwd());\nconst name = databaseNameFromUrl(url); // safe to interpolate into DROP/CREATE",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "import { databaseNameFromUrl, suffixedDatabaseUrl } from \"@zedtech/zedkit-server\";\nconst url = suffixedDatabaseUrl(process.env.TEST_DATABASE_URL!, process.cwd());\nconst name = databaseNameFromUrl(url); // safe to interpolate into DROP/CREATE"
+            }
+          ]
+        },
+        {
+          "need": "Key rate limits by client address behind a proxy",
+          "import": "`@zedtech/zedkit-server` — `clientKeyFromForwardedFor`",
+          "wraps": "`(none)`",
+          "status": "alpha",
+          "shortName": "Forwarded-for key",
+          "audience": "Developers rate-limiting public endpoints that sit behind one reverse proxy.",
+          "purpose": "Take the client key from the last `X-Forwarded-For` entry, which the proxy appended, not the spoofable first one.",
+          "whenToUse": "With `MemoryRateLimiter` behind exactly one trusted proxy that appends to the header.",
+          "whenNotToUse": "Behind several proxies or a CDN — use your framework's trusted-proxy setting instead.",
+          "derivedFrom": null,
+          "example": "import { clientKeyFromForwardedFor, MemoryRateLimiter } from \"@zedtech/zedkit-server\";\nconst limiter = new MemoryRateLimiter();\nconst key = clientKeyFromForwardedFor(request.headers.get(\"x-forwarded-for\"));\nif (!limiter.allow(key, 30)) return tooManyRequests();",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "import { clientKeyFromForwardedFor, MemoryRateLimiter } from \"@zedtech/zedkit-server\";\nconst limiter = new MemoryRateLimiter();\nconst key = clientKeyFromForwardedFor(request.headers.get(\"x-forwarded-for\"));\nif (!limiter.allow(key, 30)) return tooManyRequests();"
+            }
+          ],
+          "seeAlso": [
+            "Rate-limit calls per key"
+          ]
         }
       ]
     },
