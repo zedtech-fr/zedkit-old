@@ -9,6 +9,10 @@ export { MemoryRateLimiter } from "./rate-limit.js";
 export { redactValue } from "./redaction.js";
 export { computeBackoffMs } from "./backoff.js";
 export { verifyWebhookSignatureHeader, type VerifyWebhookOptions, webhookSignatureHeader, } from "./webhook-signature.js";
+export { hkdfKey, type HkdfKeyOptions } from "./hkdf.js";
+export { openSecret, sealSecret } from "./secret-box.js";
+export { checkoutSuffix, databaseNameFromUrl, suffixedDatabaseUrl } from "./test-db.js";
+export { clientKeyFromForwardedFor } from "./forwarded-for.js";
 
 import { z } from "zod";
 /**
@@ -63,4 +67,62 @@ export interface VerifyWebhookOptions {
 }
 /** Recompute the header over the received bytes and compare timing-safely. */
 export declare function verifyWebhookSignatureHeader(secret: Buffer, body: Buffer, header: string | null | undefined, options?: VerifyWebhookOptions): boolean;
+
+export interface HkdfKeyOptions {
+    /** Optional salt (default: empty). A per-record salt gives per-record keys. */
+    salt?: string | Uint8Array | undefined;
+    /** Output length in bytes (default 32, max 8160 for SHA-256). */
+    length?: number | undefined;
+}
+/**
+ * Derive a purpose-bound key from one master secret with HKDF-SHA256.
+ * `info` names the purpose (for example `"app/session-cookie/v1"`), so each
+ * purpose gets unrelated bytes from the same master and rotation is a
+ * version bump inside `info`. Deterministic: same inputs, same key.
+ * An empty master key throws instead of deriving a guessable key.
+ */
+export declare function hkdfKey(masterKey: string | Uint8Array, info: string, options?: HkdfKeyOptions): Buffer;
+
+/**
+ * Reversible secret envelope (AES-256-GCM) for credentials you must present
+ * again later (for example a customer's storage keys). The data key comes
+ * from `hkdfKey(masterKey, info)`, so each purpose is domain-separated from
+ * one master key. Wire format: 12-byte IV, then ciphertext, then the
+ * 16-byte auth tag, concatenated.
+ *
+ * Rotating the master key means re-sealing every stored value; no key
+ * version is embedded in the envelope.
+ */
+export declare function sealSecret(masterKey: string, info: string, plaintext: string): Buffer;
+/**
+ * Open an envelope made by `sealSecret`. Throws on a wrong master key,
+ * wrong `info`, tampering, or truncation.
+ */
+export declare function openSecret(masterKey: string, info: string, sealed: Buffer): string;
+
+/**
+ * Per-checkout test database names. Suites that drop and recreate their
+ * database must not share one across parallel checkouts on the same
+ * Postgres: derive the name from a stable hash of the checkout path.
+ */
+/** First 6 hex chars of the path hash: stable in one checkout, different in another. */
+export declare function checkoutSuffix(cwd: string): string;
+/** Base URL with the checkout suffix appended to its database name. */
+export declare function suffixedDatabaseUrl(baseUrl: string, cwd: string): string;
+/**
+ * Database name from a URL. Test setup interpolates it into DROP/CREATE,
+ * so anything outside `[A-Za-z0-9_]` throws instead of reaching SQL.
+ */
+export declare function databaseNameFromUrl(url: string): string;
+
+/**
+ * Client key for rate limiting from an `X-Forwarded-For` header. Proxies
+ * APPEND the downstream address, so the LAST entry is the one your own
+ * proxy saw; every earlier entry is client-controlled, and keying on it
+ * would hand an attacker a fresh budget per spoofed value. Correct only
+ * behind exactly one trusted proxy that appends (use your framework's
+ * trusted-proxy setting when you run more than one hop).
+ * A missing or blank header returns `fallback`.
+ */
+export declare function clientKeyFromForwardedFor(header: string | null | undefined, fallback?: string): string;
 ```

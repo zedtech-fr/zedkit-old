@@ -136,3 +136,75 @@ if (pgErrorRetryable(error) === true) {
   continue;
 }
 ```
+
+## Derive purpose-bound keys from one master secret
+
+- Import: `@zedtech/zedkit-server` — `hkdfKey`, `HkdfKeyOptions`
+- Wraps: `(none)`
+- Status: alpha
+- Short name: HKDF keys
+- Audience: Node developers who hold one master secret and need separate keys for cookies, tokens, or signing.
+- Purpose: Derive unrelated 32-byte keys per purpose from a single master with HKDF-SHA256, so rotation is a version bump.
+- When to use: When two features must not share key bytes but you only want to manage one secret.
+- When not to use: For passwords or low-entropy input — use a password hash (argon2, scrypt) instead.
+- See also: `Store secrets you must read back`, `Sign and verify webhook deliveries`
+
+```ts
+import { hkdfKey } from "@zedtech/zedkit-server";
+const cookieKey = hkdfKey(process.env.MASTER_KEY!, "app/session-cookie/v1");
+const perTenantKey = hkdfKey(process.env.MASTER_KEY!, "app/export/v1", { salt: tenantId });
+```
+
+## Store secrets you must read back
+
+- Import: `@zedtech/zedkit-server` — `sealSecret`, `openSecret`
+- Wraps: `(none)`
+- Status: alpha
+- Short name: Secret box
+- Audience: Node developers who keep third-party credentials (API keys, storage keys) in their own database.
+- Purpose: Encrypt a secret with AES-256-GCM under a key derived from your master, and open it again later.
+- When to use: For credentials you must present to another service, so hashing is not an option.
+- When not to use: For user passwords (hash them) or when a managed secret store is available.
+- See also: `Derive purpose-bound keys from one master secret`
+
+```ts
+import { openSecret, sealSecret } from "@zedtech/zedkit-server";
+const sealed = sealSecret(masterKey, "app/storage-credentials/v1", secretAccessKey);
+const plain = openSecret(masterKey, "app/storage-credentials/v1", sealed);
+```
+
+## Give each checkout its own test database
+
+- Import: `@zedtech/zedkit-server` — `checkoutSuffix`, `suffixedDatabaseUrl`, `databaseNameFromUrl`
+- Wraps: `(none)`
+- Status: alpha
+- Short name: Test DB names
+- Audience: Developers whose test suites drop and recreate a Postgres database.
+- Purpose: Derive a stable per-checkout database name and refuse unsafe names before they reach DROP.
+- When to use: When several checkouts or worktrees run tests against one Postgres server.
+- When not to use: For production database naming, or when each test run gets a throwaway container.
+
+```ts
+import { databaseNameFromUrl, suffixedDatabaseUrl } from "@zedtech/zedkit-server";
+const url = suffixedDatabaseUrl(process.env.TEST_DATABASE_URL!, process.cwd());
+const name = databaseNameFromUrl(url); // safe to interpolate into DROP/CREATE
+```
+
+## Key rate limits by client address behind a proxy
+
+- Import: `@zedtech/zedkit-server` — `clientKeyFromForwardedFor`
+- Wraps: `(none)`
+- Status: alpha
+- Short name: Forwarded-for key
+- Audience: Developers rate-limiting public endpoints that sit behind one reverse proxy.
+- Purpose: Take the client key from the last `X-Forwarded-For` entry, which the proxy appended, not the spoofable first one.
+- When to use: With `MemoryRateLimiter` behind exactly one trusted proxy that appends to the header.
+- When not to use: Behind several proxies or a CDN — use your framework's trusted-proxy setting instead.
+- See also: `Rate-limit calls per key`
+
+```ts
+import { clientKeyFromForwardedFor, MemoryRateLimiter } from "@zedtech/zedkit-server";
+const limiter = new MemoryRateLimiter();
+const key = clientKeyFromForwardedFor(request.headers.get("x-forwarded-for"));
+if (!limiter.allow(key, 30)) return tooManyRequests();
+```
