@@ -18,8 +18,39 @@ const AUTH_TOKEN_PATTERN = /\b(?:Bearer|Basic)\s+[A-Za-z0-9._~+/=-]+/gi;
 const HUMAN_TEXT_KEYS = new Set(["msg", "message", "stack"]);
 const LONG_VALUE_MAX = 512;
 
-function redactString(value: string, key: string | undefined): string {
-  const scrubbed = value.replace(
+/** An extra value pattern: every match is replaced by `replacement`, literally. */
+export interface RedactValuePattern {
+  pattern: RegExp;
+  replacement: string;
+}
+
+export interface RedactOptions {
+  /**
+   * Extra patterns for credential shapes specific to your system (for
+   * example your own API-key prefix). They run on every string, before the
+   * built-in bearer/basic pattern, in the order given. Matching is always
+   * global, whatever flags the regex carries.
+   */
+  valuePatterns?: readonly RedactValuePattern[] | undefined;
+}
+
+type CompiledPattern = readonly [RegExp, string];
+
+function compilePatterns(options: RedactOptions | undefined): CompiledPattern[] {
+  return (options?.valuePatterns ?? []).map(({ pattern, replacement }) => [
+    new RegExp(pattern.source, pattern.flags.includes("g") ? pattern.flags : `${pattern.flags}g`),
+    replacement,
+  ]);
+}
+
+function redactString(
+  value: string,
+  key: string | undefined,
+  extra: readonly CompiledPattern[],
+): string {
+  let text = value;
+  for (const [pattern, replacement] of extra) text = text.replace(pattern, () => replacement);
+  const scrubbed = text.replace(
     AUTH_TOKEN_PATTERN,
     (match) => `${match.split(/\s/, 1)[0]} [redacted]`,
   );
@@ -32,16 +63,22 @@ function redactString(value: string, key: string | undefined): string {
   return scrubbed;
 }
 
-export function redactValue(value: unknown, key?: string): unknown {
-  return redactInner(value, key, new Set());
+/** See the module notes above; `options.valuePatterns` adds your own credential shapes. */
+export function redactValue(value: unknown, key?: string, options?: RedactOptions): unknown {
+  return redactInner(value, key, new Set(), compilePatterns(options));
 }
 
-function redactInner(value: unknown, key: string | undefined, seen: Set<object>): unknown {
+function redactInner(
+  value: unknown,
+  key: string | undefined,
+  seen: Set<object>,
+  extra: readonly CompiledPattern[],
+): unknown {
   if (key !== undefined && SECRET_KEY_PATTERN.test(key)) {
     return "[redacted]";
   }
   if (typeof value === "string") {
-    return redactString(value, key);
+    return redactString(value, key, extra);
   }
   if (value === null || typeof value !== "object") {
     return value;
@@ -57,22 +94,22 @@ function redactInner(value: unknown, key: string | undefined, seen: Set<object>)
     return new Map(
       [...value].map(([k, v]) => [
         k,
-        redactInner(v, typeof k === "string" ? k : undefined, seen),
+        redactInner(v, typeof k === "string" ? k : undefined, seen, extra),
       ]),
     );
   }
   if (value instanceof Set) {
-    return new Set([...value].map((v) => redactInner(v, undefined, seen)));
+    return new Set([...value].map((v) => redactInner(v, undefined, seen, extra)));
   }
   if (Array.isArray(value)) {
-    return value.map((v) => redactInner(v, undefined, seen));
+    return value.map((v) => redactInner(v, undefined, seen, extra));
   }
   const source = value as Record<string | symbol, unknown>;
   const out: Record<string | symbol, unknown> = Object.create(
     Object.getPrototypeOf(value),
   );
   for (const k of Reflect.ownKeys(source)) {
-    out[k] = redactInner(source[k], typeof k === "string" ? k : undefined, seen);
+    out[k] = redactInner(source[k], typeof k === "string" ? k : undefined, seen, extra);
   }
   return out;
 }
