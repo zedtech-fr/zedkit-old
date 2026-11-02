@@ -41,3 +41,8 @@ test("changeset gate in check-api-report.sh lists a report for each package", ()
     assert.match(block, new RegExp(`packages/${pkg}/etc/zedkit-${pkg}\\.api\\.md`));
   }
 });
+
+test("changeset gate skips the version PR branch", () => {
+  assert.match(script, /changeset-release\/main/);
+  assert.match(script, /skip changeset gate on version PR/);
+});

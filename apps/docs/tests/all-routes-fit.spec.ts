@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { gotoStaticRoute } from "./goto-static-route.js";
+
 /**
  * Every published route, five widths: no sideways page scroll, no runtime
  * errors, one h1, and every image has an alt. The route list comes from the
@@ -32,7 +34,7 @@ test("every route fits every width and stays error-free", async ({ page, request
   for (const path of all) {
     errors.length = 0;
     await page.setViewportSize({ width: WIDTHS[0], height: 900 });
-    const response = await page.goto(path, { waitUntil: "networkidle" });
+    const response = await gotoStaticRoute(page, path);
     if (!response || response.status() !== 200) {
       problems.push(`${path}: status ${response?.status()}`);
       continue;
