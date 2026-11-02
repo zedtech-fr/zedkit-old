@@ -1,5 +1,50 @@
 # @zedtech/zedkit-ui
 
+## 1.0.0
+
+### Major Changes
+
+- f283163: Catalog maturity Option B: 60 stable, 39 beta, and 8 alpha needs; docs badges only for alpha (sidebar), beta (page + catalog), and none for stable or on the home gallery.
+
+  **1.0.0** on ui, core, server, nest, seo, quality, and payload-seo marks stable catalog entries under real semver. This release does not change runtime behavior by itself — it is a honesty and labeling step. The semver guarantee applies to **stable** needs only (no badge on the docs site). Alpha and beta entries in the same package can still change in minors with migration notes and are not covered by that guarantee.
+
+  **Consumers:** move dependencies from `~0.x` to `^1.0.0` on the packages you use. Follow each package `CHANGELOG.md` for any migrations you have not applied yet (for example ui 0.8–0.9). Packages that stay on 0.x (ai, observability, flags, devtools, i18n, storage) receive minor bumps for catalog status only.
+
+### Minor Changes
+
+- 41d5374: **POTENTIALLY BREAKING:** `IdentityTokens` light/dark pairs now include `primaryForeground` and `mutedForeground`. JSON exports emit them in CSS; older saved JSON without those keys still parses (both default to `foreground`). Contrast warnings cover primary and muted text pairs; `identityContrastTokenLabel` labels them in UI.
+- e59b6ef: Add ThemeScope so overlays inherit the nearest identity and mode. Dark tokens apply on the identity node itself; dialogs, selects, menus, popovers, tooltips and toasts portal into that scope.
+
+### Patch Changes
+
+- 0130dc4: Docs-only catalog update for the unified component page template (Button reference).
+- 12f006a: A plain `.dark` section inside a look (Press, Tide, Volt, Maison, Glass) keeps that look and only adds its dark tokens, instead of falling back to the stock dark palette.
+- 4da0034: DataTable renders loading, error, and empty states outside the horizontal scroller; filter misses show a clear-filters action and differ from an empty dataset (`emptyMessage` / `emptyAction`).
+- 3973542: Dialog and drawer overlay chrome uses one transparent surface (D5): aligned header copy, footer action spacing, calmer close control focus, and initial focus on the panel without a heavy ring.
+- 09b83e9: Fix button contrast inside destructive alerts, switch thumb geometry across identity density, and DataTable sort header semantics (`aria-sort` plus labelled sort controls).
+- 47f0f7c: The focus ring is now an outline instead of a box-shadow, so component shadows (`shadow-none`, the active-tab shadow) can no longer erase it on tabs and selects, and forced-colors mode keeps drawing it. Tide's text on its coral highlight reaches 4.5:1.
+- e384671: A plain `.dark` section inside an identity scope follows the nearest scope even when a deeper scope of another look sits between them (Tide scope to Press scope to dark used to resolve to Tide, by file order). Two looks nested alternately (X in Y in X) need `ThemeScope mode="dark"`, which carries the look on its own node and is exact at any depth.
+
+  `parseIdentityTokens` takes only plain CSS values from pasted recipes and shared links: braces, semicolons, comments, at-rules, `url()`, unbalanced brackets or quotes are rejected, and a value is capped at 400 characters. Real font stacks, shadows and `calc()`/`var()` values still pass. Rejected values are ones that wrote past their declaration into the stylesheet.
+
+  `ScrollScenes` fades scenes with opacity only: an animated `translate` made the scene the containing block of its `position: fixed` content, so a toast inside it was laid out against the scene.
+
+  `SecretField` with `multiline` wraps, as its docs always said: it was `white-space: nowrap` inside a textarea that scrolled sideways, so a long install command did not read in full on a phone.
+
+  `TabsTrigger` draws its focus ring inside the trigger: `TabsList` scrolls sideways, which clipped a ring drawn outside its 4px padding.
+
+- 8a49360: `PageHeader` accepts `titleAs="h2"` for headers shown inside a page that already has an `h1`. Combobox and MultiSelect no longer log a downshift ref warning while closed.
+- 3d30c9a: Quiet button ghost, outline, and link hover states (muted tint or underline only, no accent fill). Adds a `link` variant and pressed styling for outline controls.
+- 219861e: Soften inline code and registry command fields: quiet tinted chips without heavy borders, and horizontal scroll for long shadcn add commands on narrow screens.
+- 8dcbf60: Table rows tint with 12% of the identity accent on hover instead of the full accent fill, so Tide and Volt no longer flash a saturated row.
+- cc87ac0: `ThemeScope` composes a consumer `ref` (object or callback, cleanup included) with its internal one, so overlays keep mounting in the scope. A scope that only pins a mode inside another scope keeps that scope's identity, and a page-root identity no longer overrides the dark section of a nearer identity. The scoped Mist reset follows the Inter family Mist is documented to use. Adds A11y guidance for SecretField, Form, Stack, Select and Checkbox/Switch.
+- 9ad2249: IdentityScript accepts an optional opt-in storage key so a site can default one look until the visitor explicitly opts in. applyCustomIdentity accepts a separate persist key when applying a named preset to a custom storage slot.
+- a874bf8: Tide light accent returns to the 3:1 brand coral so the shipped presets pass the identity contrast guard again, and the compact token table matches the CSS.
+- acf38b7: Align Tide `--zk-type-h1-weight` with the shared P0 site scale (600) and set dark `--zk-subtle-foreground` for contrast on metadata copy.
+- 4a53526: Clamp identity heading tracking to −0.02em and add `--zk-subtle-foreground` for label/meta tiers.
+- 9b3a5be: WizardSteps shows a compact step summary and progress bar below the `sm` breakpoint; the horizontal step list is unchanged from `sm` up.
+- @zedtech/zedkit-i18n@0.2.1
+
 ## 0.9.4
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@zedtech/zedkit-quality",
-  "version": "0.6.1",
+  "version": "1.0.0",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"

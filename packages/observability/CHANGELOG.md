@@ -1,5 +1,40 @@
 # @zedtech/zedkit-observability
 
+## 0.3.0
+
+### Minor Changes
+
+- f283163: Catalog maturity Option B: 60 stable, 39 beta, and 8 alpha needs; docs badges only for alpha (sidebar), beta (page + catalog), and none for stable or on the home gallery.
+
+  **1.0.0** on ui, core, server, nest, seo, quality, and payload-seo marks stable catalog entries under real semver. This release does not change runtime behavior by itself — it is a honesty and labeling step. The semver guarantee applies to **stable** needs only (no badge on the docs site). Alpha and beta entries in the same package can still change in minors with migration notes and are not covered by that guarantee.
+
+  **Consumers:** move dependencies from `~0.x` to `^1.0.0` on the packages you use. Follow each package `CHANGELOG.md` for any migrations you have not applied yet (for example ui 0.8–0.9). Packages that stay on 0.x (ai, observability, flags, devtools, i18n, storage) receive minor bumps for catalog status only.
+
+### Patch Changes
+
+- Updated dependencies [0130dc4]
+- Updated dependencies [12f006a]
+- Updated dependencies [4da0034]
+- Updated dependencies [3973542]
+- Updated dependencies [09b83e9]
+- Updated dependencies [47f0f7c]
+- Updated dependencies [41d5374]
+- Updated dependencies [f283163]
+- Updated dependencies [e384671]
+- Updated dependencies [8a49360]
+- Updated dependencies [3d30c9a]
+- Updated dependencies [219861e]
+- Updated dependencies [8dcbf60]
+- Updated dependencies [cc87ac0]
+- Updated dependencies [9ad2249]
+- Updated dependencies [e59b6ef]
+- Updated dependencies [a874bf8]
+- Updated dependencies [acf38b7]
+- Updated dependencies [4a53526]
+- Updated dependencies [9b3a5be]
+  - @zedtech/zedkit-ui@1.0.0
+  - @zedtech/zedkit-core@1.0.0
+
 ## 0.2.11
 
 ### Patch Changes
