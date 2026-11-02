@@ -416,6 +416,10 @@ if (invoked) {
   listenSuggest({ host: "0.0.0.0", port: Number(process.env.PORT || 3001) }).then(({ port, config }) => {
     console.log(`suggest: listening on ${port}; generation ${config.problems.length === 0 ? "on" : `off (${config.problems.join("; ")})`}`);
     // Where calls go, never the key: a 404 from the provider is a wrong URL or model, and this is how to see which.
+    for (const p of providersOf(config))
+      fetch(`${p.base.endsWith("/v1") ? p.base : `${p.base}/v1`}/models`, { headers: { authorization: `Bearer ${p.key}` }, signal: AbortSignal.timeout(10_000) })
+        .then((r) => r.json().then((j) => console.log(`suggest: models ${r.status} ${JSON.stringify((j.data ?? []).map((m) => m.id))}`)))
+        .catch((e) => console.log(`suggest: models check failed ${e?.name}`));
     for (const p of providersOf(config)) console.log(`suggest: provider base#${fp(p.base)} model#${fp(p.model)} effort#${fp(p.effort)} key#${fp(p.key)} lengths ${p.base.length}/${p.model.length}/${p.effort.length}/${p.key.length}`);
   });
 }
