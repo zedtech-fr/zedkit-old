@@ -60,6 +60,14 @@ see `@zedtech/zedkit-core` instead.
 - `clientKeyFromForwardedFor(header, fallback = "local")` — rate-limit
   key from `X-Forwarded-For`: the last entry (appended by your proxy),
   never the spoofable first. Correct behind exactly one trusted proxy.
+- `checkEndpointUrl(url, { allowPrivate? })` / `isPrivateHostname(host)` —
+  SSRF guard for URLs your server calls on a customer's behalf (webhook
+  targets, callbacks). http/https only; refuses loopback, private,
+  link-local (cloud metadata), CGNAT, reserved and special-use names, and
+  sees through decimal/octal/hex IPv4 and IPv6 with an embedded IPv4.
+  Returns `{ ok: true, value: undefined }` or `{ ok: false, error }`. It
+  does not resolve DNS, so a name that points at a private address at
+  send time (DNS rebinding) is not caught.
 - `computeBackoffMs(attemptNo, random?)` — exponential retry backoff
   (2s × 3^(n-1), ±20% jitter, 1s floor, 1h cap).
 - `webhookSignatureHeader(secret, body, timestamp)` /
