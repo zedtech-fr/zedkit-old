@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { DEFAULT_IDENTITY } from "../lib/default-identity";
+import { openHeroPage } from "./hero-helpers";
 
 const BASE = "http://127.0.0.1:3100";
 
@@ -94,6 +95,7 @@ test("home hero proof follows site mode and can override dark (#1072)", async ({
 test("home hero embeds the interactive admin demo above the fold on desktop (#1111 L1b)", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto(BASE, { waitUntil: "networkidle" });
+  await openHeroPage(page, "Apps");
   const demo = page.locator("#demo").getByLabel("Interactive admin dashboard demo in the hero");
   await expect(demo.getByRole("button", { name: "Add app" })).toBeVisible();
   const box = await demo.getByRole("button", { name: "Add app" }).boundingBox();

@@ -4,6 +4,7 @@ export const homeIdentityLooksCopy = {
   title: "Same components, different products",
   body: "A bag shop, a newsroom, a SaaS app: each example is built from the same zedkit components. Only the identity changes, and type, shape, density and color change together.",
   liveNote: "Live components, not screenshots.",
+  scrollHint: "Keep scrolling to change the example, or pick one.",
   tabsAriaLabel: "Examples",
   factsSummary: (label: string) => `${label} identity`,
   factsEyebrow: "Identity",

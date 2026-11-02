@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { openHeroPage } from "./hero-helpers";
 
 const MOBILE = { width: 390, height: 844 };
 
@@ -7,6 +8,7 @@ test.describe("home dashboard mobile (#388)", () => {
 
   test("single card chrome, toolbar row, compact row actions", async ({ page }) => {
     await page.goto("/", { waitUntil: "networkidle" });
+    await openHeroPage(page, "Apps");
 
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
@@ -52,6 +54,7 @@ test.describe("home dashboard mobile (#388)", () => {
 
   test("edit sheet keeps side gutters, a visible handle, and clears the bottom edge", async ({ page }) => {
     await page.goto("/", { waitUntil: "networkidle" });
+    await openHeroPage(page, "Apps");
     const card = page.locator("[data-home-dashboard-card]");
     await card.scrollIntoViewIfNeeded();
     await card.getByRole("button", { name: "Edit console" }).click();
@@ -124,6 +127,7 @@ test.describe("home dashboard mobile (#388)", () => {
     test(`hero shows a full record row and actions at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 844 });
       await page.goto("/", { waitUntil: "networkidle" });
+      await openHeroPage(page, "Apps");
       const card = page.locator("[data-home-dashboard-card]");
       await card.scrollIntoViewIfNeeded();
       const preview = page.locator("[data-home-hero-preview]");

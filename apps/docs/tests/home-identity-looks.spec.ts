@@ -12,16 +12,34 @@ const IDENTITIES = [
   { id: "glass", name: "Glass", product: "SaaS app", heading: "Usage", action: "Invite teammate" },
 ] as const;
 
+/** The examples arrive with a short entrance; checks that read colours or positions wait for it to be over. */
+async function settle(looks: Locator) {
+  await looks.evaluate(
+    (node) =>
+      new Promise<void>((resolve) => {
+        const done = () => node.getAnimations({ subtree: true }).every((animation) => animation.effect?.getComputedTiming().iterations === Infinity);
+        const tick = () => (done() ? resolve() : requestAnimationFrame(tick));
+        tick();
+      }),
+  );
+}
+
+/**
+ * Opens the section at its top, above the pinned stretch, so the first example is the first one. Where the examples
+ * follow the scroll (wide, tall, motion allowed), scrolling to the middle of the section would pick one by position.
+ */
 async function openLooks(page: Page, width = 1440, height = 900): Promise<{ looks: Locator; stage: Locator }> {
   await page.setViewportSize({ width, height });
   await page.goto("/", { waitUntil: "networkidle" });
   const looks = page.locator("[data-home-identity-looks]");
-  await looks.scrollIntoViewIfNeeded();
+  await looks.evaluate((node) => node.scrollIntoView({ block: "start" }));
+  await settle(looks);
   return { looks, stage: looks.locator("[data-home-identity-stage]") };
 }
 
 async function pick(looks: Locator, product: string) {
   await looks.getByRole("tab", { name: product }).click();
+  await settle(looks);
 }
 
 test("the section is a set of examples, not a count of identities", async ({ page }) => {

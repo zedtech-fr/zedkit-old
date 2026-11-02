@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { openHeroPage } from "./hero-helpers";
 
 const BASE = "http://127.0.0.1:3100";
 const DESKTOP_WIDTHS = [1280, 1440] as const;
@@ -80,6 +81,7 @@ for (const theme of ["light", "dark"] as const) {
     await page.addInitScript((mode) => localStorage.setItem("theme", mode), theme);
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(BASE, { waitUntil: "networkidle" });
+    await openHeroPage(page, "Apps");
 
     const card = page.locator("[data-home-dashboard-card]");
     await card.scrollIntoViewIfNeeded();

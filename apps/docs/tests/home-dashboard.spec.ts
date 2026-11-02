@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { openHeroPage } from "./hero-helpers";
 
 const BASE = "http://127.0.0.1:3100";
 
@@ -14,6 +15,7 @@ async function axeDashboard(page: import("@playwright/test").Page) {
 
 test("home dashboard: row selection and add-app toast (no detail panel in hero)", async ({ page }) => {
   await page.goto(BASE, { waitUntil: "networkidle" });
+  await openHeroPage(page, "Apps");
   const demo = page.locator("#demo").getByLabel("Interactive admin dashboard demo in the hero");
 
   await demo.getByRole("button", { name: "worker", exact: true }).click();
@@ -28,6 +30,7 @@ test("home dashboard: row selection and add-app toast (no detail panel in hero)"
 
 test("home dashboard: create, edit, delete with axe on ready state", async ({ page }) => {
   await page.goto(BASE, { waitUntil: "networkidle" });
+  await openHeroPage(page, "Apps");
   const demo = page.locator("#demo").getByLabel("Interactive admin dashboard demo in the hero");
   await axeDashboard(page);
 
@@ -49,6 +52,7 @@ test("home dashboard: create, edit, delete with axe on ready state", async ({ pa
 
 test("home dashboard: closing the create drawer restores focus to Add app", async ({ page }) => {
   await page.goto(BASE, { waitUntil: "networkidle" });
+  await openHeroPage(page, "Apps");
   const demo = page.locator("#demo").getByLabel("Interactive admin dashboard demo in the hero");
   await expect(demo).toBeVisible();
   const add = demo.getByRole("button", { name: "Add app" });
@@ -62,6 +66,7 @@ test("home dashboard: closing the create drawer restores focus to Add app", asyn
 
 test("home dashboard: create success restores focus to Add app", async ({ page }) => {
   await page.goto(BASE, { waitUntil: "networkidle" });
+  await openHeroPage(page, "Apps");
   const demo = page.locator("#demo").getByLabel("Interactive admin dashboard demo in the hero");
   const add = demo.getByRole("button", { name: "Add app" });
   await add.click();
@@ -73,6 +78,7 @@ test("home dashboard: create success restores focus to Add app", async ({ page }
 
 test("home dashboard: canceling edit restores focus to the edit trigger", async ({ page }) => {
   await page.goto(BASE, { waitUntil: "networkidle" });
+  await openHeroPage(page, "Apps");
   const demo = page.locator("#demo").getByLabel("Interactive admin dashboard demo in the hero");
   const edit = demo.getByRole("button", { name: "Edit console" });
   await edit.click();
@@ -85,6 +91,7 @@ test("home dashboard: canceling edit restores focus to the edit trigger", async 
 
 test("home dashboard: preview modes are keyboard reachable", async ({ page }) => {
   await page.goto(BASE, { waitUntil: "networkidle" });
+  await openHeroPage(page, "Apps");
   const demo = page.locator("#demo").getByLabel("Interactive admin dashboard demo in the hero");
   const display = page.locator("[data-hero-demo-display]");
   await display.getByRole("combobox", { name: "Table preview mode" }).click();

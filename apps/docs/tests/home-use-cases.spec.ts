@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { DEFAULT_IDENTITY } from "../lib/default-identity";
+import { openHeroPage } from "./hero-helpers";
 
 /**
  * Home: hero Display row scopes the specimen; identities are linked from the secondary band.
@@ -71,6 +72,7 @@ test("the identities band links to the demo editor and no-code route (#1092)", a
 
 test("Display preview mode reaches the table without a toolbar select", async ({ page }) => {
   await page.goto("/");
+  await openHeroPage(page, "Apps");
   const card = page.locator("[data-home-dashboard-card]");
   await card.scrollIntoViewIfNeeded();
   await expect(card.locator("[data-demo-toolbar] [role=combobox]")).toHaveCount(0);
