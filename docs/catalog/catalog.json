@@ -863,6 +863,19 @@
               "code": "import { compactRequestSerializers, createNestApp, createRequestLogLevel } from \"@zedtech/zedkit-nest\";\nconst app = await createNestApp({\n  module: AppModule,\n  logger: {\n    serializers: compactRequestSerializers(),\n    customLogLevel: createRequestLogLevel({ quietPaths: [\"/health\"] }),\n  },\n});"
             }
           ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-nest",
+                "exports": [
+                  "compactRequestSerializers",
+                  "createRequestLogLevel",
+                  "LoggerOptions"
+                ]
+              }
+            ]
+          },
           "seeAlso": [
             "Ship request logs without leaking credentials",
             "Bootstrap a Nest app"
