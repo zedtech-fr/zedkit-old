@@ -1,5 +1,13 @@
 # @zedtech/zedkit-ui
 
+## 1.0.1
+
+### Patch Changes
+
+- 2fde8ae: Identity tokens: a CSS value with a control character (a newline in a quoted string, for example) is now refused, because it would drop the declaration that follows it.
+- 2fde8ae: Catalog entries for Theme, Motion and the TypeScript base now type their adoption (CSS import, CSS directive, utilities, attributes, extended config) instead of listing prose as exports. No code change; the install steps on the docs site are generated from these lines.
+- @zedtech/zedkit-i18n@0.2.1
+
 ## 1.0.0
 
 ### Major Changes
