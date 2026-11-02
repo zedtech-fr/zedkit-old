@@ -8,3 +8,7 @@ export {
   type VerifyWebhookOptions,
   webhookSignatureHeader,
 } from "./webhook-signature.js";
+export { hkdfKey, type HkdfKeyOptions } from "./hkdf.js";
+export { openSecret, sealSecret } from "./secret-box.js";
+export { checkoutSuffix, databaseNameFromUrl, suffixedDatabaseUrl } from "./test-db.js";
+export { clientKeyFromForwardedFor } from "./forwarded-for.js";
