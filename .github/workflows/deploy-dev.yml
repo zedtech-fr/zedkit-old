@@ -76,6 +76,13 @@ jobs:
         env:
           TARGET: ${{ secrets.DOCS_DEPLOY_USER }}@${{ secrets.DOCS_DEPLOY_HOST }}
         run: deploy/deploy.sh --dev "$TARGET"
+      - name: Make the dev suggest release stamp readable
+        # deploy.sh writes release.json from mktemp (0600, owned by the deploy user); suggest-dev runs as root with
+        # cap_drop ALL (no DAC override), so the server cannot read it and crash-loops. Make it 0644 and restart.
+        env:
+          TARGET: ${{ secrets.DOCS_DEPLOY_USER }}@${{ secrets.DOCS_DEPLOY_HOST }}
+        run: |
+          ssh "$TARGET" 'cd /srv/app && f=suggest-dev/code/release.json && if [ -f "$f" ]; then chmod 644 "$f" && docker compose -f compose.yaml -f compose.override.yaml -f compose.dev.yaml restart suggest-dev; fi'
       - name: Verify dev build stamp
         run: |
           for _ in $(seq 1 5); do
