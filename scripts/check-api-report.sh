@@ -16,6 +16,7 @@ fail=0
 # pkg|types-entry|report file  (quality has a second export path)
 entries=(
   "ai|dist/index.d.ts|zedkit-ai.api.md"
+  "brand|dist/index.d.ts|zedkit-brand.api.md"
   "core|dist/index.d.ts|zedkit-core.api.md"
   "devtools|dist/index.d.ts|zedkit-devtools.api.md"
   "flags|dist/index.d.ts|zedkit-flags.api.md"
@@ -131,6 +132,7 @@ if probe.returncode != 0:
 
 reports = [
     ("packages/ai/etc/zedkit-ai.api.md", "@zedtech/zedkit-ai"),
+    ("packages/brand/etc/zedkit-brand.api.md", "@zedtech/zedkit-brand"),
     ("packages/core/etc/zedkit-core.api.md", "@zedtech/zedkit-core"),
     ("packages/devtools/etc/zedkit-devtools.api.md", "@zedtech/zedkit-devtools"),
     ("packages/flags/etc/zedkit-flags.api.md", "@zedtech/zedkit-flags"),

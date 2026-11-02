@@ -170,7 +170,7 @@ installs the full agent and command lists from `kit.json`.
   rejects it.
 - Cursor reads `.cursor/agents`, `.claude/agents` and `.codex/agents`
   ([docs](https://cursor.com/docs/subagents), checked 2026-10-24); the installer
-  links `.cursor/agents` anyway so a Cursor-only repo needs nothing else.
+  copies into `.cursor/agents` anyway so a Cursor-only repo needs nothing else.
 - Codex reads `.agents/skills` (it follows symlinks) and `AGENTS.md`
   ([docs](https://developers.openai.com/codex/skills), checked 2026-10-24), so
   it needs no adapter. The subagent files are not wired for Codex.

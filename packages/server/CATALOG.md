@@ -26,7 +26,7 @@ const env = loadEnv({ PORT: z.coerce.number(), DATABASE_URL: z.string().url() })
 
 ## Rate-limit calls per key
 
-- Import: `@zedtech/zedkit-server` — `MemoryRateLimiter`
+- Import: `@zedtech/zedkit-server` — `MemoryRateLimiter`, `MemoryRateLimiterOptions`
 - Wraps: `(none)`
 - Status: stable
 - Short name: Rate limiting
@@ -39,11 +39,14 @@ const env = loadEnv({ PORT: z.coerce.number(), DATABASE_URL: z.string().url() })
 import { MemoryRateLimiter } from "@zedtech/zedkit-server";
 const limiter = new MemoryRateLimiter();
 if (!limiter.allow(clientIp, 100)) return tooManyRequests();
+
+// Optional: another window, a test clock, a different sweep threshold.
+const perTenSeconds = new MemoryRateLimiter({ windowMs: 10_000, now: () => clock.now(), maxKeys: 5_000 });
 ```
 
 ## Redact secrets before logging
 
-- Import: `@zedtech/zedkit-server` — `redactValue`
+- Import: `@zedtech/zedkit-server` — `redactValue`, `RedactOptions`, `RedactValuePattern`
 - Wraps: `(none)`
 - Status: stable
 - Short name: Redaction
@@ -56,6 +59,10 @@ if (!limiter.allow(clientIp, 100)) return tooManyRequests();
 ```ts
 import { redactValue } from "@zedtech/zedkit-server";
 logger.info(redactValue({ user, token, headers }));
+
+// Add your own credential shape (replaces every match, before bearer/basic).
+const valuePatterns = [{ pattern: /\bsk_[A-Za-z0-9_-]{8,}\b/, replacement: "[redacted-key]" }];
+logger.info(redactValue(record, undefined, { valuePatterns }));
 ```
 
 ## Retry with exponential backoff
@@ -100,7 +107,7 @@ if (!verify(secret, rawBody, headers["webhook-signature"], { maxAgeSeconds: 300 
 - Status: stable
 - Short name: Postgres errors
 - Audience: Developers mapping Postgres driver errors to HTTP responses.
-- Purpose: Extract the Postgres error code so unique violations map to 409, not 500.
+- Purpose: Extract the Postgres error code (also from an ORM-wrapped `cause`) so unique violations map to 409, not 500.
 - When to use: Around writes where a conflict is an expected outcome (signup, idempotent creates).
 - When not to use: For query building or migrations — use your ORM or migration tool instead.
 - See also: `Return uniform error bodies`
@@ -207,4 +214,22 @@ import { clientKeyFromForwardedFor, MemoryRateLimiter } from "@zedtech/zedkit-se
 const limiter = new MemoryRateLimiter();
 const key = clientKeyFromForwardedFor(request.headers.get("x-forwarded-for"));
 if (!limiter.allow(key, 30)) return tooManyRequests();
+```
+
+## Refuse private targets before calling a customer URL
+
+- Import: `@zedtech/zedkit-server` — `checkEndpointUrl`, `isPrivateHostname`, `EndpointCheckOptions`, `EndpointCheckResult`
+- Wraps: `(none)`
+- Status: alpha
+- Short name: SSRF guard
+- Audience: Developers whose server sends requests to URLs that users or customers supply (webhooks, callbacks).
+- Purpose: Reject non-http(s) URLs and loopback, private, link-local, cloud-metadata and special-use hosts before any request is made.
+- When to use: When saving or sending to a user-supplied URL; keep `allowPrivate` for local development only.
+- When not to use: As your only defense. It does not resolve DNS, so DNS rebinding is not covered; also pin the resolved address, or send through an egress proxy.
+- See also: `Sign and verify webhook deliveries`
+
+```ts
+import { checkEndpointUrl } from "@zedtech/zedkit-server";
+const check = checkEndpointUrl(input, { allowPrivate: process.env.NODE_ENV !== "production" });
+if (!check.ok) return badRequest(check.error.message);
 ```

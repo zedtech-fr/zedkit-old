@@ -6,8 +6,8 @@
    test fixtures stay product-free too (the `inventory` domain).
 2. TypeScript strict, ESM, Node 22, pnpm. Dev deps use `catalog:`
    pins; peerDependencies use `^` ranges from the same pins (one copy
-   per app — Nest DI breaks across duplicates). This package has zero
-   runtime deps of its own.
+   per app — Nest DI breaks across duplicates). Runtime dep:
+   `@zedtech/zedkit-core` (`tryCatch` in the optional log-line transform).
 3. No raw `try`/`catch`: use `tryCatch`/`tryCatchAsync` from
    `@zedtech/zedkit-core` (add a `workspace:*` dep if a module ever needs it).
 4. Explicit named exports from `src/index.ts` (no `export *`, no default

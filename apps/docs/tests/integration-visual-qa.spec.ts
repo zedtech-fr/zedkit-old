@@ -113,11 +113,11 @@ async function assertLinkGhostHoverCalm(page: Page) {
 async function assertInstallSection(page: Page) {
   await page.goto(HOME, { waitUntil: "networkidle" });
   const section = page.locator("#install-or-copy");
-  // Two adoption paths (install, copy), one command, one copy button.
-  await expect(section.getByRole("tab")).toHaveCount(2);
-  await expect(section.getByRole("tab", { name: "Install", exact: true })).toHaveAttribute("aria-selected", "true");
-  await expect(section.getByRole("region", { name: "Package install command" })).toBeVisible();
-  await expect(section.getByRole("button", { name: "Copy package install command" })).toBeVisible();
+  // Two adoption paths (install, copy), the install command first, with its copy button.
+  await expect(section.getByRole("tablist", { name: "How to adopt" }).getByRole("tab")).toHaveCount(2);
+  await expect(section.getByRole("tab", { name: "Install package" })).toHaveAttribute("aria-selected", "true");
+  await expect(section.getByRole("region", { name: "Terminal" }).first()).toBeVisible();
+  await expect(section.getByRole("button", { name: "Copy terminal" })).toBeVisible();
 }
 
 async function assertMobileDrawerCoherent(page: Page) {

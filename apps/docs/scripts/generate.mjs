@@ -251,7 +251,10 @@ function componentPageMdx(pkg, need, version, spec, related, prose) {
     `  audience={${JSON.stringify(need.audience)}}`,
     `  whenToUse={${JSON.stringify(need.whenToUse)}}`,
     `  whenNotToUse={${JSON.stringify(need.whenNotToUse)}}`,
-    `  importLine={${JSON.stringify(need.import)}}`,
+    `  needName={${JSON.stringify(need.need)}}`,
+    `  shortName={${JSON.stringify(need.shortName ?? "")}}`,
+    `  adoption={${JSON.stringify(need.adoption)}}`,
+    ...(need.exampleFile ? [`  exampleFile={${JSON.stringify(need.exampleFile)}}`] : []),
     `  wraps={${JSON.stringify(need.wraps)}}`,
     `  registry={${JSON.stringify(registryBrick)}}`,
     `  demo={${JSON.stringify(spec.demo)}}`,
@@ -645,6 +648,7 @@ const CATALOG_AREA_BY_FOLDER = {
   observability: "backend",
   quality: "backend",
   i18n: "ui",
+  brand: "ui",
 };
 
 function catalogAreaForFolder(folder) {

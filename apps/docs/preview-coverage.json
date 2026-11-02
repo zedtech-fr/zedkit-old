@@ -1,6 +1,7 @@
 {
   "nonVisualPackages": [
     "@zedtech/zedkit-ai",
+    "@zedtech/zedkit-brand",
     "@zedtech/zedkit-core",
     "@zedtech/zedkit-devtools",
     "@zedtech/zedkit-nest",
