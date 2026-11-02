@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import { once } from "node:events";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { text } from "node:stream/consumers";
 import test from "node:test";
 
 import { openLedger } from "./ledger.mjs";
@@ -101,27 +103,15 @@ test("separate processes racing for the last dollars cannot overspend the ceilin
     console.log("ADMITTED " + admitted);
   `;
   const runs = await Promise.all(
-    ["a", "b", "c", "d", "e", "f"].map(
-      (id) =>
-        new Promise((resolve, reject) => {
-          const child = spawn(process.execPath, ["--input-type=module", "-e", worker, id], { stdio: ["ignore", "pipe", "inherit"] });
-          let out = "";
-          child.stdout.on("data", (chunk) => (out += chunk));
-          child.on("error", reject);
-          child.on("close", (code) => {
-            if (code !== 0) {
-              reject(new Error(`worker ${id} exited ${code ?? "unknown"} (output: ${out.trim() || "(empty)"})`));
-              return;
-            }
-            const match = /ADMITTED (\d+)/.exec(out);
-            if (!match) {
-              reject(new Error(`worker ${id} missing ADMITTED line (output: ${out.trim() || "(empty)"})`));
-              return;
-            }
-            resolve(Number(match[1]));
-          });
-        }),
-    ),
+    ["a", "b", "c", "d", "e", "f"].map(async (id) => {
+      const child = spawn(process.execPath, ["--input-type=module", "-e", worker, id], { stdio: ["ignore", "pipe", "inherit"] });
+      const out = await text(child.stdout);
+      const [code] = await once(child, "close");
+      assert.equal(code, 0, `worker ${id}: ${out}`);
+      const match = /ADMITTED (\d+)/.exec(out);
+      assert.ok(match, `worker ${id} output: ${JSON.stringify(out)}`);
+      return Number(match[1]);
+    }),
   );
   const total = runs.reduce((sum, value) => sum + value, 0);
   assert.equal(total, 10, `six processes admitted ${total} reservations of $0.10 against a $1.00 ceiling`);

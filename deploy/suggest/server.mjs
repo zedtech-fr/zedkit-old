@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 // POST /api/identity/suggest: a brief (and optional reference pages) in, a validated identity patch out.
 //
 // Order of the work is the point of this file. Everything that can refuse a request runs before anything that
@@ -307,7 +308,8 @@ async function suggest(ctx, req, res) {
 
   const base = { ms: now() - started, refs: references.length, costMicro: outcome.spent, calls: outcome.called };
   if (!outcome.result.ok) {
-    log({ outcome: `upstream-${outcome.result.kind}`, ...base });
+    // The provider's HTTP status is not a secret and is the first thing an operator needs.
+    log({ outcome: `upstream-${outcome.result.kind}`, ...base, ...(outcome.result.status ? { status: outcome.result.status, detail: outcome.result.detail } : {}) });
     if (outcome.result.kind === "aborted") return;
     return send(res, outcome.result.kind === "timeout" ? 504 : 502, { error: outcome.result.kind === "timeout" ? "timeout" : "upstream", references: referenceReport(references) }, setCookie);
   }
@@ -406,10 +408,19 @@ export function listenSuggest(options = {}) {
   });
 }
 
+// A short fingerprint: comparable with a known value, unreadable in a log that masks secrets anyway.
+const fp = (value) => createHash("sha256").update(String(value)).digest("hex").slice(0, 8);
+
 const invoked = process.argv[1] && fileURLToPath(import.meta.url) === resolvePath(process.argv[1]);
 if (invoked) {
   listenSuggest({ host: "0.0.0.0", port: Number(process.env.PORT || 3001) }).then(({ port, config }) => {
     console.log(`suggest: listening on ${port}; generation ${config.problems.length === 0 ? "on" : `off (${config.problems.join("; ")})`}`);
+    // Where calls go, never the key: a 404 from the provider is a wrong URL or model, and this is how to see which.
+    for (const p of providersOf(config))
+      fetch(`${p.base.endsWith("/v1") ? p.base : `${p.base}/v1`}/models`, { headers: { authorization: `Bearer ${p.key}` }, signal: AbortSignal.timeout(10_000) })
+        .then((r) => r.json().then((j) => console.log(`suggest: models ${r.status} ${JSON.stringify((j.data ?? []).map((m) => m.id))}`)))
+        .catch((e) => console.log(`suggest: models check failed ${e?.name}`));
+    for (const p of providersOf(config)) console.log(`suggest: provider base#${fp(p.base)} model#${fp(p.model)} effort#${fp(p.effort)} key#${fp(p.key)} lengths ${p.base.length}/${p.model.length}/${p.effort.length}/${p.key.length}`);
   });
 }
 

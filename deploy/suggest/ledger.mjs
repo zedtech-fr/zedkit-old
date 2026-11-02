@@ -67,7 +67,6 @@ function isSqliteBusy(error) {
 }
 
 /** Concurrent openLedger calls can race on first WAL; busy_timeout applies after it is set. */
-/** Concurrent openLedger calls can race on first WAL; busy_timeout applies after it is set. */
 function execBusyRetry(db, sql, attempts = 50) {
   for (let i = 0; i < attempts; i += 1) {
     /* eslint-disable no-restricted-syntax -- deploy suggest has no workspace deps; sync SQLite busy retry */
