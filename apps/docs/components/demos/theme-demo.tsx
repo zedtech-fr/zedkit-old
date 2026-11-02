@@ -72,7 +72,7 @@ export function ThemeTokensDemo() {
         <ul aria-label={themeCopy.releasesLabel} className="divide-y divide-border rounded-md bg-muted">
           {RELEASES.map((release) => (
             <li key={release.name} className="flex min-w-0 items-center justify-between gap-3 px-3 py-2 text-sm">
-              <Text as="span" className="min-w-0 truncate">{release.name}</Text>
+              <Text as="span" className="min-w-0 wrap-anywhere">{release.name}</Text>
               <Badge variant={release.trend === "up" ? "success" : "destructive"} className="shrink-0 gap-1">
                 {release.trend === "up" ? <ArrowUpRight className="size-3" aria-hidden /> : <ArrowDownRight className="size-3" aria-hidden />}
                 {release.state}

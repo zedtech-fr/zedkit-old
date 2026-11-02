@@ -2,7 +2,7 @@
 export const secretFieldCopy = {
   key: "API key (shown once)",
   keyValue: "zk_live_49f2c1",
-  command: "Install command (multiline)",
+  command: "Install command",
   copy: "Copy install command",
 } as const;
 

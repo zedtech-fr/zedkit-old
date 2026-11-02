@@ -17,7 +17,7 @@ import {
   workspaceToolchain,
 } from "@/content/maturity-compatibility";
 import { maturityCompatibilityCopy } from "@/components/i18n/maturity-compatibility-copy";
-import { maturityBadgeVariant } from "@/lib/maturity-status";
+import { maturityBadgeClass, maturityBadgeVariant } from "@/lib/maturity-status";
 
 // Same limits as docs/catalog/README.md#maturity. Wording lives in the copy module.
 const MATURITY_LIMITS = [
@@ -83,7 +83,10 @@ export function MaturityCompatibilityView() {
           {MATURITY_LIMITS.map((row) => (
             <Stack key={row.status} gap={2}>
               {row.showBadge ? (
-                <Badge variant={maturityBadgeVariant(maturityCompatibilityCopy.badges[row.status])} className="w-fit">
+                <Badge
+                  variant={maturityBadgeVariant(maturityCompatibilityCopy.badges[row.status])}
+                  className={`w-fit ${maturityBadgeClass(maturityCompatibilityCopy.badges[row.status])}`}
+                >
                   {maturityCompatibilityCopy.badges[row.status]}
                 </Badge>
               ) : (

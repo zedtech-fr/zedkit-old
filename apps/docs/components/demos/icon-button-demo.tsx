@@ -12,7 +12,7 @@ export function IconButtonDemo() {
     <Stack className="min-w-0 rounded-lg border border-border bg-background">
       <header className="flex min-w-0 items-center justify-between gap-3 border-b border-border px-4 py-3">
         <Stack gap={1} className="min-w-0">
-          <Heading level={2} className="truncate">
+          <Heading level={2} className="text-xl text-balance">
             {iconButtonCopy.demo.title}
           </Heading>
           <Text variant="muted" className="text-xs">

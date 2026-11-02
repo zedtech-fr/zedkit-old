@@ -1098,7 +1098,7 @@ toast.error("Upload failed"); // typed variants: success | error | info | warnin
 - Status: stable
 - Short name: SecretField
 - Audience: Developers displaying API keys and tokens shown only once.
-- Purpose: A read-only shown-once value with one-click copy; `multiline` wraps long values (install commands, short snippets) so they read in full on narrow screens.
+- Purpose: A read-only shown-once value with one-click copy; `multiline` wraps long values (install commands, short snippets) in a textarea that grows, so they read in full on narrow screens.
 - When to use: Right after creating a credential the user must store.
 - When not to use: For passwords the user typed — use a password Input instead.
 - See also: `Collect text input with a label`
