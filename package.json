@@ -42,7 +42,6 @@
     "@microsoft/api-extractor": "catalog:",
     "@playwright/test": "catalog:",
     "@vitest/coverage-v8": "catalog:",
-    "@zedtech/zedkit-core": "workspace:*",
     "@zedtech/zedkit-quality": "workspace:*",
     "eslint": "catalog:",
     "eslint-plugin-better-tailwindcss": "catalog:",
