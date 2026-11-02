@@ -303,7 +303,7 @@ test("the same limits hold across a restart and across two instances sharing the
 });
 
 test("fallback: a rate-limit refusal tries the second origin once; the refusal did no work, so only the reply is charged", async () => {
-  const p = provider((call) => (call.url.startsWith("https://primary.test") ? refusal(429) : reply(PATCH, { usage: { prompt_tokens: 1000, completion_tokens: 500 } })));
+  const p = provider((call) => (new URL(call.url).hostname === "primary.test" ? refusal(429) : reply(PATCH, { usage: { prompt_tokens: 1000, completion_tokens: 500 } })));
   const env = configured({ IDENTITY_AI_FALLBACK_BASE_URL: "https://fallback.test", IDENTITY_AI_FALLBACK_API_KEY: "sk-fallback", IDENTITY_AI_FALLBACK_MODEL: "fallback-model", IDENTITY_AI_FALLBACK_PRICE_INPUT_USD_PER_MTOK: "1", IDENTITY_AI_FALLBACK_PRICE_OUTPUT_USD_PER_MTOK: "10" });
   await withServer({ env, fetchImpl: p.fetchImpl }, async ({ port, ledger }) => {
     const res = await post(port, body());
@@ -511,7 +511,7 @@ function worstOf(env, payload, urls = []) {
 const withFallback = { IDENTITY_AI_FALLBACK_BASE_URL: "https://fallback.test", IDENTITY_AI_FALLBACK_API_KEY: "k", IDENTITY_AI_FALLBACK_MODEL: "m", IDENTITY_AI_FALLBACK_PRICE_INPUT_USD_PER_MTOK: "1", IDENTITY_AI_FALLBACK_PRICE_OUTPUT_USD_PER_MTOK: "10" };
 
 test("a provider server error may have done the work: it is charged at the worst case, then the fallback is tried", async () => {
-  const p = provider((call) => (call.url.startsWith("https://primary.test") ? refusal(504) : reply(PATCH, { usage: { prompt_tokens: 1000, completion_tokens: 500 } })));
+  const p = provider((call) => (new URL(call.url).hostname === "primary.test" ? refusal(504) : reply(PATCH, { usage: { prompt_tokens: 1000, completion_tokens: 500 } })));
   const env = configured(withFallback);
   const payload = body();
   await withServer({ env, fetchImpl: p.fetchImpl }, async ({ port, ledger }) => {

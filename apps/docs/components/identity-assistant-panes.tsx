@@ -4,7 +4,7 @@ import type { RefObject } from "react";
 import { Stack, Text, cn, type IdentityTokens } from "@zedtech/zedkit-ui";
 
 import { identityAssistantCopy as copy } from "@/components/i18n/identity-assistant-copy";
-import { Composer, ProposalCard, ReferenceReportList, Thread, UnavailableBanner, type View } from "@/components/identity-assistant-parts";
+import { BriefForm, ProposalCard, ReferenceReportList, Thread, UnavailableBanner, type View } from "@/components/identity-assistant-parts";
 import { IdentityMiniPreview } from "@/components/identity-mini-preview";
 import { DetectedLinks } from "@/components/identity-references";
 import type { Unavailable } from "@/lib/identity-assistant";
@@ -26,7 +26,7 @@ export function ConversationPane(props: {
     <Stack gap={4} className={cn("min-w-0", props.view === "preview" && "max-lg:hidden")} data-assistant-pane="conversation">
       {props.off ? <UnavailableBanner reason={props.off} /> : null}
       <Thread turns={props.session.thread} />
-      <Composer
+      <BriefForm
         value={props.brief}
         onValue={props.onBrief}
         refining={props.session.thread.length > 0}

@@ -113,6 +113,13 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+/** A fixed program with arguments: nothing is parsed by a shell, so a path with a space or a quote stays one argument. */
+function run(file, args, cwd, env = {}) {
+  console.log(`\n$ ${[file, ...args].join(" ")}`);
+  execFileSync(file, args, { cwd, stdio: "inherit", env: { ...process.env, CI: "1", NEXT_TELEMETRY_DISABLED: "1", ...env } });
+}
+
+/** A command exactly as the page shows it to a person: a shell line, because that is what is being tested. */
 function sh(command, cwd, env = {}) {
   console.log(`\n$ ${command}`);
   execFileSync("bash", ["-c", command], {
@@ -240,11 +247,11 @@ async function main() {
   const template = join(work, "app");
   let tarball = null;
   if (PACKAGE_SOURCE === "local") {
-    sh("pnpm exec turbo run build --filter=@zedtech/zedkit-ui", ROOT);
-    sh(`pnpm pack --pack-destination ${work}`, join(ROOT, "packages/ui"));
+    run("pnpm", ["exec", "turbo", "run", "build", "--filter=@zedtech/zedkit-ui"], ROOT);
+    run("pnpm", ["pack", "--pack-destination", work], join(ROOT, "packages/ui"));
     tarball = execFileSync("bash", ["-c", `ls ${work}/*.tgz`], { encoding: "utf8" }).trim();
   }
-  sh(`pnpm dlx create-next-app@${NEXT_APP} app --ts --tailwind --eslint --app --src-dir --import-alias "@/*" --use-pnpm --skip-install --yes`, work);
+  run("pnpm", ["dlx", `create-next-app@${NEXT_APP}`, "app", "--ts", "--tailwind", "--eslint", "--app", "--src-dir", "--import-alias", "@/*", "--use-pnpm", "--skip-install", "--yes"], work);
 
   const { chromium } = await import("@playwright/test");
   const failures = [];

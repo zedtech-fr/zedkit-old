@@ -43,7 +43,7 @@ export function noticeText(notice: Notice): string {
 }
 
 /** The one place a brief is written and sent. Typing here costs nothing; only pressing the button asks the assistant. */
-export function Composer({
+export function BriefForm({
   value,
   onValue,
   refining,

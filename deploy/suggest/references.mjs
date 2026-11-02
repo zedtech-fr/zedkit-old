@@ -166,15 +166,16 @@ export function guardedRequest(url, { resolve, signal, maxBytes }) {
   });
 }
 
+const ENTITIES = { nbsp: " ", amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", "#39": "'" };
+
+/** One pass, so `&amp;lt;` stays the text `&lt;` instead of being unescaped twice. */
 function decodeEntities(text) {
-  return text
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&amp;/gi, "&")
-    .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">")
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;|&apos;/gi, "'")
-    .replace(/&#(\d{1,6});/g, (_m, code) => (Number(code) < 0x110000 ? String.fromCodePoint(Number(code)) : " "));
+  return text.replace(/&(nbsp|amp|lt|gt|quot|apos|#39|#\d{1,6});/gi, (match, name) => {
+    const key = name.toLowerCase();
+    if (key in ENTITIES) return ENTITIES[key];
+    const code = Number(key.slice(1));
+    return code < 0x110000 ? String.fromCodePoint(code) : " ";
+  });
 }
 
 // Well-formed and free of control characters, so that a field costs at most 3 bytes per UTF-16 unit once serialised

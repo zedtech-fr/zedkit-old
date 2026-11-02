@@ -234,3 +234,7 @@ test("what reaches the model is well-formed and free of control characters, so i
     assert.ok(Buffer.byteLength(JSON.stringify(value)) <= value.length * 3 + 2, "at most 3 bytes per unit once serialised");
   }
 });
+
+test("an entity is decoded once: &amp;lt; is the text &lt;, never a bracket", () => {
+  assert.equal(extractReference("<p>a &amp;lt;b&amp;gt; &lt;c&gt; &#65;</p>", 200).text, "a &lt;b&gt; <c> A");
+});
