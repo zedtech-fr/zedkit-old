@@ -1,7 +1,12 @@
 import { expect, test } from "@playwright/test";
 import { identityPresets, tokensToCss, withIdentityDarkPair, type IdentityTokens } from "@zedtech/zedkit-ui";
 
-import { LIGHT_KEYS, SCALAR_KEYS } from "../lib/identity-editor-search";
+import {
+  LIGHT_KEYS,
+  SCALAR_KEYS,
+  parseIdentityEditorSearch,
+  serializeIdentityEditorSearch,
+} from "../lib/identity-editor-search";
 import { parseRecipe, serializeRecipe } from "../lib/identity-recipe";
 
 /** The export is a recipe (see the export copy). These tests pin what that recipe preserves. */
@@ -61,6 +66,61 @@ test("the recipe keeps independent light and dark palettes (no flattening to one
   if (!result.ok) throw new Error("import failed");
   expect(result.tokens.light.background).not.toBe(result.tokens.dark.background);
   expect(result.tokens.light.primary).not.toBe(result.tokens.dark.primary);
+});
+
+/** The shareable link is the second way a draft leaves the editor: it must carry what the recipe carries. */
+test.describe("the editor link carries the whole recipe", () => {
+  const withFonts = (tokens: IdentityTokens): IdentityTokens => ({
+    ...clone(tokens),
+    fontSans: '"Test Sans", ui-sans-serif, sans-serif',
+    fontDisplay: '"Test Display", Georgia, serif',
+  });
+
+  test("custom font stacks survive link serialization and restoration", () => {
+    for (const base of [identityPresets.mist, identityPresets.press, identityPresets.volt]) {
+      const edited = withFonts(base);
+      const restored = parseIdentityEditorSearch(serializeIdentityEditorSearch("mist", edited, false));
+      expect(restored.tokens.fontSans).toBe(edited.fontSans);
+      expect(restored.tokens.fontDisplay).toBe(edited.fontDisplay);
+    }
+  });
+
+  test("a font that differs from the preset is written once, one that matches is not", () => {
+    const query = new URLSearchParams(
+      serializeIdentityEditorSearch("mist", { ...clone(identityPresets.mist), fontDisplay: '"Test Display", serif' }, false),
+    );
+    expect(query.get("fontDisplay")).toBe('"Test Display", serif');
+    expect(query.has("fontSans")).toBe(false);
+  });
+
+  test("independent light and dark palettes stay independent next to the fonts", () => {
+    const edited = withFonts(identityPresets.press);
+    edited.light.primary = "10 50% 30%";
+    edited.dark.primary = "200 60% 70%";
+    const restored = parseIdentityEditorSearch(serializeIdentityEditorSearch("press", edited, true));
+    expect(restored.tokens).toEqual(edited);
+    expect(restored.darkPreview).toBe(true);
+  });
+
+  test("an older link without font keys still opens the preset's own fonts", () => {
+    const restored = parseIdentityEditorSearch("?identity=press&radius=0.75rem&preview=dark");
+    expect(restored.tokens.fontSans).toBe(identityPresets.press.fontSans);
+    expect(restored.tokens.fontDisplay).toBe(identityPresets.press.fontDisplay);
+    expect(restored.tokens.radius).toBe("0.75rem");
+  });
+
+  test("a link cannot carry anything that would leave the declaration it is written into", () => {
+    for (const hostile of [
+      "x; } body { display: none",
+      "Georgia } @import url(//evil.test/x.css)",
+      "Georgia /* open",
+      "url(https://evil.test/font.woff2)",
+      "<style>",
+    ]) {
+      const restored = parseIdentityEditorSearch(`?identity=mist&fontSans=${encodeURIComponent(hostile)}`);
+      expect(restored.tokens.fontSans).toBe(identityPresets.mist.fontSans);
+    }
+  });
 });
 
 test("bad input names its reason instead of loading", () => {

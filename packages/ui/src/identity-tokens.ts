@@ -4,7 +4,17 @@ import { applyCustomIdentityCss } from "./identity-custom-sheet.js";
 import { IDENTITY_STORAGE_KEY } from "./identity-data.js";
 
 const hsl = z.string().regex(/^\d+(\.\d+)?\s+\d+(\.\d+)?%\s+\d+(\.\d+)?%$/);
-const cssValue = z.string().min(1);
+/**
+ * One declaration value, written verbatim into a stylesheet, and read back from pasted JSON and shared links.
+ * It must not be able to end its declaration or rule, open a comment, or fetch anything.
+ */
+const cssValue = z
+  .string()
+  .min(1)
+  .max(400)
+  .refine((value) => !/[{};<>@\\]|\/\*|url\s*\(/i.test(value), {
+    message: "Not a plain CSS value (no braces, semicolons, comments, at-rules or url())",
+  });
 const leading = z.string().regex(/^\d+(\.\d+)?$/);
 const tracking = z.string().regex(/^-?\d+(\.\d+)?em$/);
 

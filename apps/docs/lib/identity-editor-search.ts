@@ -20,6 +20,12 @@ const SCALAR_KEYS = [
   "shadowMd",
 ] as const;
 
+/** Font stacks travel with the recipe (JSON) and with the link, like every other scalar. */
+const FONT_KEYS = ["fontSans", "fontDisplay"] as const;
+
+/** Every single-value token the link carries, in link order. */
+const VALUE_KEYS = [...SCALAR_KEYS, ...FONT_KEYS] as const;
+
 const LIGHT_KEYS = [
   "background",
   "foreground",
@@ -79,7 +85,7 @@ function parseIdentityEditorSearch(search: string): IdentityEditorSearch {
     light: { ...fallback.light },
     dark: { ...fallback.dark },
   };
-  for (const key of SCALAR_KEYS) {
+  for (const key of VALUE_KEYS) {
     const value = params.get(key);
     if (value) draft[key] = value;
   }
@@ -111,7 +117,7 @@ function serializeIdentityEditorSearch(
   params.set("identity", identity);
   if (darkPreview) params.set("preview", "dark");
   const base = identityPresets[isPresetId(identity) ? identity : "mist"];
-  for (const key of SCALAR_KEYS) {
+  for (const key of VALUE_KEYS) {
     if (tokens[key] !== base[key]) params.set(key, tokens[key]);
   }
   for (const key of LIGHT_KEYS) {
@@ -123,4 +129,4 @@ function serializeIdentityEditorSearch(
   return params.toString();
 }
 
-export { LIGHT_KEYS, SCALAR_KEYS, inferKeptDark, parseIdentityEditorSearch, serializeIdentityEditorSearch };
+export { FONT_KEYS, LIGHT_KEYS, SCALAR_KEYS, VALUE_KEYS, inferKeptDark, parseIdentityEditorSearch, serializeIdentityEditorSearch };
