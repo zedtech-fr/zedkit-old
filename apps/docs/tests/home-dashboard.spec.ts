@@ -1,12 +1,13 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
-import { openHeroPage } from "./hero-helpers";
+import { openHeroPage, settleHero } from "./hero-helpers";
 
 const BASE = "http://127.0.0.1:3100";
 
 async function axeDashboard(page: import("@playwright/test").Page) {
   const demo = page.locator("#demo").getByLabel("Interactive admin dashboard demo in the hero");
   await expect(demo).toBeVisible();
+  await settleHero(page);
   const results = await new AxeBuilder({ page })
     .include("#demo [aria-label='Interactive admin dashboard demo in the hero']")
     .analyze();

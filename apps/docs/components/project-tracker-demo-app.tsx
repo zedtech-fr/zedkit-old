@@ -336,7 +336,7 @@ export function ProjectTrackerDemoApp() {
     setRows((prev) => [
       {
         id: `t-${200 + prev.length}`,
-        title: projectTrackerDemoCopy.tasks.nextSprint,
+        title: projectTrackerDemoCopy.tasks.nextReview,
         owner: projectTrackerDemoCopy.people.maya,
         status: projectTrackerDemoCopy.status.todo,
         due: "2026-11-09",

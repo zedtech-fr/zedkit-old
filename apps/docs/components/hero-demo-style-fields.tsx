@@ -30,6 +30,7 @@ export function HeroDemoIdentitySelect({ look, onLook }: { look: string; onLook:
       <SelectTrigger
         className="h-9 w-full min-w-0 border-border/70 bg-transparent shadow-none sm:w-32"
         aria-label={heroDemoStyleCopy.identityAriaLabel}
+        data-hero-look-select=""
       >
         <SelectValue placeholder={heroDemoStyleCopy.identityPlaceholder} />
       </SelectTrigger>

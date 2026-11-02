@@ -117,14 +117,6 @@
   line-height: var(--zk-type-lead-leading);
 }
 
-#home-page [data-home-hero-lead] [data-home-hero-label] {
-  font-size: var(--zk-type-label-size);
-  font-weight: var(--zk-type-label-weight);
-  line-height: var(--zk-type-label-leading);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
 #scenarios [data-slot="card-title"] {
   font-size: var(--zk-type-card-title-size);
   font-weight: var(--zk-type-card-title-weight);

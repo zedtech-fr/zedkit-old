@@ -13,3 +13,16 @@ export async function openHeroPage(page: Page, name: HeroPageName): Promise<void
     .getByRole("button", { name, exact: true })
     .click();
 }
+
+/**
+ * Waits for the entrances in the hero to be over, so checks that read colours do not catch a page half faded in.
+ * Loops (the floating cards) and scroll-driven motion never end, so they do not count.
+ */
+export async function settleHero(page: Page): Promise<void> {
+  await page.waitForFunction(() =>
+    (document.querySelector("#demo")?.getAnimations({ subtree: true }) ?? []).every(
+      (animation) =>
+        animation.timeline !== document.timeline || animation.effect?.getComputedTiming().iterations === Infinity,
+    ),
+  );
+}
