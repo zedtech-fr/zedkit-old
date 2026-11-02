@@ -13,6 +13,7 @@ import {
   Input,
   Stack,
   Text,
+  cn,
   identityContrastTokenLabel,
   type IdentityContrastWarning,
   type IdentityTokens,
@@ -71,9 +72,9 @@ function TokenField({
   );
 }
 
-function FieldGroup({ legend, children }: { legend: string; children: ReactNode }) {
+function FieldGroup({ legend, className, children }: { legend: string; className?: string; children: ReactNode }) {
   return (
-    <fieldset className="m-0 min-w-0 border-0 p-0">
+    <fieldset className={cn("m-0 min-w-0 border-0 p-0", className)}>
       <legend className="mb-3 text-sm font-semibold text-foreground">{legend}</legend>
       <Stack className="grid min-w-0 gap-4 sm:grid-cols-2">{children}</Stack>
     </fieldset>
@@ -88,10 +89,13 @@ function EditorFields({
   tokens,
   scheme,
   onPatch,
+  afterShape,
 }: {
   tokens: IdentityTokens;
   scheme: "light" | "dark";
   onPatch: (key: string, value: string) => void;
+  /** Rendered right after the first group: what you do once the first adjustment has shown its effect. */
+  afterShape?: ReactNode;
 }) {
   const pair = tokens[scheme];
   const scalar = (keys: readonly (typeof SCALAR_KEYS)[number][]) =>
@@ -107,6 +111,7 @@ function EditorFields({
   return (
     <Stack gap={5} data-slot="identity-editor-fields">
       <FieldGroup legend={identityEditorCopy.fields.groups.shape}>{scalar(SHAPE_KEYS)}</FieldGroup>
+      {afterShape}
       <FieldGroup legend={identityEditorCopy.fields.groups.type}>{scalar(TYPE_KEYS)}</FieldGroup>
       <FieldGroup legend={identityEditorCopy.fields.groups.depth}>{scalar(DEPTH_KEYS)}</FieldGroup>
       <FieldGroup legend={identityEditorCopy.fields.groups.colour(scheme)}>
@@ -134,7 +139,9 @@ function SpecimenBody() {
         <Heading level={2}>{identityEditorCopy.fields.draftTitle}</Heading>
         <Badge variant="success">{copy.status}</Badge>
       </Stack>
-      <Text variant="muted">{identityEditorCopy.fields.draftBody}</Text>
+      <Text variant="muted" className="max-lg:hidden">
+        {identityEditorCopy.fields.draftBody}
+      </Text>
       <Stack direction="horizontal" gap={2} className="flex-wrap">
         <Button size="sm">{identityEditorCopy.fields.draftSave}</Button>
         <Button size="sm" variant="secondary">
@@ -182,7 +189,7 @@ function DraftCard({ darkPreview }: { darkPreview: boolean }) {
       data-slot="identity-editor-preview"
       role="group"
       aria-label={identityEditorCopy.fields.specimenLabel}
-      className="z-20 min-w-0 rounded-xl border border-border bg-background p-4 font-sans text-foreground shadow-md lg:sticky lg:top-20 lg:col-start-2 lg:row-start-1 lg:self-start lg:p-6 max-lg:[@media(min-height:48rem)]:sticky max-lg:[@media(min-height:48rem)]:top-14"
+      className="z-20 min-w-0 rounded-xl border border-border bg-background p-4 font-sans text-foreground shadow-md max-lg:order-3 lg:sticky lg:top-20 lg:col-start-2 lg:row-start-1 lg:self-start lg:p-6 max-lg:[@media(min-height:48rem)]:sticky max-lg:[@media(min-height:48rem)]:top-14"
       gap={3}
     >
       {/* `inert`: the specimen is for looking at. It must not read as, or act as, an editor command. */}

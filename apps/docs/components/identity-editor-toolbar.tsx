@@ -9,28 +9,11 @@ import {
   Input,
   Stack,
   Text,
+  cn,
   identities,
   type IdentityOption,
 } from "@zedtech/zedkit-ui";
 import { identityEditorCopy } from "@/components/i18n/identity-editor-copy";
-
-type IdentityEditorToolbarProps = {
-  identity: string;
-  looks: readonly IdentityOption[];
-  name: string;
-  namedSelected: boolean;
-  darkPreview: boolean;
-  canUndo: boolean;
-  onIdentity: (id: string) => void;
-  onName: (value: string) => void;
-  onSave: () => void;
-  onRename: () => void;
-  onDelete: () => void;
-  onDark: () => void;
-  onUndo: () => void;
-  onReset: () => void;
-  onApplySite: () => void;
-};
 
 function LookSelect({
   identity,
@@ -61,35 +44,55 @@ function LookSelect({
   );
 }
 
-function ToolbarGroup({ label, children }: { label: string; children: ReactNode }) {
-  const id = useId();
+/** Controls that sit on one line align on their bottom edge; a hint never sits inside the row. */
+function Row({ children }: { children: ReactNode }) {
   return (
-    <Stack gap={1} role="group" aria-labelledby={id}>
-      <Text as="span" id={id} className="text-xs font-medium text-muted-foreground">
-        {label}
-      </Text>
-      <Stack direction="horizontal" gap={2} className="flex-wrap items-end">
-        {children}
-      </Stack>
+    <Stack direction="horizontal" gap={2} className="flex-wrap items-end">
+      {children}
     </Stack>
   );
 }
 
-function NameField({ name, onName }: { name: string; onName: (value: string) => void }) {
+type PreviewBarProps = {
+  identity: string;
+  looks: readonly IdentityOption[];
+  darkPreview: boolean;
+  canUndo: boolean;
+  onIdentity: (id: string) => void;
+  onDark: () => void;
+  onUndo: () => void;
+  onReset: () => void;
+  className?: string;
+};
+
+/** Choose a look and change how the card is seen: the first thing the editor is for. */
+function IdentityEditorPreviewBar({
+  identity,
+  looks,
+  darkPreview,
+  canUndo,
+  onIdentity,
+  onDark,
+  onUndo,
+  onReset,
+  className,
+}: PreviewBarProps) {
   const copy = identityEditorCopy.toolbar;
   return (
-    <Field className="w-full min-w-36 sm:w-56">
-      <FieldLabel htmlFor="identity-editor-name">{copy.name}</FieldLabel>
-      <Input
-        id="identity-editor-name"
-        value={name}
-        aria-describedby="identity-editor-name-hint"
-        onChange={(event) => onName(event.target.value)}
-      />
-      <Text id="identity-editor-name-hint" variant="muted" className="text-xs">
-        {name.trim() === "" ? copy.nameHint : "\u00a0"}
-      </Text>
-    </Field>
+    <div role="group" aria-label={copy.groups.preview} data-slot="identity-editor-toolbar" className={cn("min-w-0", className)}>
+      <Row>
+        <LookSelect identity={identity} looks={looks} onIdentity={onIdentity} />
+        <Button type="button" variant="outline" aria-pressed={darkPreview} onClick={onDark}>
+          {copy.previewDark}
+        </Button>
+        <Button type="button" variant="outline" disabled={!canUndo} onClick={onUndo}>
+          {copy.undo}
+        </Button>
+        <Button type="button" variant="outline" onClick={onReset}>
+          {copy.reset}
+        </Button>
+      </Row>
+    </div>
   );
 }
 
@@ -117,29 +120,45 @@ function DeleteLook({ disabled, onDelete }: { disabled: boolean; onDelete: () =>
   );
 }
 
-function IdentityEditorToolbar({
-  identity,
-  looks,
+type KeepBarProps = {
+  name: string;
+  namedSelected: boolean;
+  onName: (value: string) => void;
+  onSave: () => void;
+  onRename: () => void;
+  onDelete: () => void;
+  onApplySite: () => void;
+  className?: string;
+};
+
+/** Name, save, rename or delete a look, and apply it to this site: what you do once you like the card. */
+function IdentityEditorKeepBar({
   name,
   namedSelected,
-  darkPreview,
-  canUndo,
-  onIdentity,
   onName,
   onSave,
   onRename,
   onDelete,
-  onDark,
-  onUndo,
-  onReset,
   onApplySite,
-}: IdentityEditorToolbarProps) {
+  className,
+}: KeepBarProps) {
   const copy = identityEditorCopy.toolbar;
+  const titleId = useId();
   return (
-    <Stack gap={4} data-slot="identity-editor-toolbar">
-      <ToolbarGroup label={copy.groups.look}>
-        <LookSelect identity={identity} looks={looks} onIdentity={onIdentity} />
-        <NameField name={name} onName={onName} />
+    <Stack gap={2} role="group" aria-labelledby={titleId} className={cn("min-w-0", className)} data-slot="identity-editor-keep">
+      <Text as="span" id={titleId} className="text-sm font-semibold text-foreground">
+        {copy.groups.keep}
+      </Text>
+      <Row>
+        <Field className="w-full min-w-36 sm:w-56">
+          <FieldLabel htmlFor="identity-editor-name">{copy.name}</FieldLabel>
+          <Input
+            id="identity-editor-name"
+            value={name}
+            aria-describedby="identity-editor-name-hint"
+            onChange={(event) => onName(event.target.value)}
+          />
+        </Field>
         <Button type="button" onClick={onSave} disabled={name.trim() === ""}>
           {copy.saveLook}
         </Button>
@@ -147,27 +166,20 @@ function IdentityEditorToolbar({
           {copy.rename}
         </Button>
         <DeleteLook disabled={!namedSelected} onDelete={onDelete} />
-      </ToolbarGroup>
-      <Stack direction="horizontal" gap={6} className="flex-wrap items-end">
-        <ToolbarGroup label={copy.groups.edit}>
-          <Button type="button" variant="outline" aria-pressed={darkPreview} onClick={onDark}>
-            {copy.previewDark}
-          </Button>
-          <Button type="button" variant="outline" disabled={!canUndo} onClick={onUndo}>
-            {copy.undo}
-          </Button>
-          <Button type="button" variant="outline" onClick={onReset}>
-            {copy.reset}
-          </Button>
-        </ToolbarGroup>
-        <ToolbarGroup label={copy.groups.site}>
-          <Button type="button" variant="outline" onClick={onApplySite}>
-            {copy.applySite}
-          </Button>
-        </ToolbarGroup>
-      </Stack>
+      </Row>
+      <Text id="identity-editor-name-hint" variant="muted" className="text-xs">
+        {name.trim() === "" ? copy.nameHint : "\u00a0"}
+      </Text>
+      <Row>
+        <Button type="button" variant="outline" onClick={onApplySite}>
+          {copy.applySite}
+        </Button>
+      </Row>
+      <Text variant="muted" className="text-xs">
+        {copy.applyHint}
+      </Text>
     </Stack>
   );
 }
 
-export { IdentityEditorToolbar };
+export { IdentityEditorKeepBar, IdentityEditorPreviewBar };

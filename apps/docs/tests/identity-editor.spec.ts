@@ -125,8 +125,7 @@ test.describe("identity editor page", () => {
     expect(await buttons.count()).toBeGreaterThan(0);
     expect(await buttons.evaluateAll((nodes) => nodes.every((node) => node.closest("[inert]") !== null))).toBe(true);
     await expect(page.getByText("Preview only: the buttons and fields here are samples.")).toBeVisible();
-    const toolbar = page.locator('[data-slot="identity-editor-toolbar"]');
-    for (const name of ["Library", "Editing", "Site"]) await expect(toolbar.getByRole("group", { name })).toBeVisible();
+    for (const name of ["Choose and preview", "Save and apply"]) await expect(page.getByRole("group", { name })).toBeVisible();
   });
 
   test("Suggest applies a service patch after Apply", async ({ page }) => {
@@ -672,3 +671,56 @@ test.describe("identity editor named looks", () => {
   });
 });
 
+
+test.describe("identity editor: choose, see, adjust, then keep", () => {
+  test("on a standard phone the first screen holds the look, a useful preview and the first adjustment", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(PAGE, { waitUntil: "networkidle" });
+    const boxes = await page.evaluate(() => {
+      const top = (selector: string) => document.querySelector(selector)?.getBoundingClientRect() ?? null;
+      const spacing = document.getElementById("identity-editor-spacing");
+      return {
+        look: top("#identity-editor-look"),
+        card: top('[data-slot="identity-editor-preview"]'),
+        spacing: spacing?.getBoundingClientRect() ?? null,
+        keep: top('[data-slot="identity-editor-keep"]'),
+        vh: innerHeight,
+      };
+    });
+    expect(boxes.look && boxes.card && boxes.spacing && boxes.keep).toBeTruthy();
+    // Look, then the card in full, then the first field: all above the fold of an 844px phone.
+    expect(boxes.look!.bottom).toBeLessThan(boxes.card!.top);
+    expect(boxes.card!.bottom).toBeLessThan(boxes.spacing!.top);
+    expect(boxes.spacing!.bottom, "the Spacing field is on the first screen").toBeLessThanOrEqual(boxes.vh);
+    // Saving and applying come after the first adjustment, and are still on the page, not folded away.
+    expect(boxes.keep!.top).toBeGreaterThan(boxes.spacing!.bottom);
+    await expect(page.getByRole("button", { name: "Save look" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Apply to the whole site" })).toBeVisible();
+  });
+
+  test("desktop rows line up on their bottom edge whatever the hint text under them", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(PAGE, { waitUntil: "networkidle" });
+    const rows = await page.evaluate(() => {
+      const bottom = (target: string) => {
+        const el = target.startsWith("#")
+          ? document.querySelector(target)
+          : [...document.querySelectorAll("button")].find((button) => button.textContent?.trim() === target);
+        return Math.round((el?.getBoundingClientRect().bottom ?? Number.NaN) * 10) / 10;
+      };
+      return {
+        look: ["#identity-editor-look", "Preview dark", "Undo", "Reset"].map(bottom),
+        name: ["#identity-editor-name", "Save look", "Rename", "Delete"].map(bottom),
+      };
+    });
+    for (const [row, values] of Object.entries(rows)) {
+      expect(values.every(Number.isFinite), `${row} row found`).toBe(true);
+      expect(Math.max(...values) - Math.min(...values), `${row} row bottoms ${values.join(", ")}`).toBeLessThanOrEqual(1);
+    }
+    // Typing a name removes the hint under it; nothing in the row moves.
+    const before = await page.locator("#identity-editor-name").evaluate((el) => el.getBoundingClientRect().bottom);
+    await page.locator("#identity-editor-name").fill("Harbor");
+    const after = await page.locator("#identity-editor-name").evaluate((el) => el.getBoundingClientRect().bottom);
+    expect(after).toBe(before);
+  });
+});

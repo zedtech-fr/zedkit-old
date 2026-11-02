@@ -6,7 +6,7 @@ export const identityEditorCopy = {
       "Try spacing, colour, and type tokens in the browser. Demo only — not a shipped docs feature.",
   },
   heading: "Try looks in the demo editor",
-  body: "Tune tokens and preview them on a card. Use Apply to the whole site only when you mean to change the docs shell; the home hero demo uses its own scoped selector.",
+  body: "Tune tokens and preview them on a card. The link keeps your draft, so you can reopen it.",
 } as const;
 
 export type IdentityEditorCopy = typeof identityEditorCopy;

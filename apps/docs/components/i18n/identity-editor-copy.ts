@@ -74,7 +74,7 @@ export const identityEditorCopy = {
     fix: (scheme: string, label: string) => `Fix ${scheme} ${label}`,
   },
   panel: {
-    hint: "Change spacing first, then watch the card. Preview dark only changes the card; the site keeps its own light or dark setting.",
+    hint: "Change spacing first, then watch the card. Preview dark changes the card only.",
     applied: "Applied to the whole site.",
   },
   suggest: {
@@ -105,10 +105,10 @@ export const identityEditorCopy = {
     reset: "Reset",
     applySite: "Apply to the whole site",
     groups: {
-      look: "Library",
-      edit: "Editing",
-      site: "Site",
+      preview: "Choose and preview",
+      keep: "Save and apply",
     },
+    applyHint: "Applying restyles this site in your browser only. The home demo keeps its own look.",
   },
 } as const;
 
