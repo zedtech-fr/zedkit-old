@@ -1,9 +1,10 @@
 export const homeHeroCopy = {
   hero: {
-    label: "zedkit",
     title: "Build the parts you need. Keep the rest of your app.",
-    sub: "React components you add to the app you already have.",
-    facts: "MIT · React 19 · Tailwind 4 · npm or source",
+    /** The first words are an invitation to use the example beside the text; the rest says what it is made of. */
+    play: "Play with it yourself",
+    sub: "Everything in this app is a zedkit component. Click through the pages, add an app, change the look.",
+    facts: "What you see installs from npm or copies as source · MIT · React 19 · Tailwind 4",
   },
   heroActions: {
     getStarted: "Get started",

@@ -230,10 +230,15 @@ test("a guided cursor tours the pages by itself, and stops for good the moment t
   await page.goto(BASE, { waitUntil: "networkidle" });
   const current = () => nav(page).locator("[aria-current='page']").innerText();
 
-  await expect(windowOf(page)).toHaveAttribute("data-tour", "on", { timeout: 8000 });
+  // The cursor sets off while the first page is still assembling: nothing waits on screen for seconds.
+  await expect(windowOf(page)).toHaveAttribute("data-tour", "on", { timeout: 2500 });
   await expect(page.locator("#demo [data-hero-cursor]")).toBeVisible();
   // Nobody touched anything, and the example moves on to its second page by itself, using the real sidebar entry.
-  await expect.poll(current, { timeout: 12000 }).toBe("Apps");
+  await expect.poll(current, { timeout: 3500 }).toBe("Apps");
+  // On the table it sorts by name: every row moves, and nothing opens over the page.
+  const firstRow = () => section(page, "apps").locator("tbody tr").first().innerText();
+  await expect.poll(firstRow, { timeout: 4000 }).toContain("billing");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
 
   // The visitor presses inside the frame: the tour ends and the page stays where they put it.
   await go(page, "Settings");
@@ -243,13 +248,41 @@ test("a guided cursor tours the pages by itself, and stops for good the moment t
   await expect(page.locator("#demo [data-hero-cursor]")).toHaveCSS("opacity", "0");
 });
 
-test("the guided tour waits while the example is off screen", async ({ page }) => {
+test("the tour also changes the look in the Display row, and a look the visitor leaves in place stays", async ({ page }) => {
+  test.setTimeout(45_000);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(BASE, { waitUntil: "networkidle" });
+  const select = page.locator("#demo [data-hero-look-select]");
+  const scope = page.locator("#demo [data-home-hero-visuals]");
+  const before = await scope.getAttribute("data-identity");
+  await expect(select).toHaveText("Tide");
+
+  // Nobody touches anything: the cursor presses the select and the whole example, cards included, changes look.
+  await expect(select).toHaveText("Glass", { timeout: 12_000 });
+  await expect(scope).toHaveAttribute("data-identity", "glass");
+  expect(before).not.toBe("glass");
+  // The site around the example keeps its own look.
+  expect(await page.locator("html").getAttribute("data-identity")).toBe(before);
+
+  // The visitor presses a page entry: the tour ends and the look stays as it was.
+  await go(page, "Team");
+  await expect(windowOf(page)).toHaveAttribute("data-tour", "off");
+  await page.waitForTimeout(6000);
+  await expect(select).toHaveText("Glass");
+  await expect(scope).toHaveAttribute("data-identity", "glass");
+});
+
+test("the guided tour waits while the example is off screen and carries on when it is back", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(BASE, { waitUntil: "networkidle" });
+  const current = () => nav(page).locator("[aria-current='page']").innerText();
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-  await page.waitForTimeout(5500);
-  await expect(windowOf(page)).not.toHaveAttribute("data-tour", /.+/);
-  await expect(nav(page).locator("[aria-current='page']")).toHaveText("Overview");
+  await page.waitForTimeout(900); // a step already under way may finish
+  const parked = await current();
+  await page.waitForTimeout(5000);
+  expect(await current()).toBe(parked);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect.poll(current, { timeout: 8000 }).not.toBe(parked);
 });
 
 test("the cards over the window's edge follow the pointer, and are out of reach of keyboard and screen readers", async ({ page }) => {

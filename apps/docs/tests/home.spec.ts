@@ -43,9 +43,10 @@ test("home hero offers get started first with catalog and demo links (#1038)", a
   await expect(heroActions.nth(1)).toHaveText("Browse catalog");
   await expect(heroActions.nth(1)).toHaveAttribute("href", "/catalog");
 
-  await expect(
-    page.getByText("React components you add to the app you already have."),
-  ).toBeVisible();
+  await expect(page.locator("[data-home-hero-sub]")).toHaveText("Play with it yourself");
+  await expect(page.locator("[data-home-hero-lead]")).toContainText("Everything in this app is a zedkit component.");
+  // Nothing above the title: the page header already says what this is.
+  await expect(page.locator("[data-home-hero-lead] > :first-child")).toHaveJSProperty("tagName", "H1");
   await expect(page.getByText(/theme everything with one of six identities/)).toHaveCount(0);
   await expect(page.getByText(/linked maturity badges/)).toHaveCount(0);
   await expect(page.locator("[data-home-hero-lead]").getByText(/Latest in v/)).toHaveCount(0);
@@ -55,7 +56,9 @@ test("home hero offers get started first with catalog and demo links (#1038)", a
 test("home hero shows proof line without a separate proofs band (#1057)", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(BASE, { waitUntil: "networkidle" });
-  await expect(page.getByText("MIT · React 19 · Tailwind 4 · npm or source")).toBeVisible();
+  await expect(
+    page.getByText("What you see installs from npm or copies as source · MIT · React 19 · Tailwind 4"),
+  ).toBeVisible();
   await expect(page.getByText(/^Latest in v/)).toHaveCount(0);
   await expect(page.locator("#proofs")).toHaveCount(0);
 });

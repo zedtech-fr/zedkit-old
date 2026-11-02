@@ -1,18 +1,28 @@
-import { useEffect, type RefObject } from "react";
+import { useEffect, useRef, type RefObject } from "react";
+import { DEFAULT_IDENTITY } from "@/lib/default-identity";
 
 /**
- * One lap of the guided tour: go to a page by its sidebar entry, then use one control on it.
- * Targets are plain selectors inside the window; the tour clicks the real controls, so every state
- * change on screen is the kit component doing its job, not a recording.
+ * One lap of the guided tour: go to a page by its sidebar entry, use one control on it, and sometimes change the
+ * look in the Display row under the window (`look`), so the same app is seen in more than one identity.
+ * Targets are plain selectors inside the window; the tour clicks the real controls, so every state change on
+ * screen is the kit component doing its job, not a recording. The one exception is the look: a menu popping open
+ * would cover the window, so the cursor presses the select and the look is set through the page's own state.
  */
 const LAP = [
-  { page: "overview", use: null, dwell: 3600 },
-  { page: "apps", use: "[data-slot='data-table'] tbody tr:nth-child(2) td:first-child button", dwell: 2800 },
-  { page: "calendar", use: "[data-day='2026-11-06'] button", dwell: 2800 },
-  { page: "team", use: "[data-hero-person='Luca Moretti']", dwell: 2800 },
-  { page: "settings", use: "[data-hero-switch]", dwell: 2600 },
+  { page: "overview", use: null, dwell: 1400, look: null },
+  // Sorting by name reorders every row at once: a change anyone can see, with nothing opening over the page.
+  { page: "apps", use: "[data-slot='data-table'] thead th:first-child button", dwell: 1500, look: "glass" },
+  { page: "calendar", use: "[data-day='2026-11-06'] button", dwell: 1500, look: null },
+  { page: "team", use: "[data-hero-person='Luca Moretti']", dwell: 1400, look: "maison" },
+  { page: "settings", use: "[data-hero-switch]", dwell: 1400, look: DEFAULT_IDENTITY },
 ] as const;
 
+/** The cursor starts moving as soon as the window is on screen, while the first page is still assembling. */
+const START_MS = 400;
+/** How long the cursor takes between two controls. Keep equal to the `translate` transition in `home-hero.css`. */
+const GLIDE_MS = 560;
+/** After pressing: time to see the result before moving on. */
+const SETTLE_MS = 380;
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 /** What the window shows under the cursor; the cursor is positioned in the window's own coordinates. */
@@ -27,7 +37,19 @@ function centreOf(root: HTMLElement, target: Element) {
  * touch event inside the frame ends the tour for good: from then on the window only does what the visitor asks.
  * Off the screen or in a hidden tab it waits; nothing runs without motion allowed.
  */
-export function useHeroTour({ rootRef, enabled }: { rootRef: RefObject<HTMLElement | null>; enabled: boolean }) {
+export function useHeroTour({
+  rootRef,
+  enabled,
+  onLook,
+}: {
+  rootRef: RefObject<HTMLElement | null>;
+  enabled: boolean;
+  onLook: (id: string) => void;
+}) {
+  const lookRef = useRef(onLook);
+  useEffect(() => {
+    lookRef.current = onLook;
+  });
   useEffect(() => {
     const root = rootRef.current;
     // A cursor only makes sense with a pointer and room for the sidebar; a phone keeps the page still.
@@ -75,14 +97,21 @@ export function useHeroTour({ rootRef, enabled }: { rootRef: RefObject<HTMLEleme
       cursor.style.translate = `${x}px ${y}px`;
     };
 
-    const press = async (target: Element) => {
+    const press = async (target: Element, act: () => void = () => (target as HTMLElement).click()) => {
       moveTo(target);
-      await beat(820);
+      await beat(GLIDE_MS + 40);
       if (stopped) return;
       cursor.dataset.press = "";
-      (target as HTMLElement).click();
-      await beat(260);
+      act();
+      await beat(160);
       delete cursor.dataset.press;
+    };
+
+    /** The Display row's identity select sits under the window, still inside the frame. */
+    const changeLook = async (id: string) => {
+      const select = touchArea.querySelector("[data-hero-look-select]");
+      if (select) await press(select, () => lookRef.current(id));
+      await beat(SETTLE_MS + 520);
     };
 
     /** Parks the cursor at the lower right of the window without gliding there from the corner. */
@@ -95,9 +124,10 @@ export function useHeroTour({ rootRef, enabled }: { rootRef: RefObject<HTMLEleme
     };
 
     const run = async () => {
-      await beat(1900);
+      await beat(START_MS);
       if (stopped) return;
       park();
+      let first = true;
       while (!stopped) {
         for (const step of LAP) {
           if (stopped) return;
@@ -107,13 +137,17 @@ export function useHeroTour({ rootRef, enabled }: { rootRef: RefObject<HTMLEleme
           root.dataset.tour = "on";
           if (step.page !== "overview" || cursor.dataset.placed) await press(nav);
           cursor.dataset.placed = "";
-          await beat(650);
+          await beat(first && step.page === "overview" ? 0 : SETTLE_MS);
           if (stopped) return;
           if (step.use) {
             const control = root.querySelector(`[data-hero-page='${step.page}'] ${step.use}`);
             if (control) await press(control);
           }
-          await beat(step.dwell);
+          // The very first page was just shown on load: the cursor sets off at once instead of waiting beside it.
+          await beat(first && step.page === "overview" ? 0 : step.dwell);
+          first = false;
+          if (stopped) return;
+          if (step.look) await changeLook(step.look);
         }
       }
     };

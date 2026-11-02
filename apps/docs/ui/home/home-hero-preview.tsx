@@ -11,6 +11,7 @@ import { HomeHeroApp } from "@/ui/home/home-hero-app";
 import { HomeHeroSatellites } from "@/ui/home/home-hero-satellites";
 import { HOME_HERO_PREVIEW_SHELL_CLASS } from "@/ui/home/home-rhythm";
 import type { HeroPageId } from "@/ui/home/i18n/home-hero-copy";
+import { useLookFade } from "@/ui/home/use-look-fade";
 import { usePointerParallax } from "@/ui/home/use-pointer-parallax";
 import { useMotionOk } from "@/ui/home/use-motion-ok";
 
@@ -33,6 +34,7 @@ export function HomeHeroPreview() {
   const [page, setPage] = useState<HeroPageId>("overview");
   const [intro, setIntro] = useState(true);
   const frame = useRef<HTMLDivElement>(null);
+  const scope = useRef<HTMLDivElement>(null);
   const motionOk = useMotionOk();
   const { resolvedTheme } = useTheme();
   const mounted = useSyncExternalStore(noop, () => true, () => false);
@@ -44,6 +46,8 @@ export function HomeHeroPreview() {
     return () => clearTimeout(timer);
   }, []);
   usePointerParallax(frame, motionOk);
+
+  useLookFade(scope, look, motionOk);
 
   return (
     <div
@@ -59,12 +63,13 @@ export function HomeHeroPreview() {
       )}
     >
       <ThemeScope
+        ref={scope}
         identity={look}
         mode={dark ? "dark" : "light"}
         className="relative min-h-0 min-w-0 rounded-t-xl bg-background"
         data-home-hero-visuals=""
       >
-        <HomeHeroApp page={page} onPage={setPage} intro={intro} preview={preview} onPreviewChange={setPreview} />
+        <HomeHeroApp page={page} onPage={setPage} intro={intro} preview={preview} onPreviewChange={setPreview} onLook={setLook} />
         <HomeHeroSatellites />
       </ThemeScope>
       <div className="border-t border-border px-3 py-2.5 sm:px-4" data-home-specimen-footer="">
