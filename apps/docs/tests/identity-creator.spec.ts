@@ -312,7 +312,7 @@ test.describe("the assistant in the editor", () => {
     await page.getByRole("button", { name: "Generate" }).click();
     await expect(page.locator("[data-assistant-proposal]")).toBeVisible();
     await page.getByRole("button", { name: "Generate" }).click();
-    await expect(page.locator("[data-assistant-status]")).toContainText("The daily limit for the assistant has been reached. Try again in 30 minutes.");
+    await expect(page.locator("[data-assistant-status]")).toContainText("The assistant limit has been reached. Try again in 30 minutes.");
     await expect(page.locator("[data-assistant-proposal]")).toBeVisible();
     await expect(page.locator("main")).not.toContainText(/remaining|left today|requests left/i);
   });
