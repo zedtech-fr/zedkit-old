@@ -1,5 +1,11 @@
 # @zedtech/zedkit-quality
 
+## 1.1.1
+
+### Patch Changes
+
+- 3e25575: Add `nodePreset` for Node/TS packages: eslint + typescript-eslint recommended, raw try/catch ban, and deep relative import ban.
+
 ## 1.1.0
 
 ### Minor Changes
