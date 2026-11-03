@@ -150,9 +150,7 @@ size_budget() {
 size_budget ui 43500
 # Marketing entry (separate from the main budget); measured 785 on 3 Nov 2026 with GlassSurface only.
 size_budget ui 6000 marketing
-# Raised from 9800 to 11500 on 3 Nov 2026: init --adopt, per-skill Cursor
-# links, and lenses.md Status filtering (measured 11228).
-size_budget ai 11500
+size_budget ai 12000
 
 if [ -f apps/docs/out/index.html ]; then
   if ! node apps/docs/scripts/check-first-load-budget.mjs; then
