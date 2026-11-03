@@ -35,6 +35,14 @@ export type DefineLayersOptions =
     };
 };
 
+// @public (undocumented)
+export function nodePreset(options?: NodePresetOptions): Linter.Config[];
+
+// @public (undocumented)
+export interface NodePresetOptions {
+    readonly tryCatchSource?: string;
+}
+
 // @public
 export interface RestrictedImportPattern {
     // (undocumented)
