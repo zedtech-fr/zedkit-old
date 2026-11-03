@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { installKit } from "#install.js";
 import { agentsForPreset, commandsForPreset, readManifest } from "#kit.js";
-import { validateKit } from "#validate.js";
+import { checkDrift, validateKit } from "#validate.js";
 import { firstPartySkills, markdownFiles, put, SKILL, tempDir } from "./helpers.js";
 
 function install(dest: string, options: Parameters<typeof installKit>[0] extends infer O ? Partial<O> : never = {}) {
@@ -47,6 +47,45 @@ describe("installKit", () => {
     expect(starter).toHaveLength(5);
     expect(agentsForPreset(manifest.value, "starter")).toHaveLength(3);
     expect(commandsForPreset(manifest.value, "starter")).toHaveLength(2);
+  });
+
+  it("starter lenses.md marks uninstalled runners planned and installed ones exists", () => {
+    const dest = tempDir();
+    install(dest, { providers: [] });
+    const text = readFileSync(join(dest, ".agents/skills/review/lenses.md"), "utf8");
+    expect(text).toMatch(/\| quality gate\s+\| agent `verifier`\s+\|\s*exists\s*\|/);
+    expect(text).toMatch(/\| code\s+\| skill `code-review`[^\n]*\|\s*planned\s*\|/);
+    expect(text).toMatch(/\| ponytail\s+\| skill `ponytail-review`[^\n]*\|\s*planned\s*\|/);
+    expect(text).toMatch(/\| persona\s+\| skill `persona-review`[^\n]*\|\s*planned\s*\|/);
+    expect(validateKit(join(dest, ".agents"))).toEqual([]);
+  });
+
+  it("adopts colliding cursor files: user copy kept, kit sidecar written, validate green", () => {
+    const dest = tempDir();
+    put(dest, ".cursor/skills/team-own/SKILL.md", "team\n");
+    put(dest, ".cursor/agents/explorer.md", "custom explorer\n");
+    put(dest, ".cursor/commands/review.md", "custom review\n");
+    const actions = install(dest, { providers: ["cursor"], adopt: true });
+    expect(readFileSync(join(dest, ".cursor/skills/team-own/SKILL.md"), "utf8")).toBe("team\n");
+    expect(readFileSync(join(dest, ".cursor/agents/explorer.md"), "utf8")).toBe("custom explorer\n");
+    expect(readFileSync(join(dest, ".cursor/commands/review.md"), "utf8")).toBe("custom review\n");
+    expect(existsSync(join(dest, ".cursor/agents/explorer.kit.md"))).toBe(true);
+    expect(existsSync(join(dest, ".cursor/commands/review.kit.md"))).toBe(true);
+    expect(lstatSync(join(dest, ".cursor/skills/ground-truth")).isSymbolicLink()).toBe(true);
+    expect(readlinkSync(join(dest, ".cursor/skills/ground-truth"))).toContain(".agents/skills/ground-truth");
+    expect(actions.some((a) => a.note?.includes("kept user file"))).toBe(true);
+    expect(validateKit(join(dest, ".agents"))).toEqual([]);
+    expect(checkDrift(dest, join(dest, ".agents"))).toEqual([]);
+  });
+
+  it("links kit skills into a pre-existing real .cursor/skills directory", () => {
+    const dest = tempDir();
+    put(dest, ".cursor/skills/team-own/SKILL.md", "team\n");
+    install(dest, { providers: ["cursor"] });
+    expect(lstatSync(join(dest, ".cursor/skills")).isSymbolicLink()).toBe(false);
+    expect(readFileSync(join(dest, ".cursor/skills/team-own/SKILL.md"), "utf8")).toBe("team\n");
+    expect(lstatSync(join(dest, ".cursor/skills/setup-ai")).isSymbolicLink()).toBe(true);
+    expect(checkDrift(dest, join(dest, ".agents")).filter((i) => i.message.includes("unreachable"))).toEqual([]);
   });
 
   it("core preset validates clean: every command resolves to an installed skill", () => {

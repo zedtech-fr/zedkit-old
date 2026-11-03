@@ -34,14 +34,14 @@ List, with paths: `AGENTS.md` (root and nested), `CLAUDE.md`, `GEMINI.md`, `.cur
 
 Launch read-only `explorer` subagents in one batch, one question each, with the brief format of `parallel-work`. Ask each to return `file:line` evidence and nothing else. If you cannot spawn subagents, ask the same questions yourself, one after the other.
 
-| Question | Where it looks |
-|---|---|
-| Stack, layout, entry points, workspaces | manifests, lockfiles, top-level folders, build config |
-| The real commands: install, dev, typecheck, lint, test, build, migrate | manifest scripts, `Makefile`, task runners, CI workflow files |
-| Conventions already enforced | lint, format and compiler configs, test layout, naming seen in the code |
-| What the docs say | README, `docs/`, ADRs, glossary, contributing guide |
-| How the team works | `git log` (commit style, PR size, hotfix habits), templates, branch rules, CI jobs and what blocks a merge |
-| Sensitive areas | auth, tenancy, secrets handling, money, migrations, generated code, vendored folders |
+| Question                                                               | Where it looks                                                                                             |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Stack, layout, entry points, workspaces                                | manifests, lockfiles, top-level folders, build config                                                      |
+| The real commands: install, dev, typecheck, lint, test, build, migrate | manifest scripts, `Makefile`, task runners, CI workflow files                                              |
+| Conventions already enforced                                           | lint, format and compiler configs, test layout, naming seen in the code                                    |
+| What the docs say                                                      | README, `docs/`, ADRs, glossary, contributing guide                                                        |
+| How the team works                                                     | `git log` (commit style, PR size, hotfix habits), templates, branch rules, CI jobs and what blocks a merge |
+| Sensitive areas                                                        | auth, tenancy, secrets handling, money, migrations, generated code, vendored folders                       |
 
 Then **run the gate commands you found**, preferring forms without side effects (note any that write build output). Judge a command by its exit code, not by parsed output. A command that fails is a finding, not something to hide.
 
@@ -49,16 +49,16 @@ Then **run the gate commands you found**, preferring forms without side effects 
 
 In **improve** mode, audit each existing file and report before you edit:
 
-| Check | How |
-|---|---|
-| Stale | paths that no longer exist, commands that fail, tools the repo no longer uses. Check each path and run each command; do not judge by reading. |
-| Contradictory | two files giving different commands or rules |
-| Duplicated | a paragraph, or three or more lines, repeated across files; keep one home and link to it |
-| Copied shared config | a local copy of what a published `@zedtech/*` package ships (ESLint preset/boundaries, tsconfig base): replace the copy with the install, thin wrapper only, never copy-paste; verify with the package's verify command |
-| Too long for always-loaded | root file over about 100 lines, nested file over about 60, skill over about 150; or details only one folder needs |
-| Missing trigger | skills or agents whose `description` does not say when to use them |
-| Unenforced | prose rules a tool could check. Before calling a rule unenforced, open the lint, type and CI configs and search them for it. |
-| Missing ladder | root `AGENTS.md`, or the `plan` / `implement` / `review` skills, does not state the 7-question ladder. Search for the ladder section or the 7 rungs; an existing `AGENTS.md` without it is a gap like any other. |
+| Check                      | How                                                                                                                                                                                                                     |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Stale                      | paths that no longer exist, commands that fail, tools the repo no longer uses. Check each path and run each command; do not judge by reading.                                                                           |
+| Contradictory              | two files giving different commands or rules                                                                                                                                                                            |
+| Duplicated                 | a paragraph, or three or more lines, repeated across files; keep one home and link to it                                                                                                                                |
+| Copied shared config       | a local copy of what a published `@zedtech/*` package ships (ESLint preset/boundaries, tsconfig base): replace the copy with the install, thin wrapper only, never copy-paste; verify with the package's verify command |
+| Too long for always-loaded | root file over about 100 lines, nested file over about 60, skill over about 150; or details only one folder needs                                                                                                       |
+| Missing trigger            | skills or agents whose `description` does not say when to use them                                                                                                                                                      |
+| Unenforced                 | prose rules a tool could check. Before calling a rule unenforced, open the lint, type and CI configs and search them for it.                                                                                            |
+| Missing ladder             | root `AGENTS.md`, or the `plan` / `implement` / `review` skills, does not state the 7-question ladder. Search for the ladder section or the 7 rungs; an existing `AGENTS.md` without it is a gap like any other.        |
 
 In both modes, list **gaps**: repo facts an agent would otherwise get wrong. Examples: a non-obvious test command, a generated folder not to edit, a module boundary, a migration procedure, a naming rule the linter misses, a service that must be running.
 
@@ -66,14 +66,14 @@ In both modes, list **gaps**: repo facts an agent would otherwise get wrong. Exa
 
 For each gap pick the smallest home:
 
-| Artifact | Create it when |
-|---|---|
-| Root `AGENTS.md` | always: role and style, non-negotiables, verified commands, map, review angles. Short. |
-| Nested `AGENTS.md` | a folder has its own stack, commands or rules that the rest of the repo does not |
-| Repo skill | a multi-step workflow is repeated in this repo (seen in two or more places in code, docs or `git log`), for example "add an endpoint" or "add a migration" |
-| Subagent | a narrow job needs fresh context or fewer permissions, for example a reviewer for one sensitive area |
-| Lint, CI or hook change | a rule is mechanical and keeps being broken |
-| Nothing | the fact is already clear from the code |
+| Artifact                | Create it when                                                                                                                                             |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Root `AGENTS.md`        | always: role and style, non-negotiables, verified commands, map, review angles. Short.                                                                     |
+| Nested `AGENTS.md`      | a folder has its own stack, commands or rules that the rest of the repo does not                                                                           |
+| Repo skill              | a multi-step workflow is repeated in this repo (seen in two or more places in code, docs or `git log`), for example "add an endpoint" or "add a migration" |
+| Subagent                | a narrow job needs fresh context or fewer permissions, for example a reviewer for one sensitive area                                                       |
+| Lint, CI or hook change | a rule is mechanical and keeps being broken                                                                                                                |
+| Nothing                 | the fact is already clear from the code                                                                                                                    |
 
 Present the plan as a table: artifact, path, why (with evidence), action (create, edit, dedupe, leave alone), and whether it is `safe` (additive) or `needs OK` (removes or rewrites existing text). Every finding from step 3 gets a row, or an explicit "left alone: reason". **Wait for the user's go before writing.** If nobody can answer (non-interactive run), output the table and stop.
 
@@ -81,12 +81,12 @@ Present the plan as a table: artifact, path, why (with evidence), action (create
 
 Shared source first, provider layers after. `zedkit-ai init --provider <names>` does the mechanical part; you do the repo-specific part.
 
-| Provider | Layer on top of `AGENTS.md` + `.agents/` |
-|---|---|
+| Provider | Layer on top of `AGENTS.md` + `.agents/`                                                                                                                                   |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `cursor` | `.cursor/rules/project.mdc` (skip it when an always-on rule exists), `.cursor/skills` link, agents and commands as real-file copies (a linked folder shows up empty there) |
-| `claude` | `CLAUDE.md` link, `.claude/{skills,agents,commands}` links |
-| `codex` | none: reads `AGENTS.md` and `.agents/skills` directly |
-| `muse` | none: reads `.agents/` directly |
+| `claude` | `CLAUDE.md` link, `.claude/{skills,agents,commands}` links                                                                                                                 |
+| `codex`  | none: reads `AGENTS.md` and `.agents/skills` directly                                                                                                                      |
+| `muse`   | none: reads `.agents/` directly                                                                                                                                            |
 
 - **Root `AGENTS.md`**: start from the kit template if there is none; when one exists, keep it and add the missing ladder section (the same 7 questions as the template). Replace every `<placeholder>` with a verified fact or delete the line. Non-negotiables name how each is enforced.
 - **Role and style**: fill it from evidence, not taste. Role and audience from the README (who the project serves); reply language from the language of the docs and commit messages; tone from commit style (terse or explanatory). If the evidence is missing or mixed, ask the user exactly one question covering what is unknown (for example reply language and audience) before writing; with nobody to ask, default to English replies and mark the choice `UNVERIFIED`.
@@ -137,6 +137,6 @@ Example: a `workspace/` root holding `services-api/` and `services-web/`
 (each with its own `.git`) gets a root `AGENTS.md` declaring the workspace,
 a two-row inventory, and:
 
-| Repo | Depends on | Evidence |
-|---|---|---|
+| Repo           | Depends on     | Evidence                                                   |
+| -------------- | -------------- | ---------------------------------------------------------- |
 | `services-web` | `services-api` | `package.json` needs `@example/api-client`, same git group |

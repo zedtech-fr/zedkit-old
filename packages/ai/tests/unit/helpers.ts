@@ -39,7 +39,7 @@ export function lensTableRows(): string[][] {
     .split("\n")
     .filter((line) => line.startsWith("| "))
     .map((line) => line.split("|").map((c) => c.trim()))
-    .filter((cells) => cells[1] !== "Lens" && cells[1] !== "---");
+    .filter((cells) => (cells[1] ?? "") !== "Lens" && !/^:?-{3,}:?$/.test(cells[1] ?? ""));
 }
 
 /** Skill directory names only: stray files (LICENSE-*) never count as skills. */

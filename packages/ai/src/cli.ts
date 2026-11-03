@@ -9,12 +9,14 @@ import { checkDrift, validateKit } from "./validate.js";
 
 const USAGE = `zedkit-ai <command>
 
-  init [dir] [--preset starter|core|full] [--provider ...] [--dry-run]
+  init [dir] [--preset starter|core|full] [--provider ...] [--adopt] [--dry-run]
       Copy skills, subagents, commands and an AGENTS.md template into dir
       (default .), then wire the providers (default all). Never overwrites
       existing files (an existing AGENTS.md without the ladder gets the
-      ladder section appended). --provider takes cursor,claude,codex,muse,all;
-      --target is an alias of --provider.
+      ladder section appended). --adopt keeps a colliding user file and
+      writes the kit version beside it (review.kit.md or zk-review).
+      --provider takes cursor,claude,codex,muse,all; --target is an alias
+      of --provider.
   validate [dir]
       Check skills, subagents and commands, plus provider-copy drift
       (default dir: .agents; a project root is accepted too). Exit 1
@@ -32,6 +34,7 @@ const OPTIONS = {
   preset: { type: "string" },
   provider: { type: "string" },
   target: { type: "string" },
+  adopt: { type: "boolean" },
   "dry-run": { type: "boolean" },
 } as const;
 
@@ -65,12 +68,14 @@ function runInit(args: string[], sinks: Sinks): number {
   const providers = parseProviders(values.provider ?? values.target);
   if (!providers.ok) return fail(providers.error.message, sinks);
   const dryRun = values["dry-run"] === true;
+  const adopt = values.adopt === true;
   const preset = typeof values.preset === "string" ? values.preset : undefined;
   const result = installKit({
     dest: resolve(positionals[0] ?? "."),
     ...(preset !== undefined && { preset }),
     ...(providers.value !== undefined && { providers: providers.value }),
     dryRun,
+    adopt,
   });
   if (!result.ok) return fail(result.error.message, sinks);
   for (const action of result.value) {

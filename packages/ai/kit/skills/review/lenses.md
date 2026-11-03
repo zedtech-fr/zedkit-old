@@ -6,25 +6,25 @@ exist yet (kit-agents roadmap): the lens reports skipped-planned, never a
 blocker, until the runner lands. Skipping a mandatory lens whose runner
 exists IS a blocker.
 
-| Lens | Runner (skill or agent) | Status | Trigger (changed paths/types) | Mandatory? | Output |
-|---|---|---|---|---|---|
-| code | skill `code-review` (Standards applies `ponytail-review`) | exists | always | yes | findings + verdict |
-| ponytail | skill `ponytail-review` (via code lens, surfaced separately) | exists | always | yes | ladder table + lean findings |
-| persona | skill `persona-review` + repo `.agents/personas.md` | exists | always | yes | per-persona Pass/Rough/Fail + evidence |
-| quality gate | agent `verifier` | exists | always | yes | gate results + DoD checklist |
-| adversarial-tests | agent `test-writer` (method: skill `adversarial-tests`) | exists | logic, handlers, endpoints, state machines | when triggered | edge cases + missing tests |
-| security | agent `security-reviewer` | exists | auth, secrets, tenancy, user data, external calls, crypto | when triggered | threats + fixes, file:line |
-| skeptic | agent `skeptic` (angle per brief: plan, ui/ux, security, scope, data/ops, copy) | exists | plans, specs, ADRs, estimates, product/UI/scope decisions | when triggered | pre-mortem + ranked objections |
-| ui | agent `ui-designer` | exists | `packages/ui/**`, `**/*.tsx`, styles, preview/gallery | when triggered | kit/composition/hierarchy/state findings + examined screenshots + persona(lazy client) |
-| copy | agent `copywriter` | exists | user-visible strings, messages, errors, CTAs | when triggered | keys + FR/EN proposals |
-| a11y | agent `a11y-auditor` | exists | `**/*.tsx`, components, forms, tables | when triggered | WCAG findings + fixes, file:line |
-| seo | agent `seo-auditor` | exists | `packages/seo/**`, pages, metadata, sitemap, redirects | when triggered | rule findings + fixes |
-| dependencies | agent `dependency-auditor` | exists | `package.json`, lockfiles, catalogs, `Dockerfile` | when triggered | need/size/license/maintenance/duplicates |
-| docs | agent `docs-writer` | exists | `README.md`, `AGENTS.md`, `CATALOG.md`, `docs/**`, skills, agents, commands | when triggered | drift + fixes, compiling examples |
-| release | agent `release-manager` | exists | `.changeset/**`, public API, catalog `Status`, `package.json` metadata | when triggered | semver + migration-note + package-metadata (keywords/homepage/bugs/README) check |
-| research | agent `researcher` (method: skill `research`) | exists | new capability with no in-repo precedent | optional | adopt/wrap/build + sources |
-| frontend-quality | agents `ui-designer` + `console-architecture` | exists | app routes, views, `**/*.tsx`, styles, preview/gallery | when triggered | layer + composition + design critique + one-file-one-job findings, file:line |
-| doc-demos | agent `docs-writer` (demos: `ui-designer`) | exists | doc apps, `**/demos/**`, preview registries, generated pages | when triggered | registry + frame + drift findings per §Frontend rules, file:line |
+| Lens              | Runner (skill or agent)                                                         | Status | Trigger (changed paths/types)                                               | Mandatory?     | Output                                                                                 |
+| ----------------- | ------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------- | -------------- | -------------------------------------------------------------------------------------- |
+| code              | skill `code-review` (Standards applies `ponytail-review`)                       | exists | always                                                                      | yes            | findings + verdict                                                                     |
+| ponytail          | skill `ponytail-review` (via code lens, surfaced separately)                    | exists | always                                                                      | yes            | ladder table + lean findings                                                           |
+| persona           | skill `persona-review` + repo `.agents/personas.md`                             | exists | always                                                                      | yes            | per-persona Pass/Rough/Fail + evidence                                                 |
+| quality gate      | agent `verifier`                                                                | exists | always                                                                      | yes            | gate results + DoD checklist                                                           |
+| adversarial-tests | agent `test-writer` (method: skill `adversarial-tests`)                         | exists | logic, handlers, endpoints, state machines                                  | when triggered | edge cases + missing tests                                                             |
+| security          | agent `security-reviewer`                                                       | exists | auth, secrets, tenancy, user data, external calls, crypto                   | when triggered | threats + fixes, file:line                                                             |
+| skeptic           | agent `skeptic` (angle per brief: plan, ui/ux, security, scope, data/ops, copy) | exists | plans, specs, ADRs, estimates, product/UI/scope decisions                   | when triggered | pre-mortem + ranked objections                                                         |
+| ui                | agent `ui-designer`                                                             | exists | `packages/ui/**`, `**/*.tsx`, styles, preview/gallery                       | when triggered | kit/composition/hierarchy/state findings + examined screenshots + persona(lazy client) |
+| copy              | agent `copywriter`                                                              | exists | user-visible strings, messages, errors, CTAs                                | when triggered | keys + FR/EN proposals                                                                 |
+| a11y              | agent `a11y-auditor`                                                            | exists | `**/*.tsx`, components, forms, tables                                       | when triggered | WCAG findings + fixes, file:line                                                       |
+| seo               | agent `seo-auditor`                                                             | exists | `packages/seo/**`, pages, metadata, sitemap, redirects                      | when triggered | rule findings + fixes                                                                  |
+| dependencies      | agent `dependency-auditor`                                                      | exists | `package.json`, lockfiles, catalogs, `Dockerfile`                           | when triggered | need/size/license/maintenance/duplicates                                               |
+| docs              | agent `docs-writer`                                                             | exists | `README.md`, `AGENTS.md`, `CATALOG.md`, `docs/**`, skills, agents, commands | when triggered | drift + fixes, compiling examples                                                      |
+| release           | agent `release-manager`                                                         | exists | `.changeset/**`, public API, catalog `Status`, `package.json` metadata      | when triggered | semver + migration-note + package-metadata (keywords/homepage/bugs/README) check       |
+| research          | agent `researcher` (method: skill `research`)                                   | exists | new capability with no in-repo precedent                                    | optional       | adopt/wrap/build + sources                                                             |
+| frontend-quality  | agents `ui-designer` + `console-architecture`                                   | exists | app routes, views, `**/*.tsx`, styles, preview/gallery                      | when triggered | layer + composition + design critique + one-file-one-job findings, file:line           |
+| doc-demos         | agent `docs-writer` (demos: `ui-designer`)                                      | exists | doc apps, `**/demos/**`, preview registries, generated pages                | when triggered | registry + frame + drift findings per §Frontend rules, file:line                       |
 
 ## Frontend rules (the `ui` lens fails the review on any of these)
 

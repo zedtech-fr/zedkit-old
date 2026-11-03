@@ -71,8 +71,8 @@ at the first rung that holds (skill `ponytail-review` has the full text):
 
 ## Map
 
-| Area | Rules | README |
-|---|---|---|
+| Area     | Rules                         | README                     |
+| -------- | ----------------------------- | -------------------------- |
 | `<path>` | [AGENTS.md](<path>/AGENTS.md) | [README](<path>/README.md) |
 
 ## Reviews

@@ -15,7 +15,7 @@ Real output with a drifted Cursor copy (plus a core-preset gap):
 
 ```text
 commands/audit.md: names no installed skill (a command runs a `skill` by name)
-.cursor/agents/verifier.md: drifted from .agents/agents/verifier.md: copy it over (init never overwrites)
+.cursor/agents/verifier.md: differs from .agents/agents/verifier.md; user copy kept
 2 problems
 ```
 
@@ -26,9 +26,9 @@ available programmatically via `validateKit` + `checkDrift`, which return
 
 ## Troubleshooting
 
-- `drifted from …: copy it over (init never overwrites)` — a provider copy
-  (Cursor keeps real-file copies) no longer matches `.agents/`. Copy the
-  file over by hand; re-running `init` will not touch it.
+- `differs from …; user copy kept` — a provider copy (Cursor keeps real-file
+  copies) no longer matches `.agents/`. The user file is left as-is. Re-run
+  `zedkit-ai init --adopt` to write a kit sidecar (`*.kit.md`) next to it.
 - `copy missing: copy it from … or re-run init` — a provider file was
   deleted. Either restore that one file or re-run `init`.
 - `names no installed skill` — the installed preset does not ship that

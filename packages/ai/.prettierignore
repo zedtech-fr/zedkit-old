@@ -1,0 +1,27 @@
+# Vendored skills stay verbatim (see kit/THIRD_PARTY_NOTICES.md).
+kit/skills/ponytail/**
+kit/skills/ponytail-audit/**
+kit/skills/ponytail-debt/**
+kit/skills/ponytail-gain/**
+kit/skills/ponytail-help/**
+kit/skills/ponytail-review/**
+kit/skills/code-review/**
+kit/skills/codebase-design/**
+kit/skills/diagnosing-bugs/**
+kit/skills/domain-modeling/**
+kit/skills/handoff/**
+kit/skills/implement/**
+kit/skills/implement-spec/**
+kit/skills/improve-codebase-architecture/**
+kit/skills/pr/**
+kit/skills/research/**
+kit/skills/retro/**
+kit/skills/setup-matt-pocock-skills/**
+kit/skills/setup-ts-deep-modules/**
+kit/skills/tdd/**
+kit/skills/to-spec/**
+kit/skills/to-tickets/**
+kit/skills/triage/**
+kit/skills/wayfinder/**
+kit/skills/writing-for-agents/**
+kit/skills/LICENSE-*
