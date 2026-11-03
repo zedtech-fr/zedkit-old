@@ -9,6 +9,9 @@ import { checkDrift, validateKit } from "./validate.js";
 
 const USAGE = `zedkit-ai <command>
 
+  setup [dir] [--provider ...] [--preset starter|setup|core|full] [--dry-run]
+      One-shot onboarding: same as init --adopt (keeps your existing agent
+      files on collision). Then run /setup-ai in your agent.
   init [dir] [--preset starter|setup|core|full] [--provider ...] [--adopt] [--dry-run]
       Copy skills, subagents, commands and an AGENTS.md template into dir
       (default .), then wire the providers (default all). Never overwrites
@@ -61,15 +64,20 @@ function fail(message: string, sinks: Sinks): number {
   return 2;
 }
 
-function runInit(args: string[], sinks: Sinks): number {
+function nextStep(dryRun: boolean): string {
+  if (dryRun) return "dry run: nothing written";
+  return "next: run /setup-ai in your agent (or ask: run the setup-ai skill). When it finishes: npx zedkit-ai validate";
+}
+
+function runInstall(args: string[], sinks: Sinks, kind: "init" | "setup"): number {
   const parsed = parse(args, OPTIONS, 1);
   if (!parsed.ok) return fail(parsed.error.message, sinks);
   const { values, positionals } = parsed.value;
   const providers = parseProviders(values.provider ?? values.target);
   if (!providers.ok) return fail(providers.error.message, sinks);
   const dryRun = values["dry-run"] === true;
-  const adopt = values.adopt === true;
   const preset = typeof values.preset === "string" ? values.preset : undefined;
+  const adopt = kind === "setup" || values.adopt === true;
   const result = installKit({
     dest: resolve(positionals[0] ?? "."),
     ...(preset !== undefined && { preset }),
@@ -81,8 +89,16 @@ function runInit(args: string[], sinks: Sinks): number {
   for (const action of result.value) {
     sinks.out(`${action.kind.padEnd(5)} ${action.path}${action.note ? `  (${action.note})` : ""}`);
   }
-  sinks.out(dryRun ? "dry run: nothing written" : "next: ask your agent to run the `setup-ai` skill, then `zedkit-ai validate`");
+  sinks.out(nextStep(dryRun));
   return 0;
+}
+
+function runInit(args: string[], sinks: Sinks): number {
+  return runInstall(args, sinks, "init");
+}
+
+function runSetup(args: string[], sinks: Sinks): number {
+  return runInstall(args, sinks, "setup");
 }
 
 function runValidate(args: string[], sinks: Sinks): number {
@@ -121,6 +137,7 @@ function runList(args: string[], sinks: Sinks): number {
 /** Run the CLI. Returns the process exit code (0 ok, 1 validation problems, 2 usage or runtime error). */
 export function main(argv: string[], sinks: Sinks): number {
   const [command, ...rest] = argv;
+  if (command === "setup") return runSetup(rest, sinks);
   if (command === "init") return runInit(rest, sinks);
   if (command === "validate") return runValidate(rest, sinks);
   if (command === "list") return runList(rest, sinks);

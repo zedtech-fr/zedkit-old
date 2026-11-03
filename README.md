@@ -82,8 +82,8 @@ Prerequisites: Node ≥ 22 and pnpm 9. In your own repo:
 
 ```sh
 pnpm add -D @zedtech/zedkit-ai
-npx zedkit-ai init . --provider cursor   # cursor, claude, codex, muse, all
-# then ask your agent: "run the setup-ai skill"
+npx @zedtech/zedkit-ai setup --provider cursor
+# in your agent: /setup-ai
 npx zedkit-ai validate                   # must print: ok
 ```
 

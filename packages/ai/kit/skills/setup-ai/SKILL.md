@@ -7,6 +7,15 @@ description: "Set up or improve this repo's AI setup from what the repo actually
 
 Make the AI setup of **this** repo true and specific. Generic advice is already in the kit; your job is what only this repo can say: its product, domain rules, commands, layout, traps, and repeated workflows.
 
+## Tell the user first
+
+When `/setup-ai` starts (or the user asks to set up AI), say this in plain language before phase A — no interview yet:
+
+- **Modes:** **fresh** (little or no agent setup yet) or **improve** (you already have `AGENTS.md`, rules, or provider folders — audit and extend, do not replace blindly).
+- **Phases:** **A** inventory and explore → **B** discovery (evidence plus one batched interview) → **C** build artifacts → **D** catalog skills → write, verify, report.
+- **What they get:** a verified root `AGENTS.md`, product/domain artifacts when depth is wanted, nested rules where folders differ, optional repo skills and subagents, and thin Cursor/Claude layers that match `.agents/`.
+- **Time:** about **15–45 minutes** for a typical app repo; large monorepos or workspace roots can take longer. They answer the plan go/no-go and at most **one** provider question when evidence is missing.
+
 ## Phases (whole run)
 
 | Phase | Name      | What happens                                                                              |
