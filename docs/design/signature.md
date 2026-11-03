@@ -1,6 +1,8 @@
 # zedkit signature
 
-The reference site's visual language on top of **Glass** (default identity): editorial type rhythm, calm composition, named motion, and selective elevation. Specimens inside `ThemeScope` keep their own look; the frame uses these rules only.
+The reference site's visual language on top of **Glass** (default identity; decision D3 — no alternate default identity): editorial type rhythm, calm composition, named motion, and selective elevation. Specimens inside `ThemeScope` keep their own look; the frame uses these rules only.
+
+Approved product context: [reference-decisions.md](./reference-decisions.md) (D1–D4).
 
 ## Type: semantic level vs visual role
 
