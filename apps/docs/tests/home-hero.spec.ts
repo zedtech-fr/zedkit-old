@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { DEFAULT_IDENTITY, HERO_TOUR_LOOK as TOUR_LOOK } from "../lib/default-identity";
 
 const BASE = "http://127.0.0.1:3100";
 
@@ -255,12 +256,13 @@ test("the tour also changes the look in the Display row, and a look the visitor 
   const select = page.locator("#demo [data-hero-look-select]");
   const scope = page.locator("#demo [data-home-hero-visuals]");
   const before = await scope.getAttribute("data-identity");
-  await expect(select).toHaveText("Tide");
+  const label = (id: string) => id.charAt(0).toUpperCase() + id.slice(1);
+  await expect(select).toHaveText(label(DEFAULT_IDENTITY));
 
   // Nobody touches anything: the cursor presses the select and the whole example, cards included, changes look.
-  await expect(select).toHaveText("Glass", { timeout: 12_000 });
-  await expect(scope).toHaveAttribute("data-identity", "glass");
-  expect(before).not.toBe("glass");
+  await expect(select).toHaveText(label(TOUR_LOOK), { timeout: 12_000 });
+  await expect(scope).toHaveAttribute("data-identity", TOUR_LOOK);
+  expect(before).not.toBe(TOUR_LOOK);
   // The site around the example keeps its own look.
   expect(await page.locator("html").getAttribute("data-identity")).toBe(before);
 
@@ -268,8 +270,8 @@ test("the tour also changes the look in the Display row, and a look the visitor 
   await go(page, "Team");
   await expect(windowOf(page)).toHaveAttribute("data-tour", "off");
   await page.waitForTimeout(6000);
-  await expect(select).toHaveText("Glass");
-  await expect(scope).toHaveAttribute("data-identity", "glass");
+  await expect(select).toHaveText(label(TOUR_LOOK));
+  await expect(scope).toHaveAttribute("data-identity", TOUR_LOOK);
 });
 
 const tourControl = (page: Page) => page.locator("#demo").getByRole("button", { name: /^(Pause|Play) tour$/ });

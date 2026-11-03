@@ -30,8 +30,8 @@ const seenValues = (page: Page) =>
 
 const identityValues = (seen: Seen) => seen.filter((value) => value !== null && !value.startsWith("dcl:"));
 
-test("a first-time visitor gets Tide before the first paint, with no change after", async ({ page }) => {
-  expect(DEFAULT).toBe("tide");
+test("a first-time visitor gets Glass before the first paint, with no change after", async ({ page }) => {
+  expect(DEFAULT).toBe("glass");
   await recordIdentity(page);
   await page.goto(PAGE, { waitUntil: "networkidle" });
   await expect(page.locator("html")).toHaveAttribute("data-identity", DEFAULT);

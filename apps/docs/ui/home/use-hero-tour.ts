@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type RefObject } from "react";
-import { DEFAULT_IDENTITY } from "@/lib/default-identity";
+import { DEFAULT_IDENTITY, HERO_TOUR_LOOK } from "@/lib/default-identity";
 
 /**
  * One lap of the guided tour: go to a page by its sidebar entry, use one control on it, and sometimes change the
@@ -11,7 +11,7 @@ import { DEFAULT_IDENTITY } from "@/lib/default-identity";
 const LAP = [
   { page: "overview", use: null, dwell: 1400, look: null },
   // Sorting by name reorders every row at once: a change anyone can see, with nothing opening over the page.
-  { page: "apps", use: "[data-slot='data-table'] thead th:first-child button", dwell: 1500, look: "glass" },
+  { page: "apps", use: "[data-slot='data-table'] thead th:first-child button", dwell: 1500, look: HERO_TOUR_LOOK },
   { page: "calendar", use: "[data-day='2026-11-06'] button", dwell: 1500, look: null },
   { page: "team", use: "[data-hero-person='Luca Moretti']", dwell: 1400, look: "maison" },
   { page: "settings", use: "[data-hero-switch]", dwell: 1400, look: DEFAULT_IDENTITY },

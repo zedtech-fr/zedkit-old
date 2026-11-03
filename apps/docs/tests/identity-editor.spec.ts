@@ -283,7 +283,7 @@ test.describe("identity editor apply to site", () => {
     await page.getByRole("button", { name: "Apply to the whole site" }).click();
     await page.getByRole("button", { name: "Back to default" }).click();
     await expect(page.locator("html")).toHaveAttribute("data-identity", DEFAULT_IDENTITY);
-    await expect.poll(() => spacingOnHtml(page)).toMatch(/^0?\.28rem$/);
+    await expect.poll(() => spacingOnHtml(page)).toMatch(/^0?\.26rem$/);
     await expect(page.getByRole("button", { name: "Back to default" })).toHaveCount(0);
     expect(await page.evaluate((key) => localStorage.getItem(key), DOCS_CUSTOM_STORAGE_KEY)).toBeNull();
   });

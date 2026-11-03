@@ -4,4 +4,7 @@
  * "Back to default" returns here. A stored choice still wins. The kit's own
  * fallback stays "mist" (`identities[0]` in `@zedtech/zedkit-ui`).
  */
-export const DEFAULT_IDENTITY = "tide";
+export const DEFAULT_IDENTITY = "glass";
+
+/** A look other than the site default, so the hero tour visibly changes it. */
+export const HERO_TOUR_LOOK = DEFAULT_IDENTITY === "glass" ? "tide" : "glass";

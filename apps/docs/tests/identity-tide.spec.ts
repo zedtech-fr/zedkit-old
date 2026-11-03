@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { assertA11yGate } from "./a11y-helpers";
-import { probe, useIdentity } from "./identity-helpers";
+import { persistDocsSiteLook, probe, useIdentity } from "./identity-helpers";
 import { openHeroPage } from "./hero-helpers";
 
 // Relative path: the config baseURL decides the port.
@@ -41,6 +41,7 @@ test.describe("tide identity", () => {
   }
 
   test("keeps UI changelog on one line at 1280", async ({ page }) => {
+    await persistDocsSiteLook(page, "tide", "light");
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.goto(HOME, { waitUntil: "networkidle" });
     await expect(page.locator("html")).toHaveAttribute("data-identity", "tide");
@@ -54,6 +55,7 @@ test.describe("tide identity", () => {
   });
 
   test("hero admin preview sizes to content on phone (no clipped overflow)", async ({ page }) => {
+    await persistDocsSiteLook(page, "tide", "light");
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(HOME, { waitUntil: "networkidle" });
     await openHeroPage(page, "Apps");

@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { persistDocsSiteLook } from "./identity-helpers";
+
 /**
  * Touch targets: on narrow or coarse-pointer screens, interactive controls
  * reach a 44px tap size. The visible size of small controls (checkbox,
@@ -68,6 +70,8 @@ test.describe("touch targets on desktop", () => {
   test.use({ viewport: DESKTOP });
 
   test("mouse users keep compact control heights", async ({ page }) => {
+    // Compact identities only: Glass (the site default) sizes controls from its roomier unit.
+    await persistDocsSiteLook(page, "tide", "light");
     await open(page, "/docs/ui/collect-text-input-with-a-label");
     const input = page.locator("main input.h-control-height").first();
     await expect(input).toBeVisible();

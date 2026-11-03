@@ -23,6 +23,7 @@ import "./catalog-shell.css";
 import "./tide-fit.css";
 import "./docs-tables.css";
 import "./code-scroll.css";
+import "./site-compact.css";
 import "./docs-component-page.css";
 import "./fonts";
 

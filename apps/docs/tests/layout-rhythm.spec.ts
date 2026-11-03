@@ -37,7 +37,7 @@ test("docs article keeps token gutters on mobile", async ({ page }) => {
     return out;
   });
   expect(gutter).toBe(token);
-  expect(Number.parseFloat(gutter)).toBeGreaterThanOrEqual(20);
+  expect(Number.parseFloat(gutter)).toBeGreaterThanOrEqual(16);
 });
 
 test("catalog band sits on the 1160px container", async ({ page }) => {
