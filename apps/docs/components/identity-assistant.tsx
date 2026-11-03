@@ -52,7 +52,7 @@ export function IdentityAssistant({ tokens, onUse }: { tokens: IdentityTokens; o
           <AssistantHeading />
           <ViewSwitch view={ui.view} onView={ui.setView} waiting={session.proposal !== null} previewRef={ui.previewButton} />
           <Text role="status" className="min-h-5 text-sm text-muted-foreground" data-assistant-status="">
-            {busy ? copy.working : session.notice && session.notice.kind !== "unavailable" ? noticeText(session.notice) : null}
+            {busy ? copy.working : session.notice && session.notice.kind !== "unavailable" ? noticeText(session.notice) : session.proposal ? copy.views.proposalReady : null}
           </Text>
           <ConversationPane view={ui.view} session={session} off={off} brief={brief} busy={busy} onBrief={setBrief} onSubmit={send} onCancel={cancel} textareaRef={ui.textarea} />
           <PreviewPane

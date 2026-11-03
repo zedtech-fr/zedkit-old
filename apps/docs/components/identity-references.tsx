@@ -32,7 +32,7 @@ export function DetectedLinks({ text, onText, disabled = false }: { text: string
                 <Text as="span" className="min-w-0 truncate text-sm" title={url}>
                   {url}
                 </Text>
-                <Button type="button" variant="ghost" size="sm" disabled={disabled} aria-label={copy.links.remove(hostOf(url))} onClick={() => onText(removeLink(text, url))}>
+                <Button type="button" variant="ghost" size="sm" className="min-w-11" disabled={disabled} aria-label={copy.links.remove(hostOf(url))} onClick={() => onText(removeLink(text, url))}>
                   ×
                 </Button>
               </li>

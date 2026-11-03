@@ -71,10 +71,10 @@ export function BriefForm({
           id="identity-assistant-brief"
           ref={textareaRef}
           rows={4}
-          placeholder={copy.placeholder}
+          placeholder={refining ? copy.refinePlaceholder : copy.placeholder}
           maxLength={LIMITS.prompt}
           value={value}
-          disabled={busy}
+          readOnly={busy}
           aria-describedby="identity-assistant-brief-hint"
           onChange={(event) => onValue(event.target.value)}
           onKeyDown={(event) => {
@@ -129,10 +129,10 @@ export function ViewSwitch({
 }) {
   return (
     <Stack direction="horizontal" gap={2} role="group" aria-label={copy.views.label} data-assistant-views="" className="lg:hidden">
-      <Button type="button" variant={view === "conversation" ? "default" : "outline"} aria-pressed={view === "conversation"} className="flex-1" onClick={() => onView("conversation")}>
+      <Button type="button" variant="outline" aria-pressed={view === "conversation"} className="flex-1" onClick={() => onView("conversation")}>
         {copy.views.conversation}
       </Button>
-      <Button ref={previewRef} type="button" variant={view === "preview" ? "default" : "outline"} aria-pressed={view === "preview"} className="flex-1" onClick={() => onView("preview")}>
+      <Button ref={previewRef} type="button" variant="outline" aria-pressed={view === "preview"} className="flex-1" onClick={() => onView("preview")}>
         {copy.views.preview}
         {waiting && view !== "preview" ? <Text as="span" aria-hidden="true" className="inline-block size-2 rounded-full bg-primary" /> : null}
       </Button>
@@ -220,7 +220,7 @@ export function ProposalCard({
           {copy.proposal.discard}
         </Button>
       </Stack>
-      <Text variant="muted" className="text-xs">
+      <Text variant="muted" className="text-sm">
         {copy.proposal.note}
       </Text>
     </Stack>

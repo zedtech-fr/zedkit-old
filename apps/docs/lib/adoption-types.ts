@@ -8,7 +8,7 @@ export type AdoptionBlock =
       path: string;
       lang: "tsx" | "ts" | "css" | "json";
       code: string;
-      action: "create" | "replace" | "append";
+      action: "create" | "replace" | "append" | "merge";
       role?: "main" | "companion";
     }
   | { kind: "snippet"; title?: string; lang: "tsx" | "ts"; code: string };

@@ -86,7 +86,7 @@ export function useHeroTour({
   });
   useEffect(() => {
     const root = rootRef.current;
-    if (!enabled || !root || !window.matchMedia(TOUR_QUERY).matches) return;
+    if (!enabled || !root) return;
     const cursor = root.querySelector<HTMLElement>("[data-hero-cursor]");
     if (!cursor) return;
     if (!playing) {

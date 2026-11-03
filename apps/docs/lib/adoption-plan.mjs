@@ -11,7 +11,7 @@
  *
  * @typedef {"pnpm" | "npm" | "yarn"} PackageManager
  * @typedef {{ kind: "command", commands: Record<PackageManager, string> }} CommandBlock
- * @typedef {{ kind: "file", path: string, lang: "tsx" | "ts" | "css" | "json", code: string, action: "create" | "replace" | "append", role?: "main" | "companion" }} FileBlock
+ * @typedef {{ kind: "file", path: string, lang: "tsx" | "ts" | "css" | "json", code: string, action: "create" | "replace" | "append" | "merge", role?: "main" | "companion" }} FileBlock
  * @typedef {{ kind: "snippet", title?: string, lang: "tsx" | "ts", code: string }} SnippetBlock
  * @typedef {CommandBlock | FileBlock | SnippetBlock} Block
  * @typedef {{ id: string, params?: { brick?: string, files?: number, packages?: string[] }, blocks: Block[] }} Step
@@ -96,7 +96,7 @@ export function registryClosure(registry, names) {
       if (!SHADCN_BUILTIN.has(itemName)) throw new Error(`registry: "${itemName}" is neither a brick nor built into shadcn`);
       return;
     }
-    for (const file of item.files) files.push({ ...file, brick: item.name });
+    for (const file of item.files) if (!files.some((known) => known.path === file.path)) files.push({ ...file, brick: item.name });
     for (const dep of item.dependencies ?? []) if (!dependencies.includes(dep)) dependencies.push(dep);
     if (item.cssVars || item.css) css.push({ cssVars: item.cssVars, css: item.css });
     for (const dep of item.registryDependencies ?? []) {
@@ -351,7 +351,7 @@ function packageMode({ need, packageName, example }) {
   if (adoption.kind === "config") {
     steps.push({
       id: "extend",
-      blocks: [{ kind: "file", path: "tsconfig.json", lang: "json", code: `${JSON.stringify({ extends: adoption.extends }, null, 2)}\n`, action: "replace" }],
+      blocks: [{ kind: "file", path: "tsconfig.json", lang: "json", code: `${JSON.stringify({ extends: adoption.extends }, null, 2)}\n`, action: "merge" }],
     });
   } else if (isUi) {
     steps.push({

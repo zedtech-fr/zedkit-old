@@ -35,7 +35,7 @@ type AppProps = {
   /** The tour changes the look through this, the way the Display row does. */
   onLook: (id: string) => void;
   /** Whether the guided tour runs, and what to do when the visitor takes the example over. */
-  tour: { playing: boolean; onTakeover: () => void };
+  tour: { available: boolean; playing: boolean; onTakeover: () => void };
 };
 
 /** One page. All five stay mounted in a single grid cell: the window is as tall as the tallest, and what the visitor did stays. */
@@ -82,7 +82,7 @@ function Pages({ page, preview, onPreviewChange, motionOk }: Pick<AppProps, "pag
 export function HomeHeroApp({ page, onPage, intro, preview, onPreviewChange, onLook, tour }: AppProps) {
   const motionOk = useMotionOk();
   const root = useRef<HTMLDivElement>(null);
-  useHeroTour({ rootRef: root, enabled: motionOk, playing: tour.playing, onTakeover: tour.onTakeover, onLook });
+  useHeroTour({ rootRef: root, enabled: tour.available, playing: tour.playing, onTakeover: tour.onTakeover, onLook });
   return (
     <div ref={root} role="region" aria-label={copy.label} data-hero-window="" data-intro={intro ? "" : undefined} className="relative min-w-0">
       <HeroShell sidebar={<HeroSidebar page={page} onPage={onPage} />} topbar={<HeroTopBar page={page} onPage={onPage} />}>

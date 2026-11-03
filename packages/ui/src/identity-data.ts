@@ -16,8 +16,9 @@ const CUSTOM_IDENTITY_ID = "custom";
 /** Prefix for saved named identities (`n-acme`). Built-in ids never use it. */
 const NAMED_IDENTITY_PREFIX = "n-";
 
+/** `n-` and a plain slug. The id is written into a `[data-identity="…"]` selector, so nothing else may pass. */
 function isNamedIdentityId(id: string): boolean {
-  return id.startsWith(NAMED_IDENTITY_PREFIX);
+  return /^n-[a-z0-9-]{0,120}$/.test(id);
 }
 
 /** Extra option so a select/radio group can name a custom or named look that is not in the list. */

@@ -46,6 +46,8 @@ test("each refusal is its own named outcome, with a retry time when there is one
   assert.deepEqual(await kinds(429, { error: "rate" }, { "retry-after": "30" }), { kind: "rate", retryAfterSec: 30 });
   assert.deepEqual(await kinds(429, { error: "busy", retryAfterSec: 5 }), { kind: "busy", retryAfterSec: 5 });
   assert.deepEqual(await kinds(429, { error: "rate" }), { kind: "rate" });
+  // A retry time that no clock can show is a day at most: it must never reach a date formatter.
+  assert.deepEqual(await kinds(429, { error: "quota", retryAfterSec: 1e13 }), { kind: "quota", retryAfterSec: 86_400 });
   assert.deepEqual(await kinds(409, { error: "duplicate" }), { kind: "duplicate" });
   assert.deepEqual(await kinds(413, { error: "size" }), { kind: "too-large" });
   assert.deepEqual(await kinds(400, { error: "body", field: "prompt" }), { kind: "invalid-input", field: "prompt" });

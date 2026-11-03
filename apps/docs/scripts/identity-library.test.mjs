@@ -118,6 +118,18 @@ test("invalid entries are dropped and counted, never rendered", () => {
   assert.equal(read.dropped, 5);
 });
 
+test("an id that could leave its CSS selector is dropped, not applied", () => {
+  const storage = memory();
+  const good = { id: "n-good", label: "Good", tokens: TOKENS };
+  const breakout = { id: 'n-a"]{} body{display:none} [x="', label: "Breakout", tokens: TOKENS };
+  const spaced = { id: "n-a b", label: "Spaced", tokens: TOKENS };
+  const upper = { id: "n-Upper", label: "Upper", tokens: TOKENS };
+  storage.data.set(LIBRARY_KEY, JSON.stringify({ version: 2, items: [good, breakout, spaced, upper] }));
+  const read = readLibrary(storage);
+  assert.deepEqual(read.items.map((item) => item.id), ["n-good"]);
+  assert.equal(read.dropped, 3);
+});
+
 test("corrupt storage is reported, copied aside before it is overwritten, and does not throw", () => {
   const storage = memory();
   storage.data.set(LIBRARY_KEY, "{not json");

@@ -301,4 +301,10 @@ describe("isNamedIdentityId", () => {
     expect(isNamedIdentityId("custom")).toBe(false);
     expect(isNamedIdentityId("N-acme")).toBe(false);
   });
+
+  it("refuses an id that could leave the [data-identity] selector it is written into", () => {
+    for (const id of ['n-a"]{} body{display:none} [x="', "n-a b", "n-Upper", "n-a]", "n-a\\", `n-${"a".repeat(121)}`]) {
+      expect(isNamedIdentityId(id), id).toBe(false);
+    }
+  });
 });
