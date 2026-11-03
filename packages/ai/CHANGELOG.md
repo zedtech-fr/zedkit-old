@@ -1,5 +1,11 @@
 # @zedtech/zedkit-ai
 
+## 0.12.0
+
+### Minor Changes
+
+- e8dbb21: Add the `evidence-grounded-analysis` skill (full preset): analyse customer or audit material with every claim tagged [VERBATIM], [INFERENCE] or [ABSENT], a source inventory first, solidity ratings and one 24h action.
+
 ## 0.11.1
 
 ### Patch Changes
