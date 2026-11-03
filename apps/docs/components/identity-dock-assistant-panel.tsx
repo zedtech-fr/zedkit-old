@@ -48,7 +48,7 @@ export function IdentityDockAssistantPanel({
   }
 
   return (
-    <Stack ref={panelRef} gap={0} className="min-h-0 flex-1 overflow-hidden" data-slot="identity-dock-body">
+    <Stack ref={panelRef} className="min-h-0 flex-1 gap-0 overflow-hidden" data-slot="identity-dock-body">
       <Stack direction="horizontal" gap={2} className="items-center border-b border-border px-3 py-2">
         <Text className="min-w-0 flex-1 text-sm font-medium">{identityDockCopy.panelTitle}</Text>
         <IconButton type="button" variant="ghost" size="sm" label={identityDockCopy.closeLabel} onClick={() => setExpanded(false)}>

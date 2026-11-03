@@ -74,11 +74,10 @@ function IdentityDockWidget() {
         narrow ? (
           <IdentityDockSheet open={expanded} onOpenChange={setExpanded}>
             <Stack
-              gap={0}
               data-slot="identity-dock-panel"
               data-state="open"
               aria-label={identityDockCopy.panelTitle}
-              className="min-h-0 flex-1 overflow-hidden"
+              className="min-h-0 flex-1 gap-0 overflow-hidden"
             >
               {panel}
             </Stack>
