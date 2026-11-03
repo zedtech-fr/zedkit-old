@@ -637,6 +637,7 @@ const CATALOG_AREA_BY_FOLDER = {
   ui: "ui",
   ai: "agents",
   seo: "seo",
+  "payload-access": "backend",
   "payload-seo": "seo",
   core: "backend",
   server: "backend",

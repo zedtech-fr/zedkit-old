@@ -10,7 +10,7 @@ test("create app shows a toast", async ({ page }) => {
   const preview = page.locator("[data-component-preview]").first();
   await preview.scrollIntoViewIfNeeded();
   await preview.getByRole("button", { name: "Create app" }).click();
-  await expect(page.getByText("App created")).toBeVisible();
+  await expect(preview.getByText("App created")).toBeVisible();
 });
 
 test("button demo shows sizes and disabled states (#1065)", async ({ page }) => {
