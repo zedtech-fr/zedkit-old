@@ -8,8 +8,8 @@ const HomeGetStartedSection = dynamic(
   () => import("@/ui/home/home-get-started-section").then((mod) => ({ default: mod.HomeGetStartedSection })),
   {
     loading: () => (
-      <section id="get-started" aria-busy="true" className="min-h-96 w-full scroll-mt-24">
-        <section id="install-or-copy" className="sr-only" />
+      <section aria-busy="true" className="min-h-96 w-full scroll-mt-24" data-home-section-loading="get-started">
+        <div id="install-or-copy" className="sr-only" />
       </section>
     ),
   },
@@ -21,7 +21,7 @@ const HomeComponentFamiliesSection = dynamic(
       default: mod.HomeComponentFamiliesSection,
     })),
   {
-    loading: () => <section id="components" aria-busy="true" className="min-h-48 w-full scroll-mt-24" />,
+    loading: () => <section aria-busy="true" className="min-h-48 w-full scroll-mt-24" data-home-section-loading="components" />,
   },
 );
 

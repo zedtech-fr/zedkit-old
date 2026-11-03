@@ -52,7 +52,7 @@ export function HomeGetStartedSection({ npmPackage }: { npmPackage: string }) {
   return (
     <Section
       spacing="md"
-      containerWidth="default"
+      containerWidth="wide"
       id="get-started"
       title={homeCopy.getStarted.section.title}
       description={homeCopy.getStarted.section.description}
