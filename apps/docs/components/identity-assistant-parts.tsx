@@ -174,6 +174,12 @@ export function UnavailableBanner({ reason }: { reason: Unavailable }) {
   );
 }
 
+/** Says what the repair did, and never claims success while a pair still misses its target. */
+function contrastNote(repaired: { adjusted: number; remaining: number }): string {
+  if (repaired.remaining > 0) return copy.proposal.contrastUnresolved(repaired.remaining);
+  return repaired.adjusted > 0 ? copy.proposal.contrastAdjusted(repaired.adjusted) : copy.proposal.contrastOk;
+}
+
 /** A proposal to look at, in light and dark, with what changed and why. Using it is the only thing that changes the draft. */
 export function ProposalCard({
   proposal,
@@ -205,7 +211,7 @@ export function ProposalCard({
         </Text>
       ) : null}
       <Text variant="muted" className="text-sm">
-        {copy.proposal.changes(rows.length)}. {repaired.adjusted > 0 ? copy.proposal.contrastAdjusted(repaired.adjusted) : copy.proposal.contrastOk}
+        {copy.proposal.changes(rows.length)}. {contrastNote(repaired)}
       </Text>
       <IdentityMiniPreview tokens={repaired.tokens} id={`proposal-${proposal.requestId}`} />
       {rows.length > 0 ? (
