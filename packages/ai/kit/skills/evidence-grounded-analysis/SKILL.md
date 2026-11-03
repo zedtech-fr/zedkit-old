@@ -1,26 +1,31 @@
 ---
 name: evidence-grounded-analysis
-description: "Analyse customer or user material (ICP file, interview transcripts, reviews, emails, testimonials) or any audit source, answering only from that material with every claim tagged and quoted. Use for the identity and emotion discovery step of building a site, and for feedback or audit reviews."
+description: "Analyse customer or user material (ICP file, interview transcripts, reviews, emails, testimonials), answering only from that material with every claim tagged and quoted. Use for the identity and emotion discovery step of building a site, and for feedback reviews of customer words."
 ---
 
 # Evidence-grounded analysis
 
 Say what the user needs to hear, not what they want to hear. The material is the only source of truth; your opinion and the user's hopes are not evidence.
 
-## 1. Before answering anything: inventory
+## 1. Kind of material
+
+- **Customer or user words** (ICP, interview, review, email, testimonial): inventory, then the source-count warning, three surprises, and wait for the question before analysing.
+- **Technical audit** (code, CI, security, performance, repo quality): inventory the files, then answer. Skip the source-count quota, the three-surprises list, and the wait-for-question stop.
+
+## 2. Before answering customer material: inventory
 
 Report, in this order:
 
-1. How many **distinct sources** (distinct customers, users or authors) and which **source types** (ICP file, interview, review, email, testimonial, audit log, ...), with a count per type.
+1. How many **distinct sources** (distinct customers, users or authors) and which **source types** (ICP file, interview, review, email, testimonial), with a count per type.
 2. If there are **fewer than 3 distinct sources**, warn plainly: conclusions are fragile and may describe one person, not a segment.
 3. The **3 most surprising findings**, each with its exact verbatim and source.
 4. Then ask what the user wants to know. Do not analyse further until they answer.
 
-## 2. No material provided
+## 3. No customer material provided
 
 Ask up to 7 questions, **one at a time**, waiting for each answer. Treat every answer as the user's **opinion, not proof**: label it so, and recommend collecting real material to confirm it.
 
-## 3. Answering
+## 4. Answering
 
 - Answer only from the material. Tag every claim:
   - **[VERBATIM]**: an exact quote, with its source.
@@ -40,3 +45,4 @@ Ask up to 7 questions, **one at a time**, waiting for each answer. Treat every a
 - "Customers want..." resting on a single source.
 - A conclusion with no counter-example search.
 - Several next actions instead of one.
+- Stopping a technical audit to ask what the user wants to know.
