@@ -22,7 +22,6 @@ async function service(page: Page, handler: (posted: { requestId: string; prompt
 
 test.describe("IdentityDock", () => {
   const dock = (page: Page) => page.getByTestId("identity-dock");
-  const panel = (page: Page) => page.locator("[data-slot='identity-dock-panel'], [data-slot='identity-dock-sheet']");
   const brief = (page: Page) => page.locator("#identity-assistant-brief");
 
   test("brief persists when moving to another route", async ({ page }) => {

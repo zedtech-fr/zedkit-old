@@ -13,7 +13,7 @@ function IdentityDock({ className, ...props }: IdentityDockProps) {
     <div
       data-slot="identity-dock"
       className={cn(
-        "fixed inset-x-0 bottom-0 z-(--z-index-overlay) flex flex-col items-stretch gap-2 p-3 sm:inset-x-auto sm:right-4 sm:bottom-4 sm:max-w-sm sm:items-end sm:p-0",
+        "fixed inset-x-0 bottom-0 z-40 flex flex-col items-stretch gap-2 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:inset-x-auto sm:right-4 sm:bottom-4 sm:max-w-sm sm:items-end sm:p-0 sm:pb-0",
         className,
       )}
       {...props}
