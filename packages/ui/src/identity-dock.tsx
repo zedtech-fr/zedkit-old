@@ -13,7 +13,7 @@ function IdentityDock({ className, ...props }: IdentityDockProps) {
     <div
       data-slot="identity-dock"
       className={cn(
-        "fixed inset-x-0 bottom-0 z-(--z-index-overlay) flex flex-col items-stretch gap-2 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:inset-x-auto sm:right-4 sm:bottom-4 sm:max-w-[380px] sm:items-end sm:p-0",
+        "fixed inset-x-0 bottom-0 z-(--z-index-overlay) flex flex-col items-stretch gap-2 p-3 sm:inset-x-auto sm:right-4 sm:bottom-4 sm:max-w-sm sm:items-end sm:p-0",
         className,
       )}
       {...props}
@@ -31,7 +31,7 @@ function IdentityDockTrigger({ className, ...props }: IdentityDockTriggerProps) 
       data-slot="identity-dock-trigger"
       variant="outline"
       className={cn(
-        "w-full justify-between shadow-md sm:w-auto sm:rounded-full sm:px-4 motion-safe:transition-transform motion-reduce:transition-none",
+        "w-full justify-between shadow-md motion-safe:transition-transform motion-reduce:transition-none sm:w-auto sm:rounded-full sm:px-4",
         className,
       )}
       {...props}
@@ -43,7 +43,7 @@ type IdentityDockPanelProps = React.ComponentProps<"aside"> & {
   open: boolean;
 };
 
-/** Non-modal side sheet (desktop) / bottom panel (mobile). Does not trap focus or block the page. */
+/** Non-modal side sheet (desktop). Does not trap focus or block the page. */
 function IdentityDockPanel({ open, className, children, ...props }: IdentityDockPanelProps) {
   return (
     <aside
@@ -51,7 +51,7 @@ function IdentityDockPanel({ open, className, children, ...props }: IdentityDock
       data-state={open ? "open" : "closed"}
       aria-hidden={!open}
       className={cn(
-        "flex max-h-[min(36rem,calc(100dvh-6rem))] w-full flex-col overflow-hidden rounded-t-lg border border-border bg-background shadow-lg motion-safe:transition-[transform,opacity] motion-reduce:transition-none sm:max-h-[calc(100dvh-2rem)] sm:rounded-lg",
+        "flex max-h-drawer-sheet-max-height w-full flex-col overflow-hidden rounded-t-lg border border-border bg-background shadow-lg motion-safe:transition-[transform,opacity] motion-reduce:transition-none sm:w-full sm:max-w-sm sm:rounded-lg",
         open ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none translate-y-full opacity-0 sm:translate-y-2 sm:opacity-0",
         className,
       )}
@@ -76,3 +76,4 @@ function IdentityDockSwatch({ className, ...props }: IdentityDockSwatchProps) {
 }
 
 export { IdentityDock, IdentityDockPanel, IdentityDockSwatch, IdentityDockTrigger };
+export { IdentityDockSheet } from "./identity-dock-sheet.js";

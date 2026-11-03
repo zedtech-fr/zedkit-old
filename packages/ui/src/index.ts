@@ -215,6 +215,7 @@ export { IdentityPicker, type IdentityPickerProps } from "./identity-picker.js";
 export {
   IdentityDock,
   IdentityDockPanel,
+  IdentityDockSheet,
   IdentityDockSwatch,
   IdentityDockTrigger,
 } from "./identity-dock.js";

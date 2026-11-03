@@ -52,13 +52,14 @@ async function service(page: Page, handler: (posted: { requestId: string; prompt
 
 test.describe("IdentityDock", () => {
   const dock = (page: Page) => page.getByTestId("identity-dock");
+  const panel = (page: Page) => page.locator("[data-slot='identity-dock-panel'], [data-slot='identity-dock-sheet']");
 
   test("brief and expanded state survive navigation between routes", async ({ page }) => {
     await page.goto(BASE, { waitUntil: "networkidle" });
     await dock(page).locator("[data-slot='identity-dock-trigger']").click();
     await dock(page).locator("#identity-assistant-brief").fill("A calm SaaS dashboard");
     await page.goto(`${BASE}/docs`, { waitUntil: "networkidle" });
-    await expect(page.locator("[data-slot='identity-dock-panel'][data-state='open']")).toBeVisible();
+    await expect(panel(page)).toBeVisible();
     await expect(dock(page).locator("#identity-assistant-brief")).toHaveValue("A calm SaaS dashboard");
   });
 
@@ -75,13 +76,12 @@ test.describe("IdentityDock", () => {
     await page.goto(BASE, { waitUntil: "networkidle" });
     await dock(page).locator("[data-slot='identity-dock-trigger']").click();
     await dock(page).locator("#identity-assistant-brief").fill("A ceramics shop");
-    await page.locator("[data-slot='identity-dock-panel']").getByRole("button", { name: "Generate" }).click();
-    const message = page.locator("[data-slot='identity-dock-panel'] [data-assistant-status]");
+    await panel(page).getByRole("button", { name: "Generate" }).click();
+    const message = panel(page).locator("[data-assistant-status]");
     await expect(message).not.toBeEmpty();
     await expect(message).toBeInViewport();
-    const panel = page.locator("[data-slot='identity-dock-panel']");
     const box = await message.boundingBox();
-    const panelBox = await panel.boundingBox();
+    const panelBox = await panel(page).boundingBox();
     expect(box).toBeTruthy();
     expect(panelBox).toBeTruthy();
     expect(box!.y).toBeGreaterThanOrEqual(panelBox!.y);

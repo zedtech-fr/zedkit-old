@@ -12,6 +12,7 @@ import { useAssistantView } from "@/components/use-assistant-view";
 import { useIdentityAssistant } from "@/components/use-identity-assistant";
 import { useIdentityAssistantStore } from "@/lib/identity-assistant-store";
 import { checkInput } from "@/lib/identity-assistant";
+import { applyWidgetSpecimenPreview } from "@/lib/identity-widget-specimen-preview";
 import { linksInText } from "@/lib/identity-links-in-text";
 import type { IdentityTokens } from "@zedtech/zedkit-ui";
 
@@ -72,6 +73,7 @@ export function IdentityDockAssistantPanel({
           onUse={(next) =>
             ui.backToConversation(() => {
               onPreviewTokens(next);
+              applyWidgetSpecimenPreview(next);
               dispatch({ type: "accept" });
               setBrief("");
             })

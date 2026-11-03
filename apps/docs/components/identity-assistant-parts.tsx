@@ -10,6 +10,7 @@ import type { Unavailable, Turn } from "@/lib/identity-assistant";
 import { LIMITS } from "@/lib/identity-assistant";
 import { repairContrast } from "@/lib/identity-contrast-repair";
 import type { Notice, Proposal } from "@/lib/identity-creator-session";
+import { specimenDomainFromBrief } from "@/lib/brief-specimen-domain";
 import { tokenDiff } from "@/lib/identity-token-diff";
 
 /** The wording of a refusal, a failure or a cancellation. Never claims an allowance it cannot know. */
@@ -213,7 +214,11 @@ export function ProposalCard({
       <Text variant="muted" className="text-sm">
         {copy.proposal.changes(rows.length)}. {contrastNote(repaired)}
       </Text>
-      <IdentityMiniPreview tokens={repaired.tokens} id={`proposal-${proposal.requestId}`} />
+      <IdentityMiniPreview
+        tokens={repaired.tokens}
+        id={`proposal-${proposal.requestId}`}
+        domain={specimenDomainFromBrief(proposal.prompt)}
+      />
       {rows.length > 0 ? (
         <details className="text-sm">
           <summary className="flex min-h-11 cursor-pointer items-center focus-ring">{copy.proposal.showChanges}</summary>

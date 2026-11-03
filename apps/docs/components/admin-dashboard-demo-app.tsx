@@ -156,7 +156,7 @@ export function AdminDashboardDemoApp({
   return (
     <>
       <Toaster />
-      <Stack className="w-full min-w-0" aria-label={label} data-admin-dashboard-demo={isHome ? "home" : undefined}>
+      <Stack className="w-full min-w-0" aria-label={label} data-admin-dashboard-demo={isHome ? "home" : undefined} data-demo-specimen="">
         {isHome ? (
           <Stack
             direction="horizontal"
