@@ -8,6 +8,16 @@ import { ClassProp } from 'class-variance-authority/types';
 import type * as React_2 from 'react';
 import { VariantProps } from 'class-variance-authority';
 
+// @public
+export function CtaBand(input: CtaBandProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type CtaBandProps = Omit<React_2.ComponentProps<"section">, "title"> & {
+    title: React_2.ReactNode;
+    description?: React_2.ReactNode;
+    actions?: React_2.ReactNode;
+};
+
 // @public (undocumented)
 export function GlassSurface(input: GlassSurfaceProps): React_2.JSX.Element;
 
@@ -23,6 +33,20 @@ export const glassSurfaceVariants: (props?: ({
     tone?: "plain" | "raised" | "tinted" | null | undefined;
     padding?: "none" | "sm" | "md" | "lg" | null | undefined;
 } & ClassProp) | undefined) => string;
+
+// @public
+export function Hero(input: HeroProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type HeroProps = Omit<React_2.ComponentProps<"section">, "title"> & {
+    eyebrow?: React_2.ReactNode;
+    title: React_2.ReactNode;
+    description?: React_2.ReactNode;
+    actions?: React_2.ReactNode;
+    media?: React_2.ReactNode;
+    align?: "center" | "start" | undefined;
+    headingLevel?: 1 | 2 | undefined;
+};
 
 // (No @packageDocumentation comment for this package)
 

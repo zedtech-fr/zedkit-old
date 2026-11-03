@@ -5140,7 +5140,7 @@
         },
         {
           "need": "Compose a public marketing page",
-          "import": "`@zedtech/zedkit-ui/marketing` — `GlassSurface`, `glassSurfaceVariants`, `GlassSurfaceProps`",
+          "import": "`@zedtech/zedkit-ui/marketing` — `GlassSurface`, `glassSurfaceVariants`, `GlassSurfaceProps`, `Hero`, `HeroProps`, `CtaBand`, `CtaBandProps`",
           "wraps": "none (theme tokens, `class-variance-authority`)",
           "status": "alpha",
           "shortName": "Marketing",
@@ -5154,6 +5154,14 @@
             {
               "title": "Simple",
               "code": "import { GlassSurface } from \"@zedtech/zedkit-ui/marketing\";\n\n<GlassSurface as=\"section\" aria-label=\"Plans\" tone=\"raised\" padding=\"lg\">\n  Plans\n</GlassSurface>;"
+            },
+            {
+              "title": "Hero",
+              "code": "import { Hero } from \"@zedtech/zedkit-ui/marketing\";\n\n<Hero\n  title=\"Keep your shop. Add live updates.\"\n  description=\"Stock, orders and offers update without a refresh.\"\n  actions={<a href=\"/signup\">Create an account</a>}\n/>;"
+            },
+            {
+              "title": "Closing call to action",
+              "code": "import { CtaBand } from \"@zedtech/zedkit-ui/marketing\";\n\n<CtaBand\n  title=\"Try it on a staging key\"\n  actions={<a href=\"/signup\">Create an account</a>}\n/>;"
             }
           ],
           "adoption": {
@@ -5164,12 +5172,16 @@
                 "exports": [
                   "GlassSurface",
                   "glassSurfaceVariants",
-                  "GlassSurfaceProps"
+                  "GlassSurfaceProps",
+                  "Hero",
+                  "HeroProps",
+                  "CtaBand",
+                  "CtaBandProps"
                 ]
               }
             ]
           },
-          "a11y": "Surfaces render a plain element (`div`, `section`, `article` or `li`); pass `aria-label` or a heading inside when it is a landmark. Text sits on the card colour, so contrast follows the identity tokens; under `prefers-reduced-transparency` the glass identity turns surfaces near-solid.",
+          "a11y": "`Hero` and `CtaBand` are `section` regions named by their own heading (`Hero` renders the page `h1`; pass `headingLevel={2}` when the page already has one); calls to action are links or buttons you pass in, full width on phones. Surfaces render a plain element (`div`, `section`, `article` or `li`); pass `aria-label` or a heading inside when it is a landmark. Text sits on the card colour, so contrast follows the identity tokens; under `prefers-reduced-transparency` the glass identity turns surfaces near-solid.",
           "troubleshooting": "Surfaces look flat — the identity in use is not `glass`; set `data-identity=\"glass\"` on `<html>`. Classes missing — the `@source` line must scan the kit's `src/**` (the marketing folder is included).",
           "seeAlso": [
             "Theme an admin app (dark/light included)"

@@ -520,7 +520,11 @@
       "component": "GlassSurface",
       "props": "GlassSurfaceProps",
       "source": "marketing/glass-surface.tsx",
-      "demo": "GlassSurfaceDemo"
+      "demo": "GlassSurfaceDemo",
+      "examples": {
+        "Hero": "HeroDemo",
+        "Closing call to action": "CtaBandDemo"
+      }
     },
     "Switch the visual identity with one attribute": {
       "package": "@zedtech/zedkit-ui",
