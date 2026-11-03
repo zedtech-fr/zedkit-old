@@ -1,6 +1,7 @@
 "use client";
 
 import type * as React from "react";
+import { Check } from "lucide-react";
 
 import { cn } from "./utils.js";
 import { useUiMessages } from "./ui-provider.js";
@@ -28,7 +29,7 @@ export interface OptionCardProps {
 }
 
 /**
- * One selectable card (checkbox + title + description). Compose
+ * One selectable card (checkbox + visible check indicator + title + description). Compose
  * custom pickers with these; `OptionCards` covers the plain
  * `options[]` case with the same markup.
  */
@@ -41,7 +42,14 @@ export function OptionCard({ title, description, checked, onChange, className }:
         className,
       )}
     >
-      <input type="checkbox" className="sr-only" checked={checked} onChange={onChange} />
+      <input type="checkbox" className="peer sr-only" checked={checked} onChange={onChange} />
+      <span
+        data-slot="option-card-indicator"
+        aria-hidden="true"
+        className="mt-0.5 grid size-5 shrink-0 place-content-center rounded-sm border border-input text-transparent transition-colors peer-checked:border-primary peer-checked:bg-primary peer-checked:text-primary-foreground"
+      >
+        <Check className="size-3.5" strokeWidth={3} />
+      </span>
       <span>
         <span className="block font-medium">{title}</span>
         {description ? <span className="block text-sm text-muted-foreground">{description}</span> : null}
