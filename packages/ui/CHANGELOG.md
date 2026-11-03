@@ -1,5 +1,12 @@
 # @zedtech/zedkit-ui
 
+## 1.0.3
+
+### Patch Changes
+
+- a294306: `identityContrastWarnings` now suggests a foreground that actually meets the target on mid-tone backgrounds: the nudge tries darker and lighter and keeps the smallest passing move, instead of picking one direction from the background luminance and stopping at white or black below the target.
+- 7a9e44a: `OptionCard` / `OptionCards` now draw a visible check box on each card, filled with a check when selected, so ticked cards no longer look almost like unticked ones. The native checkbox stays the control; the indicator is decorative.
+
 ## 1.0.2
 
 ### Patch Changes
