@@ -65,20 +65,26 @@ jobs:
       - run: pnpm build
       - name: Create Version PR or publish to npm
         id: changesets
-        uses: changesets/action@v1
+        uses: changesets/action@v2
         with:
-          version: pnpm run changeset:version
-          publish: pnpm exec changeset publish
-          commit: "chore: version packages"
-          title: "chore: version packages"
+          version-script: pnpm run changeset:version
+          # changeset publish (@changesets/cli v3) writes git-tag events to
+          # $CHANGESETS_OUTPUT, which v2 sets for this script; published-packages
+          # is derived from those events, so keep calling the CLI directly.
+          publish-script: pnpm exec changeset publish
+          commit-message: "chore: version packages"
+          pr-title: "chore: version packages"
+          # v2 ignores env GITHUB_TOKEN; the token must be passed as an input.
+          github-token: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
+          # v2 defaults to pushing via the GitHub API; keep v1's git push.
+          push-with-git-cli: true
         env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           # One env for every package (smaller than publishConfig.provenance
           # on each package.json). Needs id-token: write, already set above.
           NPM_CONFIG_PROVENANCE: "true"
       # Tags + GitHub releases only for packages npm publish just shipped.
-      # Without publishedPackages, release-tags.sh used to poll npm for every
+      # Without published-packages, release-tags.sh used to poll npm for every
       # public package version on disk (~5m each) and blocked the release group.
       - name: Push tags and create GitHub releases
         if: steps.changesets.outputs.published == 'true'
@@ -86,4 +92,4 @@ jobs:
         run: timeout 25m scripts/release-tags.sh
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
-          RELEASE_TAGS_PUBLISHED: ${{ steps.changesets.outputs.publishedPackages }}
+          RELEASE_TAGS_PUBLISHED: ${{ steps.changesets.outputs.published-packages }}
