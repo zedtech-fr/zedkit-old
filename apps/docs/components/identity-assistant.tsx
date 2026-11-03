@@ -6,6 +6,7 @@ import { Stack, Text, type IdentityTokens } from "@zedtech/zedkit-ui";
 
 import { identityAssistantCopy as copy } from "@/components/i18n/identity-assistant-copy";
 import { ConversationPane, PreviewPane } from "@/components/identity-assistant-panes";
+import { ReferenceReportList } from "@/components/identity-references";
 import { AssistantHeading, ViewSwitch, noticeText } from "@/components/identity-assistant-parts";
 import { useAssistantView } from "@/components/use-assistant-view";
 import { useIdentityAssistant } from "@/components/use-identity-assistant";
@@ -54,6 +55,7 @@ export function IdentityAssistant({ tokens, onUse }: { tokens: IdentityTokens; o
           <Text role="status" className="min-h-5 text-sm text-muted-foreground" data-assistant-status="">
             {busy ? copy.working : session.notice && session.notice.kind !== "unavailable" ? noticeText(session.notice) : session.proposal ? copy.views.proposalReady : null}
           </Text>
+          <ReferenceReportList report={session.references} />
           <ConversationPane view={ui.view} session={session} off={off} brief={brief} busy={busy} onBrief={setBrief} onSubmit={send} onCancel={cancel} textareaRef={ui.textarea} />
           <PreviewPane
             view={ui.view}

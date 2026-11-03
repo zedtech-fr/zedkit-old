@@ -9,12 +9,14 @@ import { linksInText, removeLink } from "@/lib/identity-links-in-text";
 const copy = identityAssistantCopy;
 
 const hostOf = (url: string) => (URL.canParse(url) ? new URL(url).host : url);
+/** Host and path: two links on one host stay told apart. */
+const urlLabel = (url: string) => (URL.canParse(url) ? `${new URL(url).host}${new URL(url).pathname === "/" ? "" : new URL(url).pathname}` : url);
 
 /**
  * The links found in the brief, so the visitor sees what will be read and can drop one. There is nothing to fill in:
  * a link is read because it is in the text, and removing it here removes it from the text.
  */
-export function DetectedLinks({ text, onText, disabled = false }: { text: string; onText: (next: string) => void; disabled?: boolean }) {
+export function DetectedLinks({ text, onText, fieldId, disabled = false }: { text: string; onText: (next: string) => void; fieldId: string; disabled?: boolean }) {
   const { urls, skipped } = linksInText(text);
   if (urls.length === 0 && skipped.length === 0) return null;
   const tooMany = skipped.some((item) => item.why === "too-many");
@@ -32,7 +34,10 @@ export function DetectedLinks({ text, onText, disabled = false }: { text: string
                 <Text as="span" className="min-w-0 truncate text-sm" title={url}>
                   {url}
                 </Text>
-                <Button type="button" variant="ghost" size="sm" className="min-w-11" disabled={disabled} aria-label={copy.links.remove(hostOf(url))} onClick={() => onText(removeLink(text, url))}>
+                <Button type="button" variant="ghost" size="sm" className="min-w-11" disabled={disabled} aria-label={copy.links.remove(urlLabel(url))} onClick={() => {
+                    onText(removeLink(text, url));
+                    document.getElementById(fieldId)?.focus();
+                  }}>
                   ×
                 </Button>
               </li>

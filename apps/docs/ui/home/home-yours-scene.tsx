@@ -44,7 +44,7 @@ export function HomeYoursScene() {
         <Text variant="muted" id="home-yours-hint" className={HOME_SMALL_TEXT_CLASS}>
           {copy.briefHint}
         </Text>
-        <DetectedLinks text={brief} onText={setBrief} />
+        <DetectedLinks text={brief} onText={setBrief} fieldId="home-yours-brief" />
         <Stack gap={2}>
           <Button type="button" className="w-fit" onClick={start}>
             {copy.start}

@@ -33,6 +33,7 @@ export const identityAssistantCopy = {
     conversation: "Conversation",
     preview: "Preview",
     proposalReady: "A proposed look is ready.",
+    waitingSuffix: ", a proposal is ready",
     draftNow: "This is your draft as it is now. A proposal appears here, in light and dark.",
   },
   cancelled: "Cancelled. Nothing changed.",
@@ -123,6 +124,6 @@ export function referenceReason(reason: string | undefined): string {
     "not-found": "the address was not found",
     unreachable: "it could not be reached",
   };
-  if (reason?.startsWith("status-")) return `the page answered with ${reason.slice(7)}`;
-  return (reason && words[reason]) || "it could not be read";
+  if (reason && /^status-\d{3}$/.test(reason)) return `the page answered with ${reason.slice(7)}`;
+  return (reason && Object.hasOwn(words, reason) && words[reason]) || "it could not be read";
 }

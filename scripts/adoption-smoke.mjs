@@ -188,8 +188,10 @@ async function serve(project) {
 async function runCase(name, template, tarball, chromium) {
   const spec = CASES[name];
   if (spec.expectFailure) {
-    const failed = await runCaseOnce(name, spec, template, tarball, chromium).then(() => false, () => true);
-    assert(failed, `${name} was expected to fail and did not`);
+    const error = await runCaseOnce(name, spec, template, tarball, chromium).then(() => null, (thrown) => thrown);
+    assert(error, `${name} was expected to fail and did not`);
+    // It must fail where the old recipe did, in the build. A network flake while scaffolding or installing is not the proof.
+    assert(/next build/.test(String(error.message)), `${name} failed, but not in the build step: ${String(error.message).slice(0, 200)}`);
     console.log(`\nadoption-smoke: ${name} failed as expected`);
     return;
   }

@@ -4,7 +4,7 @@ import type { RefObject } from "react";
 import { Stack, Text, cn, type IdentityTokens } from "@zedtech/zedkit-ui";
 
 import { identityAssistantCopy as copy } from "@/components/i18n/identity-assistant-copy";
-import { BriefForm, ProposalCard, ReferenceReportList, Thread, UnavailableBanner, type View } from "@/components/identity-assistant-parts";
+import { BriefForm, ProposalCard, Thread, UnavailableBanner, type View } from "@/components/identity-assistant-parts";
 import { IdentityMiniPreview } from "@/components/identity-mini-preview";
 import { DetectedLinks } from "@/components/identity-references";
 import type { Unavailable } from "@/lib/identity-assistant";
@@ -36,8 +36,7 @@ export function ConversationPane(props: {
         onCancel={props.onCancel}
         textareaRef={props.textareaRef}
       />
-      <DetectedLinks text={props.brief} onText={props.onBrief} disabled={props.busy} />
-      <ReferenceReportList report={props.session.references} />
+      <DetectedLinks text={props.brief} onText={props.onBrief} fieldId="identity-assistant-brief" disabled={props.busy} />
     </Stack>
   );
 }
