@@ -1,5 +1,12 @@
 # @zedtech/zedkit-ui
 
+## 1.2.0
+
+### Minor Changes
+
+- b8a0f02: `@zedtech/zedkit-ui/marketing` gains `FeatureGrid` (a titled grid of short benefits on glass surfaces, 2 to 4 columns, optional decorative icons) and `HowItWorks` (numbered steps, stacked on phones and in a row from `md`). Both are regions named by their level-2 title, with level-3 item titles; every string is a prop.
+- 5525160: `@zedtech/zedkit-ui/marketing` gains `Hero` (promise, description, calls to action, optional media; renders the page heading) and `CtaBand` (closing call to action on a tinted glass surface). Both are labelled regions named by their own heading, take every string as a prop, and stack their actions full width on phones.
+
 ## 1.1.0
 
 ### Minor Changes
