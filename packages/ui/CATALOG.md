@@ -1878,7 +1878,7 @@ import { GlassSurface } from "@zedtech/zedkit-ui/marketing";
 
 ## Preview an identity from a brief
 
-- Import: `@zedtech/zedkit-ui/marketing` — `BriefSpecimen`, `selectSpecimenDomain`, `SpecimenDomain`, domain specimens, `specimenMessagesEn`
+- Import: `@zedtech/zedkit-ui/marketing` — `BriefSpecimen`, `BriefSpecimenProps`, `selectSpecimenDomain`, `CommerceSpecimen`, `SaasDashboardSpecimen`, `EditorialSpecimen`, `ServiceBookingSpecimen`, `specimenMessagesEn`
 - Wraps: kit primitives inside `ThemeScope` (consumer supplies the look)
 - Status: alpha
 - Short name: Brief specimens

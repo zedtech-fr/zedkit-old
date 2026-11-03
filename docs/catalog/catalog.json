@@ -5179,6 +5179,47 @@
           "seeAlso": [
             "Theme an admin app (dark/light included)"
           ]
+        },
+        {
+          "need": "Preview an identity from a brief",
+          "import": "`@zedtech/zedkit-ui/marketing` — `BriefSpecimen`, `selectSpecimenDomain`, `CommerceSpecimen`, `SaasDashboardSpecimen`, `EditorialSpecimen`, `ServiceBookingSpecimen`, `specimenMessagesEn`, `SpecimenDomain`",
+          "wraps": "kit primitives inside `ThemeScope` (consumer supplies the look)",
+          "status": "alpha",
+          "shortName": "Brief specimens",
+          "audience": "Identity preview flows that need a real composition matching the visitor's domain (commerce, SaaS, editorial, booking).",
+          "purpose": "Four interactive specimens plus keyword routing on a free-text brief.",
+          "whenToUse": "Inside a scoped preview while generating or refining an identity.",
+          "whenNotToUse": "For production app screens — copy the patterns into your own routes.",
+          "derivedFrom": null,
+          "example": "import { BriefSpecimen, selectSpecimenDomain } from \"@zedtech/zedkit-ui/marketing\";\n\nselectSpecimenDomain(\"Hair salon booking\"); // \"service-booking\"\n\n<BriefSpecimen brief=\"Independent newsroom\" />;",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "import { BriefSpecimen, selectSpecimenDomain } from \"@zedtech/zedkit-ui/marketing\";\n\nselectSpecimenDomain(\"Hair salon booking\"); // \"service-booking\"\n\n<BriefSpecimen brief=\"Independent newsroom\" />;"
+            }
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui/marketing",
+                "exports": [
+                  "BriefSpecimen",
+                  "selectSpecimenDomain",
+                  "CommerceSpecimen",
+                  "SaasDashboardSpecimen",
+                  "EditorialSpecimen",
+                  "ServiceBookingSpecimen",
+                  "specimenMessagesEn",
+                  "SpecimenDomain"
+                ]
+              }
+            ]
+          },
+          "a11y": "Each specimen exposes labels on lists, tables and status regions; mount inside an identity scope so tokens stay consistent.",
+          "seeAlso": [
+            "Compose a public marketing page"
+          ]
         }
       ]
     }
