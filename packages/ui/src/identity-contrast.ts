@@ -44,23 +44,17 @@ function contrastRatio(fg: Hsl, bg: Hsl): number {
 }
 
 function nudgeForeground(fg: Hsl, bg: Hsl, min: number): string {
-  // Walk lightness both ways and keep the smallest move that meets the target. Picking one direction from the
-  // background's luminance alone misses mid-tone backgrounds, where only the other end of the scale can pass.
-  let best: { hsl: Hsl; ratio: number; steps: number } | undefined;
-  for (const dir of [-1, 1]) {
-    let next = { ...fg };
-    for (let step = 0; step <= 100; step += 1) {
-      const ratio = contrastRatio(next, bg);
-      if (ratio >= min) {
-        if (!best || best.ratio < min || step < best.steps) best = { hsl: next, ratio, steps: step };
-        break;
-      }
-      if (!best || (best.ratio < min && ratio > best.ratio)) best = { hsl: next, ratio, steps: step };
-      if ((dir < 0 && next.l <= 0) || (dir > 0 && next.l >= 100)) break;
-      next = { ...next, l: Math.min(100, Math.max(0, next.l + dir)) };
+  // Try lightness at a growing distance on both sides: the first that meets the target is the smallest move. One
+  // direction picked from the background alone misses mid-tone backgrounds, where only the other end can pass.
+  let best = fg;
+  for (let d = 0; d <= 100; d += 1) {
+    for (const l of [fg.l - d, fg.l + d]) {
+      const next = { ...fg, l: Math.min(100, Math.max(0, l)) };
+      if (contrastRatio(next, bg) >= min) return formatHsl(next);
+      if (contrastRatio(next, bg) > contrastRatio(best, bg)) best = next;
     }
   }
-  return formatHsl(best!.hsl);
+  return formatHsl(best);
 }
 
 function warningFor(
