@@ -211,7 +211,7 @@ export function ProposalCard({
       {rows.length > 0 ? (
         <details className="text-sm">
           <summary className="flex min-h-11 cursor-pointer items-center focus-ring">{copy.proposal.showChanges}</summary>
-          <ul className="m-0 flex list-none flex-col gap-1 p-0 font-mono text-xs">
+          <ul className="m-0 flex list-none flex-col gap-1 p-0 font-mono text-sm">
             {rows.map((row) => (
               <li key={row.path} className="break-words">
                 {row.path}: {row.from} → {row.to}

@@ -52,7 +52,8 @@ export function IdentityAssistant({ tokens, onUse }: { tokens: IdentityTokens; o
         <Stack gap={4} className="pt-3">
           <AssistantHeading />
           <ViewSwitch view={ui.view} onView={ui.setView} waiting={session.proposal !== null} previewRef={ui.previewButton} />
-          <Text role="status" className="min-h-5 text-sm text-muted-foreground" data-assistant-status="">
+          {/* Always mounted, so a screen reader hears what is put in it; when it holds nothing it takes no room. */}
+          <Text role="status" className="text-sm text-muted-foreground empty:-mb-4" data-assistant-status="">
             {busy ? copy.working : session.notice && session.notice.kind !== "unavailable" ? noticeText(session.notice) : session.proposal ? copy.views.proposalReady : null}
           </Text>
           <ReferenceReportList report={session.references} />

@@ -158,6 +158,17 @@ test.describe("the assistant folds away, and on a phone the conversation and the
     await expect(page.getByText("This is your draft as it is now.")).toBeVisible();
   });
 
+  test("an idle status line takes no room: no blank band between the switch and the form", async ({ page }) => {
+    await service(page, (posted, route) => route.fulfill(ok(posted)));
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(OPEN, { waitUntil: "networkidle" });
+    const status = await page.locator("[data-assistant-status]").boundingBox();
+    expect(status!.height).toBe(0);
+    const views = (await page.getByRole("group", { name: "Conversation or preview" }).boundingBox())!;
+    const label = (await page.getByText("Your product and brand").first().boundingBox())!;
+    expect(label.y - (views.y + views.height), "the form follows the switch at one gap, not two").toBeLessThanOrEqual(24);
+  });
+
   test("1440px: no switch, the conversation and the proposal are both on the page", async ({ page }) => {
     await service(page, (posted, route) => route.fulfill(ok(posted)));
     await page.setViewportSize({ width: 1440, height: 900 });
