@@ -3,7 +3,7 @@ import { axe } from "vitest-axe";
 import { describe, expect, it } from "vitest";
 
 import * as Marketing from "#marketing/index.js";
-import { CtaBand, GlassSurface, Hero } from "#marketing/index.js";
+import { CtaBand, FeatureGrid, GlassSurface, Hero, HowItWorks } from "#marketing/index.js";
 import { assertNoValueArbitraries } from "./no-arbitraries.js";
 
 describe("marketing entry", () => {
@@ -119,6 +119,77 @@ describe("CtaBand", () => {
       </main>,
     );
     expect(container.querySelector("[data-slot='cta-band'] [data-slot='glass-surface']")).not.toBeNull();
+    for (const node of container.querySelectorAll("[class]")) {
+      assertNoValueArbitraries(node.getAttribute("class") ?? "");
+    }
+    expect((await axe(container)).violations).toEqual([]);
+  });
+});
+
+describe("FeatureGrid", () => {
+  const features = [
+    { title: "Live stock", description: "Counts follow every sale.", icon: <svg viewBox="0 0 1 1" /> },
+    { title: "Offers" },
+    { id: "assistant", title: "Assistant", description: "Answers from your catalog." },
+  ];
+
+  it("renders a labelled region, a level-2 title and one list item per feature", () => {
+    render(<FeatureGrid title="What you get" description="Three things." features={features} />);
+    const region = screen.getByRole("region", { name: "What you get" });
+    expect(region.getAttribute("data-slot")).toBe("feature-grid");
+    expect(screen.getByRole("heading", { level: 2, name: "What you get" })).toBeTruthy();
+    expect(screen.getAllByRole("listitem")).toHaveLength(3);
+    expect(screen.getByRole("heading", { level: 3, name: "Live stock" })).toBeTruthy();
+    expect(screen.getByText("Counts follow every sale.")).toBeTruthy();
+  });
+
+  it("hides the icon from assistive tech and skips empty parts", () => {
+    const { container } = render(<FeatureGrid title="T" features={features} />);
+    const icons = container.querySelectorAll("[data-slot='feature-icon']");
+    expect(icons).toHaveLength(1);
+    expect(icons[0]?.getAttribute("aria-hidden")).toBe("true");
+    expect(container.querySelector("[data-slot='marketing-section-header'] p")).toBeNull();
+  });
+
+  it("picks the column count and handles an empty list", () => {
+    const { container, rerender } = render(<FeatureGrid title="T" features={[]} columns={4} />);
+    expect(container.querySelector("ul")?.className).toContain("lg:grid-cols-4");
+    expect(container.querySelectorAll("li")).toHaveLength(0);
+    rerender(<FeatureGrid title="T" features={[]} />);
+    expect(container.querySelector("ul")?.className).toContain("lg:grid-cols-3");
+  });
+});
+
+describe("HowItWorks", () => {
+  it("renders numbered steps in order with a level-3 title each", () => {
+    const { container } = render(
+      <HowItWorks
+        title="Three steps"
+        steps={[
+          { title: "Sign up", description: "Create an account." },
+          { title: "Create a key" },
+          { title: "See your first event" },
+        ]}
+      />,
+    );
+    expect(screen.getByRole("region", { name: "Three steps" }).getAttribute("data-slot")).toBe("how-it-works");
+    const items = screen.getAllByRole("listitem");
+    expect(items.map((item) => item.querySelector("h3")?.textContent)).toEqual([
+      "Sign up",
+      "Create a key",
+      "See your first event",
+    ]);
+    expect([...container.querySelectorAll("li > span")].map((node) => node.textContent)).toEqual(["1", "2", "3"]);
+    expect(container.querySelector("ol")).not.toBeNull();
+  });
+
+  it("has no axe violations next to a feature grid", async () => {
+    const { container } = render(
+      <main>
+        <FeatureGrid title="Features" features={[{ title: "A", description: "a" }, { title: "B" }]} />
+        <HowItWorks title="Steps" steps={[{ title: "One" }, { title: "Two", description: "b" }]} />
+      </main>,
+    );
     for (const node of container.querySelectorAll("[class]")) {
       assertNoValueArbitraries(node.getAttribute("class") ?? "");
     }

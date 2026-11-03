@@ -3,5 +3,7 @@
 // the console kit never pull them in. Strings are props; chrome labels
 // come from `ZedkitUiProvider`.
 export { CtaBand, type CtaBandProps } from "./cta-band.js";
+export { FeatureGrid, type FeatureGridProps, type FeatureItem } from "./feature-grid.js";
 export { GlassSurface, glassSurfaceVariants, type GlassSurfaceProps } from "./glass-surface.js";
 export { Hero, type HeroProps } from "./hero.js";
+export { HowItWorks, type HowItWorksProps, type HowItWorksStep } from "./how-it-works.js";

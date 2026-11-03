@@ -16,4 +16,21 @@ export const marketingCopy = {
     description: "Sign up, create a key and see your first event in minutes.",
     action: "Create an account",
   },
+  features: {
+    title: "Built for the shop you already run",
+    description: "Add live features next to it, without replatforming.",
+    items: [
+      { title: "Live stock", description: "Counts follow every sale." },
+      { title: "Personal offers", description: "Each visitor sees what fits." },
+      { title: "Shopping assistant", description: "Answers from your catalog." },
+    ],
+  },
+  steps: {
+    title: "Live in three steps",
+    items: [
+      { title: "Create an account", description: "No card needed." },
+      { title: "Create a key", description: "A staging key takes a minute." },
+      { title: "See your first event", description: "It shows up in the console." },
+    ],
+  },
 } as const;

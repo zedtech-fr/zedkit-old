@@ -18,6 +18,27 @@ export type CtaBandProps = Omit<React_2.ComponentProps<"section">, "title"> & {
     actions?: React_2.ReactNode;
 };
 
+// @public
+export function FeatureGrid(input: FeatureGridProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type FeatureGridProps = Omit<React_2.ComponentProps<"section">, "title"> & {
+    title: React_2.ReactNode;
+    description?: React_2.ReactNode;
+    features: FeatureItem[];
+    columns?: 2 | 3 | 4 | undefined;
+};
+
+// @public (undocumented)
+export interface FeatureItem {
+    // (undocumented)
+    description?: React_2.ReactNode;
+    icon?: React_2.ReactNode;
+    id?: string | undefined;
+    // (undocumented)
+    title: React_2.ReactNode;
+}
+
 // @public (undocumented)
 export function GlassSurface(input: GlassSurfaceProps): React_2.JSX.Element;
 
@@ -47,6 +68,25 @@ export type HeroProps = Omit<React_2.ComponentProps<"section">, "title"> & {
     align?: "center" | "start" | undefined;
     headingLevel?: 1 | 2 | undefined;
 };
+
+// @public
+export function HowItWorks(input: HowItWorksProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type HowItWorksProps = Omit<React_2.ComponentProps<"section">, "title"> & {
+    title: React_2.ReactNode;
+    description?: React_2.ReactNode;
+    steps: HowItWorksStep[];
+};
+
+// @public (undocumented)
+export interface HowItWorksStep {
+    // (undocumented)
+    description?: React_2.ReactNode;
+    id?: string | undefined;
+    // (undocumented)
+    title: React_2.ReactNode;
+}
 
 // (No @packageDocumentation comment for this package)
 
