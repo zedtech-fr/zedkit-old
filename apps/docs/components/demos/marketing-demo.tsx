@@ -8,6 +8,7 @@ import {
   LocaleSwitch,
   MarketingFooter,
   MarketingHeader,
+  MediaSection,
 } from "@zedtech/zedkit-ui/marketing";
 import { marketingCopy } from "@/components/demos/i18n/marketing-copy";
 
@@ -123,6 +124,18 @@ export function LocaleSwitchDemo() {
     <LocaleSwitch
       current="en"
       locales={chrome.locales.map((locale) => ({ ...locale, href: `#${locale.code}` }))}
+    />
+  );
+}
+
+export function MediaSectionDemo() {
+  const { media } = marketingCopy;
+  return (
+    <MediaSection
+      title={media.title}
+      description={media.description}
+      points={[...media.points]}
+      media={<Text variant="muted">{media.caption}</Text>}
     />
   );
 }

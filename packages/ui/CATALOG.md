@@ -1847,7 +1847,7 @@ applyIdentityTokenSheet(
 
 ## Compose a public marketing page
 
-- Import: `@zedtech/zedkit-ui/marketing` — `GlassSurface`, `glassSurfaceVariants`, `GlassSurfaceProps`, `Hero`, `HeroProps`, `CtaBand`, `CtaBandProps`, `FeatureGrid`, `FeatureGridProps`, `FeatureItem`, `HowItWorks`, `HowItWorksProps`, `HowItWorksStep`, `MarketingHeader`, `MarketingHeaderProps`, `MarketingFooter`, `MarketingFooterProps`, `MarketingFooterColumn`, `LocaleSwitch`, `LocaleSwitchProps`, `LocaleOption`
+- Import: `@zedtech/zedkit-ui/marketing` — `GlassSurface`, `glassSurfaceVariants`, `GlassSurfaceProps`, `Hero`, `HeroProps`, `CtaBand`, `CtaBandProps`, `FeatureGrid`, `FeatureGridProps`, `FeatureItem`, `HowItWorks`, `HowItWorksProps`, `HowItWorksStep`, `MarketingHeader`, `MarketingHeaderProps`, `MarketingFooter`, `MarketingFooterProps`, `MarketingFooterColumn`, `LocaleSwitch`, `LocaleSwitchProps`, `LocaleOption`, `MediaSection`, `MediaSectionProps`
 - Wraps: none (theme tokens, `class-variance-authority`)
 - Status: alpha
 - Short name: Marketing
@@ -1856,8 +1856,8 @@ applyIdentityTokenSheet(
 - When to use: For a signed-out home, pricing or product page built from the kit's tokens (frosted under the glass identity, plain cards elsewhere).
 - When not to use: For app screens — use `Card`, `PageHeader` and `Section` instead; for full-page bands use `Section` with `bleed`.
 - See also: `Theme an admin app (dark/light included)`
-- Examples: Simple, Hero, Closing call to action, Feature grid, Steps, Header and footer, Language switch
-- A11y: `Hero` and `CtaBand` are `section` regions named by their own heading (`Hero` renders the page `h1`; pass `headingLevel={2}` when the page already has one); calls to action are links or buttons you pass in, full width on phones. `FeatureGrid` and `HowItWorks` are regions named by a level-2 title with level-3 item titles; feature icons are decorative (`aria-hidden`), steps are an ordered list whose numbers are added for you. `MarketingHeader` is a `banner` with a named main navigation; below `md` its links and actions open from a native `details` disclosure (a 44px `summary` labelled by `menu`). `MarketingFooter` gives each link column its own labelled navigation. `LocaleSwitch` is a named navigation whose items carry `lang`, with `aria-current` on the active language. Surfaces render a plain element (`div`, `section`, `article` or `li`); pass `aria-label` or a heading inside when it is a landmark. Text sits on the card colour, so contrast follows the identity tokens; under `prefers-reduced-transparency` the glass identity turns surfaces near-solid.
+- Examples: Simple, Hero, Closing call to action, Feature grid, Steps, Header and footer, Language switch, Use case
+- A11y: `Hero` and `CtaBand` are `section` regions named by their own heading (`Hero` renders the page `h1`; pass `headingLevel={2}` when the page already has one); calls to action are links or buttons you pass in, full width on phones. `FeatureGrid` and `HowItWorks` are regions named by a level-2 title with level-3 item titles; feature icons are decorative (`aria-hidden`), steps are an ordered list whose numbers are added for you. `MarketingHeader` is a `banner` with a named main navigation; below `md` its links and actions open from a native `details` disclosure (a 44px `summary` labelled by `menu`). `MarketingFooter` gives each link column its own labelled navigation. `MediaSection` is a region named by its level-2 title: text first in reading order, the framed media after it (`reverse` only changes the visual side from `lg`); pass `alt` text or a caption with the media. `LocaleSwitch` is a named navigation whose items carry `lang`, with `aria-current` on the active language. Surfaces render a plain element (`div`, `section`, `article` or `li`); pass `aria-label` or a heading inside when it is a landmark. Text sits on the card colour, so contrast follows the identity tokens; under `prefers-reduced-transparency` the glass identity turns surfaces near-solid.
 - Troubleshooting: Menu, navigation and language labels stay English — wrap the tree in `ZedkitUiProvider` with `zedkitUiMessagesFr` (or your own bundle). Router links reload the page — pass your router's link elements in `links`, they are rendered as given. Surfaces look flat — the identity in use is not `glass`; set `data-identity="glass"` on `<html>`. Classes missing — the `@source` line must scan the kit's `src/**` (the marketing folder is included).
 
 ```ts
@@ -1917,6 +1917,16 @@ import { MarketingFooter, MarketingHeader } from "@zedtech/zedkit-ui/marketing";
   actions={<a href="/signup">Create an account</a>}
 />;
 <MarketingFooter brand="Harbor" columns={[{ title: "Product", links: [<a key="docs" href="/docs">Docs</a>] }]} />;
+```
+
+```ts
+import { MediaSection } from "@zedtech/zedkit-ui/marketing";
+
+<MediaSection
+  title="An assistant that knows your catalog"
+  points={["Reads your products", "Never changes an order"]}
+  media={<img src="/assistant.png" alt="The assistant answering a question about stock" />}
+/>;
 ```
 
 ```ts

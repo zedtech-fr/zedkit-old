@@ -14,3 +14,4 @@ export {
   type MarketingFooterProps,
 } from "./marketing-footer.js";
 export { MarketingHeader, type MarketingHeaderProps } from "./marketing-header.js";
+export { MediaSection, type MediaSectionProps } from "./media-section.js";
