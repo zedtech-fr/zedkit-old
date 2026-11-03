@@ -11,6 +11,7 @@ import { AssistantHeading, UnavailableBanner, ViewSwitch, noticeText } from "@/c
 import { useAssistantView } from "@/components/use-assistant-view";
 import { useIdentityAssistant } from "@/components/use-identity-assistant";
 import { checkInput, type Unavailable } from "@/lib/identity-assistant";
+import { useIdentityAssistantStore } from "@/lib/identity-assistant-store";
 import type { SessionState } from "@/lib/identity-creator-session";
 import { linksInText } from "@/lib/identity-links-in-text";
 
@@ -25,7 +26,7 @@ import { linksInText } from "@/lib/identity-links-in-text";
 export function IdentityAssistant({ tokens, onUse }: { tokens: IdentityTokens; onUse: (tokens: IdentityTokens) => void }) {
   const [opened, setOpened] = useState(false);
   const { session, status, dispatch, submit, cancel } = useIdentityAssistant(tokens, opened);
-  const [brief, setBrief] = useState("");
+  const { brief, setBrief } = useIdentityAssistantStore();
   const ui = useAssistantView({ proposalId: session.proposal?.requestId, onBrief: setBrief });
   useEffect(() => {
     if (ui.open) setOpened(true);

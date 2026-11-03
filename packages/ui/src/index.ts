@@ -213,6 +213,12 @@ export { applyCustomIdentity } from "./identity-apply-custom.js";
 export { IdentitySwitcher, type IdentitySwitcherProps } from "./identity-switcher.js";
 export { IdentityPicker, type IdentityPickerProps } from "./identity-picker.js";
 export {
+  IdentityDock,
+  IdentityDockPanel,
+  IdentityDockSwatch,
+  IdentityDockTrigger,
+} from "./identity-dock.js";
+export {
   applyIdentityTokenSheet,
   identityPresets,
   identityTokenSchema,
