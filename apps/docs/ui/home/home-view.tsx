@@ -8,11 +8,11 @@ const HomeBelowHero = dynamic(
   () => import("@/ui/home/home-below-hero").then((mod) => ({ default: mod.HomeBelowHero })),
   {
     loading: () => (
-      <Stack aria-busy="true" className="min-h-screen w-full">
-        <section id="identities" className="sr-only" />
-        <section id="get-started" className="sr-only" />
-        <section id="components" className="sr-only" />
-        <section id="entry-points" className="sr-only" />
+      <Stack aria-busy="true" className="min-h-screen w-full" data-home-below-loading="">
+        <div className="sr-only" data-home-section-placeholder="identities" />
+        <div className="sr-only" data-home-section-placeholder="get-started" />
+        <div className="sr-only" data-home-section-placeholder="components" />
+        <div className="sr-only" data-home-section-placeholder="entry-points" />
       </Stack>
     ),
   },
