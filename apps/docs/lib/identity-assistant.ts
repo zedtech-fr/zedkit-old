@@ -106,9 +106,12 @@ function referencesOf(value: unknown): ReferenceReport[] {
   return out;
 }
 
+/** A monthly budget can sit ~31 days out; anything larger is not a clock we will show. */
+const MAX_RETRY_AFTER_SEC = 40 * 86_400;
+
 function retryAfter(res: Response, body: Record<string, unknown>): number | undefined {
   const fromBody = typeof body.retryAfterSec === "number" ? body.retryAfterSec : Number(res.headers.get("retry-after"));
-  return Number.isFinite(fromBody) && fromBody > 0 ? Math.min(Math.ceil(fromBody), 86_400) : undefined;
+  return Number.isFinite(fromBody) && fromBody > 0 ? Math.min(Math.ceil(fromBody), MAX_RETRY_AFTER_SEC) : undefined;
 }
 
 function readJson(res: Response): Promise<Record<string, unknown>> {
