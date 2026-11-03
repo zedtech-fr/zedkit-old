@@ -4593,20 +4593,20 @@
         },
         {
           "need": "Render headings and body text without raw tags",
-          "import": "`@zedtech/zedkit-ui` — `Heading`, `HeadingProps`, `headingVariants`, `Text`, `TextProps`, `textVariants`",
+          "import": "`@zedtech/zedkit-ui` — `Heading`, `HeadingProps`, `headingVariants`, `Text`, `TextProps`, `textVariants`, `typeRoleClass`, `signatureMotionClass`, `headingLevelDefaultRole`, `TypeRole`, `SignatureMotion`",
           "wraps": "`class-variance-authority` (styles follow the documented shadcn typography recipes; no registry item exists)",
           "status": "stable",
           "shortName": "Typography",
           "audience": "Developers writing kit pages with consistent type.",
-          "purpose": "Heading levels and Text variants with theme-aware styles.",
+          "purpose": "Heading levels and Text variants with theme-aware styles; visual roles decouple size from semantic level (`typeRole` / `typeRoleClass`).",
           "whenToUse": "For every heading and paragraph in kit UI.",
           "whenNotToUse": "For raw HTML emails or markdown — style those separately.",
           "derivedFrom": null,
-          "example": "import { Heading, Text } from \"@zedtech/zedkit-ui\";\n<Heading level={1}>Page title</Heading>\n<Heading level={2} as=\"div\">Styled as h2, neutral tag</Heading>\n<Text>Body copy.</Text>\n<Text variant=\"muted\">Secondary copy.</Text>",
+          "example": "import { Heading, Text, typeRoleClass } from \"@zedtech/zedkit-ui\";\n<Heading level={1} typeRole=\"display\">Page title</Heading>\n<Heading level={2} as=\"div\">Styled as h2, neutral tag</Heading>\n<Text>Body copy.</Text>\n<Text variant=\"muted\">Secondary copy.</Text>",
           "examples": [
             {
               "title": "Simple",
-              "code": "import { Heading, Text } from \"@zedtech/zedkit-ui\";\n<Heading level={1}>Page title</Heading>\n<Heading level={2} as=\"div\">Styled as h2, neutral tag</Heading>\n<Text>Body copy.</Text>\n<Text variant=\"muted\">Secondary copy.</Text>"
+              "code": "import { Heading, Text, typeRoleClass } from \"@zedtech/zedkit-ui\";\n<Heading level={1} typeRole=\"display\">Page title</Heading>\n<Heading level={2} as=\"div\">Styled as h2, neutral tag</Heading>\n<Text>Body copy.</Text>\n<Text variant=\"muted\">Secondary copy.</Text>"
             },
             {
               "title": "Heading styles on a link (asChild)",
@@ -4624,7 +4624,12 @@
                   "headingVariants",
                   "Text",
                   "TextProps",
-                  "textVariants"
+                  "textVariants",
+                  "typeRoleClass",
+                  "signatureMotionClass",
+                  "headingLevelDefaultRole",
+                  "TypeRole",
+                  "SignatureMotion"
                 ]
               }
             ]
