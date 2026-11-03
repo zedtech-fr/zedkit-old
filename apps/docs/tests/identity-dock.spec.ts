@@ -3,36 +3,6 @@ import { expect, test, type Page, type Route } from "@playwright/test";
 const BASE = "http://127.0.0.1:3100";
 const SERVICE = "**/api/identity/suggest";
 
-const WARM = {
-  spacing: "0.2rem",
-  borderWidth: "1px",
-  radius: "0.25rem",
-  bodyLeading: "1.6",
-  headingLeading: "1.05",
-  headingTracking: "-0.01em",
-  labelTracking: "0.12em",
-  fontSans: '"Jost Variable", Jost, "Jost Variable Fallback", ui-sans-serif, system-ui, sans-serif',
-  fontDisplay: '"Cormorant Variable", Cormorant, "Cormorant Variable Fallback", Georgia, serif',
-  light: { background: "30 40% 96%", foreground: "20 20% 12%", primary: "14 55% 34%", primaryForeground: "30 40% 96%", accent: "14 45% 42%", border: "25 20% 52%", mutedForeground: "20 12% 32%" },
-  dark: { background: "20 18% 8%", foreground: "30 35% 92%", primary: "20 70% 68%", primaryForeground: "20 18% 8%", accent: "20 30% 45%", border: "20 15% 40%", mutedForeground: "30 15% 70%" },
-  shadowSm: "0 1px 2px hsl(20 20% 12% / 0.08)",
-  shadowMd: "0 6px 16px -8px hsl(20 20% 12% / 0.2)",
-};
-
-function ok(posted: { requestId: string }) {
-  return {
-    status: 200,
-    contentType: "application/json",
-    body: JSON.stringify({
-      requestId: posted.requestId,
-      summary: "Warmer shop counter.",
-      changed: ["radius"],
-      tokens: WARM,
-      references: [],
-    }),
-  };
-}
-
 async function service(page: Page, handler: (posted: { requestId: string; prompt: string }, route: Route) => ReturnType<Route["fulfill"]> | Promise<ReturnType<Route["fulfill"]>>) {
   const posts: { requestId: string; prompt: string }[] = [];
   await page.route(`${SERVICE}/status`, (route) =>
@@ -53,14 +23,15 @@ async function service(page: Page, handler: (posted: { requestId: string; prompt
 test.describe("IdentityDock", () => {
   const dock = (page: Page) => page.getByTestId("identity-dock");
   const panel = (page: Page) => page.locator("[data-slot='identity-dock-panel'], [data-slot='identity-dock-sheet']");
+  const brief = (page: Page) => page.locator("#identity-assistant-brief");
 
-  test("brief and expanded state survive navigation between routes", async ({ page }) => {
+  test("brief persists when moving to another route", async ({ page }) => {
     await page.goto(BASE, { waitUntil: "networkidle" });
     await dock(page).locator("[data-slot='identity-dock-trigger']").click();
-    await dock(page).locator("#identity-assistant-brief").fill("A calm SaaS dashboard");
+    await brief(page).fill("A calm SaaS dashboard");
     await page.goto(`${BASE}/docs`, { waitUntil: "networkidle" });
-    await expect(panel(page)).toBeVisible();
-    await expect(dock(page).locator("#identity-assistant-brief")).toHaveValue("A calm SaaS dashboard");
+    await dock(page).locator("[data-slot='identity-dock-trigger']").click();
+    await expect(brief(page)).toHaveValue("A calm SaaS dashboard");
   });
 
   test("390px: quota feedback stays visible inside the dock panel", async ({ page }) => {
@@ -74,14 +45,15 @@ test.describe("IdentityDock", () => {
     );
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(BASE, { waitUntil: "networkidle" });
-    await dock(page).locator("[data-slot='identity-dock-trigger']").click();
-    await dock(page).locator("#identity-assistant-brief").fill("A ceramics shop");
-    await panel(page).getByRole("button", { name: "Generate" }).click();
-    const message = panel(page).locator("[data-assistant-status]");
+    await page.keyboard.press("Control+I");
+    await expect(brief(page)).toBeVisible();
+    await brief(page).fill("A ceramics shop");
+    await page.getByRole("button", { name: "Generate" }).click();
+    const message = page.locator("[data-assistant-status]");
     await expect(message).not.toBeEmpty();
     await expect(message).toBeInViewport();
     const box = await message.boundingBox();
-    const panelBox = await panel(page).boundingBox();
+    const panelBox = await page.locator("[data-slot='identity-dock-panel']").boundingBox();
     expect(box).toBeTruthy();
     expect(panelBox).toBeTruthy();
     expect(box!.y).toBeGreaterThanOrEqual(panelBox!.y);

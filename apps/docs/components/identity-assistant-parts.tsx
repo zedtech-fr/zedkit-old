@@ -181,6 +181,29 @@ function contrastNote(repaired: { adjusted: number; remaining: number }): string
   return repaired.adjusted > 0 ? copy.proposal.contrastAdjusted(repaired.adjusted) : copy.proposal.contrastOk;
 }
 
+function ProposalApplyRow({
+  busy,
+  tokens,
+  onUse,
+  onDiscard,
+}: {
+  busy: boolean;
+  tokens: IdentityTokens;
+  onUse: (tokens: IdentityTokens) => void;
+  onDiscard: () => void;
+}) {
+  return (
+    <Stack direction="horizontal" gap={2} className="flex-wrap">
+      <Button type="button" onClick={() => onUse(tokens)} disabled={busy}>
+        {copy.proposal.apply}
+      </Button>
+      <Button type="button" variant="outline" onClick={onDiscard} disabled={busy}>
+        {copy.proposal.discard}
+      </Button>
+    </Stack>
+  );
+}
+
 /** A proposal to look at, in light and dark, with what changed and why. Using it is the only thing that changes the draft. */
 export function ProposalCard({
   proposal,
@@ -231,14 +254,7 @@ export function ProposalCard({
           </ul>
         </details>
       ) : null}
-      <Stack direction="horizontal" gap={2} className="flex-wrap">
-        <Button type="button" onClick={() => onUse(repaired.tokens)} disabled={busy}>
-          {copy.proposal.apply}
-        </Button>
-        <Button type="button" variant="outline" onClick={onDiscard} disabled={busy}>
-          {copy.proposal.discard}
-        </Button>
-      </Stack>
+      <ProposalApplyRow busy={busy} tokens={repaired.tokens} onUse={onUse} onDiscard={onDiscard} />
       <Text variant="muted" className="text-sm">
         {copy.proposal.note}
       </Text>

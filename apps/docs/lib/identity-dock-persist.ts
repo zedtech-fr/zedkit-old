@@ -7,7 +7,6 @@ export const IDENTITY_DOCK_STORAGE_KEY = "zk-identity-dock-v1";
 export type IdentityDockPersist = {
   session: SessionState;
   brief: string;
-  expanded: boolean;
 };
 
 export function readIdentityDockPersist(): Partial<IdentityDockPersist> {
@@ -16,15 +15,14 @@ export function readIdentityDockPersist(): Partial<IdentityDockPersist> {
   if (!raw.ok) return {};
   const stored = raw.value;
   if (stored === null || stored === undefined) return {};
-  const parsed = tryCatch(() => JSON.parse(stored) as IdentityDockPersist);
+  const parsed = tryCatch(() => JSON.parse(stored) as IdentityDockPersist & { expanded?: boolean });
   if (!parsed.ok || typeof parsed.value !== "object" || parsed.value === null) return {};
-  const { session, brief, expanded } = parsed.value;
+  const { session, brief } = parsed.value;
   const out: Partial<IdentityDockPersist> = {};
   if (session && typeof session === "object") {
     out.session = { ...session, pending: null };
   }
   if (typeof brief === "string") out.brief = brief;
-  if (typeof expanded === "boolean") out.expanded = expanded;
   return out;
 }
 
