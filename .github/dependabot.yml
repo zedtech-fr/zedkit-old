@@ -37,6 +37,11 @@ updates:
         update-types: [version-update:semver-major]
       - dependency-name: "@nestjs/throttler"
         update-types: [version-update:semver-major]
+      # @fastify/middie 9.3.6 prefixes Nest's "{/*splat}" middleware path to
+      # "/{/*splat}", so nestjs-pino's request logger stops matching any route
+      # (no "request completed"/"request errored" lines). Pinned via
+      # pnpm.overrides; lift both once Nest or middie ship a fix.
+      - dependency-name: "@fastify/middie"
 
   - package-ecosystem: github-actions
     directory: /

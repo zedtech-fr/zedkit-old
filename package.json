@@ -11,7 +11,8 @@
   "pnpm": {
     "overrides": {
       "esbuild": "0.28.2",
-      "vite": "6.4.5"
+      "vite": "6.4.5",
+      "@fastify/middie": "9.3.5"
     }
   },
   "scripts": {
