@@ -77,6 +77,7 @@ kit packages.
   `Stack`, `Section`, `Container` (named widths + full-bleed bands).
 - Wizard: `WizardSteps` (step indicator), `OptionCards` (multi-select cards).
 - Detail: `DetailPanel` (key-value rows), `LivePulse` (live indicator).
+- Marketing (`@zedtech/zedkit-ui/marketing`, separate entry): `GlassSurface`.
 
 ## Provenance
 

@@ -51,7 +51,7 @@ function compilePreview(source) {
     // to the tmp files below.
     '"#index.js"',
     '"../dist/index.js"',
-  );
+  ).replaceAll('"#marketing/index.js"', '"../dist/marketing/index.js"');
 }
 
 // Sibling demo modules shared with the unit tests (form-demo, ...)

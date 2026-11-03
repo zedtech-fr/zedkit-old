@@ -83,6 +83,7 @@ import {
   WizardSteps,
   createDataTableColumns,
 } from "#index.js";
+import { GlassSurface } from "#marketing/index.js";
 import { X } from "lucide-react";
 import { FormDemo } from "./form-demo.js";
 
@@ -104,6 +105,7 @@ const SECTIONS = [
   ["loading", "Loading"],
   ["wizard", "Wizard"],
   ["forms", "Forms"],
+  ["marketing", "Marketing"],
 ] as const;
 
 function GallerySection({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
@@ -394,6 +396,14 @@ export function Gallery() {
             selected={["a"]}
             onChange={() => {}}
           />
+        </GallerySection>
+
+        <GallerySection id="marketing" title="Marketing">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <GlassSurface>Plain surface</GlassSurface>
+            <GlassSurface tone="raised">Raised surface</GlassSurface>
+            <GlassSurface tone="tinted">Tinted surface</GlassSurface>
+          </div>
         </GallerySection>
       </div>
     </AppShell>

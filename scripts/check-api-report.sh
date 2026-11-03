@@ -32,6 +32,7 @@ entries=(
   "server|dist/index.d.ts|zedkit-server.api.md"
   "storage|dist/index.d.ts|zedkit-storage.api.md"
   "ui|dist/index.d.ts|zedkit-ui.api.md"
+  "ui|dist/marketing/index.d.ts|zedkit-ui-marketing.api.md"
 )
 
 write_config() {

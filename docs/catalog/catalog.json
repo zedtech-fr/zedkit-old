@@ -5137,6 +5137,43 @@
           "seeAlso": [
             "Switch the visual identity with one attribute"
           ]
+        },
+        {
+          "need": "Compose a public marketing page",
+          "import": "`@zedtech/zedkit-ui/marketing` — `GlassSurface`, `glassSurfaceVariants`, `GlassSurfaceProps`",
+          "wraps": "none (theme tokens, `class-variance-authority`)",
+          "status": "alpha",
+          "shortName": "Marketing",
+          "audience": "Teams building a public landing page or pricing page on the same tokens and identities as their app.",
+          "purpose": "Presentational page sections that follow the active identity, so a public site and the console share one look. Strings are props.",
+          "whenToUse": "For a signed-out home, pricing or product page built from the kit's tokens (frosted under the glass identity, plain cards elsewhere).",
+          "whenNotToUse": "For app screens — use `Card`, `PageHeader` and `Section` instead; for full-page bands use `Section` with `bleed`.",
+          "derivedFrom": null,
+          "example": "import { GlassSurface } from \"@zedtech/zedkit-ui/marketing\";\n\n<GlassSurface as=\"section\" aria-label=\"Plans\" tone=\"raised\" padding=\"lg\">\n  Plans\n</GlassSurface>;",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "import { GlassSurface } from \"@zedtech/zedkit-ui/marketing\";\n\n<GlassSurface as=\"section\" aria-label=\"Plans\" tone=\"raised\" padding=\"lg\">\n  Plans\n</GlassSurface>;"
+            }
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui/marketing",
+                "exports": [
+                  "GlassSurface",
+                  "glassSurfaceVariants",
+                  "GlassSurfaceProps"
+                ]
+              }
+            ]
+          },
+          "a11y": "Surfaces render a plain element (`div`, `section`, `article` or `li`); pass `aria-label` or a heading inside when it is a landmark. Text sits on the card colour, so contrast follows the identity tokens; under `prefers-reduced-transparency` the glass identity turns surfaces near-solid.",
+          "troubleshooting": "Surfaces look flat — the identity in use is not `glass`; set `data-identity=\"glass\"` on `<html>`. Classes missing — the `@source` line must scan the kit's `src/**` (the marketing folder is included).",
+          "seeAlso": [
+            "Theme an admin app (dark/light included)"
+          ]
         }
       ]
     }

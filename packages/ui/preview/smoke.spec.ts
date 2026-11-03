@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const SECTIONS = ["primitives", "overlays", "data-table", "layout", "loading", "forms", "wizard"];
+const SECTIONS = ["primitives", "overlays", "data-table", "layout", "loading", "forms", "wizard", "marketing"];
 
 /** No sideways scroll: every section fits its viewport (mobile persona). */
 async function expectNoOverflow(page: Page): Promise<void> {
