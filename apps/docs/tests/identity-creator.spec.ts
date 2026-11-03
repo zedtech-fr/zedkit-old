@@ -169,6 +169,43 @@ test.describe("the assistant folds away, and on a phone the conversation and the
     expect(label.y - (views.y + views.height), "the form follows the switch at one gap, not two").toBeLessThanOrEqual(24);
   });
 
+  for (const [name, reply, text] of [
+    ["the service is down", { status: 503, json: { error: "unavailable", reason: "unavailable" } }, "[data-assistant-unavailable]"],
+    ["a quota refusal", { status: 429, headers: { "retry-after": "1800" }, json: { error: "quota", retryAfterSec: 1800 } }, "[data-assistant-status]"],
+  ] as const) {
+    test(`390px: when ${name}, the message is on screen and not behind the pinned preview`, async ({ page }) => {
+      await service(page, (_posted, route) => route.fulfill({ contentType: "application/json", ...reply }));
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto(OPEN, { waitUntil: "networkidle" });
+      await brief(page, "A ceramics shop");
+      // Where a visitor types on a phone: the text box just under the pinned preview, the keyboard below it.
+      await page.evaluate(() => {
+        const pinned = document.querySelector("[data-slot='identity-editor-preview']")!.getBoundingClientRect();
+        const field = document.querySelector("#identity-assistant-brief")!.getBoundingClientRect();
+        window.scrollBy(0, field.top - pinned.bottom - 8);
+      });
+      await page.getByRole("button", { name: "Generate" }).click();
+      const message = page.locator(text);
+      await expect(message).not.toBeEmpty();
+      await expect(message).toBeInViewport();
+      await expect
+        .poll(async () => {
+          const box = (await message.boundingBox())!;
+          const pinned = (await page.locator("[data-slot='identity-editor-preview']").boundingBox())!;
+          const overlap = Math.min(box.y + box.height, pinned.y + pinned.height) - Math.max(box.y, pinned.y);
+          return { overlap: Math.max(0, overlap), inside: box.y >= 0 && box.y + box.height <= 844 };
+        })
+        .toEqual({ overlap: 0, inside: true });
+      // And the point at its centre is the message itself, not the preview drawn over it.
+      const hit = await message.evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        const at = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        return Boolean(at && el.contains(at));
+      });
+      expect(hit).toBe(true);
+    });
+  }
+
   test("1440px: no switch, the conversation and the proposal are both on the page", async ({ page }) => {
     await service(page, (posted, route) => route.fulfill(ok(posted)));
     await page.setViewportSize({ width: 1440, height: 900 });
