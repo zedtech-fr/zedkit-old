@@ -1,0 +1,58 @@
+{
+  "name": "@zedtech/zedkit-live",
+  "version": "0.0.0",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "description": "A small LiveSource interface plus polling and WebSocket implementations with reconnect and polling backup, with no framework code. Original work by the same author.",
+  "keywords": [
+    "realtime",
+    "websocket",
+    "polling",
+    "reconnect",
+    "typescript",
+    "browser"
+  ],
+  "homepage": "https://github.com/zedtech-fr/zedkit/tree/main/packages/live",
+  "bugs": {
+    "url": "https://github.com/zedtech-fr/zedkit/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zedtech-fr/zedkit",
+    "directory": "packages/live"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.tests.json",
+    "lint": "eslint src tests"
+  },
+  "dependencies": {
+    "@zedtech/zedkit-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@zedtech/zedkit-quality": "workspace:*",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
