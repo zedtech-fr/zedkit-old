@@ -453,3 +453,22 @@ test("390px: the Display controls share one row, none stranded alone, on every p
     }
   }
 });
+
+for (const width of [1024, 1100]) {
+  test(`${width}px: the frame is the same height on every page, because the Pause button never wraps the footer`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    const preview = page.locator("[data-home-hero-preview]");
+    const heights = new Set<number>();
+    for (const name of ["Overview", "Apps", "Calendar", "Team", "Settings"] as const) {
+      await go(page, name);
+      heights.add(Math.round((await preview.boundingBox())!.height));
+    }
+    expect(Math.max(...heights) - Math.min(...heights), `heights ${[...heights].join(", ")}`).toBeLessThanOrEqual(1);
+    // The words are gone from the screen, not from the control: it is still named, and it still works.
+    // (Choosing a page is a takeover, so by now the control offers to play again.)
+    const control = page.locator("#demo").getByRole("button", { name: /(pause|play) tour/i });
+    await expect(control).toBeVisible();
+    await expect(control).toHaveAttribute("title", /(pause|play) tour/i);
+  });
+}
