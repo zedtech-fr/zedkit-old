@@ -52,6 +52,8 @@ export const identityAssistantCopy = {
     discard: "Discard",
     contrastAdjusted: (count: number) => `${count} ${count === 1 ? "colour was" : "colours were"} adjusted so text stays readable.`,
     contrastOk: "Text and controls keep their contrast in light and dark.",
+    contrastUnresolved: (count: number) =>
+      `${count} ${count === 1 ? "pair still misses" : "pairs still miss"} the contrast target after adjustment; check them before applying.`,
     note: "Nothing is applied until you use it. Your saved looks and this page are not touched.",
   },
   /** Sample content the proposal is shown in: a small shop, so type, colour, shape and density have something to act on. */

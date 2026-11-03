@@ -44,13 +44,17 @@ function contrastRatio(fg: Hsl, bg: Hsl): number {
 }
 
 function nudgeForeground(fg: Hsl, bg: Hsl, min: number): string {
-  const dir = luminance(bg.h, bg.s, bg.l) > 0.5 ? -1 : 1;
-  let next = { ...fg };
-  for (let step = 0; step < 100; step += 1) {
-    if (contrastRatio(next, bg) >= min) return formatHsl(next);
-    next = { ...next, l: Math.min(100, Math.max(0, next.l + dir)) };
+  // Try lightness at a growing distance on both sides: the first that meets the target is the smallest move. One
+  // direction picked from the background alone misses mid-tone backgrounds, where only the other end can pass.
+  let best = fg;
+  for (let d = 0; d <= 100; d += 1) {
+    for (const l of [fg.l - d, fg.l + d]) {
+      const next = { ...fg, l: Math.min(100, Math.max(0, l)) };
+      if (contrastRatio(next, bg) >= min) return formatHsl(next);
+      if (contrastRatio(next, bg) > contrastRatio(best, bg)) best = next;
+    }
   }
-  return formatHsl(next);
+  return formatHsl(best);
 }
 
 function warningFor(
