@@ -23,6 +23,7 @@ entries=(
   "i18n|dist/index.d.ts|zedkit-i18n.api.md"
   "nest|dist/index.d.ts|zedkit-nest.api.md"
   "observability|dist/index.d.ts|zedkit-observability.api.md"
+  "payload-access|dist/index.d.ts|zedkit-payload-access.api.md"
   "payload-seo|dist/index.d.ts|zedkit-payload-seo.api.md"
   "quality|src/index.d.mts|zedkit-quality.api.md"
   "quality|src/eslint.d.mts|zedkit-quality-eslint.api.md"
@@ -143,6 +144,7 @@ reports = [
     ("packages/i18n/etc/zedkit-i18n.api.md", "@zedtech/zedkit-i18n"),
     ("packages/nest/etc/zedkit-nest.api.md", "@zedtech/zedkit-nest"),
     ("packages/observability/etc/zedkit-observability.api.md", "@zedtech/zedkit-observability"),
+    ("packages/payload-access/etc/zedkit-payload-access.api.md", "@zedtech/zedkit-payload-access"),
     ("packages/payload-seo/etc/zedkit-payload-seo.api.md", "@zedtech/zedkit-payload-seo"),
     ("packages/quality/etc/zedkit-quality.api.md", "@zedtech/zedkit-quality"),
     ("packages/quality/etc/zedkit-quality-eslint.api.md", "@zedtech/zedkit-quality"),
