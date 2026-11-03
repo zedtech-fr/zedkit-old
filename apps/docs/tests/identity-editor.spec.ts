@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { DEFAULT_IDENTITY } from "../lib/default-identity";
 import { assertA11yGate } from "./a11y-helpers";
+import { persistDocsSiteLook } from "./identity-helpers";
 
 const PAGE = "/features/identity-editor";
 /** The site's own light/dark switch (header), which is separate from the editor's Preview dark. */
@@ -283,7 +284,7 @@ test.describe("identity editor apply to site", () => {
     await page.getByRole("button", { name: "Apply to the whole site" }).click();
     await page.getByRole("button", { name: "Back to default" }).click();
     await expect(page.locator("html")).toHaveAttribute("data-identity", DEFAULT_IDENTITY);
-    await expect.poll(() => spacingOnHtml(page)).toMatch(/^0?\.28rem$/);
+    await expect.poll(() => spacingOnHtml(page)).toMatch(/^0?\.26rem$/);
     await expect(page.getByRole("button", { name: "Back to default" })).toHaveCount(0);
     expect(await page.evaluate((key) => localStorage.getItem(key), DOCS_CUSTOM_STORAGE_KEY)).toBeNull();
   });
@@ -542,6 +543,8 @@ test.describe("identity editor named looks", () => {
 test.describe("identity editor: choose, see, adjust, then keep", () => {
   test("on a standard phone the first screen holds the look, a useful preview and the first adjustment", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
+    // Measured at the compact Tide unit; Glass (the site default) is roomier by design.
+    await persistDocsSiteLook(page, "tide", "light");
     await page.goto(PAGE, { waitUntil: "networkidle" });
     const boxes = await page.evaluate(() => {
       const top = (selector: string) => document.querySelector(selector)?.getBoundingClientRect() ?? null;

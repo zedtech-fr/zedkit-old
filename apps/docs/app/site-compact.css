@@ -2,10 +2,9 @@
  * Docs-site scale (site chrome only, never specimens: rules target the
  * root identity, so [data-identity-scope] previews keep their own look).
  * Roomy identities (glass: 0.32rem unit) read oversized as a docs site;
- * the site pins a calmer unit, a compact header and centred section content.
+ * the site pins a calmer unit, a compact header (bands keep the shared container).
  */
 :root[data-identity] {
-  --zk-site-content-width: 76rem;
   --zk-site-header-height: 3.5rem;
 }
 :root[data-identity="glass"] {
@@ -13,9 +12,6 @@
 }
 
 /* Header: fixed compact height, nav aligned to the content width. */
-#nd-home-layout {
-  --fd-layout-width: var(--zk-site-content-width) !important;
-}
 #nd-nav,
 #nd-nav > div,
 #nd-nav nav,
@@ -37,24 +33,9 @@
   background: hsl(var(--card) / 0.6);
 }
 
-/* Bands: full-bleed backgrounds, content centred and inset (no edge spill). */
-#home-page > section,
-#home-page section[id].w-full,
-#nd-home-layout section.w-full {
-  padding-inline: max(1.5rem, calc((100% - var(--zk-site-content-width)) / 2));
-  overflow-x: clip;
-}
-#nd-home-layout section.w-full > * {
-  max-width: var(--zk-site-content-width);
-  margin-inline: auto;
-}
-#nd-home-layout section.space-y-4 {
-  max-width: var(--zk-site-content-width);
-  margin-inline: auto;
-  padding-inline: 1.5rem;
-}
-#nd-home-layout section.w-full + section.w-full {
-  border-top: var(--zk-border-width, 1px) solid hsl(var(--border) / 0.25);
+/* Home bands: the wide container reads calmer at 76rem (content centred). */
+#nd-home-layout {
+  --zk-container-wide: 76rem;
 }
 
 /* Marketing type: a step down from the identity's display sizes. */
@@ -64,9 +45,6 @@
 }
 #nd-home-layout h2 {
   font-size: clamp(1.25rem, 1rem + 0.6vw, 1.5rem);
-}
-#nd-home-layout section.w-full {
-  padding-block: calc(var(--spacing) * 10);
 }
 /* Scroll targets clear the compact header. */
 #nd-home-layout section[id] {
@@ -108,7 +86,6 @@
 :root[data-identity="glass"] #nd-mobile-nav {
   background-color: hsl(var(--background) / 0.6);
   border-bottom-color: hsl(var(--zk-glass-edge) / var(--zk-glass-edge-alpha));
-  box-shadow: 0 1px 0 hsl(var(--border) / 0.2), 0 8px 24px -16px hsl(var(--zk-shadow-color) / 0.3);
   -webkit-backdrop-filter: var(--zk-glass-filter);
   backdrop-filter: var(--zk-glass-filter);
 }
@@ -119,14 +96,6 @@
   box-shadow: var(--zk-shadow-sm);
 }
 
-/* Hero: same centred content width as the bands (no edge-to-edge spill). */
-#home-page [data-home-hero] {
-  width: 100%;
-  max-width: var(--zk-site-content-width);
-  margin-inline: auto;
-  padding-inline: 1.5rem;
-  box-sizing: border-box;
-}
 #nd-home-layout .type-site-h1 {
   font-size: clamp(1.875rem, 1.2rem + 1.6vw, 2.5rem);
 }

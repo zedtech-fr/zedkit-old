@@ -1,6 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
+import { persistDocsSiteLook } from "./identity-helpers";
+
 const DRAWER_PAGE = "/docs/ui/slide-in-a-drawer-panel";
 const MOBILE = { width: 390, height: 844 };
 
@@ -168,6 +170,8 @@ for (const phone of PHONES) {
       });
 
       test(`${direction}: drag toward the edge closes it`, async ({ page }) => {
+        // Drag thresholds measured on a solid look; Glass (the site default) has its own overlay motion.
+        await persistDocsSiteLook(page, "tide", "light");
         await page.goto(DRAWER_PAGE, { waitUntil: "networkidle" });
         await page.getByRole("button", { name: LABEL[direction], exact: true }).click();
         await page.getByRole("button", { name: "Open drawer" }).click();

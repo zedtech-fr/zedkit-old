@@ -134,8 +134,8 @@ test.describe("glass overlay surfaces", () => {
     }
   }
 
-  test("other identities and the stock look keep opaque panels and the 50% frosted scrim", async ({ page }) => {
-    for (const identity of [null, "mist", "press", "tide", "volt", "maison"]) {
+  test("other identities keep opaque panels and the 50% frosted scrim", async ({ page }) => {
+    for (const identity of ["mist", "press", "tide", "volt", "maison"]) {
       const panel = await openOverlay(page, DRAWER_PAGE, "Open drawer", identity, "light");
       const s = await readSurface(page, "drawer");
       expect(parseColor(s.background)[3], `${identity} panel`).toBe(1);

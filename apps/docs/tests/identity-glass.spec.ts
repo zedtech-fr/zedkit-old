@@ -24,6 +24,8 @@ const ms = (value: string) => Number.parseFloat(value) * (value.trim().endsWith(
 test.describe("glass identity", () => {
   test("makes cards and popovers translucent with a backdrop blur", async ({ page }) => {
     await page.goto(HOME, { waitUntil: "networkidle" });
+    // Glass is the site default: compare against a solid identity first.
+    await useIdentity(page, "mist", "light");
     const stock = await surface(page, "bg-card border");
     expect(stock.filter === "" || stock.filter === "none").toBe(true);
 
