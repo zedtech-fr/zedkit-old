@@ -14,8 +14,7 @@ const USAGE = `zedkit-ai <command>
       (default .), then wire the providers (default all). Never overwrites
       existing files (an existing AGENTS.md without the ladder gets the
       ladder section appended). --adopt keeps a colliding user file and
-      writes the kit version beside it (review.kit.md or zk-review);
-      identical kit files are left as already installed.
+      writes the kit version beside it (review.kit.md or zk-review).
       --provider takes cursor,claude,codex,muse,all; --target is an alias
       of --provider.
   validate [dir]

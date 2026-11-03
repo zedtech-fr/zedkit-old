@@ -22,16 +22,8 @@ function dirsIn(path: string): string[] {
   return readdirSync(path).filter((entry) => statSync(join(path, entry)).isDirectory());
 }
 
-function isKitSidecar(file: string): boolean {
-  return file.endsWith(".kit.md");
-}
-
 function mdFiles(dir: string): string[] {
-  return readdirSync(dir).filter((file) => file.endsWith(".md") && !isKitSidecar(file));
-}
-
-function skillName(folder: string): string {
-  return folder.startsWith("zk-") ? folder.slice(3) : folder;
+  return readdirSync(dir).filter((file) => file.endsWith(".md") && !file.endsWith(".kit.md"));
 }
 
 function checkName(name: unknown, expected: string, path: string, issues: Issue[]): void {
@@ -75,7 +67,7 @@ function checkSkill(root: string, name: string, issues: Issue[]): void {
     issues.push({ path, message: parsed.error.message });
     return;
   }
-  checkName(parsed.value.data.name, skillName(name), path, issues);
+  checkName(parsed.value.data.name, name.replace(/^zk-/, ""), path, issues);
   checkDescription(parsed.value.data.description, path, issues);
   // No single-line check here, deliberately: skill descriptions are read
   // through YAML-aware loaders (this kit's `yaml` parse, providers), so a
@@ -136,7 +128,7 @@ function checkLineEndings(root: string, issues: Issue[]): void {
   const entries = readdirSync(root, { recursive: true, encoding: "utf8" });
   for (const entry of entries) {
     const full = join(root, entry);
-    if (entry.endsWith(".md") && !isKitSidecar(entry) && statSync(full).isFile() && read(full).includes("\r")) {
+    if (entry.endsWith(".md") && !entry.endsWith(".kit.md") && statSync(full).isFile() && read(full).includes("\r")) {
       issues.push({ path: entry, message: "CR found: use LF line endings" });
     }
   }
@@ -300,7 +292,7 @@ export function checkDrift(projectRoot: string, source: string): Issue[] {
       const from = join(source, kind);
       const to = join(projectRoot, ".cursor", kind);
       if (!isRealDir(from) || !isRealDir(to)) continue;
-      for (const file of readdirSync(from).filter((f) => f.endsWith(".md") && !isKitSidecar(f))) {
+      for (const file of readdirSync(from).filter((f) => f.endsWith(".md") && !f.endsWith(".kit.md"))) {
         const want = relative(projectRoot, join(from, file));
         const sidecar = join(to, kitSidecar(file));
         const target = join(to, file);

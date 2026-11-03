@@ -112,44 +112,24 @@ function adoptRel(rel: string): string {
   return join(dir, `zk-${base}`);
 }
 
-function filesMatch(a: string, b: string): boolean {
-  const left = tryCatch(() => readFileSync(a));
-  const right = tryCatch(() => readFileSync(b));
-  return left.ok && right.ok && Buffer.from(left.value).equals(Buffer.from(right.value));
-}
-
-function listedFiles(root: string): string[] | undefined {
+function treeFiles(root: string): string[] | undefined {
   const entries = tryCatch(() => readdirSync(root, { recursive: true, encoding: "utf8" }));
   if (!entries.ok) return undefined;
-  const files: string[] = [];
-  for (const entry of entries.value) {
-    const st = tryCatch(() => statSync(join(root, entry)));
-    if (st.ok && st.value.isFile()) files.push(entry);
-  }
-  return files.sort();
+  return entries.value.filter((e) => {
+    const st = tryCatch(() => statSync(join(root, e)));
+    return st.ok && st.value.isFile();
+  }).sort();
 }
 
-// Dest matches kit, allowing lenses.md to have been Status-patched on install.
 function treesMatch(src: string, dest: string, installed: ReadonlySet<string>): boolean {
-  if (!isDirectory(src) || !isDirectory(dest)) return false;
-  const from = listedFiles(src);
-  const to = listedFiles(dest);
-  if (from === undefined || to === undefined || from.length !== to.length) return false;
-  for (let i = 0; i < from.length; i++) {
-    if (from[i] !== to[i]) return false;
-  }
-  for (const rel of from) {
-    const left = join(src, rel);
-    const right = join(dest, rel);
-    if (rel === "lenses.md") {
-      const raw = tryCatch(() => readFileSync(left, "utf8"));
-      const got = tryCatch(() => readFileSync(right, "utf8"));
-      if (!raw.ok || !got.ok || setLensStatus(raw.value, installed) !== got.value) return false;
-      continue;
-    }
-    if (!filesMatch(left, right)) return false;
-  }
-  return true;
+  const from = treeFiles(src);
+  const to = treeFiles(dest);
+  if (!from || !to || from.join("\n") !== to.join("\n")) return false;
+  return from.every((rel) => {
+    const raw = tryCatch(() => readFileSync(join(src, rel), "utf8"));
+    const got = tryCatch(() => readFileSync(join(dest, rel), "utf8"));
+    return raw.ok && got.ok && (rel === "lenses.md" ? setLensStatus(raw.value, installed) : raw.value) === got.value;
+  });
 }
 
 function place(
@@ -158,7 +138,6 @@ function place(
   rel: string,
   make: (destRel: string) => void,
   note?: string,
-  identical?: () => boolean,
 ): string | undefined {
   const blocked = obstacle(ctx, rel);
   let target = rel;
@@ -167,11 +146,7 @@ function place(
     const current = tryCatch(() => readlinkSync(join(ctx.dest, rel)));
     const sameLink = kind === "link" && current.ok && current.value === note;
     if (sameLink) {
-      ctx.actions.push({ kind: "skip", path: rel, note: ctx.adopt ? "already installed" : "already linked" });
-      return undefined;
-    }
-    if (ctx.adopt && identical?.()) {
-      ctx.actions.push({ kind: "skip", path: rel, note: "already installed" });
+      ctx.actions.push({ kind: "skip", path: rel, note: "already linked" });
       return undefined;
     }
     if (ctx.adopt && canAdopt(rel)) {
@@ -197,9 +172,15 @@ function place(
 }
 
 function copyFile(ctx: Ctx, from: string, rel: string): void {
-  place(ctx, "copy", rel, (destRel) => copyFileSync(from, join(ctx.dest, destRel)), undefined, () =>
-    filesMatch(from, join(ctx.dest, rel)),
-  );
+  if (ctx.adopt) {
+    const left = tryCatch(() => readFileSync(from));
+    const right = tryCatch(() => readFileSync(join(ctx.dest, rel)));
+    if (left.ok && right.ok && left.value.equals(right.value)) {
+      ctx.actions.push({ kind: "skip", path: rel, note: "already installed" });
+      return;
+    }
+  }
+  place(ctx, "copy", rel, (destRel) => copyFileSync(from, join(ctx.dest, destRel)));
 }
 
 function link(ctx: Ctx, rel: string, target: string): void {
@@ -290,26 +271,21 @@ function installContent(ctx: Ctx, content: ReturnType<typeof plan>): Map<string,
   const skillDest = new Map<string, string>();
   for (const name of content.skills) {
     const rel = join(".agents", "skills", name);
-    // dereference: a symlink inside a skill must not be copied as a dangling one
-    const destRel = place(
-      ctx,
-      "copy",
-      rel,
-      (target) => {
-        cpSync(join(ctx.kit, "skills", name), join(ctx.dest, target), { recursive: true, dereference: true });
-        patchLenses(join(ctx.dest, target), installed);
-      },
-      undefined,
-      () => treesMatch(join(ctx.kit, "skills", name), join(ctx.dest, rel), installed),
-    );
+    if (ctx.adopt && treesMatch(join(ctx.kit, "skills", name), join(ctx.dest, rel), installed)) {
+      ctx.actions.push({ kind: "skip", path: rel, note: "already installed" });
+      skillDest.set(name, rel);
+      continue;
+    }
+    const destRel = place(ctx, "copy", rel, (target) => {
+      cpSync(join(ctx.kit, "skills", name), join(ctx.dest, target), { recursive: true, dereference: true });
+      patchLenses(join(ctx.dest, target), installed);
+    });
     skillDest.set(name, destRel ?? rel);
   }
-  // Licence texts of vendored skills travel with them.
   for (const file of content.licences) {
     copyFile(ctx, join(ctx.kit, "skills", file), join(".agents", "skills", file));
   }
   copyFile(ctx, join(ctx.kit, "THIRD_PARTY_NOTICES.md"), join(".agents", "THIRD_PARTY_NOTICES.md"));
-  // Project personas for persona-review; an existing file is left untouched.
   if (existsSync(join(ctx.kit, "personas.template.md"))) {
     copyFile(ctx, join(ctx.kit, "personas.template.md"), join(".agents", "personas.md"));
   }
@@ -371,8 +347,6 @@ function wireCursor(ctx: Ctx, content: ReturnType<typeof plan>, skillDest: Map<s
   const skillsRel = join(".cursor", "skills");
   const existing = lstatOf(join(ctx.dest, skillsRel));
   if (existing?.isDirectory() && !existing.isSymbolicLink()) {
-    // Cursor only auto-lists skills under a real `.cursor/skills` dir, so
-    // each kit skill gets its own link instead of replacing the folder.
     for (const name of content.skills) {
       const source = skillDest.get(name) ?? join(".agents", "skills", name);
       link(ctx, join(skillsRel, name), join("..", "..", source));
@@ -380,9 +354,6 @@ function wireCursor(ctx: Ctx, content: ReturnType<typeof plan>, skillDest: Map<s
   } else {
     link(ctx, skillsRel, "../.agents/skills");
   }
-  // Real files, not links: a symlinked folder shows up empty here, so the
-  // copies are authoritative for Cursor. They can drift from .agents/;
-  // checkDrift reports that, and init never overwrites them.
   for (const name of content.agents) {
     copyFile(ctx, join(ctx.kit, "agents", `${name}.md`), join(".cursor", "agents", `${name}.md`));
   }
@@ -412,9 +383,8 @@ function wireProvider(
  * never overwritten: they are reported as skipped, except an existing
  * AGENTS.md missing the ladder, which gets the ladder section appended
  * (reported as `append`). With `adopt`, a colliding skill/agent/command
- * that already matches the kit is skipped (`already installed`); a
- * different user file is kept and the kit version is written beside it.
- * A bad preset or kit fails before anything is written.
+ * keeps the user file and the kit version is written beside it. A bad
+ * preset or kit fails before anything is written.
  */
 export function installKit(options: InstallOptions): Result<Action[]> {
   const kit = options.kit ?? kitDir();
