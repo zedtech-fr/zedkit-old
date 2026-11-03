@@ -1,5 +1,11 @@
 # @zedtech/zedkit-server
 
+## 1.3.0
+
+### Minor Changes
+
+- 56be20a: Add `@zedtech/zedkit-server/webhook-web` with `verifyWebhookSignatureWeb` (Web Crypto, no `node:` imports).
+
 ## 1.2.0
 
 ### Minor Changes
