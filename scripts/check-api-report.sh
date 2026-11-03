@@ -21,6 +21,7 @@ entries=(
   "devtools|dist/index.d.ts|zedkit-devtools.api.md"
   "flags|dist/index.d.ts|zedkit-flags.api.md"
   "i18n|dist/index.d.ts|zedkit-i18n.api.md"
+  "live|dist/index.d.ts|zedkit-live.api.md"
   "nest|dist/index.d.ts|zedkit-nest.api.md"
   "observability|dist/index.d.ts|zedkit-observability.api.md"
   "payload-seo|dist/index.d.ts|zedkit-payload-seo.api.md"
@@ -141,6 +142,7 @@ reports = [
     ("packages/devtools/etc/zedkit-devtools.api.md", "@zedtech/zedkit-devtools"),
     ("packages/flags/etc/zedkit-flags.api.md", "@zedtech/zedkit-flags"),
     ("packages/i18n/etc/zedkit-i18n.api.md", "@zedtech/zedkit-i18n"),
+    ("packages/live/etc/zedkit-live.api.md", "@zedtech/zedkit-live"),
     ("packages/nest/etc/zedkit-nest.api.md", "@zedtech/zedkit-nest"),
     ("packages/observability/etc/zedkit-observability.api.md", "@zedtech/zedkit-observability"),
     ("packages/payload-seo/etc/zedkit-payload-seo.api.md", "@zedtech/zedkit-payload-seo"),
