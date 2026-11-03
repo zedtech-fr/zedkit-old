@@ -129,7 +129,9 @@ when the skills link is not followed.
 
 **Skills first-party:** `ground-truth`, `parallel-work`, `definition-of-done`,
 `adversarial-tests`, `rules-upkeep`, `persona-review`, `setup-ai`, `use-zedkit`,
-`review`, `plan`, `challenge`, `audit`, `orchestrate`.
+`review`, `plan`, `challenge`, `audit`, `orchestrate`,
+`evidence-grounded-analysis` (answers about customer or audit material only
+from that material, every claim tagged verbatim, inference or absent).
 
 **Entry points (one command per phase):** `review` (pins the diff, fans out
 `code-review` + `persona-review` + `adversarial-tests`/`security-reviewer`
