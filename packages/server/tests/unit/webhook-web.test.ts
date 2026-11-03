@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { verifyWebhookSignatureWeb } from "../../src/webhook-web.js";
+import { verifyWebhookSignatureWeb } from "#webhook-web.js";
 
 function sign(secret: Buffer, body: Buffer, timestamp: string): string {
   const mac = createHmac("sha256", secret).update(`${timestamp}.`, "utf8").update(body).digest("hex");
