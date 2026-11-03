@@ -11,7 +11,7 @@
 //
 // Usage: node scripts/adoption-smoke.mjs [case ...]   (default: every case)
 //   cases: home-button-package, home-button-cli, home-button-manual, drawer-cli, drawer-manual,
-//          theme-package, motion-package, drawer-manual-incomplete
+//          theme-package, motion-package, drawer-manual-incomplete, getting-started-packages
 //   `drawer-manual-incomplete` is the negative control: it replays the Drawer recipe as it was before the
 //   registry graph fed it (one file, no companions, no packages) and passes only if the build fails.
 // Needs network (create-next-app, npm) and Chromium (pnpm exec playwright install chromium).
@@ -30,6 +30,14 @@ const NEXT_APP = process.env.CREATE_NEXT_APP_VERSION ?? "16.4.3";
 const PACKAGE_SOURCE = process.env.ADOPTION_PACKAGE ?? "local";
 
 const { buildAdoptionPlan, loadRegistry, FEATURED_EXAMPLE } = await import(join(ROOT, "apps/docs/lib/adoption-plan.mjs"));
+const {
+  commandsFromPlan,
+  isWorkspacePackageAdd,
+  packagesNamedInAdd,
+  shownInstallCommands,
+  uncoveredInstallCommands,
+  workspacePackageDir,
+} = await import(join(ROOT, "apps/docs/lib/adoption-shown-commands.mjs"));
 const catalog = JSON.parse(readFileSync(join(ROOT, "docs/catalog/catalog.json"), "utf8"));
 const registry = loadRegistry(ROOT);
 
@@ -68,7 +76,7 @@ function incompleteDrawer() {
   return { ...built, modes: [{ ...manual, steps }] };
 }
 
-const CASES = {
+export const CASES = {
   "home-button-package": { mode: "package", plan: () => plan("Trigger actions with buttons", FEATURED_EXAMPLE), check: buttonChecks },
   "home-button-cli": { mode: "cli", plan: () => plan("Trigger actions with buttons", FEATURED_EXAMPLE), check: buttonChecks },
   "home-button-manual": { mode: "manual", plan: () => plan("Trigger actions with buttons", FEATURED_EXAMPLE), check: buttonChecks },
@@ -100,6 +108,8 @@ const CASES = {
       assert(animation !== "none" && animation !== "", `animate-fade-up produced no animation (${animation})`);
     },
   },
+  /** Getting-started `pnpm add` lines that the Next.js cases do not already run. */
+  "getting-started-packages": { kind: "shown-package-adds" },
 };
 
 async function drawerChecks({ page }) {
@@ -142,14 +152,19 @@ function pnpmMajor(project) {
 }
 
 function overridePackage(project, tarball) {
-  const spec = `file:${tarball}`;
+  overridePackages(project, { "@zedtech/zedkit-ui": tarball });
+}
+
+function overridePackages(project, tarballs) {
+  const overrides = Object.fromEntries(Object.entries(tarballs).map(([name, file]) => [name, `file:${file}`]));
   if (pnpmMajor(project) >= 10) {
-    appendFileSync(join(project, "pnpm-workspace.yaml"), `overrides:\n  "@zedtech/zedkit-ui": "${spec}"\n`);
+    const lines = Object.entries(overrides).map(([name, spec]) => `  "${name}": "${spec}"`);
+    appendFileSync(join(project, "pnpm-workspace.yaml"), `overrides:\n${lines.join("\n")}\n`);
     return;
   }
   const pkgPath = join(project, "package.json");
   const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
-  pkg.pnpm = { ...(pkg.pnpm ?? {}), overrides: { "@zedtech/zedkit-ui": spec } };
+  pkg.pnpm = { ...(pkg.pnpm ?? {}), overrides: { ...(pkg.pnpm?.overrides ?? {}), ...overrides } };
   writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
 }
 
@@ -185,8 +200,66 @@ async function serve(project) {
   throw new Error("next start did not answer");
 }
 
+function leftoverGettingStartedAdds() {
+  const executed = Object.values(CASES)
+    .filter((spec) => spec.plan && spec.mode)
+    .flatMap((spec) => commandsFromPlan(spec.plan(), spec.mode));
+  return uncoveredInstallCommands(shownInstallCommands(ROOT), executed).filter(isWorkspacePackageAdd);
+}
+
+async function runShownPackageAdds() {
+  const executed = Object.values(CASES)
+    .filter((spec) => spec.plan && spec.mode)
+    .flatMap((spec) => commandsFromPlan(spec.plan(), spec.mode));
+  const uncovered = uncoveredInstallCommands(shownInstallCommands(ROOT), executed);
+  const adds = uncovered.filter(isWorkspacePackageAdd);
+  const other = uncovered.filter((command) => !isWorkspacePackageAdd(command));
+  assert(other.length === 0, `shown install command is not a smoke case: ${other.join("; ")}`);
+  if (adds.length === 0) {
+    console.log("\nadoption-smoke: getting-started-packages ok (already covered)");
+    return;
+  }
+  const work = mkdtempSync(join(tmpdir(), "zedkit-adoption-shown-"));
+  const project = join(work, "app");
+  mkdirSync(project);
+  writeFileSync(join(project, "package.json"), `${JSON.stringify({ name: "shown-installs", private: true }, null, 2)}\n`);
+  if (PACKAGE_SOURCE === "local") {
+    const names = [...new Set(adds.flatMap(packagesNamedInAdd))];
+    run("pnpm", ["exec", "turbo", "run", "build", ...names.map((name) => `--filter=${name}`)], ROOT);
+    const tarballs = {};
+    for (const name of names) {
+      const dest = join(work, "pack", name.replace("@zedtech/", ""));
+      mkdirSync(dest, { recursive: true });
+      const dir = workspacePackageDir(name, ROOT);
+      assert(dir, `no packages/* folder for ${name}`);
+      run("pnpm", ["pack", "--pack-destination", dest], dir);
+      tarballs[name] = execFileSync("bash", ["-c", `ls ${dest}/*.tgz`], { encoding: "utf8" }).trim();
+    }
+    overridePackages(project, tarballs);
+  }
+  sh("pnpm install", project);
+  for (const command of adds) {
+    sh(command, project);
+    for (const name of packagesNamedInAdd(command)) {
+      const installed = JSON.parse(readFileSync(join(project, "node_modules", name, "package.json"), "utf8"));
+      assert(installed.name === name, `${command} did not install ${name}`);
+      if (PACKAGE_SOURCE === "local") {
+        const local = JSON.parse(readFileSync(join(workspacePackageDir(name, ROOT), "package.json"), "utf8")).version;
+        assert(installed.version === local, `${name} resolved to ${installed.version}, not this checkout's ${local}`);
+      }
+    }
+  }
+  if (!process.env.ADOPTION_KEEP) rmSync(work, { recursive: true, force: true });
+  else console.log(`kept ${work}`);
+}
+
 async function runCase(name, template, tarball, chromium) {
   const spec = CASES[name];
+  if (spec.kind === "shown-package-adds") {
+    await runShownPackageAdds();
+    console.log(`\nadoption-smoke: ${name} ok`);
+    return;
+  }
   if (spec.expectFailure) {
     const error = await runCaseOnce(name, spec, template, tarball, chromium).then(() => null, (thrown) => thrown);
     assert(error, `${name} was expected to fail and did not`);
@@ -243,19 +316,27 @@ async function main() {
   const wanted = process.argv.slice(2);
   const names = wanted.length > 0 ? wanted : Object.keys(CASES);
   for (const name of names) assert(CASES[name], `unknown case ${name} (${Object.keys(CASES).join(", ")})`);
-  assert(existsSync(join(REGISTRY_DIR, "button.json")), `missing ${REGISTRY_DIR}/button.json (run pnpm registry:build)`);
+
+  const appCases = names.filter((name) => CASES[name].kind !== "shown-package-adds");
+  const shownCases = names.filter((name) => CASES[name].kind === "shown-package-adds");
+  if (appCases.length > 0) {
+    assert(existsSync(join(REGISTRY_DIR, "button.json")), `missing ${REGISTRY_DIR}/button.json (run pnpm registry:build)`);
+  }
 
   const work = mkdtempSync(join(tmpdir(), "zedkit-adoption-base-"));
   const template = join(work, "app");
   let tarball = null;
-  if (PACKAGE_SOURCE === "local") {
-    run("pnpm", ["exec", "turbo", "run", "build", "--filter=@zedtech/zedkit-ui"], ROOT);
-    run("pnpm", ["pack", "--pack-destination", work], join(ROOT, "packages/ui"));
-    tarball = execFileSync("bash", ["-c", `ls ${work}/*.tgz`], { encoding: "utf8" }).trim();
+  let chromium = null;
+  if (appCases.length > 0) {
+    if (PACKAGE_SOURCE === "local") {
+      run("pnpm", ["exec", "turbo", "run", "build", "--filter=@zedtech/zedkit-ui"], ROOT);
+      run("pnpm", ["pack", "--pack-destination", work], join(ROOT, "packages/ui"));
+      tarball = execFileSync("bash", ["-c", `ls ${work}/*.tgz`], { encoding: "utf8" }).trim();
+    }
+    run("pnpm", ["dlx", `create-next-app@${NEXT_APP}`, "app", "--ts", "--tailwind", "--eslint", "--app", "--src-dir", "--import-alias", "@/*", "--use-pnpm", "--skip-install", "--yes"], work);
+    ({ chromium } = await import("@playwright/test"));
   }
-  run("pnpm", ["dlx", `create-next-app@${NEXT_APP}`, "app", "--ts", "--tailwind", "--eslint", "--app", "--src-dir", "--import-alias", "@/*", "--use-pnpm", "--skip-install", "--yes"], work);
 
-  const { chromium } = await import("@playwright/test");
   const failures = [];
   for (const name of names) {
     await runCase(name, template, tarball, chromium).catch((error) => {
@@ -271,4 +352,5 @@ async function main() {
   console.log(`\nadoption-smoke: ok (${names.join(", ")})`);
 }
 
-await main();
+const isMain = process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isMain) await main();

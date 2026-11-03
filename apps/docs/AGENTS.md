@@ -85,7 +85,8 @@ Never hand-write an install or copy snippet in a page, prose file or
 component. They come from the typed adoption contract: the catalog `adoption`
 field (`docs/catalog/README.md`) feeding `apps/docs/lib/adoption-plan.mjs`,
 which the home and every component page render, and
-`scripts/adoption-smoke.mjs` replays the result in a clean Next.js project.
+`scripts/adoption-smoke.mjs` replays the result in a clean Next.js project
+(plus the `pnpm add` lines on getting-started that those cases do not cover).
 A stylesheet or config need says so in its catalog entry, not in prose.
 Guide snippets (`prose/guides/snippets/`) are run by the `verify-*-tutorial.mjs`
 scripts inside `pnpm catalog:check`.
