@@ -60,6 +60,31 @@ describe("installKit", () => {
     expect(validateKit(join(dest, ".agents"))).toEqual([]);
   });
 
+  it("init --adopt a second time is a no-op: no copy/link and validate stays clean", () => {
+    const dest = tempDir();
+    install(dest, { preset: "starter", providers: ["cursor"], adopt: true });
+    const again = install(dest, { preset: "starter", providers: ["cursor"], adopt: true });
+    expect(again.filter((a) => a.kind === "copy" || a.kind === "link" || a.kind === "write")).toEqual([]);
+    expect(existsSync(join(dest, ".agents/skills/zk-review"))).toBe(false);
+    expect(existsSync(join(dest, ".agents/commands/review.kit.md"))).toBe(false);
+    expect(existsSync(join(dest, ".agents/personas.kit.md"))).toBe(false);
+    expect(validateKit(join(dest, ".agents"))).toEqual([]);
+    expect(checkDrift(dest, join(dest, ".agents"))).toEqual([]);
+  });
+
+  it("init --adopt on an installed tree sidecars only the user-edited kit file", () => {
+    const dest = tempDir();
+    install(dest, { preset: "starter", providers: ["cursor"], adopt: true });
+    writeFileSync(join(dest, ".agents/commands/review.md"), "edited by user\n");
+    const again = install(dest, { preset: "starter", providers: ["cursor"], adopt: true });
+    expect(again.filter((a) => a.kind !== "skip")).toEqual([
+      expect.objectContaining({ kind: "copy", path: join(".agents", "commands", "review.kit.md") }),
+    ]);
+    expect(readFileSync(join(dest, ".agents/commands/review.md"), "utf8")).toBe("edited by user\n");
+    expect(existsSync(join(dest, ".cursor/commands/review.kit.md"))).toBe(false);
+    expect(existsSync(join(dest, ".agents/skills/zk-review"))).toBe(false);
+  });
+
   it("adopts colliding cursor files: user copy kept, kit sidecar written, validate green", () => {
     const dest = tempDir();
     put(dest, ".cursor/skills/team-own/SKILL.md", "team\n");

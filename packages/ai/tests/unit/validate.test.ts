@@ -1,6 +1,7 @@
-import { symlinkSync } from "node:fs";
+import { readFileSync, symlinkSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { installKit } from "#install.js";
 import { checkDrift, validateKit } from "#validate.js";
 import { kitDir } from "#kit.js";
 import { AGENT, COMMAND, put, SKILL, tempDir } from "./helpers.js";
@@ -237,6 +238,20 @@ describe("validateKit", () => {
     expect(found.some((m) => m.includes("differs from") && m.includes("run.md"))).toBe(true);
     expect(found.some((m) => m.includes("copy it over"))).toBe(false);
     expect(found.some((m) => m.includes("mine.md"))).toBe(false);
+  });
+
+  it("init --adopt into a pre-existing .agents tree does not report sidecar issues", () => {
+    const dest = tempDir();
+    put(dest, ".agents/skills/review/SKILL.md", "my review skill\n");
+    put(dest, ".agents/agents/explorer.md", "my explorer\n");
+    put(dest, ".agents/commands/review.md", "my review cmd\n");
+    const result = installKit({ dest, preset: "starter", providers: ["cursor"], adopt: true });
+    if (!result.ok) throw result.error;
+    expect(readFileSync(join(dest, ".agents/agents/explorer.md"), "utf8")).toBe("my explorer\n");
+    expect(readFileSync(join(dest, ".agents/commands/review.md"), "utf8")).toBe("my review cmd\n");
+    const issues = [...validateKit(join(dest, ".agents")), ...checkDrift(dest, join(dest, ".agents"))];
+    expect(issues.filter((i) => i.path.endsWith(".kit.md") || i.path.includes("zk-"))).toEqual([]);
+    expect(issues.filter((i) => /copy it over|copy missing/i.test(i.message))).toEqual([]);
   });
 
   it("treats a matching kit sidecar as in-sync even when the user copy differs", () => {

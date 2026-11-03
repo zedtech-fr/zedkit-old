@@ -25,7 +25,7 @@ if (!result.ok) throw result.error;
 for (const action of result.value) console.log(action.kind, action.path);
 ```
 
-CLI equivalent: `zedkit-ai init .` (`--provider cursor,claude,codex,all`; `--target` is an alias; `--adopt` keeps colliding user files; run `--help` for every provider id)
+CLI equivalent: `zedkit-ai init .` (`--provider cursor,claude,codex,all`; `--target` is an alias; `--adopt` keeps colliding user files and skips identical kit copies; run `--help` for every provider id)
 
 Presets: `starter` (onboard + review; default), `core` (planning and
 implement entry points), `full` (every skill).

@@ -28,7 +28,8 @@ available programmatically via `validateKit` + `checkDrift`, which return
 
 - `differs from …; user copy kept` — a provider copy (Cursor keeps real-file
   copies) no longer matches `.agents/`. The user file is left as-is. Re-run
-  `zedkit-ai init --adopt` to write a kit sidecar (`*.kit.md`) next to it.
+  `zedkit-ai init --adopt` to write a kit sidecar (`*.kit.md`) next to a
+  user file that differs from the kit (identical kit copies are left as-is).
 - `copy missing: copy it from … or re-run init` — a provider file was
   deleted. Either restore that one file or re-run `init`.
 - `names no installed skill` — the installed preset does not ship that

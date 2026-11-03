@@ -58,9 +58,10 @@ the binary directly: `pnpm --filter @zedtech/zedkit-ai build`, then
 (`--target` is an alias; `--help` lists every provider id), `--adopt`, `--dry-run`. It copies files (you own them
 afterwards) and never overwrites an existing one; the one exception is an
 existing `AGENTS.md` without the ladder, which gets the ladder section
-appended (reported as `append`). `--adopt` keeps a colliding user file and
-writes the kit version beside it (`review.kit.md` for files, `zk-review` for
-skill folders). It also skips
+appended (reported as `append`). `--adopt` keeps a colliding user file that
+differs from the kit and writes the kit version beside it (`review.kit.md`
+for files, `zk-review` for skill folders); an already-installed kit copy is
+left as-is. It also skips
 `.cursor/rules/project.mdc` (with a skip line naming the rule) when another
 rule in `.cursor/rules/` is already always on (`alwaysApply: true`), instead
 of adding a second one. A real `.cursor/skills` directory is kept; kit skills
