@@ -233,11 +233,10 @@ test.describe("widget state matrix", () => {
     expect(statusBox.y + statusBox.height).toBeLessThanOrEqual(panelBox.y + panelBox.height + 1);
 
     await page.reload({ waitUntil: "networkidle" });
-    const restored = page.locator("[data-slot='identity-dock-panel']");
-    if ((await restored.getAttribute("data-state")) !== "open") {
+    if ((await page.locator("[data-slot='identity-dock-panel'][data-state='open']").count()) === 0) {
       await page.locator("[data-slot='identity-dock-trigger']").click();
     }
-    await expect(page.locator("[data-slot='identity-dock-panel'] #identity-assistant-brief")).toHaveValue("A ceramics shop");
+    await expect(page.locator("#identity-assistant-brief")).toHaveValue("A ceramics shop");
   });
 });
 

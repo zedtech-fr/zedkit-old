@@ -8,6 +8,7 @@ import {
   IdentityDockSheet,
   IdentityDockSwatch,
   IdentityDockTrigger,
+  Stack,
   Text,
   identityPresets,
   isPresetId,
@@ -72,9 +73,15 @@ function IdentityDockWidget() {
       {expanded ? (
         narrow ? (
           <IdentityDockSheet open={expanded} onOpenChange={setExpanded}>
-            <div data-slot="identity-dock-panel" data-state="open" aria-label={identityDockCopy.panelTitle}>
+            <Stack
+              gap={0}
+              data-slot="identity-dock-panel"
+              data-state="open"
+              aria-label={identityDockCopy.panelTitle}
+              className="min-h-0 flex-1 overflow-hidden"
+            >
               {panel}
-            </div>
+            </Stack>
           </IdentityDockSheet>
         ) : (
           <IdentityDockPanel open={expanded} aria-label={identityDockCopy.panelTitle}>

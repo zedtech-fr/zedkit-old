@@ -1049,7 +1049,7 @@ const [span, setSpan] = useState<DateRangePickerProps["value"]>();
 
 ## Float an identity assistant on any page
 
-- Import: `@zedtech/zedkit-ui` — `IdentityDock`, `IdentityDockTrigger`, `IdentityDockPanel`, `IdentityDockSwatch`
+- Import: `@zedtech/zedkit-ui` — `IdentityDock`, `IdentityDockTrigger`, `IdentityDockPanel`, `IdentityDockSheet`, `IdentityDockSwatch`
 - Wraps: `(none)`
 - Status: alpha
 - Short name: IdentityDock

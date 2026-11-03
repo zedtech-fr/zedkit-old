@@ -4047,7 +4047,7 @@
         },
         {
           "need": "Float an identity assistant on any page",
-          "import": "`@zedtech/zedkit-ui` — `IdentityDock`, `IdentityDockTrigger`, `IdentityDockPanel`, `IdentityDockSwatch`",
+          "import": "`@zedtech/zedkit-ui` — `IdentityDock`, `IdentityDockTrigger`, `IdentityDockPanel`, `IdentityDockSheet`, `IdentityDockSwatch`",
           "wraps": "`(none)`",
           "status": "alpha",
           "shortName": "IdentityDock",
@@ -4056,11 +4056,11 @@
           "whenToUse": "Compose app-specific assistant content inside `IdentityDockPanel`; persist conversation state in the host app.",
           "whenNotToUse": "Full-screen creator pages or modal drawers — use `Drawer`/`RouteModal` instead.",
           "derivedFrom": null,
-          "example": "import { IdentityDock, IdentityDockPanel, IdentityDockSwatch, IdentityDockTrigger, Text } from \"@zedtech/zedkit-ui\";\n\n<IdentityDock>\n  <IdentityDockTrigger type=\"button\" onClick={() => setOpen(true)}>\n    <IdentityDockSwatch color=\"hsl(var(--primary))\" />\n    <Text>And yours?</Text>\n  </IdentityDockTrigger>\n  <IdentityDockPanel open={open}>{/* assistant */}</IdentityDockPanel>\n</IdentityDock>",
+          "example": "import { IdentityDock, IdentityDockPanel, IdentityDockSwatch, IdentityDockTrigger, Text } from \"@zedtech/zedkit-ui\";\n\n<IdentityDock>\n  <IdentityDockTrigger type=\"button\" onClick={() => setOpen(true)}>\n    <IdentityDockSwatch />\n    <Text>And yours?</Text>\n  </IdentityDockTrigger>\n  <IdentityDockPanel open={open}>{/* assistant */}</IdentityDockPanel>\n</IdentityDock>",
           "examples": [
             {
               "title": "Collapsed pill",
-              "code": "import { IdentityDock, IdentityDockPanel, IdentityDockSwatch, IdentityDockTrigger, Text } from \"@zedtech/zedkit-ui\";\n\n<IdentityDock>\n  <IdentityDockTrigger type=\"button\" onClick={() => setOpen(true)}>\n    <IdentityDockSwatch color=\"hsl(var(--primary))\" />\n    <Text>And yours?</Text>\n  </IdentityDockTrigger>\n  <IdentityDockPanel open={open}>{/* assistant */}</IdentityDockPanel>\n</IdentityDock>"
+              "code": "import { IdentityDock, IdentityDockPanel, IdentityDockSwatch, IdentityDockTrigger, Text } from \"@zedtech/zedkit-ui\";\n\n<IdentityDock>\n  <IdentityDockTrigger type=\"button\" onClick={() => setOpen(true)}>\n    <IdentityDockSwatch />\n    <Text>And yours?</Text>\n  </IdentityDockTrigger>\n  <IdentityDockPanel open={open}>{/* assistant */}</IdentityDockPanel>\n</IdentityDock>"
             }
           ],
           "adoption": {
@@ -4072,6 +4072,7 @@
                   "IdentityDock",
                   "IdentityDockTrigger",
                   "IdentityDockPanel",
+                  "IdentityDockSheet",
                   "IdentityDockSwatch"
                 ]
               }

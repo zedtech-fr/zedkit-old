@@ -48,7 +48,7 @@ export function IdentityDockAssistantPanel({
   }
 
   return (
-    <div ref={panelRef} className="flex min-h-0 flex-1 flex-col overflow-hidden" data-slot="identity-dock-body">
+    <Stack ref={panelRef} gap={0} className="min-h-0 flex-1 overflow-hidden" data-slot="identity-dock-body">
       <Stack direction="horizontal" gap={2} className="items-center border-b border-border px-3 py-2">
         <Text className="min-w-0 flex-1 text-sm font-medium">{identityDockCopy.panelTitle}</Text>
         <IconButton type="button" variant="ghost" size="sm" label={identityDockCopy.closeLabel} onClick={() => setExpanded(false)}>
@@ -81,6 +81,6 @@ export function IdentityDockAssistantPanel({
           onDiscard={() => ui.backToConversation(() => dispatch({ type: "discard" }))}
         />
       </Stack>
-    </div>
+    </Stack>
   );
 }
