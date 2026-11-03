@@ -1,0 +1,64 @@
+{
+  "name": "@zedtech/zedkit-payload-access",
+  "version": "0.0.0",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "description": "Default-deny role grants compiled to Payload access functions for collections and globals.",
+  "keywords": [
+    "payloadcms",
+    "payload",
+    "access-control",
+    "rbac",
+    "permissions",
+    "roles",
+    "cms",
+    "typescript"
+  ],
+  "homepage": "https://github.com/zedtech-fr/zedkit/tree/main/packages/payload-access",
+  "bugs": {
+    "url": "https://github.com/zedtech-fr/zedkit/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zedtech-fr/zedkit",
+    "directory": "packages/payload-access"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "imports": {
+    "#*": "./src/*"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.tests.json",
+    "lint": "eslint src tests"
+  },
+  "peerDependencies": {
+    "payload": "catalog:"
+  },
+  "devDependencies": {
+    "@zedtech/zedkit-quality": "workspace:*",
+    "payload": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -57,6 +57,11 @@
   color: hsl(var(--foreground));
 }
 
+/* Cross-fade labels use opacity-0 while both stay in the tree; axe still flags contrast unless hidden. */
+[data-toc-popover-trigger] span[class*="opacity-0"] {
+  visibility: hidden;
+}
+
 /* Phone search: hidden while a drawer or dialog is open. */
 body:has([data-vaul-overlay][data-state="open"]) [data-search-pill],
 body:has([role="dialog"][data-state="open"]) [data-search-pill] {
