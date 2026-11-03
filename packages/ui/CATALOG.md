@@ -1847,7 +1847,7 @@ applyIdentityTokenSheet(
 
 ## Compose a public marketing page
 
-- Import: `@zedtech/zedkit-ui/marketing` — `GlassSurface`, `glassSurfaceVariants`, `GlassSurfaceProps`
+- Import: `@zedtech/zedkit-ui/marketing` — `GlassSurface`, `glassSurfaceVariants`, `GlassSurfaceProps`, `Hero`, `HeroProps`, `CtaBand`, `CtaBandProps`
 - Wraps: none (theme tokens, `class-variance-authority`)
 - Status: alpha
 - Short name: Marketing
@@ -1856,7 +1856,8 @@ applyIdentityTokenSheet(
 - When to use: For a signed-out home, pricing or product page built from the kit's tokens (frosted under the glass identity, plain cards elsewhere).
 - When not to use: For app screens — use `Card`, `PageHeader` and `Section` instead; for full-page bands use `Section` with `bleed`.
 - See also: `Theme an admin app (dark/light included)`
-- A11y: Surfaces render a plain element (`div`, `section`, `article` or `li`); pass `aria-label` or a heading inside when it is a landmark. Text sits on the card colour, so contrast follows the identity tokens; under `prefers-reduced-transparency` the glass identity turns surfaces near-solid.
+- Examples: Simple, Hero, Closing call to action
+- A11y: `Hero` and `CtaBand` are `section` regions named by their own heading (`Hero` renders the page `h1`; pass `headingLevel={2}` when the page already has one); calls to action are links or buttons you pass in, full width on phones. Surfaces render a plain element (`div`, `section`, `article` or `li`); pass `aria-label` or a heading inside when it is a landmark. Text sits on the card colour, so contrast follows the identity tokens; under `prefers-reduced-transparency` the glass identity turns surfaces near-solid.
 - Troubleshooting: Surfaces look flat — the identity in use is not `glass`; set `data-identity="glass"` on `<html>`. Classes missing — the `@source` line must scan the kit's `src/**` (the marketing folder is included).
 
 ```ts
@@ -1865,4 +1866,23 @@ import { GlassSurface } from "@zedtech/zedkit-ui/marketing";
 <GlassSurface as="section" aria-label="Plans" tone="raised" padding="lg">
   Plans
 </GlassSurface>;
+```
+
+```ts
+import { Hero } from "@zedtech/zedkit-ui/marketing";
+
+<Hero
+  title="Keep your shop. Add live updates."
+  description="Stock, orders and offers update without a refresh."
+  actions={<a href="/signup">Create an account</a>}
+/>;
+```
+
+```ts
+import { CtaBand } from "@zedtech/zedkit-ui/marketing";
+
+<CtaBand
+  title="Try it on a staging key"
+  actions={<a href="/signup">Create an account</a>}
+/>;
 ```

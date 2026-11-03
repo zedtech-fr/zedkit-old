@@ -1,5 +1,5 @@
-import { Heading, Stack, Text } from "@zedtech/zedkit-ui";
-import { GlassSurface } from "@zedtech/zedkit-ui/marketing";
+import { Button, Heading, Stack, Text } from "@zedtech/zedkit-ui";
+import { CtaBand, GlassSurface, Hero } from "@zedtech/zedkit-ui/marketing";
 import { marketingCopy } from "@/components/demos/i18n/marketing-copy";
 
 export function GlassSurfaceDemo() {
@@ -20,4 +20,29 @@ export function GlassSurfaceDemo() {
       </GlassSurface>
     </Stack>
   );
+}
+
+export function HeroDemo() {
+  const { hero } = marketingCopy;
+  return (
+    <Hero
+      eyebrow={hero.eyebrow}
+      title={hero.title}
+      description={hero.description}
+      headingLevel={2}
+      actions={
+        <>
+          <Button size="lg">{hero.primary}</Button>
+          <Button size="lg" variant="outline">
+            {hero.secondary}
+          </Button>
+        </>
+      }
+    />
+  );
+}
+
+export function CtaBandDemo() {
+  const { cta } = marketingCopy;
+  return <CtaBand title={cta.title} description={cta.description} actions={<Button size="lg">{cta.action}</Button>} />;
 }

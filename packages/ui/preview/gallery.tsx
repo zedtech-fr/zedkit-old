@@ -83,7 +83,7 @@ import {
   WizardSteps,
   createDataTableColumns,
 } from "#index.js";
-import { GlassSurface } from "#marketing/index.js";
+import { CtaBand, GlassSurface, Hero } from "#marketing/index.js";
 import { X } from "lucide-react";
 import { FormDemo } from "./form-demo.js";
 
@@ -404,6 +404,24 @@ export function Gallery() {
             <GlassSurface tone="raised">Raised surface</GlassSurface>
             <GlassSurface tone="tinted">Tinted surface</GlassSurface>
           </div>
+          <Hero
+            eyebrow="Gallery"
+            title="Keep your shop. Add live updates."
+            description="Stock, orders and offers update on the page without a refresh."
+            actions={
+              <>
+                <Button size="lg">Create an account</Button>
+                <Button size="lg" variant="outline">
+                  Read the docs
+                </Button>
+              </>
+            }
+          />
+          <CtaBand
+            title="Try it on a staging key"
+            description="Sign up, create a key, see your first event in minutes."
+            actions={<Button size="lg">Create an account</Button>}
+          />
         </GallerySection>
       </div>
     </AppShell>
