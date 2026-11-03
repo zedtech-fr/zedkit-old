@@ -4,6 +4,7 @@ import { join, relative } from "node:path";
 import { tryCatch } from "@zedtech/zedkit-core";
 import { readManifest } from "./kit.js";
 import { parseFrontmatter } from "./frontmatter.js";
+import { lensClosureIssues } from "./lenses.js";
 import { danglingSkillRefs, skillRefFiles } from "./skill-refs.js";
 
 export type Issue = { path: string; message: string };
@@ -19,6 +20,10 @@ function read(path: string): string {
 function dirsIn(path: string): string[] {
   if (!existsSync(path)) return [];
   return readdirSync(path).filter((entry) => statSync(join(path, entry)).isDirectory());
+}
+
+function mdFiles(dir: string): string[] {
+  return readdirSync(dir).filter((file) => file.endsWith(".md") && !file.endsWith(".kit.md"));
 }
 
 function checkName(name: unknown, expected: string, path: string, issues: Issue[]): void {
@@ -62,7 +67,7 @@ function checkSkill(root: string, name: string, issues: Issue[]): void {
     issues.push({ path, message: parsed.error.message });
     return;
   }
-  checkName(parsed.value.data.name, name, path, issues);
+  checkName(parsed.value.data.name, name.replace(/^zk-/, ""), path, issues);
   checkDescription(parsed.value.data.description, path, issues);
   // No single-line check here, deliberately: skill descriptions are read
   // through YAML-aware loaders (this kit's `yaml` parse, providers), so a
@@ -123,7 +128,7 @@ function checkLineEndings(root: string, issues: Issue[]): void {
   const entries = readdirSync(root, { recursive: true, encoding: "utf8" });
   for (const entry of entries) {
     const full = join(root, entry);
-    if (entry.endsWith(".md") && statSync(full).isFile() && read(full).includes("\r")) {
+    if (entry.endsWith(".md") && !entry.endsWith(".kit.md") && statSync(full).isFile() && read(full).includes("\r")) {
       issues.push({ path: entry, message: "CR found: use LF line endings" });
     }
   }
@@ -162,9 +167,7 @@ function checkManifest(root: string, issues: Issue[]): void {
   }
   const skills = new Set(dirsIn(join(root, "skills")));
   const agents = new Set(
-    existsSync(join(root, "agents"))
-      ? readdirSync(join(root, "agents")).map((f) => f.replace(/\.md$/, ""))
-      : [],
+    existsSync(join(root, "agents")) ? mdFiles(join(root, "agents")).map((f) => f.replace(/\.md$/, "")) : [],
   );
   for (const [preset, names] of Object.entries(manifest.value.presets)) {
     for (const name of names === "*" ? [] : names) {
@@ -175,9 +178,7 @@ function checkManifest(root: string, issues: Issue[]): void {
     if (!agents.has(name)) issues.push({ path: "kit.json", message: `lists missing agent "${name}"` });
   }
   const commands = new Set(
-    existsSync(join(root, "commands"))
-      ? readdirSync(join(root, "commands")).map((f) => f.replace(/\.md$/, ""))
-      : [],
+    existsSync(join(root, "commands")) ? mdFiles(join(root, "commands")).map((f) => f.replace(/\.md$/, "")) : [],
   );
   for (const name of manifest.value.commands ?? []) {
     if (!commands.has(name)) issues.push({ path: "kit.json", message: `lists missing command "${name}"` });
@@ -187,9 +188,7 @@ function checkManifest(root: string, issues: Issue[]): void {
 function namesIn(root: string, dir: string): string[] {
   const full = join(root, dir);
   if (!existsSync(full)) return [];
-  return readdirSync(full)
-    .filter((file) => file.endsWith(".md"))
-    .map((file) => file.replace(/\.md$/, ""));
+  return mdFiles(full).map((file) => file.replace(/\.md$/, ""));
 }
 
 // A skill, agent or command that tells the agent to run a skill must name
@@ -206,13 +205,13 @@ function collect(root: string): Issue[] {
   for (const name of skills) checkSkill(root, name, issues);
   const agentsDir = join(root, "agents");
   if (existsSync(agentsDir)) {
-    for (const file of readdirSync(agentsDir).filter((f) => f.endsWith(".md"))) {
+    for (const file of mdFiles(agentsDir)) {
       checkAgent(root, file, issues);
     }
   }
   const commandsDir = join(root, "commands");
   if (existsSync(commandsDir)) {
-    for (const file of readdirSync(commandsDir).filter((f) => f.endsWith(".md"))) {
+    for (const file of mdFiles(commandsDir)) {
       checkCommand(root, file, skills, issues);
     }
   }
@@ -220,7 +219,17 @@ function collect(root: string): Issue[] {
   checkLadder(root, issues);
   checkLineEndings(root, issues);
   checkSkillRefs(root, skills, issues);
+  checkLenses(root, skills, issues);
   return issues;
+}
+
+function checkLenses(root: string, skills: Set<string>, issues: Issue[]): void {
+  const file = join(root, "skills", "review", "lenses.md");
+  if (!existsSync(file)) return;
+  const installed = new Set([...skills, ...namesIn(root, "agents")]);
+  for (const issue of lensClosureIssues("skills/review/lenses.md", read(file), installed)) {
+    issues.push(issue);
+  }
 }
 
 /**
@@ -242,14 +251,39 @@ function isRealDir(path: string): boolean {
   return stat.ok && stat.value.isDirectory();
 }
 
+function kitSidecar(file: string): string {
+  return file.replace(/\.md$/, ".kit.md");
+}
+
+function checkCursorSkills(projectRoot: string, source: string, issues: Issue[]): void {
+  const from = join(source, "skills");
+  const to = join(projectRoot, ".cursor", "skills");
+  if (!isRealDir(from) || !existsSync(to)) return;
+  const stat = tryCatch(() => lstatSync(to));
+  if (!stat.ok) return;
+  if (stat.value.isSymbolicLink()) return;
+  if (!stat.value.isDirectory()) return;
+  for (const name of dirsIn(from)) {
+    const aliases = [name, `zk-${name}`];
+    if (name.startsWith("zk-")) aliases.push(name.slice(3));
+    if (aliases.some((alias) => existsSync(join(to, alias)))) continue;
+    issues.push({
+      path: relative(projectRoot, join(to, name)),
+      message: `kit skill "${name}" is unreachable from .cursor/skills`,
+    });
+  }
+}
+
 /**
  * Compare the provider copies (`.cursor/agents`, `.cursor/commands`) against
  * the shared `source` (usually the project's `.agents/`). Copies are real
  * files because that provider does not follow a symlinked folder here; when
  * the source changes they go stale, and init never overwrites them. Reports
- * each missing or drifted copy. Links and missing folders cannot drift and
- * are skipped silently, as are extra files on the provider side (the user's
- * own). Paths are relative to `projectRoot`.
+ * each missing or drifted copy. A kit sidecar (`*.kit.md`) matching the
+ * source means the user file may differ. Links and missing folders cannot
+ * drift and are skipped silently, as are extra files on the provider side
+ * (the user's own). Also flags kit skills that a real `.cursor/skills`
+ * directory does not expose. Paths are relative to `projectRoot`.
  */
 export function checkDrift(projectRoot: string, source: string): Issue[] {
   const run = tryCatch(() => {
@@ -258,16 +292,30 @@ export function checkDrift(projectRoot: string, source: string): Issue[] {
       const from = join(source, kind);
       const to = join(projectRoot, ".cursor", kind);
       if (!isRealDir(from) || !isRealDir(to)) continue;
-      for (const file of readdirSync(from).filter((f) => f.endsWith(".md"))) {
-        const target = join(to, file);
+      for (const file of readdirSync(from).filter((f) => f.endsWith(".md") && !f.endsWith(".kit.md"))) {
         const want = relative(projectRoot, join(from, file));
+        const sidecar = join(to, kitSidecar(file));
+        const target = join(to, file);
+        if (existsSync(sidecar)) {
+          if (read(sidecar) !== read(join(from, file))) {
+            issues.push({
+              path: relative(projectRoot, sidecar),
+              message: `differs from ${want}; user copy kept`,
+            });
+          }
+          continue;
+        }
         if (!existsSync(target)) {
           issues.push({ path: relative(projectRoot, target), message: `copy missing: copy it from ${want} or re-run init` });
         } else if (read(target) !== read(join(from, file))) {
-          issues.push({ path: relative(projectRoot, target), message: `drifted from ${want}: copy it over (init never overwrites)` });
+          issues.push({
+            path: relative(projectRoot, target),
+            message: `differs from ${want}; user copy kept`,
+          });
         }
       }
     }
+    checkCursorSkills(projectRoot, source, issues);
     return issues;
   });
   return run.ok ? run.value : [{ path: projectRoot, message: `cannot check drift: ${run.error.message}` }];

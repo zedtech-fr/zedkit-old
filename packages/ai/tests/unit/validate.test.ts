@@ -1,6 +1,7 @@
-import { symlinkSync } from "node:fs";
+import { readFileSync, symlinkSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { installKit } from "#install.js";
 import { checkDrift, validateKit } from "#validate.js";
 import { kitDir } from "#kit.js";
 import { AGENT, COMMAND, put, SKILL, tempDir } from "./helpers.js";
@@ -36,6 +37,25 @@ describe("validateKit", () => {
     put(root, "skills/alpha/SKILL.md", SKILL("alpha"));
     put(root, "commands/run.md", COMMAND("alpha"));
     expect(validateKit(root)).toEqual([]);
+  });
+
+  it("does not flag host slash-commands /ask and /improve as missing skills", () => {
+    const root = tempDir();
+    put(root, "skills/alpha/SKILL.md", `${SKILL("alpha")}\nThen run /ask or \`/improve\`.\n`);
+    expect(validateKit(root)).toEqual([]);
+  });
+
+  it("flags a lenses.md row marked exists whose runner is not installed", () => {
+    const root = tempDir();
+    put(root, "skills/review/SKILL.md", SKILL("review"));
+    put(
+      root,
+      "skills/review/lenses.md",
+      ["# Lenses", "", "| Lens | Runner (skill or agent) | Status | Trigger | Mandatory? | Output |", "|---|---|---|---|---|---|", "| code | skill `code-review` | exists | always | yes | findings |", ""].join("\n"),
+    );
+    expect(messages(root)).toContain(
+      'skills/review/lenses.md: lens "code" marks runner "code-review" as exists, but it is not installed',
+    );
   });
 
   it("flags a skill, agent or command that runs a skill which is not installed", () => {
@@ -214,9 +234,47 @@ describe("validateKit", () => {
     const found = checkDrift(root, join(root, ".agents")).map((i) => `${i.path}: ${i.message}`);
     expect(found).toContainEqual(expect.stringContaining("copy missing"));
     expect(found.some((m) => m.includes("copy missing") && m.includes("beta.md"))).toBe(true);
-    expect(found).toContainEqual(expect.stringContaining("drifted"));
-    expect(found.some((m) => m.includes("drifted") && m.includes("run.md"))).toBe(true);
+    expect(found).toContainEqual(expect.stringContaining("differs from"));
+    expect(found.some((m) => m.includes("differs from") && m.includes("run.md"))).toBe(true);
+    expect(found.some((m) => m.includes("copy it over"))).toBe(false);
     expect(found.some((m) => m.includes("mine.md"))).toBe(false);
+  });
+
+  it("init --adopt into a pre-existing .agents tree does not report sidecar issues", () => {
+    const dest = tempDir();
+    put(dest, ".agents/skills/review/SKILL.md", "my review skill\n");
+    put(dest, ".agents/agents/explorer.md", "my explorer\n");
+    put(dest, ".agents/commands/review.md", "my review cmd\n");
+    const result = installKit({ dest, preset: "starter", providers: ["cursor"], adopt: true });
+    if (!result.ok) throw result.error;
+    expect(readFileSync(join(dest, ".agents/agents/explorer.md"), "utf8")).toBe("my explorer\n");
+    expect(readFileSync(join(dest, ".agents/commands/review.md"), "utf8")).toBe("my review cmd\n");
+    const issues = [...validateKit(join(dest, ".agents")), ...checkDrift(dest, join(dest, ".agents"))];
+    expect(issues.filter((i) => i.path.endsWith(".kit.md") || i.path.includes("zk-"))).toEqual([]);
+    expect(issues.filter((i) => /copy it over|copy missing/i.test(i.message))).toEqual([]);
+  });
+
+  it("treats a matching kit sidecar as in-sync even when the user copy differs", () => {
+    const root = tempDir();
+    put(root, ".agents/agents/beta.md", AGENT("beta"));
+    put(root, ".cursor/agents/beta.md", "mine\n");
+    put(root, ".cursor/agents/beta.kit.md", AGENT("beta"));
+    expect(checkDrift(root, join(root, ".agents"))).toEqual([]);
+  });
+
+  it("treats a cursor skill linked under the unprefixed name as reachable for a zk- sidecar", () => {
+    const root = tempDir();
+    put(root, ".agents/skills/zk-alpha/SKILL.md", SKILL("alpha"));
+    put(root, ".cursor/skills/alpha/SKILL.md", SKILL("alpha"));
+    expect(checkDrift(root, join(root, ".agents"))).toEqual([]);
+  });
+
+  it("flags a kit skill that a real .cursor/skills directory does not expose", () => {
+    const root = tempDir();
+    put(root, ".agents/skills/alpha/SKILL.md", SKILL("alpha"));
+    put(root, ".cursor/skills/team-own/SKILL.md", SKILL("team-own"));
+    const found = checkDrift(root, join(root, ".agents")).map((i) => `${i.path}: ${i.message}`);
+    expect(found).toContainEqual(expect.stringContaining('kit skill "alpha" is unreachable'));
   });
 
   it("drift is clean when copies match, and skipped for links and missing folders", () => {

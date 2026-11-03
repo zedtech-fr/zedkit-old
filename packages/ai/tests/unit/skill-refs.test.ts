@@ -16,7 +16,7 @@ describe("skillRefNames", () => {
       "Run `/setup-matt-pocock-skills`.",
       "Also /to-spec and /to-tickets.",
       "Switch level: `/ponytail lite|full|ultra`.",
-      "falling back to `/tmp` (or run `/reload-plugins`, open `/plugin`).",
+      "falling back to `/tmp` (or run `/reload-plugins`, open `/plugin`, `/ask`, `/improve`).",
       "see `package.json`/lockfile and `package.json`/build-tool `lint`.",
       "</vertical-slice-rules>",
       "https://github.com/example/repo/blob/main/docs/guide.md",

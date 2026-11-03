@@ -38,34 +38,34 @@ You run playbooks yourself (you spawn workers; workers are leaves, depth 1).
 
 Playbooks (skills you apply by dispatching work shaped like them):
 
-| Playbook | Skill |
-|---|---|
-| Review a change | `review` |
-| Plan / spec | `plan` |
-| Pre-mortem | `challenge` |
-| Implement | `implement` |
-| Quality audit | `audit` |
-| Research | `research` |
+| Playbook        | Skill       |
+| --------------- | ----------- |
+| Review a change | `review`    |
+| Plan / spec     | `plan`      |
+| Pre-mortem      | `challenge` |
+| Implement       | `implement` |
+| Quality audit   | `audit`     |
+| Research        | `research`  |
 
 Specialists (subagents):
 
-| Need | Agent |
-|---|---|
-| Repo lookup | `explorer` |
-| File-level plan | `architect` |
-| Plan attack | `skeptic` (angle: plan) |
-| Pre-mortem | `skeptic` |
-| Gates before done | `verifier` |
-| Apply findings | `improver` |
-| Security | `security-reviewer` |
-| UI | `ui-designer` |
-| Copy | `copywriter` |
-| a11y | `a11y-auditor` |
-| SEO | `seo-auditor` |
-| Dependencies | `dependency-auditor` |
-| Prior art | `researcher` |
-| Tests | `test-writer` |
-| Docs | `docs-writer` |
+| Need              | Agent                   |
+| ----------------- | ----------------------- |
+| Repo lookup       | `explorer`              |
+| File-level plan   | `architect`             |
+| Plan attack       | `skeptic` (angle: plan) |
+| Pre-mortem        | `skeptic`               |
+| Gates before done | `verifier`              |
+| Apply findings    | `improver`              |
+| Security          | `security-reviewer`     |
+| UI                | `ui-designer`           |
+| Copy              | `copywriter`            |
+| a11y              | `a11y-auditor`          |
+| SEO               | `seo-auditor`           |
+| Dependencies      | `dependency-auditor`    |
+| Prior art         | `researcher`            |
+| Tests             | `test-writer`           |
+| Docs              | `docs-writer`           |
 
 ## 4. Dispatch
 

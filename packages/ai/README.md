@@ -55,13 +55,17 @@ the binary directly: `pnpm --filter @zedtech/zedkit-ai build`, then
 `node packages/ai/dist/bin.js init <dir>`.
 
 `init` options: `--preset starter|core|full`, `--provider cursor,claude,codex,all`
-(`--target` is an alias; `--help` lists every provider id), `--dry-run`. It copies files (you own them
+(`--target` is an alias; `--help` lists every provider id), `--adopt`, `--dry-run`. It copies files (you own them
 afterwards) and never overwrites an existing one; the one exception is an
 existing `AGENTS.md` without the ladder, which gets the ladder section
-appended (reported as `append`). It also skips
+appended (reported as `append`). `--adopt` keeps a colliding user file that
+differs from the kit and writes the kit version beside it (`review.kit.md`
+for files, `zk-review` for skill folders); an already-installed kit copy is
+left as-is. It also skips
 `.cursor/rules/project.mdc` (with a skip line naming the rule) when another
 rule in `.cursor/rules/` is already always on (`alwaysApply: true`), instead
-of adding a second one. Run `zedkit-ai list` to see presets, subagents and
+of adding a second one. A real `.cursor/skills` directory is kept; kit skills
+are linked inside it one by one. Run `zedkit-ai list` to see presets, subagents and
 commands.
 
 ## When to use
@@ -77,7 +81,7 @@ One shared source (`.agents/`), then a thin layer per provider:
 
 | Provider | Layer | Reads |
 |---|---|---|
-| `cursor` | `.cursor/rules/project.mdc`, `.cursor/skills` link, agents and commands as real-file copies | its `.cursor/` layer |
+| `cursor` | `.cursor/rules/project.mdc`, `.cursor/skills` link (or per-skill links if that path is already a real directory), agents and commands as real-file copies | its `.cursor/` layer |
 | `claude` | `CLAUDE.md` link, `.claude/{skills,agents,commands}` links | its `.claude/` layer |
 | `codex` | none | `AGENTS.md` and `.agents/skills` directly |
 
@@ -85,7 +89,8 @@ Other provider ids with no install layer behave like `codex` (see `zedkit-ai ini
 
 Cursor gets copies because a symlinked folder shows up empty there. Copies
 can drift when `.agents/` changes: `zedkit-ai validate` reports each missing
-or drifted copy — fix it by copying the file over (init never overwrites).
+or differing copy and never tells you to overwrite a user file. Re-run
+`init --adopt` to install a kit sidecar next to the user copy.
 `setup-ai` takes provider names (`setup-ai cursor claude`) and asks once
 which providers to wire when it cannot tell.
 
@@ -98,7 +103,7 @@ CLAUDE.md -> AGENTS.md
 .agents/agents/            subagents
 .agents/commands/          one-keystroke commands (thin: each runs a skill)
 .claude/{skills,agents,commands}  symlinks to .agents/
-.cursor/skills             symlink to .agents/skills
+.cursor/skills             symlink to .agents/skills (or per-skill links)
 .cursor/{agents,commands}  real-file copies (a link shows up empty)
 .cursor/rules/project.mdc  one always-on rule pointing at AGENTS.md
 ```

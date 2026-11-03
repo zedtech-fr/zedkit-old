@@ -26,6 +26,7 @@ export type InstallOptions = {
     providers?: readonly (Provider | string)[];
     targets?: readonly (Provider | string)[];
     dryRun?: boolean;
+    adopt?: boolean;
     kit?: string;
 };
 

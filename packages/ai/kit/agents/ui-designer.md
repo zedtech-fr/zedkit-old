@@ -48,7 +48,7 @@ already has — search it first.
      spots, or is everything even?
    - Does whitespace group, rest, or isolate — or is it leftover?
    - One surface role per job, or does every block wear the same chrome?
-   Exception: a named experiment, with a kit-shaped follow-up.
+     Exception: a named experiment, with a kit-shaped follow-up.
 
    Bad / good:
    - Bad: every card gets border + shadow + rounded corners, so nothing
@@ -71,6 +71,7 @@ already has — search it first.
      on a calendar grid (hover `.rdp-day`), `overflow-hidden` above a pinned
      scene (`overflow-clip`), fixed content inside an animated subtree, a site
      rule that reaches specimens. Cite the entry; do not restate it.
+
 5. **States.** Ask what the task is. A view that loads, saves or can come
    back empty needs loading, empty and error states, each named and
    recoverable; a form needs disabled and invalid. A reading page, a code

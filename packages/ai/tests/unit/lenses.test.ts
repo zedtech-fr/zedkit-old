@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { kitDir } from "#kit.js";
+import { setLensStatus } from "#lenses.js";
 import { lensTableRows } from "./helpers.js";
 
 type LensRow = {
@@ -95,5 +96,18 @@ describe("lens registry", () => {
     expect(
       existsSync(join(kitDir(), "agents", "release-manager.md")),
     ).toBe(true);
+  });
+
+  it("marks a lens planned when its runner is not in the installed set", () => {
+    const src = [
+      "| Lens | Runner (skill or agent) | Status | Trigger | Mandatory? | Output |",
+      "|---|---|---|---|---|---|",
+      "| code | skill `code-review` | exists | always | yes | findings |",
+      "| quality gate | agent `verifier` | exists | always | yes | gates |",
+      "",
+    ].join("\n");
+    const out = setLensStatus(src, new Set(["verifier"]));
+    expect(out).toContain("| code | skill `code-review` | planned |");
+    expect(out).toContain("| quality gate | agent `verifier` | exists |");
   });
 });

@@ -9,11 +9,11 @@ Tests that only show the code working prove little. Aim them at how it breaks. A
 
 ## Pick the test type first
 
-| Test | Use it for | Not for |
-|---|---|---|
-| Unit | one decision: guard, branch, mapping, error classification | full flows, wiring |
-| Integration (real DB, real queue or in-memory fake that behaves) | data access, transactions, constraints | logic branches |
-| End-to-end through the public entry (HTTP, message, CLI) | the contract: the success case, each documented failure, garbage input | every internal branch |
+| Test                                                             | Use it for                                                             | Not for               |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------- | --------------------- |
+| Unit                                                             | one decision: guard, branch, mapping, error classification             | full flows, wiring    |
+| Integration (real DB, real queue or in-memory fake that behaves) | data access, transactions, constraints                                 | logic branches        |
+| End-to-end through the public entry (HTTP, message, CLI)         | the contract: the success case, each documented failure, garbage input | every internal branch |
 
 Do not mock the database or the thing under test. Fake only what you do not own (network, clock, third parties).
 
@@ -22,25 +22,30 @@ Do not mock the database or the thing under test. Fake only what you do not own 
 Take every item that applies to the code. At least one test per relevant item.
 
 **Inputs**
+
 - Each optional parameter as `null`, as `undefined`, and omitted. `false` and `0` versus missing.
 - Empty string, array, object. Zero, negative, `NaN`, `Infinity`, max safe integer.
 - Too long, odd characters, unicode, injection strings.
 
 **Shapes**
+
 - Required field missing. Present but `null`. Wrong type. Extra unknown fields. Array where one value is expected, and the reverse.
 
 **Dependencies**
+
 - Throws: is the error propagated, not swallowed or rewrapped?
 - Returns `undefined`, an empty list, or a value missing optional fields.
 - Slow, timing out, answering 5xx or a malformed body.
 
 **State and time**
+
 - Calling again with identical input: is the second call harmless?
 - Two concurrent calls: race, lost update?
 - Wrong order: finish before start, act on a deleted item.
 - Unknown enum or version value: a newer producer must not crash an older consumer.
 
 **Business rules**
+
 - Valid shape that breaks a rule. Cross-tenant or cross-user access: denied and indistinguishable from "not found".
 
 ## Rules

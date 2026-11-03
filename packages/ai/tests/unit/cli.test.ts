@@ -1,4 +1,4 @@
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { main } from "#cli.js";
@@ -72,6 +72,16 @@ describe("cli", () => {
     const result = run("init", tempDir(), "--provider", "pilot");
     expect(result.code).toBe(2);
     expect(result.errors).toContain('unknown provider "pilot"');
+  });
+
+  it("init --adopt keeps a colliding cursor command and writes a kit sidecar", () => {
+    const dest = tempDir();
+    put(dest, ".cursor/commands/review.md", "mine\n");
+    const { code, text } = run("init", dest, "--provider", "cursor", "--adopt");
+    expect(code).toBe(0);
+    expect(text).toContain("kept user file");
+    expect(readFileSync(join(dest, ".cursor/commands/review.md"), "utf8")).toBe("mine\n");
+    expect(existsSync(join(dest, ".cursor/commands/review.kit.md"))).toBe(true);
   });
 
   it("init --dry-run writes nothing", () => {
@@ -155,7 +165,8 @@ describe("cli", () => {
     for (const dir of [root, join(root, ".agents")]) {
       const result = run("validate", dir);
       expect(result.code, dir).toBe(1);
-      expect(result.text, dir).toContain("drifted");
+      expect(result.text, dir).toContain("differs from");
+      expect(result.text, dir).not.toContain("copy it over");
     }
   });
 

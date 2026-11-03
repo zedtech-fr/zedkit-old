@@ -6,7 +6,7 @@ const NAME = "[a-z0-9]+(?:-[a-z0-9]+)*";
 
 // Host slash commands and filesystem roots share the /name shape.
 // shortcut: denylist, extend when a skill uses a new non-skill /name.
-const NOT_SKILLS = new Set(["plugin", "reload-plugins", "tmp"]);
+const NOT_SKILLS = new Set(["plugin", "reload-plugins", "tmp", "ask", "improve"]);
 
 export type SkillRefIssue = { path: string; message: string };
 

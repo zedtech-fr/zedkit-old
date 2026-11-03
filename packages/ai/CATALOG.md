@@ -25,13 +25,14 @@ if (!result.ok) throw result.error;
 for (const action of result.value) console.log(action.kind, action.path);
 ```
 
-CLI equivalent: `zedkit-ai init .` (`--provider cursor,claude,codex,all`; `--target` is an alias; run `--help` for every provider id)
+CLI equivalent: `zedkit-ai init .` (`--provider cursor,claude,codex,all`; `--target` is an alias; `--adopt` keeps colliding user files and skips identical kit copies; run `--help` for every provider id)
 
 Presets: `starter` (onboard + review; default), `core` (planning and
 implement entry points), `full` (every skill).
 
-Providers: `cursor` (rules file, skills link, agents and commands as real-file
-copies), `claude` (`CLAUDE.md` and folder links), `codex` (no
+Providers: `cursor` (rules file, skills link or per-skill links inside a
+real `.cursor/skills` dir, agents and commands as real-file copies),
+`claude` (`CLAUDE.md` and folder links), `codex` (no
 layer: reads the shared source directly; same for other no-layer ids in `--help`).
 
 ## Check that skills, subagents, commands and provider copies are valid
@@ -41,7 +42,7 @@ layer: reads the shared source directly; same for other no-layer ids in `--help`
 - Status: beta
 - Short name: Kit validation
 - Audience: Teams keeping an installed agent setup healthy across providers.
-- Purpose: Validate installed skills, subagents and commands, and report drift between providers.
+- Purpose: Validate installed skills, subagents and commands, report drift between providers without asking to overwrite user files, and flag kit skills Cursor cannot see.
 - When to use: In CI and after editing shared agent files, to catch invalid or drifted copies.
 - When not to use: For one-off local edits — run the install command again instead of validating by hand.
 - See also: `Set up AI agent instructions, skills, subagents and commands in a repo`

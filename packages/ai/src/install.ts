@@ -16,6 +16,7 @@ import { dirname, join, sep } from "node:path";
 import { err, ok, tryCatch, type Result } from "@zedtech/zedkit-core";
 import { parseFrontmatter } from "./frontmatter.js";
 import { agentsForPreset, commandsForPreset, kitDir, readManifest, type KitManifest } from "./kit.js";
+import { setLensStatus } from "./lenses.js";
 import { danglingSkillRefs, skillRefFiles } from "./skill-refs.js";
 
 /** Providers that get an installer layer or shared-source wiring. */
@@ -40,6 +41,11 @@ export type InstallOptions = {
   targets?: readonly (Provider | string)[];
   /** Report what would happen without touching the disk. */
   dryRun?: boolean;
+  /**
+   * On a name collision keep the user file and write the kit version next to
+   * it (`review.kit.md` for files, `zk-review` for skill folders).
+   */
+  adopt?: boolean;
   /** Custom kit directory (default: the bundled kit). */
   kit?: string;
 };
@@ -62,7 +68,7 @@ alwaysApply: true
 Read and follow /AGENTS.md at the repo root, and use the skills in .agents/skills.
 `;
 
-type Ctx = { dest: string; kit: string; dryRun: boolean; actions: Action[] };
+type Ctx = { dest: string; kit: string; dryRun: boolean; adopt: boolean; actions: Action[] };
 
 function lstatOf(path: string): ReturnType<typeof lstatSync> | undefined {
   const stat = tryCatch(() => lstatSync(path));
@@ -88,26 +94,97 @@ function obstacle(ctx: Ctx, rel: string): string | undefined {
   return lstatOf(join(ctx.dest, rel)) ? "already exists, left untouched" : undefined;
 }
 
-function place(ctx: Ctx, kind: Exclude<Action["kind"], "skip">, rel: string, make: () => void, note?: string): void {
+function canAdopt(rel: string): boolean {
+  const [root, kind] = rel.split(sep);
+  if (root === ".agents" && (kind === "skills" || kind === "agents" || kind === "commands" || kind === "personas.md")) {
+    return true;
+  }
+  if ((root === ".cursor" || root === ".claude") && (kind === "skills" || kind === "agents" || kind === "commands")) {
+    return true;
+  }
+  return false;
+}
+
+function adoptRel(rel: string): string {
+  const base = rel.split(sep).pop() ?? rel;
+  const dir = dirname(rel);
+  if (base.endsWith(".md")) return join(dir, base.replace(/\.md$/, ".kit.md"));
+  return join(dir, `zk-${base}`);
+}
+
+function treeFiles(root: string): string[] | undefined {
+  const entries = tryCatch(() => readdirSync(root, { recursive: true, encoding: "utf8" }));
+  if (!entries.ok) return undefined;
+  return entries.value.filter((e) => {
+    const st = tryCatch(() => statSync(join(root, e)));
+    return st.ok && st.value.isFile();
+  }).sort();
+}
+
+function treesMatch(src: string, dest: string, installed: ReadonlySet<string>): boolean {
+  const from = treeFiles(src);
+  const to = treeFiles(dest);
+  if (!from || !to || from.join("\n") !== to.join("\n")) return false;
+  return from.every((rel) => {
+    const raw = tryCatch(() => readFileSync(join(src, rel), "utf8"));
+    const got = tryCatch(() => readFileSync(join(dest, rel), "utf8"));
+    return raw.ok && got.ok && (rel === "lenses.md" ? setLensStatus(raw.value, installed) : raw.value) === got.value;
+  });
+}
+
+function place(
+  ctx: Ctx,
+  kind: Exclude<Action["kind"], "skip">,
+  rel: string,
+  make: (destRel: string) => void,
+  note?: string,
+): string | undefined {
   const blocked = obstacle(ctx, rel);
+  let target = rel;
+  let targetNote = note;
   if (blocked) {
     const current = tryCatch(() => readlinkSync(join(ctx.dest, rel)));
-    const same = kind === "link" && current.ok && current.value === note;
-    ctx.actions.push({ kind: "skip", path: rel, note: same ? "already linked" : blocked });
-    return;
+    const sameLink = kind === "link" && current.ok && current.value === note;
+    if (sameLink) {
+      ctx.actions.push({ kind: "skip", path: rel, note: "already linked" });
+      return undefined;
+    }
+    if (ctx.adopt && canAdopt(rel)) {
+      const alt = adoptRel(rel);
+      const altBlocked = obstacle(ctx, alt);
+      ctx.actions.push({ kind: "skip", path: rel, note: `kept user file; kit → ${alt}` });
+      if (altBlocked) {
+        ctx.actions.push({ kind: "skip", path: alt, note: altBlocked });
+        return undefined;
+      }
+      target = alt;
+      targetNote = note !== undefined ? `${note}; user ${rel} kept` : `kit sidecar (user ${rel} kept)`;
+    } else {
+      ctx.actions.push({ kind: "skip", path: rel, note: blocked });
+      return undefined;
+    }
   }
-  ctx.actions.push({ kind, path: rel, ...(note !== undefined && { note }) });
-  if (ctx.dryRun) return;
-  mkdirSync(dirname(join(ctx.dest, rel)), { recursive: true });
-  make();
+  ctx.actions.push({ kind, path: target, ...(targetNote !== undefined && { note: targetNote }) });
+  if (ctx.dryRun) return target;
+  mkdirSync(dirname(join(ctx.dest, target)), { recursive: true });
+  make(target);
+  return target;
 }
 
 function copyFile(ctx: Ctx, from: string, rel: string): void {
-  place(ctx, "copy", rel, () => copyFileSync(from, join(ctx.dest, rel)));
+  if (ctx.adopt) {
+    const left = tryCatch(() => readFileSync(from));
+    const right = tryCatch(() => readFileSync(join(ctx.dest, rel)));
+    if (left.ok && right.ok && left.value.equals(right.value)) {
+      ctx.actions.push({ kind: "skip", path: rel, note: "already installed" });
+      return;
+    }
+  }
+  place(ctx, "copy", rel, (destRel) => copyFileSync(from, join(ctx.dest, destRel)));
 }
 
 function link(ctx: Ctx, rel: string, target: string): void {
-  place(ctx, "link", rel, () => symlinkSync(target, join(ctx.dest, rel)), target);
+  place(ctx, "link", rel, (destRel) => symlinkSync(target, join(ctx.dest, destRel)), target);
 }
 
 function skillNames(manifest: KitManifest, kit: string, preset: string): string[] {
@@ -183,20 +260,32 @@ function installAgentsMd(ctx: Ctx): void {
   writeFileSync(join(ctx.dest, "AGENTS.md"), `${current.value}${gap}${section}`);
 }
 
-function installContent(ctx: Ctx, content: ReturnType<typeof plan>): void {
+function patchLenses(folder: string, installed: ReadonlySet<string>): void {
+  const file = join(folder, "lenses.md");
+  if (!existsSync(file)) return;
+  writeFileSync(file, setLensStatus(readFileSync(file, "utf8"), installed));
+}
+
+function installContent(ctx: Ctx, content: ReturnType<typeof plan>): Map<string, string> {
+  const installed = new Set([...content.skills, ...content.agents]);
+  const skillDest = new Map<string, string>();
   for (const name of content.skills) {
     const rel = join(".agents", "skills", name);
-    // dereference: a symlink inside a skill must not be copied as a dangling one
-    place(ctx, "copy", rel, () =>
-      cpSync(join(ctx.kit, "skills", name), join(ctx.dest, rel), { recursive: true, dereference: true }),
-    );
+    if (ctx.adopt && treesMatch(join(ctx.kit, "skills", name), join(ctx.dest, rel), installed)) {
+      ctx.actions.push({ kind: "skip", path: rel, note: "already installed" });
+      skillDest.set(name, rel);
+      continue;
+    }
+    const destRel = place(ctx, "copy", rel, (target) => {
+      cpSync(join(ctx.kit, "skills", name), join(ctx.dest, target), { recursive: true, dereference: true });
+      patchLenses(join(ctx.dest, target), installed);
+    });
+    skillDest.set(name, destRel ?? rel);
   }
-  // Licence texts of vendored skills travel with them.
   for (const file of content.licences) {
     copyFile(ctx, join(ctx.kit, "skills", file), join(".agents", "skills", file));
   }
   copyFile(ctx, join(ctx.kit, "THIRD_PARTY_NOTICES.md"), join(".agents", "THIRD_PARTY_NOTICES.md"));
-  // Project personas for persona-review; an existing file is left untouched.
   if (existsSync(join(ctx.kit, "personas.template.md"))) {
     copyFile(ctx, join(ctx.kit, "personas.template.md"), join(".agents", "personas.md"));
   }
@@ -207,6 +296,7 @@ function installContent(ctx: Ctx, content: ReturnType<typeof plan>): void {
     copyFile(ctx, join(ctx.kit, "commands", `${name}.md`), join(".agents", "commands", `${name}.md`));
   }
   installAgentsMd(ctx);
+  return skillDest;
 }
 
 function agentsMdReady(ctx: Ctx): boolean {
@@ -241,7 +331,7 @@ function writeCursorRule(ctx: Ctx): void {
       return;
     }
   }
-  place(ctx, "write", rel, () => writeFileSync(join(ctx.dest, rel), CURSOR_RULE));
+  place(ctx, "write", rel, (destRel) => writeFileSync(join(ctx.dest, destRel), CURSOR_RULE));
 }
 
 function wireClaude(ctx: Ctx): void {
@@ -253,11 +343,17 @@ function wireClaude(ctx: Ctx): void {
   else ctx.actions.push({ kind: "skip", path: "CLAUDE.md", note: "AGENTS.md is not a file" });
 }
 
-function wireCursor(ctx: Ctx, content: ReturnType<typeof plan>): void {
-  link(ctx, join(".cursor", "skills"), "../.agents/skills");
-  // Real files, not links: a symlinked folder shows up empty here, so the
-  // copies are authoritative for Cursor. They can drift from .agents/;
-  // checkDrift reports that, and init never overwrites them.
+function wireCursor(ctx: Ctx, content: ReturnType<typeof plan>, skillDest: Map<string, string>): void {
+  const skillsRel = join(".cursor", "skills");
+  const existing = lstatOf(join(ctx.dest, skillsRel));
+  if (existing?.isDirectory() && !existing.isSymbolicLink()) {
+    for (const name of content.skills) {
+      const source = skillDest.get(name) ?? join(".agents", "skills", name);
+      link(ctx, join(skillsRel, name), join("..", "..", source));
+    }
+  } else {
+    link(ctx, skillsRel, "../.agents/skills");
+  }
   for (const name of content.agents) {
     copyFile(ctx, join(ctx.kit, "agents", `${name}.md`), join(".cursor", "agents", `${name}.md`));
   }
@@ -267,9 +363,14 @@ function wireCursor(ctx: Ctx, content: ReturnType<typeof plan>): void {
   writeCursorRule(ctx);
 }
 
-function wireProvider(ctx: Ctx, provider: WireProvider, content: ReturnType<typeof plan>): void {
+function wireProvider(
+  ctx: Ctx,
+  provider: WireProvider,
+  content: ReturnType<typeof plan>,
+  skillDest: Map<string, string>,
+): void {
   if (provider === "claude") wireClaude(ctx);
-  else if (provider === "cursor") wireCursor(ctx, content);
+  else if (provider === "cursor") wireCursor(ctx, content, skillDest);
   // codex and muse read the shared source directly (AGENTS.md plus
   // .agents/): no per-provider layer to generate.
 }
@@ -281,20 +382,27 @@ function wireProvider(ctx: Ctx, provider: WireProvider, content: ReturnType<type
  * provider follows them, real files where it does not. Existing files are
  * never overwritten: they are reported as skipped, except an existing
  * AGENTS.md missing the ladder, which gets the ladder section appended
- * (reported as `append`). A bad preset or kit fails before anything is
- * written.
+ * (reported as `append`). With `adopt`, a colliding skill/agent/command
+ * keeps the user file and the kit version is written beside it. A bad
+ * preset or kit fails before anything is written.
  */
 export function installKit(options: InstallOptions): Result<Action[]> {
   const kit = options.kit ?? kitDir();
   const manifest = readManifest(kit);
   if (!manifest.ok) return err(manifest.error);
-  const ctx: Ctx = { dest: options.dest, kit, dryRun: options.dryRun ?? false, actions: [] };
+  const ctx: Ctx = {
+    dest: options.dest,
+    kit,
+    dryRun: options.dryRun ?? false,
+    adopt: options.adopt ?? false,
+    actions: [],
+  };
   const run = tryCatch(() => {
     const content = plan(kit, manifest.value, options.preset ?? "starter");
-    installContent(ctx, content);
+    const skillDest = installContent(ctx, content);
     const chosen = (options.providers ?? options.targets ?? ALL_PROVIDERS) as WireProvider[];
     for (const provider of chosen) {
-      wireProvider(ctx, provider, content);
+      wireProvider(ctx, provider, content, skillDest);
     }
   });
   return run.ok ? ok(ctx.actions) : err(run.error);
