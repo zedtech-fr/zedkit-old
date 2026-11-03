@@ -543,8 +543,6 @@ test.describe("identity editor named looks", () => {
 test.describe("identity editor: choose, see, adjust, then keep", () => {
   test("on a standard phone the first screen holds the look, a useful preview and the first adjustment", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    // Measured at the compact Tide unit; Glass (the site default) is roomier by design.
-    await persistDocsSiteLook(page, "tide", "light");
     await page.goto(PAGE, { waitUntil: "networkidle" });
     const boxes = await page.evaluate(() => {
       const top = (selector: string) => document.querySelector(selector)?.getBoundingClientRect() ?? null;
