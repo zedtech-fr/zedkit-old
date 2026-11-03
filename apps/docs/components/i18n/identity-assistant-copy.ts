@@ -18,7 +18,7 @@ export const identityAssistantCopy = {
   title: "Create an identity",
   intro: "Describe your product in a few plain sentences. The assistant proposes a look; you review it before anything changes.",
   briefLabel: "Your product and brand",
-  briefHint: "What it is, who it is for, the mood. Paste a link to a site you like if you want to: the assistant reads the words on that page, not its pictures or layout.",
+  briefHint: "What it is, who it is for, the mood. Paste a link to a site you like if you want to: the assistant reads its styles and words, not its pictures.",
   followUpLabel: "What should change?",
   followUpHint: "Type, density, hierarchy, colour, radius, contrast or mood. The rest stays as it is.",
   generate: "Generate",
@@ -74,14 +74,15 @@ export const identityAssistantCopy = {
   placeholder: "A small online shop selling hand-thrown ceramics. Calm and warm, a little editorial.\nIn the spirit of https://example.com/studio",
   links: {
     found: "Links the assistant will read",
-    note: "It reads the text of each page, not the pictures.",
+    note: "It reads each page's styles (colours, fonts, radius, shadows, spacing) and its text, not the pictures.",
     remove: (host: string) => `Stop reading ${host}`,
-    onlyHttps: "A link that does not start with https:// is not read.",
     tooMany: "Only the first 3 links are read.",
     list: "Links found in your text",
   },
   references: {
     textOnly: "Read as text only. Pictures and layout are not analysed.",
+    styles: (signals: string) => (signals ? `Styles and text read: ${signals}.` : "Styles and text read. No distinct colours or fonts found."),
+    radius: (value: string) => `radius ${value}`,
     failed: (reason: string) => `Could not be used: ${referenceReason(reason)}.`,
     report: "What happened to your links",
   },
@@ -112,7 +113,7 @@ export const identityAssistantCopy = {
 
 export function referenceReason(reason: string | undefined): string {
   const words: Record<string, string> = {
-    protocol: "only https links are read",
+    protocol: "only http and https links are read, and https never back to http",
     credentials: "links with a login are not read",
     port: "only the standard port is read",
     "ip-literal": "links to an address are not read",

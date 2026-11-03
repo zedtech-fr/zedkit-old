@@ -15,14 +15,30 @@ export { LIMITS };
 export type ReferenceReport = {
   url: string;
   status: "used" | "failed";
-  /** Only ever "text-only": the service reads a page's text; it never looks at the page. */
-  analysis?: "text-only";
+  /** What was read: the page's CSS and text ("styles-and-text"), or its text alone. Never a rendered look. */
+  analysis?: "styles-and-text" | "text-only";
   reason?: string;
   host?: string;
   title?: string;
   chars?: number;
-  hints?: { themeColor?: string; fonts?: string[] };
+  hints?: { themeColor?: string; fonts?: string[]; colors?: string[]; radius?: string };
 };
+
+/** Short plain strings from an untrusted report, or nothing. */
+const shortStrings = (value: unknown, count: number, chars: number): string[] =>
+  Array.isArray(value) ? value.filter((item): item is string => typeof item === "string" && item.length > 0).slice(0, count).map((item) => item.slice(0, chars)) : [];
+
+function hintsOf(value: unknown): { hints?: NonNullable<ReferenceReport["hints"]> } {
+  if (!value || typeof value !== "object") return {};
+  const hints = value as Record<string, unknown>;
+  const out: NonNullable<ReferenceReport["hints"]> = {
+    ...(typeof hints.themeColor === "string" && hints.themeColor ? { themeColor: hints.themeColor.slice(0, 30) } : {}),
+    fonts: shortStrings(hints.fonts, 6, 40),
+    colors: shortStrings(hints.colors, 5, 32),
+    ...(typeof hints.radius === "string" && hints.radius ? { radius: hints.radius.slice(0, 24) } : {}),
+  };
+  return { hints: out };
+}
 
 export type Turn = { role: "user" | "assistant"; text: string };
 
@@ -79,7 +95,8 @@ function referencesOf(value: unknown): ReferenceReport[] {
     out.push({
       url: ref.url.slice(0, 200),
       status: ref.status,
-      ...(ref.status === "used" ? { analysis: "text-only" as const } : {}),
+      ...(ref.status === "used" ? { analysis: ref.analysis === "styles-and-text" ? ("styles-and-text" as const) : ("text-only" as const) } : {}),
+      ...(ref.status === "used" ? hintsOf(ref.hints) : {}),
       ...(typeof ref.reason === "string" ? { reason: ref.reason.slice(0, 40) } : {}),
       ...(typeof ref.host === "string" ? { host: ref.host.slice(0, 80) } : {}),
       ...(typeof ref.title === "string" && ref.title ? { title: ref.title.slice(0, 80) } : {}),

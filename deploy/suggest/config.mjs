@@ -32,7 +32,7 @@ const DEFAULTS = Object.freeze({
   globalPerDay: 300,
   globalPerHourShare: 4,
   netPerDayMultiple: 4,
-  referenceTimeoutMs: 8_000,
+  referenceTimeoutMs: 5_000,
   referenceMaxBytes: 524_288,
 });
 

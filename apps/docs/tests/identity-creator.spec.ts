@@ -85,16 +85,19 @@ test.describe("home closing scene", () => {
     await page.waitForURL("**/#identities");
   });
 
-  test("a link in the text is shown, can be dropped, and http links are said not to be read", async ({ page }) => {
+  test("links in the text, full or bare, become chips that can be dropped; a fourth is said not to be read", async ({ page }) => {
     await page.goto(BASE, { waitUntil: "networkidle" });
     const scene = page.locator("#your-identity");
     await scene.scrollIntoViewIfNeeded();
     const field = scene.getByLabel("Your product and brand");
-    await field.fill("Shop like https://a.example.org/ and http://old.example.org and https://b.example.org/");
-    await expect(scene.getByRole("listitem")).toHaveCount(2);
-    await expect(scene).toContainText("does not start with https://");
+    await field.fill("Shop like https://a.example.org/, http://old.example.org and linear.app. Also https://b.example.org/");
+    const chips = scene.locator("[data-assistant-link-label]");
+    await expect(chips).toHaveCount(3);
+    await expect(chips).toHaveText(["a.example.org", "old.example.org", "linear.app"]);
+    await expect(scene).toContainText("Only the first 3 links are read.");
     await scene.getByRole("button", { name: "Stop reading a.example.org" }).click();
-    await expect(scene.getByRole("listitem")).toHaveCount(1);
+    await expect(chips).toHaveCount(3, { timeout: 5_000 });
+    await expect(chips).toHaveText(["old.example.org", "linear.app", "b.example.org"]);
     await expect(field).not.toHaveValue(/a\.example\.org/);
   });
 });
@@ -431,3 +434,34 @@ test.describe("fit and access", () => {
     });
   }
 });
+
+test.describe("reference links: recognised in the chat, read for their styles, and reported honestly", () => {
+  for (const [label, viewport] of [["desktop", { width: 1440, height: 900 }], ["mobile", { width: 390, height: 844 }]] as const) {
+    test(`on ${label}: chips while typing, the links are sent, the signals read and the unreadable link are shown`, async ({ page }) => {
+      const used = {
+        url: "https://linear.app/",
+        status: "used",
+        analysis: "styles-and-text",
+        host: "linear.app",
+        title: "Linear",
+        hints: { themeColor: "#08090a", fonts: ["Inter Variable"], colors: ["#08090a", "#5e6ad2", "#f7f8f8"], radius: "6px" },
+      };
+      const failed = { url: "https://down.example.org/", status: "failed", reason: "timeout" };
+      const posts = await service(page, (posted, route) => route.fulfill(ok(posted, WARM, { summary: "From linear.app: #5e6ad2 as primary, Inter, 6px radius.", references: [used, failed] })));
+      await page.setViewportSize(viewport);
+      await page.goto(OPEN, { waitUntil: "networkidle" });
+      await brief(page, "A calm tool for teams, like linear.app and https://down.example.org/");
+      const chips = page.locator("[data-assistant-link-label]");
+      await expect(chips).toHaveText(["linear.app", "down.example.org"]);
+      await page.getByRole("button", { name: "Generate" }).click();
+      const report = page.locator("[data-assistant-reference-report]");
+      await expect(report).toContainText("Linear Styles and text read: #08090a · #5e6ad2 · #f7f8f8 · Inter Variable · radius 6px.");
+      await expect(report).toContainText("down.example.org Could not be used:");
+      await expect(report).not.toContainText(/analysed visually|visual analysis/i);
+      expect(posts[0].references).toEqual(["https://linear.app/", "https://down.example.org/"]);
+      const box = await report.boundingBox();
+      expect(box!.x + box!.width).toBeLessThanOrEqual(viewport.width + 0.5);
+    });
+  }
+});
+

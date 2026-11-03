@@ -5,7 +5,7 @@ export const homeYoursCopy = {
   title: "And yours?",
   body: "That was a bag shop, a newsroom, a SaaS app. Describe your own product and try a look made for it, in light and dark, before you decide anything.",
   briefLabel: identityAssistantCopy.briefLabel,
-  briefHint: "A few sentences. Paste a link to a site you like if you want to: the assistant reads the words on that page, not its pictures or layout.",
+  briefHint: "A few sentences. Paste a link to a site you like if you want to: the assistant reads its styles and words, not its pictures.",
   start: "Start creating",
   startHint: "This opens the identity editor with your text in place. Nothing is sent until you press Generate there.",
 } as const;
