@@ -1,14 +1,21 @@
-/* Doc page hierarchy uses shared semantic type roles (PR A tokens). */
+/* Doc page title stays 2rem / 1.75rem — not the marketing H1 clamp. */
+#nd-page {
+  --zk-type-doc-h1-size: 2rem;
+}
+
 #nd-page h1 {
-  font-size: 2rem;
+  font-size: var(--zk-type-doc-h1-size);
   font-weight: 600;
   line-height: 2.375rem;
   letter-spacing: var(--zk-type-h1-tracking, -0.02em);
 }
 
 @media (width < 48rem) {
+  #nd-page {
+    --zk-type-doc-h1-size: 1.75rem;
+  }
+
   #nd-page h1 {
-    font-size: 1.75rem;
     line-height: 2.125rem;
   }
 }
