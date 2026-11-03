@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Linter } from "eslint";
 import { parser as tsParser, plugin as tsPlugin } from "typescript-eslint";
-import { defineLayers, uiPreset } from "#index.mjs";
+import { defineLayers, nodePreset, uiPreset } from "#index.mjs";
 
 function restrictRow(prefix) {
   const [, tailwind] = uiPreset({ entryPoint: "/repo/app/globals.css" });
@@ -24,6 +24,30 @@ function matchesArbitrary(className) {
 function matchesFocus(className) {
   return Boolean(className.match(focusRow().pattern));
 }
+
+describe("nodePreset", () => {
+  it("includes recommended stacks and the try/catch and import-depth bans", () => {
+    const blocks = nodePreset();
+    const base = blocks.find((block) => block.name === "zedkit/node-base");
+    expect(base).toBeDefined();
+    const syntax = base.rules["no-restricted-syntax"][1];
+    expect(syntax.message).toContain("@zedtech/zedkit-core");
+    const patterns = base.rules["no-restricted-imports"][1].patterns;
+    expect(patterns[0].group).toContain("../../*");
+  });
+
+  it("customizes the try/catch message import path", () => {
+    const base = nodePreset({ tryCatchSource: "@acme/helpers" }).find((block) => block.name === "zedkit/node-base");
+    expect(base.rules["no-restricted-syntax"][1].message).toContain("@acme/helpers");
+  });
+
+  it("flags raw try/catch when linted", () => {
+    const linter = new Linter({ configType: "flat" });
+    const config = [...nodePreset(), { files: ["**/*.ts"], languageOptions: { parser: tsParser } }];
+    const messages = linter.verify("try { x(); } catch { /* noop */ }", config, { filename: "src/foo.ts" });
+    expect(messages.some((m) => m.ruleId === "no-restricted-syntax")).toBe(true);
+  });
+});
 
 describe("uiPreset", () => {
   it("carries the passed entryPoint into the tailwind settings", () => {

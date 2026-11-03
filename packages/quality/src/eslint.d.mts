@@ -1,5 +1,12 @@
 import type { Linter } from "eslint";
 
+export interface NodePresetOptions {
+  /** Import path shown in the try/catch ban message. Default `@zedtech/zedkit-core`. */
+  readonly tryCatchSource?: string;
+}
+
+export function nodePreset(options?: NodePresetOptions): Linter.Config[];
+
 export interface UiPresetOptions {
   /** Path to the repo's Tailwind CSS entry. Required, no default. */
   readonly entryPoint: string;

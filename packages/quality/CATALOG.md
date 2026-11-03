@@ -5,6 +5,28 @@
 - Purpose: Shared quality setup: UI lint preset, route/view/data layer boundaries, one strict TypeScript base, and repo hygiene bins — consume, do not copy.
 
 
+## Lint Node and TypeScript libraries
+
+- Import: `@zedtech/zedkit-quality/eslint` — `nodePreset`
+- Wraps: `@eslint/js`, `typescript-eslint`
+- Status: stable
+- Short name: NodePreset
+- Audience: Backend and library packages that share the same try/catch and import-depth rules as the monorepo root.
+- Purpose: Spread eslint + typescript-eslint recommended, ban raw try/catch (point callers at `tryCatch` / `tryCatchAsync`), and ban deep `../..` imports in favor of `#*` subpaths.
+- When to use: When a package eslint.config.mjs today copies the root Node block from another repo.
+- When not to use: When the package is UI-only (use `Lint UI files for accessibility, Tailwind and tokens`).
+- See also: `Lint UI files for accessibility, Tailwind and tokens`
+
+```ts
+import { nodePreset } from "@zedtech/zedkit-quality/eslint";
+
+export default [
+  ...nodePreset(),
+  { ignores: ["dist/**"] },
+  { files: ["src/try-catch.ts"], rules: { "no-restricted-syntax": "off" } },
+];
+```
+
 ## Lint UI files for accessibility, Tailwind and tokens
 
 - Import: `@zedtech/zedkit-quality/eslint` — `uiPreset`

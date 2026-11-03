@@ -1416,6 +1416,39 @@
       "audience": "Teams keeping the same quality gates across repos.",
       "needs": [
         {
+          "need": "Lint Node and TypeScript libraries",
+          "import": "`@zedtech/zedkit-quality/eslint` — `nodePreset`",
+          "wraps": "`@eslint/js`, `typescript-eslint`",
+          "status": "stable",
+          "shortName": "NodePreset",
+          "audience": "Backend and library packages that share the same try/catch and import-depth rules as the monorepo root.",
+          "purpose": "Spread eslint + typescript-eslint recommended, ban raw try/catch (point callers at `tryCatch` / `tryCatchAsync`), and ban deep `../..` imports in favor of `#*` subpaths.",
+          "whenToUse": "When a package eslint.config.mjs today copies the root Node block from another repo.",
+          "whenNotToUse": "When the package is UI-only (use `Lint UI files for accessibility, Tailwind and tokens`).",
+          "derivedFrom": null,
+          "example": "import { nodePreset } from \"@zedtech/zedkit-quality/eslint\";\n\nexport default [\n  ...nodePreset(),\n  { ignores: [\"dist/**\"] },\n  { files: [\"src/try-catch.ts\"], rules: { \"no-restricted-syntax\": \"off\" } },\n];",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "import { nodePreset } from \"@zedtech/zedkit-quality/eslint\";\n\nexport default [\n  ...nodePreset(),\n  { ignores: [\"dist/**\"] },\n  { files: [\"src/try-catch.ts\"], rules: { \"no-restricted-syntax\": \"off\" } },\n];"
+            }
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-quality/eslint",
+                "exports": [
+                  "nodePreset"
+                ]
+              }
+            ]
+          },
+          "seeAlso": [
+            "Lint UI files for accessibility, Tailwind and tokens"
+          ]
+        },
+        {
           "need": "Lint UI files for accessibility, Tailwind and tokens",
           "import": "`@zedtech/zedkit-quality/eslint` — `uiPreset`",
           "wraps": "`eslint-plugin-jsx-a11y`, `eslint-plugin-better-tailwindcss`, `typescript-eslint`",
