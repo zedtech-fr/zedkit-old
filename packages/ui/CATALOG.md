@@ -1856,16 +1856,16 @@ applyIdentityTokenSheet(
 
 ## Compose a public marketing page
 
-- Import: `@zedtech/zedkit-ui/marketing` — `GlassSurface`, `glassSurfaceVariants`, `GlassSurfaceProps`
+- Import: `@zedtech/zedkit-ui/marketing` — `GlassSurface`, `glassSurfaceVariants`, `GlassSurfaceProps`, `BriefSpecimen`, `BriefSpecimenProps`, `selectSpecimenDomain`, `CommerceSpecimen`, `SaasDashboardSpecimen`, `EditorialSpecimen`, `ServiceBookingSpecimen`, `specimenMessagesEn`, `SpecimenDomain`
 - Wraps: none (theme tokens, `class-variance-authority`)
 - Status: alpha
 - Short name: Marketing
-- Audience: Teams building a public landing page or pricing page on the same tokens and identities as their app.
-- Purpose: Presentational page sections that follow the active identity, so a public site and the console share one look. Strings are props.
-- When to use: For a signed-out home, pricing or product page built from the kit's tokens (frosted under the glass identity, plain cards elsewhere).
+- Audience: Teams building a public landing page or identity preview on the same tokens and identities as their app.
+- Purpose: Marketing sections and brief-routed domain specimens (commerce, SaaS dashboard, editorial, booking). Glass stays the default identity; strings are props.
+- When to use: For a signed-out home, pricing page, or in-`ThemeScope` preview while refining an identity.
 - When not to use: For app screens — use `Card`, `PageHeader` and `Section` instead; for full-page bands use `Section` with `bleed`.
-- See also: `Theme an admin app (dark/light included)`
-- A11y: Surfaces render a plain element (`div`, `section`, `article` or `li`); pass `aria-label` or a heading inside when it is a landmark. Text sits on the card colour, so contrast follows the identity tokens; under `prefers-reduced-transparency` the glass identity turns surfaces near-solid.
+- See also: `Theme an admin app (dark/light included)`, `Render headings and body text without raw tags`
+- A11y: Surfaces render a plain element (`div`, `section`, `article` or `li`); pass `aria-label` or a heading inside when it is a landmark. Specimens expose labelled lists, tables, and status regions.
 - Troubleshooting: Surfaces look flat — the identity in use is not `glass`; set `data-identity="glass"` on `<html>`. Classes missing — the `@source` line must scan the kit's `src/**` (the marketing folder is included).
 
 ```ts
@@ -1876,23 +1876,10 @@ import { GlassSurface } from "@zedtech/zedkit-ui/marketing";
 </GlassSurface>;
 ```
 
-## Preview an identity from a brief
-
-- Import: `@zedtech/zedkit-ui/marketing` — `BriefSpecimen`, `BriefSpecimenProps`, `selectSpecimenDomain`, `CommerceSpecimen`, `SaasDashboardSpecimen`, `EditorialSpecimen`, `ServiceBookingSpecimen`, `specimenMessagesEn`
-- Wraps: kit primitives inside `ThemeScope` (consumer supplies the look)
-- Status: alpha
-- Short name: Brief specimens
-- Audience: Identity preview flows that need a real composition matching the visitor's domain (commerce, SaaS, editorial, booking).
-- Purpose: Four interactive specimens plus keyword routing on a free-text brief.
-- When to use: Inside a scoped preview while generating or refining an identity.
-- When not to use: For production app screens — copy the patterns into your own routes.
-- See also: `Compose a public marketing page`
-- A11y: Each specimen exposes labels on lists, tables and status regions; mount inside an identity scope so tokens stay consistent.
-
 ```ts
 import { BriefSpecimen, selectSpecimenDomain } from "@zedtech/zedkit-ui/marketing";
 
-selectSpecimenDomain("Hair salon booking"); // "service-booking"
+selectSpecimenDomain("Hair salon booking"); // booking (D4)
 
 <BriefSpecimen brief="Independent newsroom" />;
 ```

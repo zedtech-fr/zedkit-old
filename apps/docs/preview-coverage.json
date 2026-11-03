@@ -17,7 +17,8 @@
   ],
   "optOut": {
     "Localize kit chrome in English or French::French bundle": "App-root provider wrap; no visual host of its own.",
-    "Localize kit chrome in English or French::Override one string": "ConfirmDialog already has live previews on its own need."
+    "Localize kit chrome in English or French::Override one string": "ConfirmDialog already has live previews on its own need.",
+    "Compose a public marketing page::Example 2": "Brief specimens need a scoped identity preview (D1); not a standalone docs demo."
   },
   "pending": []
 }
