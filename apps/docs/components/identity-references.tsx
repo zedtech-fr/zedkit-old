@@ -30,7 +30,7 @@ export function DetectedLinks({ text, onText, fieldId, disabled = false }: { tex
           <ul aria-label={copy.links.list} className="m-0 flex list-none flex-wrap gap-2 p-0">
             {urls.map((url) => (
               <li key={url} data-assistant-link-chip="" className="flex max-w-full min-w-0 items-center gap-1 rounded-full border border-border bg-muted/40 py-0.5 pr-0.5 pl-3">
-                <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-primary" />
+                <Text as="span" aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-primary" />
                 <Text as="span" data-assistant-link-label="" className="min-w-0 truncate text-sm" title={url}>
                   {urlLabel(url)}
                 </Text>
