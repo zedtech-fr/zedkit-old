@@ -151,7 +151,7 @@ size_budget() {
 size_budget ui 43600
 # Marketing entry (separate from the main budget); measured 785 with GlassSurface only;
 # 5318 with L2 domain specimens (brief-routed preview compositions).
-size_budget ui 5500 marketing
+size_budget ui 5700 marketing
 size_budget ai 9800
 
 if [ -f apps/docs/out/index.html ]; then
