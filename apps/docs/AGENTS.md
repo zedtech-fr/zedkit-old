@@ -107,6 +107,13 @@ scripts inside `pnpm catalog:check`.
   reversible (`lib/site-identity-storage.ts`: opt-in key, `clearDocsSiteIdentity`).
   Quotas, references and cost controls are server rules; the client never
   works around them.
+- Secondary states (idle, loading, success, error, quota, resume) stay on
+  screen at 320, 390 and 1440. Quota copy names a real retry time, never a
+  daily allowance. The floating dock (when present) opens with Control or
+  Meta+I, closes with Escape, and on a phone is a bottom sheet. Using a look
+  from the dock paints demo specimens only, never the site chrome. Brief-routed
+  specimens are commerce, saas-dashboard, editorial and service-booking.
+  Proof: `tests/identity-state-matrix.spec.ts`.
 
 ## ZedKit art direction (Product Atelier)
 
