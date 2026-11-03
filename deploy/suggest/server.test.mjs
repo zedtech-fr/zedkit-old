@@ -634,3 +634,41 @@ test("a request has seconds, not minutes, to arrive, and the number of open conn
   ledger.close();
   await new Promise((done) => server.close(done));
 });
+
+test("the service starts and reports generation off when no provider is configured", async () => {
+  // Regression: `node server.mjs` with IDENTITY_AI_ENABLED unset/false and no key crashed right after listening,
+  // dereferencing a null primary provider in the startup log.
+  const { spawn } = await import("node:child_process");
+  const { fileURLToPath } = await import("node:url");
+  const env = { PATH: process.env.PATH, PORT: "0", IDENTITY_AI_ENABLED: "false", IDENTITY_AI_STATE_DIR: mkdtempSync(join(tmpdir(), "suggest-off-")) };
+  const child = spawn(process.execPath, [fileURLToPath(new URL("./server.mjs", import.meta.url))], { env, stdio: ["ignore", "pipe", "pipe"] });
+  let out = "";
+  child.stdout.on("data", (chunk) => (out += chunk));
+  child.stderr.on("data", (chunk) => (out += chunk));
+  const exited = new Promise((done) => child.once("exit", (code) => done(code)));
+  const port = await new Promise((done, fail) => {
+    const timer = setTimeout(() => fail(new Error(`no listening line: ${out}`)), 5_000);
+    child.stdout.on("data", () => {
+      const match = out.match(/listening on (\d+)/);
+      if (match) {
+        clearTimeout(timer);
+        done(Number(match[1]));
+      }
+    });
+  });
+  // Give the startup log a moment: the crash happened just after the listening line.
+  const early = await Promise.race([exited, new Promise((done) => setTimeout(() => done("alive"), 300))]);
+  assert.equal(early, "alive", `server exited: ${out}`);
+  assert.match(out, /generation off/);
+  const body = await new Promise((done, fail) => {
+    http.get(`http://127.0.0.1:${port}/api/identity/suggest/version`, (res) => {
+      let text = "";
+      res.on("data", (c) => (text += c));
+      res.on("end", () => done({ status: res.statusCode, json: JSON.parse(text) }));
+    }).on("error", fail);
+  });
+  assert.equal(body.status, 200);
+  assert.equal(body.json.generation, "disabled");
+  child.kill();
+  await exited;
+});

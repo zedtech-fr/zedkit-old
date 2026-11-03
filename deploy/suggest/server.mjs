@@ -183,7 +183,8 @@ function costOf(provider, result, worst, sizes) {
 }
 
 /** The primary, then the fallback if there is one: never more than the hard ceiling of calls. */
-const providersOf = (config) => [config.primary, ...(config.fallback ? [config.fallback] : [])].slice(0, HARD.maxProviderCalls);
+// Only configured providers: with no primary (generation off) there is nothing to call, and nothing to dereference.
+const providersOf = (config) => [config.primary, config.fallback].filter(Boolean).slice(0, HARD.maxProviderCalls);
 
 /** A refusal or a transport failure can try the fallback once. Invalid output, or the visitor leaving, cannot. */
 function mayFallBack(result) {
