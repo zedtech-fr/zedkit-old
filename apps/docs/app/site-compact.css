@@ -72,3 +72,49 @@
 #nd-home-layout section[id] {
   scroll-margin-top: calc(var(--zk-site-header-height) + 1rem);
 }
+
+/*
+ * Glass relief on the site (root look only): layered soft shadows, a top
+ * light edge plus a faint lower inner shade (convex read), a sheen on
+ * cards/buttons, translucent blurred surfaces with light borders.
+ */
+:root[data-identity="glass"] {
+  --zk-glass-highlight: inset 0 1px 0 hsl(0 0% 100% / 0.85), inset 0 -1px 0 hsl(232 40% 24% / 0.06);
+  --zk-site-sheen: linear-gradient(180deg, hsl(0 0% 100% / 0.55), hsl(0 0% 100% / 0) 55%);
+  --zk-shadow-sm: 0 1px 2px hsl(var(--zk-shadow-color) / 0.06), 0 4px 12px -4px hsl(var(--zk-shadow-color) / 0.12), var(--zk-glass-highlight);
+  --zk-shadow-md: 0 1px 2px hsl(var(--zk-shadow-color) / 0.06), 0 12px 32px -12px hsl(var(--zk-shadow-color) / 0.24), var(--zk-glass-highlight);
+  --zk-shadow-lg: 0 2px 4px hsl(var(--zk-shadow-color) / 0.06), 0 22px 48px -16px hsl(var(--zk-shadow-color) / 0.3), var(--zk-glass-highlight);
+}
+:root.dark[data-identity="glass"] {
+  --zk-glass-highlight: inset 0 1px 0 hsl(0 0% 100% / 0.12), inset 0 -1px 0 rgb(0 0 0 / 0.35);
+  --zk-site-sheen: linear-gradient(180deg, hsl(0 0% 100% / 0.07), hsl(0 0% 100% / 0) 55%);
+  --zk-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px -4px rgb(0 0 0 / 0.5), var(--zk-glass-highlight);
+  --zk-shadow-md: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 32px -12px rgb(0 0 0 / 0.65), var(--zk-glass-highlight);
+  --zk-shadow-lg: 0 2px 4px rgb(0 0 0 / 0.4), 0 22px 48px -16px rgb(0 0 0 / 0.7), var(--zk-glass-highlight);
+}
+:root[data-identity="glass"] :is([data-slot="card"], figure.shiki):not([data-identity-scope] *) {
+  background-image: var(--zk-site-sheen);
+  background-color: hsl(var(--card) / var(--zk-glass-alpha));
+  border-color: hsl(var(--zk-glass-edge) / var(--zk-glass-edge-alpha));
+  box-shadow: var(--zk-shadow-md);
+  -webkit-backdrop-filter: var(--zk-glass-filter);
+  backdrop-filter: var(--zk-glass-filter);
+}
+:root[data-identity="glass"] [data-slot="button"]:not([data-identity-scope] *):not([data-variant="ghost"]):not([data-variant="link"]) {
+  background-image: var(--zk-site-sheen);
+  box-shadow: var(--zk-shadow-sm);
+}
+:root[data-identity="glass"] #nd-nav > div,
+:root[data-identity="glass"] #nd-mobile-nav {
+  background-color: hsl(var(--background) / 0.6);
+  border-bottom-color: hsl(var(--zk-glass-edge) / var(--zk-glass-edge-alpha));
+  box-shadow: 0 1px 0 hsl(var(--border) / 0.2), 0 8px 24px -16px hsl(var(--zk-shadow-color) / 0.3);
+  -webkit-backdrop-filter: var(--zk-glass-filter);
+  backdrop-filter: var(--zk-glass-filter);
+}
+:root[data-identity="glass"] #nd-nav nav :is(button, a[aria-label], [data-search]) {
+  background-image: var(--zk-site-sheen);
+  background-color: hsl(var(--card) / var(--zk-glass-alpha));
+  border-color: hsl(var(--zk-glass-edge) / var(--zk-glass-edge-alpha));
+  box-shadow: var(--zk-shadow-sm);
+}
