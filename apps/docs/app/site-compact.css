@@ -1,0 +1,74 @@
+/*
+ * Docs-site scale (site chrome only, never specimens: rules target the
+ * root identity, so [data-identity-scope] previews keep their own look).
+ * Roomy identities (glass: 0.32rem unit) read oversized as a docs site;
+ * the site pins a calmer unit, a compact header and centred section content.
+ */
+:root[data-identity] {
+  --zk-site-content-width: 76rem;
+  --zk-site-header-height: 3.5rem;
+}
+:root[data-identity="glass"] {
+  --spacing: 0.26rem;
+}
+
+/* Header: fixed compact height, nav aligned to the content width. */
+#nd-home-layout {
+  --fd-layout-width: var(--zk-site-content-width) !important;
+}
+#nd-nav,
+#nd-nav > div,
+#nd-nav nav,
+#nd-mobile-nav {
+  height: var(--zk-site-header-height);
+  min-height: 0;
+}
+#nd-nav nav a,
+#nd-nav nav button {
+  border-radius: 9999px;
+  padding-block: 0.375rem;
+  padding-inline: 0.75rem;
+  font-size: var(--text-sm);
+}
+#nd-nav nav button,
+#nd-nav nav [data-search],
+#nd-nav nav a[aria-label] {
+  border: var(--zk-border-width, 1px) solid hsl(var(--border) / 0.35);
+  background: hsl(var(--card) / 0.6);
+}
+
+/* Bands: full-bleed backgrounds, content centred and inset (no edge spill). */
+#home-page > section,
+#home-page section[id].w-full,
+#nd-home-layout section.w-full {
+  padding-inline: max(1.5rem, calc((100% - var(--zk-site-content-width)) / 2));
+  overflow-x: clip;
+}
+#nd-home-layout section.w-full > * {
+  max-width: var(--zk-site-content-width);
+  margin-inline: auto;
+}
+#nd-home-layout section.space-y-4 {
+  max-width: var(--zk-site-content-width);
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+#nd-home-layout section.w-full + section.w-full {
+  border-top: var(--zk-border-width, 1px) solid hsl(var(--border) / 0.25);
+}
+
+/* Marketing type: a step down from the identity's display sizes. */
+#nd-home-layout h1 {
+  font-size: clamp(1.875rem, 1.2rem + 1.6vw, 2.5rem);
+  line-height: 1.1;
+}
+#nd-home-layout h2 {
+  font-size: clamp(1.25rem, 1rem + 0.6vw, 1.5rem);
+}
+#nd-home-layout section.w-full {
+  padding-block: calc(var(--spacing) * 10);
+}
+/* Scroll targets clear the compact header. */
+#nd-home-layout section[id] {
+  scroll-margin-top: calc(var(--zk-site-header-height) + 1rem);
+}
