@@ -80,6 +80,9 @@ see `@zedtech/zedkit-core` instead.
   `verifyWebhookSignatureHeader(secret, body, header, options?)` —
   Stripe-style `t=…,v1=…` HMAC signatures over exact body bytes, with an
   optional freshness check. Bring your own secret; an empty secret is rejected.
+- `@zedtech/zedkit-server/webhook-web` — `verifyWebhookSignatureWeb`
+  (async, Web Crypto only): same header format, default ±300 s tolerance
+  both ways; for edge and browser runtimes without `node:crypto`.
 - `pgErrorCode(error)` — read the Postgres error code (`23505`
   unique, `23503` FK, ...) from a thrown value, or `null` when it
   has none. Also reads one `cause` level down, where ORMs keep the

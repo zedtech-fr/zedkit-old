@@ -100,6 +100,24 @@ if (!verify(secret, rawBody, headers["webhook-signature"], { maxAgeSeconds: 300 
 }
 ```
 
+## Verify webhooks in browsers and edge runtimes
+
+- Import: `@zedtech/zedkit-server/webhook-web` — `verifyWebhookSignatureWeb`, `VerifyWebhookWebOptions`
+- Wraps: `(none)`
+- Status: alpha
+- Short name: Webhook verify (Web Crypto)
+- Audience: Authors verifying signed webhook deliveries outside Node (Workers, Deno, browser tests).
+- Purpose: Async HMAC verification with global `crypto.subtle`, symmetric tolerance both ways of the clock (default 300 s).
+- When to use: When the main server verifier cannot load (`node:crypto`) but the runtime provides Web Crypto.
+- When not to use: On Node servers — use `verifyWebhookSignatureHeader` on the main export instead.
+- See also: `Sign and verify webhook deliveries`
+
+```ts
+import { verifyWebhookSignatureWeb } from "@zedtech/zedkit-server/webhook-web";
+const ok = await verifyWebhookSignatureWeb(secret, request.headers.get("webhook-signature") ?? undefined, rawBody);
+if (!ok) return unauthorized();
+```
+
 ## Tell a Postgres conflict from a bug
 
 - Import: `@zedtech/zedkit-server` — `pgErrorCode`

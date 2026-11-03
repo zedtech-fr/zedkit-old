@@ -2068,6 +2068,40 @@
           }
         },
         {
+          "need": "Verify webhooks in browsers and edge runtimes",
+          "import": "`@zedtech/zedkit-server/webhook-web` — `verifyWebhookSignatureWeb`, `VerifyWebhookWebOptions`",
+          "wraps": "`(none)`",
+          "status": "alpha",
+          "shortName": "Webhook verify (Web Crypto)",
+          "audience": "Authors verifying signed webhook deliveries outside Node (Workers, Deno, browser tests).",
+          "purpose": "Async HMAC verification with global `crypto.subtle`, symmetric tolerance both ways of the clock (default 300 s).",
+          "whenToUse": "When the main server verifier cannot load (`node:crypto`) but the runtime provides Web Crypto.",
+          "whenNotToUse": "On Node servers — use `verifyWebhookSignatureHeader` on the main export instead.",
+          "derivedFrom": null,
+          "example": "import { verifyWebhookSignatureWeb } from \"@zedtech/zedkit-server/webhook-web\";\nconst ok = await verifyWebhookSignatureWeb(secret, request.headers.get(\"webhook-signature\") ?? undefined, rawBody);\nif (!ok) return unauthorized();",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "import { verifyWebhookSignatureWeb } from \"@zedtech/zedkit-server/webhook-web\";\nconst ok = await verifyWebhookSignatureWeb(secret, request.headers.get(\"webhook-signature\") ?? undefined, rawBody);\nif (!ok) return unauthorized();"
+            }
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-server/webhook-web",
+                "exports": [
+                  "verifyWebhookSignatureWeb",
+                  "VerifyWebhookWebOptions"
+                ]
+              }
+            ]
+          },
+          "seeAlso": [
+            "Sign and verify webhook deliveries"
+          ]
+        },
+        {
           "need": "Tell a Postgres conflict from a bug",
           "import": "`@zedtech/zedkit-server` — `pgErrorCode`",
           "wraps": "`(none)`",

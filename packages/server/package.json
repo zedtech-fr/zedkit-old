@@ -43,6 +43,10 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./webhook-web": {
+      "types": "./dist/webhook-web.d.ts",
+      "import": "./dist/webhook-web.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
