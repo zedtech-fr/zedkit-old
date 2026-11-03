@@ -54,4 +54,15 @@ export const marketingCopy = {
     points: ["Reads your products and stock", "Never changes an order"],
     caption: "Demo goes here",
   },
+  logos: {
+    title: "Works with the shops you know",
+    names: ["Harbor", "North", "Linen"],
+  },
+  testimonials: {
+    title: "What shops say",
+    items: [
+      { quote: "We launched a new offer in a day.", name: "Ada Lovelace", role: "Head of e-commerce, Harbor Studio", avatar: "AL" },
+      { quote: "Stock on the page is always right.", name: "Grace Hopper", role: "Founder, North Shop", avatar: "GH" },
+    ],
+  },
 } as const;

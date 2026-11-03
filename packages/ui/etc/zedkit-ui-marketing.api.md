@@ -106,6 +106,23 @@ export type LocaleSwitchProps = Omit<React_2.ComponentProps<"nav">, "children" |
 };
 
 // @public
+export function LogoBand(input: LogoBandProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export interface LogoBandItem {
+    href?: string | undefined;
+    id?: string | undefined;
+    logo: React_2.ReactNode;
+    name: string;
+}
+
+// @public (undocumented)
+export type LogoBandProps = Omit<React_2.ComponentProps<"section">, "title"> & {
+    title: string;
+    logos: LogoBandItem[];
+};
+
+// @public
 export function MarketingFooter(input: MarketingFooterProps): React_2.JSX.Element;
 
 // @public (undocumented)
@@ -145,6 +162,25 @@ export type MediaSectionProps = Omit<React_2.ComponentProps<"section">, "title">
     actions?: React_2.ReactNode;
     media: React_2.ReactNode;
     reverse?: boolean | undefined;
+};
+
+// @public (undocumented)
+export interface Testimonial {
+    avatar?: React_2.ReactNode;
+    id?: string | undefined;
+    name: string;
+    quote: React_2.ReactNode;
+    role?: React_2.ReactNode;
+}
+
+// @public
+export function Testimonials(input: TestimonialsProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type TestimonialsProps = Omit<React_2.ComponentProps<"section">, "title"> & {
+    title: React_2.ReactNode;
+    description?: React_2.ReactNode;
+    items: Testimonial[];
 };
 
 // (No @packageDocumentation comment for this package)

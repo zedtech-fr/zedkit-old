@@ -148,8 +148,8 @@ size_budget() {
 # the previous 40800 was already exceeded at 41771 before this change. Keep roughly 2% headroom.
 # Raised from 43100 to 43500 on 3 Nov 2026: measured 43137 with the OptionCard check indicator.
 size_budget ui 43500
-# Marketing entry (separate from the main budget); measured 785 on 3 Nov 2026 with GlassSurface only.
-size_budget ui 6000 marketing
+# Marketing entry (separate from the main budget); measured 785 with GlassSurface only, 4437 on 3 Nov 2026 with LogoBand and Testimonials.
+size_budget ui 8000 marketing
 # Raised from 9800 to 11500 on 3 Nov 2026: init --adopt, per-skill Cursor
 # links, and lenses.md Status filtering (measured 11228).
 size_budget ai 11500

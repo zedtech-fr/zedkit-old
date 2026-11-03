@@ -12,9 +12,11 @@ import {
   Hero,
   HowItWorks,
   LocaleSwitch,
+  LogoBand,
   MarketingFooter,
   MarketingHeader,
   MediaSection,
+  Testimonials,
 } from "#marketing/index.js";
 import { assertNoValueArbitraries } from "./no-arbitraries.js";
 
@@ -379,6 +381,67 @@ describe("MediaSection", () => {
     );
     expect(container.querySelector("ul")).toBeNull();
     expect(container.querySelector("[data-slot='media-section-actions']")).toBeNull();
+    for (const node of container.querySelectorAll("[class]")) {
+      assertNoValueArbitraries(node.getAttribute("class") ?? "");
+    }
+    expect((await axe(container)).violations).toEqual([]);
+  });
+});
+
+describe("LogoBand", () => {
+  const logos = [
+    { name: "Harbor Studio", logo: <svg viewBox="0 0 1 1" />, href: "https://example.com" },
+    { id: "north", name: "North Shop", logo: <img src="/north.svg" alt="" /> },
+  ];
+
+  it("names the region by its title and reads each company name instead of the logo", () => {
+    const { container } = render(<LogoBand title="Works with" logos={logos} />);
+    expect(screen.getByRole("region", { name: "Works with" }).getAttribute("data-slot")).toBe("logo-band");
+    expect(screen.getAllByRole("listitem")).toHaveLength(2);
+    expect(screen.getByRole("link", { name: "Harbor Studio" }).getAttribute("href")).toBe("https://example.com");
+    expect(screen.getByText("North Shop").className).toContain("sr-only");
+    for (const mark of container.querySelectorAll("[data-slot='logo-band-item'] [aria-hidden='true']")) {
+      expect(mark.querySelector("svg, img")).not.toBeNull();
+    }
+  });
+
+  it("renders an empty list without crashing", () => {
+    const { container } = render(<LogoBand title="Works with" logos={[]} />);
+    expect(container.querySelectorAll("li")).toHaveLength(0);
+  });
+});
+
+describe("Testimonials", () => {
+  const items = [
+    { quote: "We launched a new offer in a day.", name: "Ada Lovelace", role: "Head of e-commerce, Harbor Studio", avatar: "AL" },
+    { id: "b", quote: "Stock is always right.", name: "Grace Hopper" },
+  ];
+
+  it("renders each quote as a figure with a caption and hides the avatar from assistive tech", () => {
+    const { container } = render(<Testimonials title="What customers say" items={items} />);
+    expect(screen.getByRole("region", { name: "What customers say" }).getAttribute("data-slot")).toBe("testimonials");
+    expect(screen.getAllByRole("figure")).toHaveLength(2);
+    expect(container.querySelectorAll("blockquote")).toHaveLength(2);
+    expect(screen.getByText("We launched a new offer in a day.")).toBeTruthy();
+    expect(screen.getByText("Head of e-commerce, Harbor Studio")).toBeTruthy();
+    const avatars = container.querySelectorAll("[data-slot='testimonial-avatar']");
+    expect(avatars).toHaveLength(1);
+    expect(avatars[0]?.getAttribute("aria-hidden")).toBe("true");
+  });
+
+  it("leaves the quotation marks to the page language", () => {
+    const { container } = render(<Testimonials title="T" items={items} />);
+    expect(container.textContent).not.toContain("\u201c");
+    expect(container.querySelector("blockquote span")?.className).toContain("before:content-[open-quote]");
+  });
+
+  it("has no axe violations with a logo band", async () => {
+    const { container } = render(
+      <main>
+        <LogoBand title="Works with" logos={[{ name: "Harbor Studio", logo: <svg viewBox="0 0 1 1" /> }]} />
+        <Testimonials title="What customers say" items={items} />
+      </main>,
+    );
     for (const node of container.querySelectorAll("[class]")) {
       assertNoValueArbitraries(node.getAttribute("class") ?? "");
     }

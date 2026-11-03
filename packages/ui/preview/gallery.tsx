@@ -91,8 +91,10 @@ import {
   HowItWorks,
   LocaleSwitch,
   MarketingFooter,
+  LogoBand,
   MarketingHeader,
   MediaSection,
+  Testimonials,
 } from "#marketing/index.js";
 import { X } from "lucide-react";
 import { FormDemo } from "./form-demo.js";
@@ -447,6 +449,14 @@ export function Gallery() {
               </>
             }
           />
+          <LogoBand
+            title="Works with the shops you know"
+            logos={[
+              { name: "Harbor Studio", logo: <span className="text-lg font-semibold">Harbor</span> },
+              { name: "North Shop", logo: <span className="text-lg font-semibold">North</span> },
+              { name: "Linen & Co", logo: <span className="text-lg font-semibold">Linen</span> },
+            ]}
+          />
           <FeatureGrid
             title="Built for the shop you already run"
             description="Add live features next to it, without replatforming."
@@ -462,6 +472,13 @@ export function Gallery() {
               { title: "Create an account", description: "No card needed." },
               { title: "Create a key", description: "A staging key takes a minute." },
               { title: "See your first event", description: "It shows up in the console." },
+            ]}
+          />
+          <Testimonials
+            title="What shops say"
+            items={[
+              { quote: "We launched a new offer in a day.", name: "Ada Lovelace", role: "Head of e-commerce, Harbor Studio", avatar: "AL" },
+              { quote: "Stock on the page is always right.", name: "Grace Hopper", role: "Founder, North Shop", avatar: "GH" },
             ]}
           />
           <MediaSection

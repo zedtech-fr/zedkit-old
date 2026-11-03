@@ -528,7 +528,9 @@
         "Steps": "HowItWorksDemo",
         "Header and footer": "MarketingChromeDemo",
         "Language switch": "LocaleSwitchDemo",
-        "Use case": "MediaSectionDemo"
+        "Use case": "MediaSectionDemo",
+        "Logo band": "LogoBandDemo",
+        "Testimonials": "TestimonialsDemo"
       }
     },
     "Switch the visual identity with one attribute": {
