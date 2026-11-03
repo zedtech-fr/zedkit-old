@@ -93,12 +93,12 @@ function AssistantFeedback({ text, off, notice }: { text: string | null; off: Un
     ref.current.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
   }, [notice]);
   return (
-    <div ref={ref} className="-mb-4 flex flex-col gap-2 has-[:not(:empty)]:mb-0" data-assistant-feedback="">
+    <Stack gap={2} ref={ref} className="-mb-4 has-[:not(:empty)]:mb-0" data-assistant-feedback="">
       {off ? <UnavailableBanner reason={off} /> : null}
       {/* Always mounted, so a screen reader hears what is put in it; when it holds nothing it takes no room. */}
       <Text role="status" className="text-sm text-muted-foreground empty:-mt-2" data-assistant-status="">
         {text}
       </Text>
-    </div>
+    </Stack>
   );
 }
