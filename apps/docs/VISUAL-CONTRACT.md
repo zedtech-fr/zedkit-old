@@ -40,7 +40,7 @@ Sizes are the implemented tokens (`packages/ui/src/shared-type-scale.css`, appli
 | Role | Rule |
 |---|---|
 | Marketing H1 | `--zk-type-h1-size`: 32px up to 44px (`clamp`), 32px at 390px and below, weight 600, one per page. No second display size. |
-| Docs H1 | Same token as marketing H1 (one page title scale). H2 `--zk-type-h2-size` 22-26px, H3 18px, weight 600. Linked headings inherit size and weight. |
+| Docs H1 | `--zk-type-doc-h1-size`: 2rem, 1.75rem below 48rem (not the marketing clamp). H2 `--zk-type-h2-size` 22-26px, H3 18px, weight 600. Linked headings inherit size and weight. |
 | Prose | 15/1.6 (`--zk-type-prose-size`), 64-72ch. Lead paragraph `--zk-type-lead-size` 16-18px, once. |
 | Body and dense UI | Body 14/1.55. Dense UI (controls, tabs, example links, table cells, nav) is the kit's `--text-sm`: 13px. Nothing a person must read to act is below 13px. |
 | Metadata | 12/1.4 (`--zk-type-label-size`). Counts, captions, eyebrow labels, timestamps. Never essential copy or a link people need. |
