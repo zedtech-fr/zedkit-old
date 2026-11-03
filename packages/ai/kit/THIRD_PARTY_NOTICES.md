@@ -5,7 +5,7 @@ repositories (verified by diff at vendoring time; changes are listed under Modif
 every subagent in this kit is first-party zedkit work (MIT) and is not
 covered here: `audit`, `ground-truth`, `parallel-work`, `definition-of-done`,
 `adversarial-tests`, `rules-upkeep`, `persona-review`, `setup-ai`, `use-zedkit`,
-`review`, `plan`, `challenge`, `orchestrate`. Each upstream's licence file is kept next to the skills: see
+`review`, `plan`, `challenge`, `orchestrate`, `evidence-grounded-analysis`. Each upstream's licence file is kept next to the skills: see
 `skills/LICENSE-*-*`.
 
 ## Ponytail skills (6) — MIT
