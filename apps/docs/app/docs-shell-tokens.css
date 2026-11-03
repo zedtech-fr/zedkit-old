@@ -4,16 +4,17 @@
 }
 
 /*
- * Dark chrome: fumadocs 80%/50% fills read Tide muted too faint.
- * Pin the tokens those utilities inherit; keep specimens on ThemeScope.
+ * Dark chrome: fumadocs 80%/50% fills read muted too faint. Lift the nav
+ * text to the identity foreground and take fills from identity tokens
+ * (no fixed hue); specimens stay on ThemeScope.
  */
 html.dark[data-identity] #nd-nav,
 html.dark[data-identity] #nd-mobile-nav {
-  --muted-foreground: 0 0% 96%;
-  --color-fd-muted-foreground: #f4f6f8;
-  --color-muted-foreground: #f4f6f8;
-  --color-fd-background: #121826;
-  --color-fd-secondary: #1d263a;
+  --muted-foreground: var(--foreground);
+  --color-fd-muted-foreground: hsl(var(--foreground));
+  --color-muted-foreground: hsl(var(--foreground));
+  --color-fd-background: hsl(var(--background));
+  --color-fd-secondary: hsl(var(--secondary));
 }
 
 html.dark[data-identity] #home-page [data-slot="tabs-trigger"][data-state="active"] {
