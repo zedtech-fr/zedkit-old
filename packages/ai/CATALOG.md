@@ -27,8 +27,9 @@ for (const action of result.value) console.log(action.kind, action.path);
 
 CLI equivalent: `zedkit-ai init .` (`--provider cursor,claude,codex,all`; `--target` is an alias; `--adopt` keeps colliding user files and skips identical kit copies; run `--help` for every provider id)
 
-Presets: `starter` (onboard + review; default), `core` (planning and
-implement entry points), `full` (every skill).
+Presets: `starter` (onboard + review; default), `setup` (starter plus domain,
+review lenses, retro, rules-upkeep, and product/UI/copy subagents), `core`
+(planning and implement entry points), `full` (every skill).
 
 Providers: `cursor` (rules file, skills link or per-skill links inside a
 real `.cursor/skills` dir, agents and commands as real-file copies),
