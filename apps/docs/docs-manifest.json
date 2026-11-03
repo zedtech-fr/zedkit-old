@@ -523,7 +523,9 @@
       "demo": "GlassSurfaceDemo",
       "examples": {
         "Hero": "HeroDemo",
-        "Closing call to action": "CtaBandDemo"
+        "Closing call to action": "CtaBandDemo",
+        "Feature grid": "FeatureGridDemo",
+        "Steps": "HowItWorksDemo"
       }
     },
     "Switch the visual identity with one attribute": {

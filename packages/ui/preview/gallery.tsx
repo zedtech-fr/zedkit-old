@@ -83,7 +83,7 @@ import {
   WizardSteps,
   createDataTableColumns,
 } from "#index.js";
-import { CtaBand, GlassSurface, Hero } from "#marketing/index.js";
+import { CtaBand, FeatureGrid, GlassSurface, Hero, HowItWorks } from "#marketing/index.js";
 import { X } from "lucide-react";
 import { FormDemo } from "./form-demo.js";
 
@@ -416,6 +416,23 @@ export function Gallery() {
                 </Button>
               </>
             }
+          />
+          <FeatureGrid
+            title="Built for the shop you already run"
+            description="Add live features next to it, without replatforming."
+            features={[
+              { title: "Live stock", description: "Counts follow every sale." },
+              { title: "Personal offers", description: "Each visitor sees what fits." },
+              { title: "Shopping assistant", description: "Answers from your catalog." },
+            ]}
+          />
+          <HowItWorks
+            title="Live in three steps"
+            steps={[
+              { title: "Create an account", description: "No card needed." },
+              { title: "Create a key", description: "A staging key takes a minute." },
+              { title: "See your first event", description: "It shows up in the console." },
+            ]}
           />
           <CtaBand
             title="Try it on a staging key"

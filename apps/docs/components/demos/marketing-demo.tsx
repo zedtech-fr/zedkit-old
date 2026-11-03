@@ -1,5 +1,5 @@
 import { Button, Heading, Stack, Text } from "@zedtech/zedkit-ui";
-import { CtaBand, GlassSurface, Hero } from "@zedtech/zedkit-ui/marketing";
+import { CtaBand, FeatureGrid, GlassSurface, Hero, HowItWorks } from "@zedtech/zedkit-ui/marketing";
 import { marketingCopy } from "@/components/demos/i18n/marketing-copy";
 
 export function GlassSurfaceDemo() {
@@ -45,4 +45,14 @@ export function HeroDemo() {
 export function CtaBandDemo() {
   const { cta } = marketingCopy;
   return <CtaBand title={cta.title} description={cta.description} actions={<Button size="lg">{cta.action}</Button>} />;
+}
+
+export function FeatureGridDemo() {
+  const { features } = marketingCopy;
+  return <FeatureGrid title={features.title} description={features.description} features={[...features.items]} />;
+}
+
+export function HowItWorksDemo() {
+  const { steps } = marketingCopy;
+  return <HowItWorks title={steps.title} steps={[...steps.items]} />;
 }

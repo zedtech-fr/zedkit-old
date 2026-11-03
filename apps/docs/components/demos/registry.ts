@@ -85,7 +85,7 @@ import { ToggleDemo } from "./toggle-demo";
 import { ValidatedFormDemo } from "./validated-form-demo";
 import { TypographyDemo } from "./typography-demo";
 import { UpdatedAgoDemo } from "./updated-ago-demo";
-import { CtaBandDemo, GlassSurfaceDemo, HeroDemo } from "./marketing-demo";
+import { CtaBandDemo, FeatureGridDemo, GlassSurfaceDemo, HeroDemo, HowItWorksDemo } from "./marketing-demo";
 import { WizardComposedDemo } from "./wizard-composed-demo";
 import { WizardDemo } from "./wizard-demo";
 import { WizardSoloDemo } from "./wizard-solo-demo";
@@ -234,8 +234,10 @@ export const demoRegistry = {
   TypographyDemo: { Demo: TypographyDemo, file: "typography-demo.tsx" },
   UpdatedAgoDemo: { Demo: UpdatedAgoDemo, file: "updated-ago-demo.tsx" },
   CtaBandDemo: { Demo: CtaBandDemo, file: "marketing-demo.tsx" },
+  FeatureGridDemo: { Demo: FeatureGridDemo, file: "marketing-demo.tsx" },
   GlassSurfaceDemo: { Demo: GlassSurfaceDemo, file: "marketing-demo.tsx" },
   HeroDemo: { Demo: HeroDemo, file: "marketing-demo.tsx" },
+  HowItWorksDemo: { Demo: HowItWorksDemo, file: "marketing-demo.tsx" },
   WizardComposedDemo: { Demo: WizardComposedDemo, file: "wizard-composed-demo.tsx" },
   WizardDemo: { Demo: WizardDemo, file: "wizard-demo.tsx" },
   WizardSoloDemo: { Demo: WizardSoloDemo, file: "wizard-solo-demo.tsx" },
