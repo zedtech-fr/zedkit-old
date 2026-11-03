@@ -123,23 +123,33 @@ done
 # Client gzip of dist/*.js (ui kit + ai installer): npm tarball size, not what
 # a browser downloads. Docs first-load JS is checked separately from the
 # static export (see apps/docs/scripts/check-first-load-budget.mjs).
+# Optional third argument: a subdirectory of dist/ to measure on its own
+# (ui: dist/marketing). The main budget then leaves that subdirectory out.
 size_budget() {
-  local name="$1" max="$2"
+  local name="$1" max="$2" sub="${3:-}"
   local dir="$tmp/$name/unpacked/package/dist"
   [ -d "$dir" ] || { echo "$name: size budget skipped (no dist/)"; return; }
-  local bytes
-  bytes="$(find "$dir" -name '*.js' -print0 | sort -z | xargs -0 cat | gzip -c | wc -c)"
+  local bytes label="$name"
+  if [ -n "$sub" ]; then
+    [ -d "$dir/$sub" ] || { echo "$name/$sub: size budget skipped (no dist/$sub)"; return; }
+    label="$name/$sub"
+    bytes="$(find "$dir/$sub" -name '*.js' -print0 | sort -z | xargs -0 cat | gzip -c | wc -c)"
+  else
+    bytes="$(find "$dir" -name '*.js' -not -path "$dir/marketing/*" -print0 | sort -z | xargs -0 cat | gzip -c | wc -c)"
+  fi
   if [ "$bytes" -gt "$max" ]; then
-    echo "$name: gzip(dist/*.js) is $bytes bytes, budget $max"
+    echo "$label: gzip(dist/*.js) is $bytes bytes, budget $max"
     fail=1
   else
-    echo "$name: size $bytes / $max ok"
+    echo "$label: size $bytes / $max ok"
   fi
 }
 # Measured 42212 on 2 Nov 2026 (identity tokens, route modal, ThemeScope ref and nested-identity handling);
 # the previous 40800 was already exceeded at 41771 before this change. Keep roughly 2% headroom.
 # Raised from 43100 to 43500 on 3 Nov 2026: measured 43137 with the OptionCard check indicator.
 size_budget ui 43500
+# Marketing entry (separate from the main budget); measured 785 on 3 Nov 2026 with GlassSurface only.
+size_budget ui 1500 marketing
 size_budget ai 9800
 
 if [ -f apps/docs/out/index.html ]; then

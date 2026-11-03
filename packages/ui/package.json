@@ -46,6 +46,10 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./marketing": {
+      "types": "./dist/marketing/index.d.ts",
+      "import": "./dist/marketing/index.js"
+    },
     "./styles.css": "./src/styles.css",
     "./package.json": "./package.json"
   },

@@ -456,7 +456,11 @@ function barrelExports(indexPath) {
   return new Set(parseBarrelExports(readFileSync(indexPath, "utf8"), indexPath, errors));
 }
 
-const uiExports = barrelExports(join(ROOT, "packages", "ui", "src", "index.ts"));
+// The marketing entry (`@zedtech/zedkit-ui/marketing`) is a second barrel of the same package.
+const uiExports = new Set([
+  ...barrelExports(join(ROOT, "packages", "ui", "src", "index.ts")),
+  ...barrelExports(join(ROOT, "packages", "ui", "src", "marketing", "index.ts")),
+]);
 const registryText = readFileSync(join(APP, "components", "demos", "registry.ts"), "utf8");
 const registryEntries = new Map();
 for (const line of registryText.split("\n")) {

@@ -515,6 +515,13 @@
         "Pricing walkthrough": "ScrollScenesPricingDemo"
       }
     },
+    "Compose a public marketing page": {
+      "package": "@zedtech/zedkit-ui",
+      "component": "GlassSurface",
+      "props": "GlassSurfaceProps",
+      "source": "marketing/glass-surface.tsx",
+      "demo": "GlassSurfaceDemo"
+    },
     "Switch the visual identity with one attribute": {
       "package": "@zedtech/zedkit-ui",
       "component": "IdentitySwitcher",

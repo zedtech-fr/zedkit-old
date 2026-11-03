@@ -1844,3 +1844,25 @@ applyIdentityTokenSheet(
 ```
 
 
+
+## Compose a public marketing page
+
+- Import: `@zedtech/zedkit-ui/marketing` — `GlassSurface`, `glassSurfaceVariants`, `GlassSurfaceProps`
+- Wraps: none (theme tokens, `class-variance-authority`)
+- Status: alpha
+- Short name: Marketing
+- Audience: Teams building a public landing page or pricing page on the same tokens and identities as their app.
+- Purpose: Presentational page sections that follow the active identity, so a public site and the console share one look. Strings are props.
+- When to use: For a signed-out home, pricing or product page built from the kit's tokens (frosted under the glass identity, plain cards elsewhere).
+- When not to use: For app screens — use `Card`, `PageHeader` and `Section` instead; for full-page bands use `Section` with `bleed`.
+- See also: `Theme an admin app (dark/light included)`
+- A11y: Surfaces render a plain element (`div`, `section`, `article` or `li`); pass `aria-label` or a heading inside when it is a landmark. Text sits on the card colour, so contrast follows the identity tokens; under `prefers-reduced-transparency` the glass identity turns surfaces near-solid.
+- Troubleshooting: Surfaces look flat — the identity in use is not `glass`; set `data-identity="glass"` on `<html>`. Classes missing — the `@source` line must scan the kit's `src/**` (the marketing folder is included).
+
+```ts
+import { GlassSurface } from "@zedtech/zedkit-ui/marketing";
+
+<GlassSurface as="section" aria-label="Plans" tone="raised" padding="lg">
+  Plans
+</GlassSurface>;
+```
