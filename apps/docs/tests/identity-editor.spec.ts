@@ -2,7 +2,6 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { DEFAULT_IDENTITY } from "../lib/default-identity";
 import { assertA11yGate } from "./a11y-helpers";
-import { persistDocsSiteLook } from "./identity-helpers";
 
 const PAGE = "/features/identity-editor";
 /** The site's own light/dark switch (header), which is separate from the editor's Preview dark. */
