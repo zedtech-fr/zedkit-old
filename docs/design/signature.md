@@ -48,6 +48,8 @@ Five named motions (tokens in `signature-motion.css`; utilities `motion-*`). Ide
 | **glide** | `motion-glide` | Panels, sheets, layout shift | `--zk-motion-glide-duration` |
 | **feedback** | `motion-feedback` | Hover, press, colour transitions | `--zk-motion-feedback-duration` |
 
+Domain preview compositions (D4): commerce, SaaS dashboard, editorial, booking — see `@zedtech/zedkit-ui/marketing` (`BriefSpecimen`, `selectSpecimenDomain`).
+
 Scroll reveals and hero choreography also use `motion.css` (`animate-fade-up`, `hover-lift`, `hover-press`). **`prefers-reduced-motion: reduce`** disables displacement and loops everywhere.
 
 Constants: `signatureMotionClass` in `@zedtech/zedkit-ui`.
