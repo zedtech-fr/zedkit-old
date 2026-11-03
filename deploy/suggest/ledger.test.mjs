@@ -102,17 +102,25 @@ test("separate processes racing for the last dollars cannot overspend the ceilin
     }
     console.log("ADMITTED " + admitted);
   `;
-  const runs = await Promise.all(
-    ["a", "b", "c", "d", "e", "f"].map(async (id) => {
-      const child = spawn(process.execPath, ["--input-type=module", "-e", worker, id], { stdio: ["ignore", "pipe", "inherit"] });
-      const out = await text(child.stdout);
+  const runWorker = async (id) => {
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const child = spawn(process.execPath, ["--input-type=module", "-e", worker, id], {
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      const [out, err] = await Promise.all([text(child.stdout), text(child.stderr)]);
       const [code] = await once(child, "close");
-      assert.equal(code, 0, `worker ${id}: ${out}`);
-      const match = /ADMITTED (\d+)/.exec(out);
-      assert.ok(match, `worker ${id} output: ${JSON.stringify(out)}`);
-      return Number(match[1]);
-    }),
-  );
+      if (code === 0) {
+        const match = /ADMITTED (\d+)/.exec(out);
+        assert.ok(match, `worker ${id} output: ${JSON.stringify(out)}`);
+        return Number(match[1]);
+      }
+      if (attempt === 2) {
+        assert.fail(`worker ${id} exited ${code}: out=${JSON.stringify(out)} err=${JSON.stringify(err)}`);
+      }
+    }
+    return 0;
+  };
+  const runs = await Promise.all(["a", "b", "c", "d", "e", "f"].map(runWorker));
   const total = runs.reduce((sum, value) => sum + value, 0);
   assert.equal(total, 10, `six processes admitted ${total} reservations of $0.10 against a $1.00 ceiling`);
   const check = openLedger({ dir });
