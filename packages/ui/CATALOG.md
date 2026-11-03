@@ -1390,13 +1390,22 @@ import { Container, Section } from "@zedtech/zedkit-ui";
 - Examples: Simple, Heading styles on a link (asChild)
 - A11y: Keep one `h1` per page; `asChild` merges styles onto the child — keep the outline meaningful.
 - Registry: typography
+- Utilities: `text-zk-type-*`, `motion-reveal`, `motion-settle`, `motion-emphasis`, `motion-glide`, `motion-feedback` (class names in `styles.css`, not JS imports)
 - Troubleshooting: Wrong tag in the outline — `level` picks the size but `as` picks the tag; set both when they differ. Anchor hidden under a sticky header — heading scroll margin comes from the `--spacing-heading-scroll` theme token.
 
 ```ts
-import { Heading, Text, typeRoleClass } from "@zedtech/zedkit-ui";
+import {
+  Heading,
+  Text,
+  typeRoleClass,
+  signatureMotionClass,
+  headingLevelDefaultRole,
+  type TypeRole,
+  type SignatureMotion,
+} from "@zedtech/zedkit-ui";
 <Heading level={1} typeRole="display">Page title</Heading>
 <Heading level={2} as="div">Styled as h2, neutral tag</Heading>
-<Text>Body copy.</Text>
+<Text typeRole="body">Body copy.</Text>
 <Text variant="muted">Secondary copy.</Text>
 ```
 

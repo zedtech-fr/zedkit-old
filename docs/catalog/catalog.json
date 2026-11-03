@@ -4602,11 +4602,11 @@
           "whenToUse": "For every heading and paragraph in kit UI.",
           "whenNotToUse": "For raw HTML emails or markdown — style those separately.",
           "derivedFrom": null,
-          "example": "import { Heading, Text, typeRoleClass } from \"@zedtech/zedkit-ui\";\n<Heading level={1} typeRole=\"display\">Page title</Heading>\n<Heading level={2} as=\"div\">Styled as h2, neutral tag</Heading>\n<Text>Body copy.</Text>\n<Text variant=\"muted\">Secondary copy.</Text>",
+          "example": "import {\n  Heading,\n  Text,\n  typeRoleClass,\n  signatureMotionClass,\n  headingLevelDefaultRole,\n  type TypeRole,\n  type SignatureMotion,\n} from \"@zedtech/zedkit-ui\";\n<Heading level={1} typeRole=\"display\">Page title</Heading>\n<Heading level={2} as=\"div\">Styled as h2, neutral tag</Heading>\n<Text typeRole=\"body\">Body copy.</Text>\n<Text variant=\"muted\">Secondary copy.</Text>",
           "examples": [
             {
               "title": "Simple",
-              "code": "import { Heading, Text, typeRoleClass } from \"@zedtech/zedkit-ui\";\n<Heading level={1} typeRole=\"display\">Page title</Heading>\n<Heading level={2} as=\"div\">Styled as h2, neutral tag</Heading>\n<Text>Body copy.</Text>\n<Text variant=\"muted\">Secondary copy.</Text>"
+              "code": "import {\n  Heading,\n  Text,\n  typeRoleClass,\n  signatureMotionClass,\n  headingLevelDefaultRole,\n  type TypeRole,\n  type SignatureMotion,\n} from \"@zedtech/zedkit-ui\";\n<Heading level={1} typeRole=\"display\">Page title</Heading>\n<Heading level={2} as=\"div\">Styled as h2, neutral tag</Heading>\n<Text typeRole=\"body\">Body copy.</Text>\n<Text variant=\"muted\">Secondary copy.</Text>"
             },
             {
               "title": "Heading styles on a link (asChild)",
