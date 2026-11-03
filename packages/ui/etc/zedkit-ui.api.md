@@ -1626,6 +1626,9 @@ export type ZedkitUiMessages = {
     justNow: string;
     pickDate: string;
     pickDateRange: string;
+    menu: string;
+    mainNavigation: string;
+    language: string;
     locale: "en" | "fr";
 };
 

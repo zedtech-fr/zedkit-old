@@ -1,5 +1,14 @@
 import { Button, Heading, Stack, Text } from "@zedtech/zedkit-ui";
-import { CtaBand, FeatureGrid, GlassSurface, Hero, HowItWorks } from "@zedtech/zedkit-ui/marketing";
+import {
+  CtaBand,
+  FeatureGrid,
+  GlassSurface,
+  Hero,
+  HowItWorks,
+  LocaleSwitch,
+  MarketingFooter,
+  MarketingHeader,
+} from "@zedtech/zedkit-ui/marketing";
 import { marketingCopy } from "@/components/demos/i18n/marketing-copy";
 
 export function GlassSurfaceDemo() {
@@ -55,4 +64,65 @@ export function FeatureGridDemo() {
 export function HowItWorksDemo() {
   const { steps } = marketingCopy;
   return <HowItWorks title={steps.title} steps={[...steps.items]} />;
+}
+
+export function MarketingChromeDemo() {
+  const { chrome } = marketingCopy;
+  return (
+    <Stack gap={4} className="min-w-0">
+      <MarketingHeader
+        sticky={false}
+        brand={
+          <a href="#chrome" className="inline-flex min-h-11 items-center font-semibold">
+            {chrome.brand}
+          </a>
+        }
+        links={[
+          <a key="docs" href="#chrome">
+            {chrome.links.docs}
+          </a>,
+          <a key="pricing" href="#chrome">
+            {chrome.links.pricing}
+          </a>,
+        ]}
+        actions={<Button size="sm">{chrome.signUp}</Button>}
+      />
+      <MarketingFooter
+        brand={<Text as="span" className="font-semibold">{chrome.brand}</Text>}
+        description={chrome.tagline}
+        columns={[
+          {
+            title: chrome.product,
+            links: [
+              <a key="docs" href="#chrome">
+                {chrome.links.docs}
+              </a>,
+              <a key="pricing" href="#chrome">
+                {chrome.links.pricing}
+              </a>,
+            ],
+          },
+          {
+            title: chrome.company,
+            links: [
+              <a key="about" href="#chrome">
+                {chrome.about}
+              </a>,
+            ],
+          },
+        ]}
+        legal={<Text as="span" variant="muted">{chrome.legal}</Text>}
+      />
+    </Stack>
+  );
+}
+
+export function LocaleSwitchDemo() {
+  const { chrome } = marketingCopy;
+  return (
+    <LocaleSwitch
+      current="en"
+      locales={chrome.locales.map((locale) => ({ ...locale, href: `#${locale.code}` }))}
+    />
+  );
 }

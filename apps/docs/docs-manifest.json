@@ -525,7 +525,9 @@
         "Hero": "HeroDemo",
         "Closing call to action": "CtaBandDemo",
         "Feature grid": "FeatureGridDemo",
-        "Steps": "HowItWorksDemo"
+        "Steps": "HowItWorksDemo",
+        "Header and footer": "MarketingChromeDemo",
+        "Language switch": "LocaleSwitchDemo"
       }
     },
     "Switch the visual identity with one attribute": {

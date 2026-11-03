@@ -1,9 +1,20 @@
 import { render, screen } from "@testing-library/react";
 import { axe } from "vitest-axe";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import * as Marketing from "#marketing/index.js";
-import { CtaBand, FeatureGrid, GlassSurface, Hero, HowItWorks } from "#marketing/index.js";
+import { userEvent } from "@testing-library/user-event";
+import { ZedkitUiProvider, zedkitUiMessagesFr } from "#index.js";
+import {
+  CtaBand,
+  FeatureGrid,
+  GlassSurface,
+  Hero,
+  HowItWorks,
+  LocaleSwitch,
+  MarketingFooter,
+  MarketingHeader,
+} from "#marketing/index.js";
 import { assertNoValueArbitraries } from "./no-arbitraries.js";
 
 describe("marketing entry", () => {
@@ -189,6 +200,136 @@ describe("HowItWorks", () => {
         <FeatureGrid title="Features" features={[{ title: "A", description: "a" }, { title: "B" }]} />
         <HowItWorks title="Steps" steps={[{ title: "One" }, { title: "Two", description: "b" }]} />
       </main>,
+    );
+    for (const node of container.querySelectorAll("[class]")) {
+      assertNoValueArbitraries(node.getAttribute("class") ?? "");
+    }
+    expect((await axe(container)).violations).toEqual([]);
+  });
+});
+
+const links = [<a key="a" href="/docs">Docs</a>, <a key="b" href="/pricing" aria-current="page">Pricing</a>];
+
+describe("MarketingHeader", () => {
+  it("renders brand, a named main navigation and actions", () => {
+    render(<MarketingHeader brand={<a href="/">Harbor</a>} links={links} actions={<a href="/signin">Sign in</a>} />);
+    expect(screen.getByRole("banner").getAttribute("data-slot")).toBe("marketing-header");
+    expect(screen.getAllByRole("navigation", { name: "Main navigation" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("link", { name: "Docs" })).toHaveLength(2);
+    expect(screen.getAllByRole("link", { name: "Sign in" })).toHaveLength(2);
+    expect(screen.getByText("Menu")).toBeTruthy();
+  });
+
+  it("opens the phone menu from a native disclosure and speaks French through the provider", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <ZedkitUiProvider messages={zedkitUiMessagesFr}>
+        <MarketingHeader brand="Harbor" links={links} />
+      </ZedkitUiProvider>,
+    );
+    const details = container.querySelector("details");
+    expect(details?.open).toBe(false);
+    await user.click(screen.getByText("Menu"));
+    expect(details?.open).toBe(true);
+    expect(screen.getAllByRole("navigation", { name: "Navigation principale" }).length).toBeGreaterThan(0);
+  });
+
+  it("is sticky by default and can opt out; omits empty parts", () => {
+    const { container, rerender } = render(<MarketingHeader brand="Harbor" />);
+    const header = container.querySelector("header");
+    expect(header?.className).toContain("sticky");
+    expect(container.querySelector("nav")).toBeNull();
+    expect(container.querySelector("[data-slot='marketing-header-actions']")).toBeNull();
+    rerender(<MarketingHeader brand="Harbor" sticky={false} />);
+    expect(container.querySelector("header")?.className).not.toContain("sticky");
+  });
+});
+
+describe("MarketingFooter", () => {
+  it("renders brand, description, labelled link columns and the legal line", () => {
+    render(
+      <MarketingFooter
+        brand={<a href="/">Harbor</a>}
+        description="Live features for your shop."
+        columns={[
+          { title: "Product", links },
+          { title: "Company", links: [<a key="c" href="/about">About</a>] },
+        ]}
+        legal={<p>© 2026 Harbor</p>}
+      />,
+    );
+    expect(screen.getByRole("contentinfo").getAttribute("data-slot")).toBe("marketing-footer");
+    expect(screen.getByRole("navigation", { name: "Product" })).toBeTruthy();
+    expect(screen.getByRole("navigation", { name: "Company" })).toBeTruthy();
+    expect(screen.getByText("© 2026 Harbor")).toBeTruthy();
+    expect(screen.getByText("Live features for your shop.")).toBeTruthy();
+  });
+
+  it("renders with nothing but a legal line", () => {
+    const { container } = render(<MarketingFooter legal={<p>© 2026</p>} />);
+    expect(container.querySelector("nav")).toBeNull();
+    expect(screen.getByText("© 2026")).toBeTruthy();
+  });
+});
+
+describe("LocaleSwitch", () => {
+  const locales = [
+    { code: "en", label: "English", href: "/en" },
+    { code: "fr", label: "Français", href: "/fr" },
+  ];
+
+  it("marks the current language and sets lang on each item", () => {
+    render(<LocaleSwitch locales={locales} current="fr" />);
+    expect(screen.getByRole("navigation", { name: "Language" })).toBeTruthy();
+    const fr = screen.getByRole("link", { name: "Français" });
+    expect(fr.getAttribute("aria-current")).toBe("true");
+    expect(fr.getAttribute("lang")).toBe("fr");
+    expect(fr.getAttribute("hreflang")).toBe("fr");
+    expect(screen.getByRole("link", { name: "English" }).getAttribute("aria-current")).toBeNull();
+  });
+
+  it("renders buttons without an href and calls onSelect with the code", async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    render(
+      <LocaleSwitch
+        locales={[
+          { code: "en", label: "English" },
+          { code: "fr", label: "Français" },
+        ]}
+        current="en"
+        onSelect={onSelect}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Français" }));
+    expect(onSelect).toHaveBeenCalledWith("fr");
+    expect(screen.getByRole("button", { name: "English" }).getAttribute("aria-current")).toBe("true");
+  });
+
+  it("calls onSelect from a link too, and the name follows the provider language", async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn<(code: string) => void>();
+    render(
+      <ZedkitUiProvider messages={zedkitUiMessagesFr}>
+        <LocaleSwitch locales={locales} current="en" onSelect={onSelect} />
+      </ZedkitUiProvider>,
+    );
+    expect(screen.getByRole("navigation", { name: "Langue" })).toBeTruthy();
+    const link = screen.getByRole("link", { name: "Français" });
+    link.addEventListener("click", (event) => event.preventDefault());
+    await user.click(link);
+    expect(onSelect).toHaveBeenCalledWith("fr");
+  });
+
+  it("has no axe violations inside a page frame", async () => {
+    const { container } = render(
+      <>
+        <MarketingHeader brand={<a href="/">Harbor</a>} links={links} actions={<LocaleSwitch locales={locales} current="en" />} />
+        <main>
+          <Hero title="Keep your shop" />
+        </main>
+        <MarketingFooter brand={<a href="/">Harbor</a>} columns={[{ title: "Product", links }]} legal={<p>© 2026</p>} />
+      </>,
     );
     for (const node of container.querySelectorAll("[class]")) {
       assertNoValueArbitraries(node.getAttribute("class") ?? "");

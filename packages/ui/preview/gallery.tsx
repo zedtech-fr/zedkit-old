@@ -83,7 +83,16 @@ import {
   WizardSteps,
   createDataTableColumns,
 } from "#index.js";
-import { CtaBand, FeatureGrid, GlassSurface, Hero, HowItWorks } from "#marketing/index.js";
+import {
+  CtaBand,
+  FeatureGrid,
+  GlassSurface,
+  Hero,
+  HowItWorks,
+  LocaleSwitch,
+  MarketingFooter,
+  MarketingHeader,
+} from "#marketing/index.js";
 import { X } from "lucide-react";
 import { FormDemo } from "./form-demo.js";
 
@@ -399,6 +408,26 @@ export function Gallery() {
         </GallerySection>
 
         <GallerySection id="marketing" title="Marketing">
+          <MarketingHeader
+            sticky={false}
+            brand={<a href="#marketing" className="inline-flex min-h-11 items-center font-semibold">Harbor</a>}
+            links={[
+              <a key="docs" href="#marketing">Docs</a>,
+              <a key="pricing" href="#marketing">Pricing</a>,
+            ]}
+            actions={
+              <>
+                <LocaleSwitch
+                  locales={[
+                    { code: "en", label: "EN", href: "#marketing" },
+                    { code: "fr", label: "FR", href: "#marketing" },
+                  ]}
+                  current="en"
+                />
+                <Button size="sm">Create an account</Button>
+              </>
+            }
+          />
           <div className="grid gap-4 sm:grid-cols-3">
             <GlassSurface>Plain surface</GlassSurface>
             <GlassSurface tone="raised">Raised surface</GlassSurface>
@@ -438,6 +467,15 @@ export function Gallery() {
             title="Try it on a staging key"
             description="Sign up, create a key, see your first event in minutes."
             actions={<Button size="lg">Create an account</Button>}
+          />
+          <MarketingFooter
+            brand={<span className="font-semibold">Harbor</span>}
+            description="Live features for the shop you already run."
+            columns={[
+              { title: "Product", links: [<a key="docs" href="#marketing">Docs</a>, <a key="pricing" href="#marketing">Pricing</a>] },
+              { title: "Company", links: [<a key="about" href="#marketing">About</a>] },
+            ]}
+            legal={<p>© 2026 Harbor</p>}
           />
         </GallerySection>
       </div>
