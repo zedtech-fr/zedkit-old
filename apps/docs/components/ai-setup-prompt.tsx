@@ -56,7 +56,14 @@ function CopyPromptButton({ text }: { text: string }) {
 /** One-line Cursor prompt + copy control; used on the AI setup guide. */
 export function AiSetupPrompt() {
   return (
-    <Stack gap={2} className="not-prose rounded-lg border border-border bg-muted/40 p-4">
+    <Stack
+      gap={2}
+      className={
+        // not-prose is a fumadocs escape hatch, not a Tailwind utility.
+        // eslint-disable-next-line better-tailwindcss/no-unknown-classes
+        "not-prose rounded-lg border border-border bg-muted/40 p-4"
+      }
+    >
       <Text as="p" variant="muted" className="m-0">
         Paste this as the only message in a new Cursor chat at the repo root (agents should fetch{" "}
         <a href={AI_SETUP_LLMS_URL} className="underline underline-offset-2">
@@ -65,7 +72,7 @@ export function AiSetupPrompt() {
         ):
       </Text>
       <Stack gap={2} className="min-w-0 sm:flex-row sm:items-start sm:justify-between">
-        <pre className="min-w-0 flex-1 overflow-x-auto whitespace-pre-wrap break-words rounded-md bg-background px-3 py-2 font-mono text-sm">
+        <pre className="min-w-0 flex-1 overflow-x-auto rounded-md bg-background px-3 py-2 font-mono text-sm break-words whitespace-pre-wrap">
           {AI_SETUP_MINI_PROMPT}
         </pre>
         <CopyPromptButton text={AI_SETUP_MINI_PROMPT} />
