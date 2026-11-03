@@ -96,8 +96,10 @@ scripts inside `pnpm catalog:check`.
   CSS or HTML. One schema (`parseIdentityTokens`,
   `packages/ui/src/identity-tokens.ts`) validates in the browser and in the
   suggest service ([deploy/AGENTS.md](../../deploy/AGENTS.md)).
-  Parse whatever the service returns and fall back to the keyword match
-  (`lib/identity-editor-suggest.ts`).
+  The page's client is `lib/identity-assistant.ts`: it parses whatever the
+  service returns and turns every failure into a named outcome (`unavailable`
+  with its reason, shown by `UnavailableBanner`). There is no silent keyword
+  fallback: a failed generation says so and leaves the draft untouched.
 - Saved looks are local recipes (`lib/named-identities.ts`): re-validated on
   every read, no server copy. Changing the stored shape needs a version and a
   migration.
