@@ -4,4 +4,4 @@
  * "Back to default" returns here. A stored choice still wins. The kit's own
  * fallback stays "mist" (`identities[0]` in `@zedtech/zedkit-ui`).
  */
-export const DEFAULT_IDENTITY = "tide";
+export const DEFAULT_IDENTITY = "mist";
