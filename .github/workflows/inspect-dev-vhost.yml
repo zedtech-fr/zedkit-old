@@ -60,7 +60,7 @@ jobs:
         run: |
           ssh "$TARGET" "cd /srv/app; echo '[files]'; ls -1; echo '[start]'; docker inspect -f '{{json .Config.Cmd}} {{json .Config.Entrypoint}}' \$(docker compose ps -q caddy); echo '[mounts]'; docker inspect -f '{{range .Mounts}}{{.Source}} -> {{.Destination}}{{println}}{{end}}' \$(docker compose ps -q caddy); echo '[container Caddyfile hosts]'; docker compose exec -T caddy grep -n 'zedkit.app' /etc/caddy/Caddyfile; echo '[dev.caddy hosts]'; docker compose exec -T caddy grep -n 'zedkit.app' /etc/caddy/dev.caddy; echo '[wrapper]'; cat Caddyfile.dev-wrapper; echo '[override masked]'; sed -E 's/(KEY|TOKEN|SECRET|PASSWORD|API)([A-Za-z_]*)(:|=)[^ ]*/\1\2\3***/gi' compose.override.yaml" > host-wiring.txt || true
           cat host-wiring.txt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: dev-vhost
           path: |

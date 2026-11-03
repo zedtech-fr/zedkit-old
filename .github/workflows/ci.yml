@@ -84,7 +84,7 @@ jobs:
         run: |
           test -f coverage/coverage-summary.json || exit 0
           node scripts/coverage-summary.mjs coverage/coverage-summary.json >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: coverage
@@ -100,7 +100,7 @@ jobs:
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm --filter @zedtech/zedkit-ui smoke
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ui-gallery
           path: packages/ui/test-results/*.png
@@ -276,7 +276,7 @@ jobs:
           kill "$(cat /tmp/docs.pid)"
         env:
           DOCS_E2E_PROJECT: chromium
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: success()
         with:
           name: docs-home-smoke
