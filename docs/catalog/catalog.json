@@ -751,6 +751,124 @@
         }
       ]
     },
+    "@zedtech/zedkit-live": {
+      "catalog": "packages/live/CATALOG.md",
+      "keywords": [
+        "realtime",
+        "websocket",
+        "polling",
+        "reconnect",
+        "typescript",
+        "browser"
+      ],
+      "audience": "Apps that refresh data when something changes on a server, in any framework or none.",
+      "needs": [
+        {
+          "need": "Share one live feed between subscribers",
+          "import": "`@zedtech/zedkit-live` — `createLiveSource`, `LiveSource`, `LiveStatus`, `LiveListener`, `LiveHost`, `CreateLiveSourceOptions`",
+          "wraps": "`(none)`",
+          "status": "alpha",
+          "shortName": "LiveSource",
+          "audience": "Authors of a custom transport (SSE, a vendor channel) and code that consumes any source.",
+          "purpose": "Start the transport on the first subscriber, stop it on the last, expose status, and isolate listener errors.",
+          "whenToUse": "Wrapping a transport that is not polling or WebSocket, or typing a function that takes any live source.",
+          "whenNotToUse": "One-shot fetches; call the endpoint directly.",
+          "derivedFrom": null,
+          "example": "import { createLiveSource } from \"@zedtech/zedkit-live\";\n\nconst ticks = createLiveSource<number>((host) => {\n  host.setStatus(\"live\");\n  const id = setInterval(() => host.emit(Date.now()), 1000);\n  return () => clearInterval(id);\n});\nconst stop = ticks.subscribe((t) => console.log(t));",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "import { createLiveSource } from \"@zedtech/zedkit-live\";\n\nconst ticks = createLiveSource<number>((host) => {\n  host.setStatus(\"live\");\n  const id = setInterval(() => host.emit(Date.now()), 1000);\n  return () => clearInterval(id);\n});\nconst stop = ticks.subscribe((t) => console.log(t));"
+            }
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-live",
+                "exports": [
+                  "createLiveSource",
+                  "LiveSource",
+                  "LiveStatus",
+                  "LiveListener",
+                  "LiveHost",
+                  "CreateLiveSourceOptions"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "need": "Poll an endpoint as a live source",
+          "import": "`@zedtech/zedkit-live` — `pollingSource`, `PollingSourceOptions`",
+          "wraps": "`(none)`",
+          "status": "alpha",
+          "shortName": "pollingSource",
+          "audience": "Apps whose backend has no push channel, or that need a backup for one.",
+          "purpose": "Poll on an interval without overlap, back off on failure, abort on stop, and skip unchanged values.",
+          "whenToUse": "Dashboards and lists that tolerate a few seconds of delay.",
+          "whenNotToUse": "Sub-second updates; use a push transport.",
+          "derivedFrom": null,
+          "example": "import { pollingSource } from \"@zedtech/zedkit-live\";\n\nconst jobs = pollingSource({\n  intervalMs: 5000,\n  poll: (signal) => fetch(\"/api/jobs\", { signal }).then((r) => r.json()),\n  isEqual: (a, b) => JSON.stringify(a) === JSON.stringify(b),\n});",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "import { pollingSource } from \"@zedtech/zedkit-live\";\n\nconst jobs = pollingSource({\n  intervalMs: 5000,\n  poll: (signal) => fetch(\"/api/jobs\", { signal }).then((r) => r.json()),\n  isEqual: (a, b) => JSON.stringify(a) === JSON.stringify(b),\n});"
+            }
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-live",
+                "exports": [
+                  "pollingSource",
+                  "PollingSourceOptions"
+                ]
+              }
+            ]
+          },
+          "seeAlso": [
+            "Receive WebSocket messages with reconnect and polling backup"
+          ]
+        },
+        {
+          "need": "Receive WebSocket messages with reconnect and polling backup",
+          "import": "`@zedtech/zedkit-live` — `wsSource`, `WsSourceOptions`, `WsReconnectOptions`",
+          "wraps": "`(none)`",
+          "status": "alpha",
+          "shortName": "wsSource",
+          "audience": "Apps that want push updates and still work when the socket drops.",
+          "purpose": "Open a WebSocket on demand, reconnect with jittered exponential backoff, resolve the URL per attempt, and run a fallback source while it is down.",
+          "whenToUse": "Live lists and status pages behind a WebSocket endpoint.",
+          "whenNotToUse": "Guaranteed delivery; missed messages are not replayed, so make the fallback fetch current state.",
+          "derivedFrom": null,
+          "example": "import { pollingSource, wsSource } from \"@zedtech/zedkit-live\";\n\nconst events = wsSource<{ type: string }>({\n  url: async () => `wss://example.com/live?token=${await getToken()}`,\n  fallback: pollingSource({ intervalMs: 10_000, poll: () => fetchLatest() }),\n});\nconst stop = events.subscribe((event) => refresh(event));",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "import { pollingSource, wsSource } from \"@zedtech/zedkit-live\";\n\nconst events = wsSource<{ type: string }>({\n  url: async () => `wss://example.com/live?token=${await getToken()}`,\n  fallback: pollingSource({ intervalMs: 10_000, poll: () => fetchLatest() }),\n});\nconst stop = events.subscribe((event) => refresh(event));"
+            }
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-live",
+                "exports": [
+                  "wsSource",
+                  "WsSourceOptions",
+                  "WsReconnectOptions"
+                ]
+              }
+            ]
+          },
+          "seeAlso": [
+            "Poll an endpoint as a live source"
+          ]
+        }
+      ]
+    },
     "@zedtech/zedkit-nest": {
       "catalog": "packages/nest/CATALOG.md",
       "keywords": [

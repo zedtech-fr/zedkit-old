@@ -23,6 +23,7 @@ Each package PR adds its row here, following
 | `@zedtech/zedkit-seo` | robots, sitemaps, JSON-LD, metadata, llms.txt, slugs | [packages/seo/CATALOG.md](../../packages/seo/CATALOG.md) |
 | `@zedtech/zedkit-payload-access` | Payload role grants compiled to access functions | [packages/payload-access/CATALOG.md](../../packages/payload-access/CATALOG.md) |
 | `@zedtech/zedkit-payload-seo` | Payload SEO group field | [packages/payload-seo/CATALOG.md](../../packages/payload-seo/CATALOG.md) |
+| `@zedtech/zedkit-live` | live sources: polling, WebSocket with reconnect and backup | [packages/live/CATALOG.md](../../packages/live/CATALOG.md) |
 | `@zedtech/zedkit-quality` | UI lint preset, layer boundaries, strict tsconfig, hygiene bins | [packages/quality/CATALOG.md](../../packages/quality/CATALOG.md) |
 | `@zedtech/zedkit-devtools` | dev-only drawer: identity, flag overrides, locale, build info | [packages/devtools/CATALOG.md](../../packages/devtools/CATALOG.md) |
 | `@zedtech/zedkit-flags` | typed feature flags, server evaluation, React hooks | [packages/flags/CATALOG.md](../../packages/flags/CATALOG.md) |

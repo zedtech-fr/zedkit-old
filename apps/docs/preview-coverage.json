@@ -6,6 +6,7 @@
     "@zedtech/zedkit-devtools",
     "@zedtech/zedkit-nest",
     "@zedtech/zedkit-i18n",
+    "@zedtech/zedkit-live",
     "@zedtech/zedkit-observability",
     "@zedtech/zedkit-payload-access",
     "@zedtech/zedkit-payload-seo",

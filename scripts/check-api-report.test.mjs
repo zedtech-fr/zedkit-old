@@ -6,7 +6,7 @@ import test from "node:test";
 const root = join(import.meta.dirname, "..");
 const script = readFileSync(join(root, "scripts/check-api-report.sh"), "utf8");
 
-/** Every publishable workspace package under packages/* (15 today). */
+/** Every publishable workspace package under packages/* (16 today). */
 function packageDirs() {
   return readdirSync(join(root, "packages"), { withFileTypes: true })
     .filter((d) => d.isDirectory())
@@ -25,7 +25,7 @@ function entryPackagesFromScript() {
 
 test("check-api-report.sh lists every packages/* workspace package", () => {
   const want = packageDirs();
-  assert.equal(want.length, 15, "update this test if the workspace package count changes");
+  assert.equal(want.length, 16, "update this test if the workspace package count changes");
   const have = entryPackagesFromScript();
   assert.deepEqual(
     have,
