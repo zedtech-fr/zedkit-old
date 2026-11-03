@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import process from "node:process";
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -43,15 +43,9 @@ export function runEmptyRepoTutorial(dir) {
   return { initLines: init.out, validateOut: validate.out.trim() };
 }
 
-<<<<<<< HEAD
 /** Cursor easy path (/docs/ai/setup): setup + validate in a scratch repo cwd. */
 export function runCursorSetupTutorial(dir) {
   const setup = capture(["setup", ".", "--provider", "cursor"], dir);
-=======
-/** Cursor easy path: setup (adopt) + validate on an empty scratch repo. */
-export function runCursorSetupTutorial(dir) {
-  const setup = capture(["setup", dir, "--provider", "cursor"]);
->>>>>>> ee9b7054 (feat(ai,docs): Cursor one-paste setup page and agent markdown)
   if (setup.code !== 0) {
     throw new Error(`setup failed: ${setup.err || setup.out}`);
   }
@@ -61,7 +55,6 @@ export function runCursorSetupTutorial(dir) {
   for (const rel of [".agents/skills/setup-ai/SKILL.md", ".cursor/commands/setup-ai.md", ".cursor/rules/project.mdc"]) {
     if (!existsSync(join(dir, rel))) throw new Error(`setup missing ${rel}`);
   }
-<<<<<<< HEAD
   const validate = capture(["validate", "."], dir);
   if (validate.code !== 0 || validate.out.trim() !== "ok") {
     throw new Error(`validate after setup failed: ${validate.out} ${validate.err}`);
@@ -80,6 +73,9 @@ export function runCursorSetupTutorial(dir) {
 
 /** setup --adopt with team-owned .cursor paths before install. */
 export function runCursorSetupAdoptTutorial(dir) {
+  mkdirSync(join(dir, ".cursor/skills/team-own"), { recursive: true });
+  mkdirSync(join(dir, ".cursor/agents"), { recursive: true });
+  mkdirSync(join(dir, ".cursor/commands"), { recursive: true });
   writeFileSync(join(dir, ".cursor/skills/team-own/SKILL.md"), "team\n", "utf8");
   writeFileSync(join(dir, ".cursor/agents/explorer.md"), "custom explorer\n", "utf8");
   writeFileSync(join(dir, ".cursor/commands/review.md"), "custom review\n", "utf8");
@@ -93,12 +89,6 @@ export function runCursorSetupAdoptTutorial(dir) {
   if (readFileSync(join(dir, ".cursor/commands/review.md"), "utf8") !== "custom review\n") {
     throw new Error("setup should keep the user's .cursor/commands file");
   }
-=======
-  const validate = capture(["validate", dir]);
-  if (validate.code !== 0 || validate.out.trim() !== "ok") {
-    throw new Error(`validate after setup failed: ${validate.out} ${validate.err}`);
-  }
->>>>>>> ee9b7054 (feat(ai,docs): Cursor one-paste setup page and agent markdown)
 }
 
 /** Repo that already has AGENTS.md without the ladder section (tutorial scenario). */
