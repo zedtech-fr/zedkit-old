@@ -1875,3 +1875,24 @@ import { GlassSurface } from "@zedtech/zedkit-ui/marketing";
   Plans
 </GlassSurface>;
 ```
+
+## Preview an identity from a brief
+
+- Import: `@zedtech/zedkit-ui/marketing` — `BriefSpecimen`, `selectSpecimenDomain`, `SpecimenDomain`, domain specimens, `specimenMessagesEn`
+- Wraps: kit primitives inside `ThemeScope` (consumer supplies the look)
+- Status: alpha
+- Short name: Brief specimens
+- Audience: Identity preview flows that need a real composition matching the visitor's domain (commerce, SaaS, editorial, booking).
+- Purpose: Four interactive specimens plus keyword routing on a free-text brief.
+- When to use: Inside a scoped preview while generating or refining an identity.
+- When not to use: For production app screens — copy the patterns into your own routes.
+- See also: `Compose a public marketing page`
+- A11y: Each specimen exposes labels on lists, tables and status regions; mount inside an identity scope so tokens stay consistent.
+
+```ts
+import { BriefSpecimen, selectSpecimenDomain } from "@zedtech/zedkit-ui/marketing";
+
+selectSpecimenDomain("Hair salon booking"); // "service-booking"
+
+<BriefSpecimen brief="Independent newsroom" />;
+```
