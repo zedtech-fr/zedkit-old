@@ -122,3 +122,10 @@
 #demo [data-home-hero-visuals][data-identity="glass"] {
   --spacing: 0.26rem;
 }
+
+/* Phones: one 16px gutter for the site (no extra inset stacked inside the bands or the hero example). */
+@media (max-width: 40rem) {
+  :root[data-identity] {
+    --zk-page-gutter: 1rem;
+  }
+}
