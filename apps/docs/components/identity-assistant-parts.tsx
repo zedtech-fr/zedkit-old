@@ -75,6 +75,7 @@ export function BriefForm({
           maxLength={LIMITS.prompt}
           value={value}
           readOnly={busy}
+          className="scroll-mt-28 max-lg:[@media(min-height:48rem)]:scroll-mt-80"
           aria-describedby="identity-assistant-brief-hint"
           onChange={(event) => onValue(event.target.value)}
           onKeyDown={(event) => {
@@ -134,7 +135,14 @@ export function ViewSwitch({
       </Button>
       <Button ref={previewRef} type="button" variant="outline" aria-pressed={view === "preview"} className="flex-1" onClick={() => onView("preview")}>
         {copy.views.preview}
-        {waiting && view !== "preview" ? <Text as="span" aria-hidden="true" className="inline-block size-2 rounded-full bg-primary" /> : null}
+        {waiting && view !== "preview" ? (
+          <>
+            <Text as="span" aria-hidden="true" className="inline-block size-2 rounded-full bg-primary" />
+            <Text as="span" className="sr-only">
+              {copy.views.waitingSuffix}
+            </Text>
+          </>
+        ) : null}
       </Button>
     </Stack>
   );

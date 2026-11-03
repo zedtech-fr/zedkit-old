@@ -87,3 +87,8 @@ test("reset starts over", () => {
   const s = run({ type: "submit", requestId: "a", prompt: "calm" }, { type: "reset" });
   assert.deepEqual(s, initialSession);
 });
+
+test("a proposal carries the id this page sent, never one the service echoed", () => {
+  const s = run({ type: "submit", requestId: "mine", prompt: "calm" }, { type: "result", requestId: "mine", result: ok("echoed-by-the-service") });
+  assert.equal(s.proposal.requestId, "mine");
+});

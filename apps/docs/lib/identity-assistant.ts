@@ -71,17 +71,18 @@ export function trimHistory(turns: readonly Turn[]): Turn[] {
 function referencesOf(value: unknown): ReferenceReport[] {
   if (!Array.isArray(value)) return [];
   const out: ReferenceReport[] = [];
-  for (const row of value) {
+  // The service reports at most the links it was sent. A longer or wider report is not believed.
+  for (const row of value.slice(0, LIMITS.references)) {
     if (!row || typeof row !== "object") continue;
     const ref = row as Record<string, unknown>;
     if (typeof ref.url !== "string" || (ref.status !== "used" && ref.status !== "failed")) continue;
     out.push({
-      url: ref.url,
+      url: ref.url.slice(0, 200),
       status: ref.status,
       ...(ref.status === "used" ? { analysis: "text-only" as const } : {}),
-      ...(typeof ref.reason === "string" ? { reason: ref.reason } : {}),
-      ...(typeof ref.host === "string" ? { host: ref.host } : {}),
-      ...(typeof ref.title === "string" && ref.title ? { title: ref.title } : {}),
+      ...(typeof ref.reason === "string" ? { reason: ref.reason.slice(0, 40) } : {}),
+      ...(typeof ref.host === "string" ? { host: ref.host.slice(0, 80) } : {}),
+      ...(typeof ref.title === "string" && ref.title ? { title: ref.title.slice(0, 80) } : {}),
       ...(typeof ref.chars === "number" ? { chars: ref.chars } : {}),
     });
   }

@@ -94,3 +94,22 @@ test("status is free and says why generation is off, or that nothing could be re
   assert.deepEqual(await status(new TypeError("down")), { available: false, reason: "unreachable" });
   assert.deepEqual(await status(json(200, "junk")), { available: false, reason: "unavailable" });
 });
+
+test("a report is read as far as it is believed: at most the links that were sent, each field bounded", async () => {
+  const many = Array.from({ length: 10 }, (_, i) => ({ url: `https://${"a".repeat(300)}${i}.example.org/`, status: "failed", reason: "constructor".padEnd(200, "x"), title: "T".repeat(500), host: "h".repeat(500) }));
+  const out = await requestIdentity(input(), { fetchImpl: sends(json(200, { requestId: "request-0001", summary: "x", tokens: identityPresets.press, changed: [], references: many })).fetchImpl });
+  assert.equal(out.kind, "ok");
+  assert.equal(out.references.length, 3);
+  for (const ref of out.references) {
+    assert.ok(ref.url.length <= 200 && (ref.reason?.length ?? 0) <= 40 && (ref.title?.length ?? 0) <= 80 && (ref.host?.length ?? 0) <= 80);
+  }
+});
+
+test("a reason is worded from a closed list: nothing the service sends can name a property of Object", async () => {
+  const { referenceReason } = await import("../components/i18n/identity-assistant-copy.ts");
+  for (const reason of ["constructor", "__proto__", "toString", "status-99999", "status-abc", undefined]) {
+    assert.equal(referenceReason(reason), "it could not be read", String(reason));
+  }
+  assert.equal(referenceReason("status-404"), "the page answered with 404");
+  assert.equal(referenceReason("timeout"), "it took too long to answer");
+});

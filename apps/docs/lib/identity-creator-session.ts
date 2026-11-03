@@ -58,7 +58,7 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
           ...base,
           notice: null,
           references: result.references,
-          proposal: { requestId: result.requestId, prompt: state.pending.prompt, tokens: result.tokens, summary: result.summary, changed: result.changed },
+          proposal: { requestId: state.pending.requestId, prompt: state.pending.prompt, tokens: result.tokens, summary: result.summary, changed: result.changed },
         };
       }
       const references = "references" in result ? result.references : state.references;

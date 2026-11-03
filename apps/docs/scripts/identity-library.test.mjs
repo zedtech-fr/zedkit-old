@@ -6,6 +6,8 @@ import { identityPresets } from "@zedtech/zedkit-ui";
 import {
   LEGACY_KEY,
   LIBRARY_KEY,
+  LIBRARY_VERSION,
+  MAX_ITEMS,
   deleteIdentity,
   exportRecipe,
   freeLabel,
@@ -159,4 +161,30 @@ test("export is a named recipe, and import accepts it or bare tokens, nothing el
   assert.equal(importRecipe("nope"), null);
   assert.equal(importRecipe(JSON.stringify({ format: "zedkit-identity", tokens: { x: 1 } })), null);
   assert.equal(importRecipe("[]"), null);
+});
+
+test("a library written by a newer page is not edited: it is reported, and kept aside before any write", () => {
+  const storage = memory();
+  const future = JSON.stringify({ version: LIBRARY_VERSION + 1, items: [{ id: "n-a", label: "A", tokens: TOKENS }] });
+  storage.data.set(LIBRARY_KEY, future);
+  assert.equal(readLibrary(storage).problem, "corrupt");
+  assert.equal(saveIdentity(storage, { label: "Fresh", tokens: TOKENS }).ok, true);
+  assert.equal(storage.data.get("zk-identity-library-corrupt") ?? [...storage.data.values()].find((value) => value === future), future, "a copy of the newer value survives");
+});
+
+test("a runaway library is read up to the limit the editor enforces, and the rest is counted", () => {
+  const storage = memory();
+  const rows = Array.from({ length: MAX_ITEMS + 30 }, (_, i) => ({ id: `n-look-${i}`, label: `Look ${i}`, tokens: TOKENS }));
+  storage.data.set(LIBRARY_KEY, JSON.stringify({ version: LIBRARY_VERSION, items: rows }));
+  const read = readLibrary(storage);
+  assert.equal(read.items.length, MAX_ITEMS);
+  assert.equal(read.dropped, 30);
+});
+
+test("invisible and control characters do not make two labels look different", () => {
+  const storage = memory();
+  assert.equal(saveIdentity(storage, { label: "Atelier", tokens: TOKENS }).ok, true);
+  const again = saveIdentity(storage, { label: "Ate\u200blier\u0007", tokens: TOKENS });
+  assert.equal(again.ok, false);
+  assert.equal(again.reason, "exists");
 });

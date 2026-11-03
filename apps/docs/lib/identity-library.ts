@@ -45,7 +45,7 @@ export type SaveResult = { ok: true; item: SavedIdentity } | { ok: false; reason
 
 const EMPTY: LibraryRead = { items: [], dropped: 0 };
 
-const cleanLabel = (label: string) => label.replace(/\s+/g, " ").trim().slice(0, MAX_LABEL);
+const cleanLabel = (label: string) => label.replace(/[\p{Cc}\p{Cf}]/gu, "").replace(/\s+/g, " ").trim().slice(0, MAX_LABEL);
 const sameLabel = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 
 function slug(label: string): string {
@@ -92,14 +92,20 @@ function parseItem(value: unknown, now: number): SavedIdentity | undefined {
 
 function parseList(rows: unknown[], now: number): LibraryRead {
   const items: SavedIdentity[] = [];
-  let dropped = 0;
-  for (const row of rows) {
+  const ids = new Set<string>();
+  // A hand-edited or runaway value is read up to the limit the editor itself enforces; the rest is counted, not parsed.
+  let dropped = Math.max(0, rows.length - MAX_ITEMS);
+  for (const row of rows.slice(0, MAX_ITEMS)) {
     const item = parseItem(row, now);
-    if (item && !items.some((seen) => seen.id === item.id)) items.push(item);
-    else dropped += 1;
+    if (item && !ids.has(item.id)) {
+      ids.add(item.id);
+      items.push(item);
+    } else dropped += 1;
   }
   return { items, dropped };
 }
+
+const isNewer = (body: unknown) => typeof (body as { version?: unknown } | null)?.version === "number" && (body as { version: number }).version > LIBRARY_VERSION;
 
 /** The saved identities, from storage, validated. Never throws. */
 export function readLibrary(storage: StorageLike | undefined, now: number = Date.now()): LibraryRead {
@@ -111,6 +117,8 @@ export function readLibrary(storage: StorageLike | undefined, now: number = Date
     const body = json.ok ? json.value : undefined;
     const rows = body && typeof body === "object" ? (body as { version?: unknown; items?: unknown }).items : undefined;
     if (!json.ok || !Array.isArray(rows)) return { ...EMPTY, problem: "corrupt" };
+    // Written by a newer page: not understood, so not edited. The next write keeps a copy of it aside.
+    if (isNewer(body)) return { ...EMPTY, problem: "corrupt" };
     return parseList(rows, now);
   }
   const legacy = tryCatch(() => storage.getItem(LEGACY_KEY));
@@ -131,8 +139,8 @@ function writeLibrary(storage: StorageLike | undefined, items: SavedIdentity[]):
   const before = tryCatch(() => storage.getItem(LIBRARY_KEY));
   if (before.ok && before.value !== null) {
     const text = before.value;
-    const parsed = tryCatch(() => (JSON.parse(text) as { items?: unknown }).items);
-    if (!parsed.ok || !Array.isArray(parsed.value)) tryCatch(() => storage.setItem(CORRUPT_BACKUP_KEY, text));
+    const parsed = tryCatch(() => JSON.parse(text) as { items?: unknown; version?: unknown });
+    if (!parsed.ok || !Array.isArray(parsed.value?.items) || isNewer(parsed.value)) tryCatch(() => storage.setItem(CORRUPT_BACKUP_KEY, text));
   }
   const written = tryCatch(() => storage.setItem(LIBRARY_KEY, JSON.stringify({ version: LIBRARY_VERSION, items })));
   if (!written.ok) return isFull(written.error) ? "full" : "unavailable";

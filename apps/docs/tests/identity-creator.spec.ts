@@ -117,7 +117,8 @@ test.describe("the assistant folds away, and on a phone the conversation and the
   });
 
   test("390px: a proposal takes the visitor to the preview with focus; the way back is one tap; using it returns to the form", async ({ page }) => {
-    const posts = await service(page, (posted, route) => route.fulfill(ok(posted)));
+    const used = { url: "https://atelier-nord.example.org/", status: "used", analysis: "text-only", host: "atelier-nord.example.org", title: "Atelier Nord" };
+    const posts = await service(page, (posted, route) => route.fulfill(ok(posted, WARM, { references: [used] })));
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(OPEN, { waitUntil: "networkidle" });
     const views = page.getByRole("group", { name: "Conversation or preview" });
@@ -133,6 +134,9 @@ test.describe("the assistant folds away, and on a phone the conversation and the
     await expect(preview).toHaveAttribute("aria-pressed", "true");
     await expect(preview).toBeFocused();
     await expect(page.locator("[data-assistant-pane='conversation']")).toBeHidden();
+    // What happened to the links qualifies the proposal, so it stays on screen when the conversation is hidden.
+    await expect(page.locator("[data-assistant-reference-report]")).toContainText("Atelier Nord Read as text only");
+    await expect(page.locator("[data-assistant-status]")).toContainText("A proposed look is ready.");
     // The switch is on screen after the change: nothing to scroll back for.
     const box = (await views.boundingBox())!;
     expect(box.y).toBeGreaterThanOrEqual(0);
