@@ -3,7 +3,7 @@ import { performance } from "node:perf_hooks";
 import test from "node:test";
 import { createServer } from "node:net";
 
-import { checkUrl, extractReference, fetchReference, fetchReferences, guardedLookup, isPublicAddress } from "./references.mjs";
+import { checkUrl, designSignals, extractReference, fetchReference, fetchReferences, guardedLookup, isPublicAddress, stylesheetUrls, urlsInText } from "./references.mjs";
 
 const OPTIONS = { timeoutMs: 2_000, maxBytes: 4_096, maxChars: 300 };
 const html = (body, head = "") => `<!doctype html><html><head><title>Maison Lune</title>${head}</head><body>${body}</body></html>`;
@@ -32,17 +32,23 @@ test("only globally routable addresses are public, in every spelling of the priv
   }
 });
 
-test("a URL must be https, plain, and look like a public name", () => {
+test("a URL must be http(s), plain, and look like a public name", () => {
   const ok = checkUrl("https://maison-lune.example.org/about?x=1#top");
   assert.equal(ok.ok, true);
   assert.equal(ok.url.href, "https://maison-lune.example.org/about?x=1");
   const reasons = {
-    "http://example.org/": "protocol",
     "ftp://example.org/": "protocol",
     "file:///etc/passwd": "protocol",
     "javascript:alert(1)": "protocol",
     "https://user:pw@example.org/": "credentials",
     "https://example.org:8443/": "port",
+    "http://example.org:8080/": "port",
+    "http://169.254.169.254/latest/meta-data": "ip-literal",
+    "http://[fd00::1]/": "ip-literal",
+    "http://100.64.0.1/": "ip-literal",
+    "http://017700000001/": "ip-literal",
+    "http://metadata.google.internal/": "hostname",
+    "http://router.lan/": "hostname",
     "https://127.0.0.1/": "ip-literal",
     "https://2130706433/": "ip-literal",
     "https://0x7f.0.0.1/": "ip-literal",
@@ -62,6 +68,8 @@ test("a URL must be https, plain, and look like a public name", () => {
     assert.deepEqual([raw, result.ok, result.reason], [raw, false, reason]);
   }
   assert.equal(checkUrl(`https://example.org/${"a".repeat(3000)}`).reason, "invalid-url");
+  assert.equal(checkUrl("http://example.org/").ok, true, "a plain http page can be read");
+  assert.equal(checkUrl("http://example.org/", { allowHttp: false }).reason, "protocol");
 });
 
 test("the socket's own lookup refuses a name with any non-public answer, and passes a public one", async () => {
@@ -166,7 +174,7 @@ test("references come back one per URL, in order, each with its own status", asy
     "https://bad.example.org/": { status: 500 },
   });
   const out = await fetchReferences(
-    ["https://good.example.org/", "https://bad.example.org/", "https://good.example.org/", "http://insecure.example.org/"],
+    ["https://good.example.org/", "https://bad.example.org/", "https://good.example.org/", "ftp://files.example.org/"],
     { ...OPTIONS, transport },
   );
   assert.deepEqual(
@@ -174,7 +182,7 @@ test("references come back one per URL, in order, each with its own status", asy
     [
       { url: "https://good.example.org/", ok: true, reason: undefined },
       { url: "https://bad.example.org/", ok: false, reason: "status-500" },
-      { url: "http://insecure.example.org/", ok: false, reason: "protocol" },
+      { url: "ftp://files.example.org/", ok: false, reason: "protocol" },
     ],
   );
   assert.equal(calls.filter((url) => url === "https://good.example.org/").length, 1, "a repeated URL is fetched once");
@@ -237,4 +245,98 @@ test("what reaches the model is well-formed and free of control characters, so i
 
 test("an entity is decoded once: &amp;lt; is the text &lt;, never a bracket", () => {
   assert.equal(extractReference("<p>a &amp;lt;b&amp;gt; &lt;c&gt; &#65;</p>", 200).text, "a &lt;b&gt; <c> A");
+});
+
+test("the kit's host guard is a layer too: every address it calls private is refused here", () => {
+  for (const address of ["127.0.0.1", "10.1.2.3", "172.16.0.1", "192.168.1.1", "169.254.169.254", "100.64.0.1", "0.0.0.0", "::1", "fe80::1", "fd00::1", "::ffff:10.0.0.1", "::ffff:169.254.169.254", "64:ff9b::a00:1"]) {
+    assert.equal(isPublicAddress(address), false, address);
+  }
+  assert.equal(isPublicAddress("93.184.216.34"), true);
+});
+
+test("http is read on the first hop only: https never redirects down, and stylesheets follow the same rule", async () => {
+  const plain = fakeTransport({ "http://plain.example.org/": { body: html("<p>Plain</p>") } });
+  assert.equal((await fetchReference("http://plain.example.org/", { ...OPTIONS, transport: plain.transport })).ok, true);
+  const up = fakeTransport({
+    "http://plain.example.org/": { status: 301, headers: { location: "https://plain.example.org/" } },
+    "https://plain.example.org/": { status: 302, headers: { location: "http://plain.example.org/again" } },
+  });
+  assert.equal((await fetchReference("http://plain.example.org/", { ...OPTIONS, transport: up.transport })).reason, "protocol");
+  assert.deepEqual(up.calls, ["http://plain.example.org/", "https://plain.example.org/"]);
+  const toPrivate = fakeTransport({ "http://plain.example.org/": { status: 302, headers: { location: "http://169.254.169.254/latest/meta-data" } } });
+  assert.equal((await fetchReference("http://plain.example.org/", { ...OPTIONS, transport: toPrivate.transport })).reason, "ip-literal");
+});
+
+test("stylesheets are fetched through the guard, at most two, and one that fails costs nothing", async () => {
+  const head = [
+    '<link rel="stylesheet" href="/app.css">',
+    '<link rel="preload stylesheet" href="https://cdn.example.org/b.css">',
+    '<link rel="stylesheet" href="https://127.0.0.1/c.css">',
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600">',
+    '<link rel="icon" href="/favicon.css">',
+  ].join("");
+  const { transport, calls } = fakeTransport({
+    "https://site.example.org/": { body: html("<p>Hello</p>", head) },
+    "https://site.example.org/app.css": { headers: { "content-type": "text/css" }, body: ":root{--color-brand:#5E6AD2;--radius-md:6px}.b{border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.1);padding:8px 16px;color:#5e6ad2}" },
+    "https://cdn.example.org/b.css": { status: 302, headers: { location: "https://10.0.0.1/b.css" } },
+  });
+  const got = await fetchReference("https://site.example.org/", { ...OPTIONS, transport });
+  assert.equal(got.ok, true);
+  assert.deepEqual(calls, ["https://site.example.org/", "https://site.example.org/app.css", "https://cdn.example.org/b.css"], "two sheets at most, the private one never asked");
+  assert.equal(got.signals.stylesheets, 1);
+  assert.deepEqual(got.signals.properties, ["--color-brand: #5E6AD2", "--radius-md: 6px"]);
+  assert.equal(got.signals.colors[0], "#5e6ad2");
+  assert.deepEqual(got.signals.radii, ["6px"]);
+  assert.deepEqual(got.signals.spacing, ["8px", "16px"]);
+  assert.deepEqual(got.fonts, ["Inter"]);
+
+  const notCss = fakeTransport({
+    "https://site.example.org/": { body: html("<p>Hello</p>", '<link rel="stylesheet" href="/x.css">') },
+    "https://site.example.org/x.css": { body: "<html>--color-brand:#ff0000</html>" },
+  });
+  const plainPage = await fetchReference("https://site.example.org/", { ...OPTIONS, transport: notCss.transport });
+  assert.equal(plainPage.ok, true);
+  assert.equal(plainPage.signals.stylesheets, 0, "a sheet not served as text/css is not read");
+  assert.deepEqual(stylesheetUrls(html("", '<link rel=stylesheet href="a.css"><link rel=stylesheet href="a.css">'), new URL("https://s.example.org/d/")), ["https://s.example.org/d/a.css"]);
+});
+
+test("design signals: colours, custom properties, fonts, radii, shadows and spacing, ranked and bounded", () => {
+  const css = `
+    @font-face { font-family: "Inter Variable"; src: url(/inter.woff2) }
+    :root { --color-bg: #08090A; --color-accent: #5e6ad2; --font-display: Inter, sans-serif; --space-2: 8px; --z-top: 999; --evil: url(https://x/); --brand-x: "}{"; --color-alias: var(--color-bg) }
+    body { color: #f7f8f8; background: #08090a; font-family: "Inter Variable", system-ui }
+    .card { border-radius: 8px; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2); padding: 12px 24px; gap: 0.5rem }
+    .chip { border-radius: 9999px; color: #fff; margin: 0 }
+    .x { border-radius: 8px; background: url(javascript:alert(1)) }
+  `;
+  const s = designSignals(css, ["https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500&amp;family=Inter"]);
+  assert.deepEqual(s.properties, ["--color-bg: #08090A", "--color-accent: #5e6ad2", "--font-display: Inter, sans-serif", "--space-2: 8px"]);
+  assert.equal(s.colors[0], "#08090a");
+  assert.ok(s.colors.includes("#ffffff") && s.colors.includes("rgba(0, 0, 0, 0.2)"));
+  assert.deepEqual(s.fonts, ["Space Grotesk", "Inter", "Inter Variable"]);
+  assert.deepEqual(s.radii, ["8px", "9999px"]);
+  assert.deepEqual(s.shadows, ["0 4px 24px rgba(0, 0, 0, 0.2)"]);
+  assert.deepEqual(s.spacing, ["0.5rem", "12px", "24px"]);
+  for (const value of Object.values(s).flat()) assert.doesNotMatch(value, /url\(|javascript|[{}"']|evil/);
+
+  const flood = Array.from({ length: 500 }, (_, i) => `--color-${i}: #${String(i).padStart(6, "0")}; border-radius: ${i}px; box-shadow: 0 0 ${i}px red; padding: ${i}px;`).join("");
+  const big = designSignals(flood + Array.from({ length: 50 }, (_, i) => `--radius-${i}: ${i}px; --font-${i}: Serif${i}; --space-${i}: ${i}px;`).join(""));
+  assert.equal(big.properties.length, 12, "six colour tokens, then two each of shape, type and spacing");
+  assert.deepEqual(big.properties.slice(6).map((p) => p.split(":")[0]), ["--radius-0", "--radius-1", "--font-0", "--font-1", "--space-0", "--space-1"]);
+  assert.deepEqual(designSignals("--blue: #00f; --color-brand: #5e6ad2; --tw-ring: #fff; --text-sm: .875rem").properties, ["--color-brand: #5e6ad2", "--text-sm: .875rem"]);
+  assert.ok(big.colors.length <= 8 && big.radii.length <= 4 && big.shadows.length <= 3 && big.spacing.length <= 6);
+  for (const value of [...big.properties, ...big.colors, ...big.radii, ...big.shadows, ...big.spacing]) assert.match(value, /^[\x20-\x7e]+$/);
+});
+
+test("hostile CSS costs time in proportion to its size", () => {
+  for (const css of ["--a:".repeat(150_000), "border-radius:".repeat(50_000), "#".repeat(600_000), "rgb(".repeat(150_000), "padding:1px ".repeat(50_000)]) {
+    const t = performance.now();
+    designSignals(css);
+    assert.ok(performance.now() - t < 1_500, `took ${performance.now() - t}ms`);
+  }
+});
+
+test("links written in a brief are found, without the punctuation around them", () => {
+  assert.deepEqual(urlsInText("Like https://linear.app, and (http://stripe.com/docs). Also https://linear.app!"), ["https://linear.app", "http://stripe.com/docs"]);
+  assert.deepEqual(urlsInText("no links, just linear.app"), []);
 });

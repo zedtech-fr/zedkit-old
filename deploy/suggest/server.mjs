@@ -20,7 +20,7 @@ import { openLedgerSafely } from "./ledger.mjs";
 import { clientKey, networkOf, trustedList } from "./network.mjs";
 import { buildMessages, inputBytes, inputTokens, worstCaseReferences } from "./prompt.mjs";
 import { callProvider, parseJson } from "./provider.mjs";
-import { fetchReferences } from "./references.mjs";
+import { fetchReferences, urlsInText } from "./references.mjs";
 import { fontsAllowed, mergePatch, validateTokens } from "./tokens.mjs";
 
 const COOKIE = "zk_sid";
@@ -116,7 +116,8 @@ export function parseRequest(value) {
       requestId: value.requestId,
       prompt: value.prompt.trim(),
       history: history.map((turn) => ({ role: turn.role, text: turn.text.trim() })),
-      references: [...new Set(references.map((url) => url.trim()).filter(Boolean))],
+      // Links written in the brief count as references too, after the explicit ones, still at most three.
+      references: [...new Set([...references.map((url) => url.trim()).filter(Boolean), ...urlsInText(value.prompt)])].slice(0, HARD.maxReferences),
       current,
     },
   };
@@ -228,7 +229,23 @@ async function interpret(content, current) {
 function referenceReport(items) {
   return items.map((item) =>
     item.ok
-      ? { url: item.url, status: "used", analysis: "text-only", host: item.host, title: item.title, chars: item.text.length, hints: { themeColor: item.themeColor, fonts: item.fonts } }
+      ? {
+          url: item.url,
+          status: "used",
+          analysis: "styles-and-text",
+          host: item.host,
+          title: item.title,
+          chars: item.text.length,
+          hints: {
+            themeColor: item.themeColor,
+            fonts: item.fonts,
+            colors: item.signals.colors.slice(0, 5),
+            radius: item.signals.radii[0] ?? "",
+            properties: item.signals.properties.length,
+            shadows: item.signals.shadows.length,
+            stylesheets: item.signals.stylesheets,
+          },
+        }
       : { url: item.url, status: "failed", reason: item.reason },
   );
 }

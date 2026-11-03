@@ -17,10 +17,15 @@ kit: `pnpm exec turbo run build --filter=@zedtech/zedkit-ui`.
    (`packages/ui/src/identity-tokens.ts`) validates in the browser;
    `suggest/tokens.mjs` is a port, guarded by `suggest/tokens.parity.test.mjs`.
    Change the kit schema, port it, keep parity green. Never loosen one side.
-3. **References are untrusted text.** `https` only, public addresses only
-   (checked at lookup, not just on the URL string), every redirect re-checked,
-   no cookies, size and time caps. What comes back is text-only: report it
-   that way, never as a visual analysis of the page.
+3. **References are untrusted data.** `http` or `https` on the first hop,
+   never `https` down to `http`; public addresses only, by this service's list
+   and the kit's `isPrivateHostname` (`suggest/hostname-guard.mjs` is a port,
+   guarded by `suggest/hostname-guard.parity.test.mjs`), checked at lookup,
+   not just on the URL string; every redirect re-checked; at most four linked
+   stylesheets, through the same guard; no cookies, size and time caps. What
+   comes back is text plus design signals measured from CSS (plain values
+   only, no `url()`): report it as "styles and text", never as a visual
+   analysis of the page.
 4. **Paid generation is opt-in and bounded.** It stays off until an operator
    sets the switch, an approved budget and the model prices; there is no
    default budget or price. Reserve the worst case atomically before the

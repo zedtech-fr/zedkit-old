@@ -1,20 +1,29 @@
-// Reference pages for an identity brief, fetched as untrusted text.
+// Reference pages for an identity brief, fetched as untrusted data.
 //
-// Scope: this module exists for identity generation and does nothing else. It reads a page, never runs it, and
-// returns bounded text and a few design hints (title, description, theme colour, font names). It does not look at
-// pictures or render anything: whatever it returns is `analysis: "text-only"`, and callers must say so.
+// Scope: this module exists for identity generation and does nothing else. It reads a page and up to two of its
+// stylesheets, never runs them, and returns bounded text plus design signals measured from the CSS: custom
+// properties, dominant colours, font families (Google Fonts links included), radii, shadows, a spacing scale and the
+// theme colour. It does not render the page or look at pictures: whatever it returns is
+// `analysis: "styles-and-text"`, and callers must say so (never "visual analysis").
 //
 // Server-side request forgery (OWASP SSRF prevention cheat sheet), layer by layer:
-//   1. The URL is checked before any lookup: https only, default port, no credentials, a plain public-looking
-//      hostname (no IP literals, no single-label or internal suffixes).
-//   2. Every address the name resolves to must be public. The check runs inside the socket's own `lookup`, so the
-//      address that was checked is the address that is connected to: no gap for DNS rebinding.
-//   3. Redirects are followed by hand, a few at most, and each hop goes through 1 and 2 again.
+//   1. The URL is checked before any lookup: http or https, default port, no credentials, a plain public-looking
+//      hostname (no IP literals, no single-label or internal suffixes), and the kit's own `isPrivateHostname`
+//      (`@zedtech/zedkit-server`, ported in `hostname-guard.mjs`).
+//   2. Every address the name resolves to must be public, by this module's list and by the kit's. The check runs
+//      inside the socket's own `lookup`, so the address that was checked is the address that is connected to: no
+//      gap for DNS rebinding.
+//   3. Redirects are followed by hand, a few at most, each hop goes through 1 and 2 again, and https never
+//      redirects down to http. Stylesheets are fetched through the very same path.
 //   4. The request carries no cookies, no credentials, no referrer; it asks for no compression (so there is
-//      nothing to inflate); the body is read up to a byte cap and the whole fetch has a deadline.
+//      nothing to inflate); every body is read up to a byte cap and the whole reference (page and stylesheets
+//      together) has one deadline.
 import { BlockList, isIP } from "node:net";
 import { lookup as dnsLookup } from "node:dns";
+import http from "node:http";
 import https from "node:https";
+
+import { isPrivateHostname } from "./hostname-guard.mjs";
 
 const BLOCKED = new BlockList();
 for (const [net, prefix] of [
@@ -70,6 +79,7 @@ export function isPublicAddress(address) {
   if (mapped) return isPublicAddress(mapped[1]);
   if (family === 6 && /^::ffff:/i.test(address)) return false;
   if (family === 6 && !GLOBAL_V6.check(address, "ipv6")) return false;
+  if (isPrivateHostname(address)) return false;
   return !BLOCKED.check(address, family === 6 ? "ipv6" : "ipv4");
 }
 
@@ -79,17 +89,17 @@ const INTERNAL_SUFFIXES = [".local", ".localhost", ".internal", ".localdomain", 
  * @returns {{ ok: true, url: URL } | { ok: false, reason: string }}
  * A reason is a short code for the caller to show; it never echoes the input.
  */
-export function checkUrl(raw) {
+export function checkUrl(raw, { allowHttp = true } = {}) {
   if (typeof raw !== "string" || raw.length === 0 || raw.length > 2048) return { ok: false, reason: "invalid-url" };
   if (!URL.canParse(raw)) return { ok: false, reason: "invalid-url" };
   const url = new URL(raw);
-  if (url.protocol !== "https:") return { ok: false, reason: "protocol" };
+  if (url.protocol !== "https:" && !(allowHttp && url.protocol === "http:")) return { ok: false, reason: "protocol" };
   if (url.username !== "" || url.password !== "") return { ok: false, reason: "credentials" };
   if (url.port !== "") return { ok: false, reason: "port" };
   const host = url.hostname.toLowerCase();
   if (host.startsWith("[") || isIP(host) !== 0) return { ok: false, reason: "ip-literal" };
   const valid = host.length <= 253 && /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:[a-z]{2,63}|xn--[a-z0-9-]{1,59})$/.test(host);
-  if (!valid || INTERNAL_SUFFIXES.some((suffix) => host.endsWith(suffix))) return { ok: false, reason: "hostname" };
+  if (!valid || INTERNAL_SUFFIXES.some((suffix) => host.endsWith(suffix)) || isPrivateHostname(host)) return { ok: false, reason: "hostname" };
   url.hash = "";
   return { ok: true, url };
 }
@@ -116,25 +126,27 @@ export function guardedLookup(resolve = dnsLookup) {
 }
 
 const ACCEPTED_TYPES = /^(text\/html|application\/xhtml\+xml|text\/plain)\b/i;
+const CSS_TYPE = /^text\/css\b/i;
 const USER_AGENT = "ZedkitIdentityReference/1 (+https://zedkit.app)";
 
 /**
  * One GET with the guarded lookup. Resolves with the status, headers and a body capped at `maxBytes` (flagged
  * `truncated`), or rejects. Nothing but plain headers is sent.
  */
-export function guardedRequest(url, { resolve, signal, maxBytes }) {
+export function guardedRequest(url, { resolve, signal, maxBytes, accept = "text/html,text/plain;q=0.8" }) {
+  const secure = url.protocol === "https:";
   return new Promise((done, fail) => {
-    const request = https.request(
+    const request = (secure ? https : http).request(
       {
-        protocol: "https:",
+        protocol: secure ? "https:" : "http:",
         host: url.hostname,
-        port: 443,
+        port: secure ? 443 : 80,
         path: `${url.pathname}${url.search}`,
         method: "GET",
         agent: false,
         lookup: guardedLookup(resolve),
         signal,
-        headers: { accept: "text/html,text/plain;q=0.8", "accept-encoding": "identity", "user-agent": USER_AGENT },
+        headers: { accept, "accept-encoding": "identity", "user-agent": USER_AGENT },
       },
       (response) => {
         const status = response.statusCode ?? 0;
@@ -229,6 +241,7 @@ function closeOf(html, name, from) {
 function scan(html) {
   const metas = {};
   const hrefs = [];
+  const sheets = [];
   const style = [];
   const text = [];
   let title = "";
@@ -265,6 +278,7 @@ function scan(html) {
       if (key && attrs.content && metas[key] === undefined) metas[key] = attrs.content;
     } else if (name === "link" && attrs.href) {
       hrefs.push(attrs.href);
+      if (/(?:^|\s)stylesheet(?:\s|$)/i.test(attrs.rel ?? "") && sheets.length < 200) sheets.push(attrs.href);
     }
     if (name === "title" && !titleSeen) {
       titleSeen = true;
@@ -280,69 +294,213 @@ function scan(html) {
       i = end === -1 ? html.length : end;
     }
   }
-  return { title, metas, hrefs, style: style.join(";\n").slice(0, MAX_STYLE_CHARS), text: text.join("") };
+  return { title, metas, hrefs, sheets, style: style.join(";\n").slice(0, MAX_STYLE_CHARS), text: text.join("") };
 }
 
 /** Font family names a page asks for: from Google Fonts links and `font-family`, never fetched. */
-function fontNames({ hrefs, style }) {
+function fontNames(hrefs, css) {
   const found = new Set();
   for (const href of hrefs) {
     if (!/^https?:\/\/fonts\.googleapis\.com\/css2?\?/i.test(href)) continue;
     // URLSearchParams decodes without throwing on a malformed escape.
     for (const family of new URLSearchParams(href.slice(href.indexOf("?") + 1).replace(/&amp;/g, "&")).getAll("family")) found.add(family.split(":")[0] ?? "");
   }
-  for (const rule of style.matchAll(/font-family\s*:\s*([^;}"]{1,200})/gi)) {
+  for (const rule of css.matchAll(/font-family\s*:\s*([^;}]{1,200})/gi)) {
     const first = rule[1].split(",")[0]?.replace(/["']/g, "").trim();
-    if (first && !/^(inherit|initial|unset|serif|sans-serif|monospace|system-ui|var\(.*)$/i.test(first)) found.add(first);
+    if (first && !/^(inherit|initial|unset|serif|sans-serif|monospace|system-ui|-apple-system|var\(.*)$/i.test(first)) found.add(first);
   }
   return [...found].map((name) => name.replace(/[^\w .-]/g, "").slice(0, FIELD_MAX.fontChars)).filter(Boolean).slice(0, FIELD_MAX.fonts);
 }
 
 /** The longest each field of a read page can be, in UTF-16 units: the worst case a reservation has to cover. */
-export const FIELD_MAX = Object.freeze({ title: 120, description: 300, themeColor: 30, fonts: 6, fontChars: 40 });
+export const FIELD_MAX = Object.freeze({
+  title: 120,
+  description: 300,
+  themeColor: 30,
+  fonts: 6,
+  fontChars: 40,
+  properties: 12,
+  propertyChars: 64,
+  colors: 8,
+  colorChars: 32,
+  radii: 4,
+  radiusChars: 24,
+  shadows: 3,
+  shadowChars: 80,
+  spacing: 6,
+  spacingChars: 10,
+});
 
-/** The text of a page and a few hints, bounded. Scripts, styles and markup never reach the model. */
-export function extractReference(html, maxChars) {
+/** Stylesheets read per page, and the CSS scanned per reference (inline and linked together). */
+export const MAX_STYLESHEETS = 4;
+const MAX_CSS_CHARS = 1_000_000;
+
+// A CSS value reaches the prompt only if it is plain: no url(), no quotes, no braces, nothing but the characters
+// colours, lengths and shadows are written with. Anything else is dropped, not escaped.
+const SAFE_VALUE = /^[#\w\s.,%()/+-]+$/;
+const plain = (value, max) => {
+  const squashed = value.replace(/!important/gi, "").replace(/\s+/g, " ").trim();
+  if (!squashed || squashed.length > max || !SAFE_VALUE.test(squashed) || /url\(|expression/i.test(squashed)) return "";
+  return squashed;
+};
+
+/** Values by how often they occur, most frequent first; ties keep first-seen order. */
+function ranked(values, limit) {
+  const counts = new Map();
+  for (const value of values) if (value) counts.set(value, (counts.get(value) ?? 0) + 1);
+  return [...counts.entries()].sort((x, y) => y[1] - x[1]).slice(0, limit).map(([value]) => value);
+}
+
+function normalizeColor(raw) {
+  const value = raw.toLowerCase();
+  if (value.startsWith("#")) {
+    const hex = value.slice(1);
+    if (hex.length === 3 || hex.length === 4) return `#${[...hex.slice(0, 3)].map((c) => c + c).join("")}`;
+    return `#${hex.slice(0, 6)}`;
+  }
+  return value.replace(/\s+/g, " ");
+}
+
+const DESIGN_PROPERTY = /color|colour|bg|background|surface|brand|accent|primary|secondary|foreground|text|border|radius|font|shadow|space|spacing|gap/i;
+
+/**
+ * Design signals measured from a page's CSS. Every regular expression here has bounded quantifiers and no nesting,
+ * so a hostile stylesheet costs linear time, and every list and value is capped by `FIELD_MAX`.
+ */
+export function designSignals(rawCss, hrefs = []) {
+  const css = rawCss.slice(0, MAX_CSS_CHARS);
+  // Colour tokens first (they carry the palette), then shape, type and spacing; at most a few of each kind.
+  const kinds = { colour: [], shape: [], type: [], space: [] };
+  const seen = new Set();
+  for (const match of css.matchAll(/(--[\w-]{1,48})\s*:\s*([^;{}]{1,120})/g)) {
+    const name = match[1];
+    if (seen.has(name) || !DESIGN_PROPERTY.test(name) || /^--tw-/.test(name)) continue;
+    const value = plain(match[2], FIELD_MAX.propertyChars - name.length - 2);
+    if (!value || /^(var\(|calc\(|initial$|inherit$|unset$|none$|0$|solid$)/i.test(value)) continue;
+    seen.add(name);
+    const kind = /radius|shadow|border-width/i.test(name) ? "shape" : /font|text-(?:xs|sm|base|md|lg|\d?xl)|size|leading|tracking|letter|line-height|weight/i.test(name) ? "type" : /space|spacing|gap/i.test(name) ? "space" : "colour";
+    const list = kinds[kind];
+    if (list.length < (kind === "colour" ? 200 : 2)) list.push(`${name}: ${value}`);
+    if (seen.size > 5_000) break;
+  }
+  // Role names (brand, primary, background...) say more than palette names (blue, gray-200).
+  const role = (entry) => (/brand|primary|accent|bg|background|surface|foreground|text|border/i.test(entry.split(":")[0]) ? 0 : 1);
+  kinds.colour = kinds.colour.map((entry, index) => [role(entry), index, entry]).sort((x, y) => x[0] - y[0] || x[1] - y[1]).slice(0, 6).map(([, , entry]) => entry);
+  const properties = [...kinds.colour, ...kinds.shape, ...kinds.type, ...kinds.space].slice(0, FIELD_MAX.properties);
+  const colors = ranked(
+    [...css.matchAll(/#[0-9a-fA-F]{8}\b|#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3,4}\b|(?:rgba?|hsla?|oklch)\([^()]{1,40}\)/g)].map((m) => plain(normalizeColor(m[0]), FIELD_MAX.colorChars)),
+    FIELD_MAX.colors,
+  );
+  const radii = ranked(
+    [...css.matchAll(/border-radius\s*:\s*([^;{}]{1,60})/gi)].map((m) => plain(m[1], FIELD_MAX.radiusChars)).filter((v) => v && !/^(0|0px|inherit|initial|unset)$/i.test(v)),
+    FIELD_MAX.radii,
+  );
+  const shadows = ranked(
+    [...css.matchAll(/box-shadow\s*:\s*([^;{}]{1,160})/gi)].map((m) => plain(m[1], FIELD_MAX.shadowChars)).filter((v) => v && !/^(none|inherit|initial|unset)$|^var\(/i.test(v)),
+    FIELD_MAX.shadows,
+  );
+  const lengths = [];
+  for (const m of css.matchAll(/(?:padding|margin|gap|row-gap|column-gap)(?:-[a-z]{1,6})?\s*:\s*([^;{}]{1,60})/gi)) {
+    for (const token of m[1].split(/\s+/)) if (/^\d{1,3}(?:\.\d{1,3})?(?:px|rem)$/.test(token) && !/^0(?:\.0+)?(?:px|rem)$/.test(token)) lengths.push(token);
+  }
+  const px = (v) => Number.parseFloat(v) * (v.endsWith("rem") ? 16 : 1);
+  const spacing = ranked(lengths, FIELD_MAX.spacing).sort((x, y) => px(x) - px(y)).map((v) => v.slice(0, FIELD_MAX.spacingChars));
+  return { properties, colors, fonts: fontNames(hrefs, css), radii, shadows, spacing };
+}
+
+/** The text of a page and a few hints, bounded. Scripts and markup never reach the model; CSS only as signals. */
+export function extractReference(html, maxChars, sheets = []) {
   const page = scan(html);
   const pick = (...names) => {
     for (const name of names) if (page.metas[name]) return squash(page.metas[name]);
     return "";
   };
+  const signals = designSignals([page.style, ...sheets].join("\n"), page.hrefs);
   return {
     title: clip(squash(page.title), FIELD_MAX.title),
     description: clip(pick("description", "og:description"), FIELD_MAX.description),
-    themeColor: clip(pick("theme-color"), FIELD_MAX.themeColor),
-    fonts: fontNames(page),
+    themeColor: plain(clip(pick("theme-color"), FIELD_MAX.themeColor), FIELD_MAX.themeColor),
+    fonts: signals.fonts,
+    signals: { ...signals, stylesheets: sheets.length },
     text: clip(squash(page.text), maxChars),
   };
 }
 
+/**
+ * The stylesheets worth reading, as absolute URLs (font CSS is read from its link, not fetched). A sheet linked
+ * several times is usually the shared one that holds the design tokens, so the most linked come first, then
+ * document order.
+ */
+export function stylesheetUrls(html, base) {
+  const counts = new Map();
+  for (const href of scan(html).sheets) {
+    if (!URL.canParse(href.replace(/&amp;/g, "&"), base)) continue;
+    const url = new URL(href.replace(/&amp;/g, "&"), base);
+    if (url.hostname === "fonts.googleapis.com" || (url.protocol !== "https:" && url.protocol !== "http:")) continue;
+    counts.set(url.href, (counts.get(url.href) ?? 0) + 1);
+  }
+  return [...counts.entries()].sort((x, y) => y[1] - x[1]).slice(0, MAX_STYLESHEETS).map(([href]) => href);
+}
+
+/** Absolute http(s) links written in free text, in order, without trailing punctuation. */
+export function urlsInText(text) {
+  const out = [];
+  for (const match of String(text).slice(0, 20_000).matchAll(/https?:\/\/[^\s<>"'`]{1,2000}/gi)) {
+    const url = match[0].replace(/[).,;:!?\]}]+$/, "");
+    if (URL.canParse(url) && !out.includes(url)) out.push(url);
+  }
+  return out;
+}
+
 const MAX_REDIRECTS = 3;
+export const STYLESHEET_MAX_BYTES = 196_608;
 
 /**
- * One reference. Always resolves: a failure is `{ ok: false, reason }`, which the caller shows as it is.
- * `transport` and `resolve` are injection points for tests; the defaults are the guarded ones.
+ * One guarded GET with redirects. Each hop is checked again; once a chain is on https it never goes back to http.
+ * Resolves to `{ ok: true, url, response }` or `{ ok: false, reason }`; network errors reject.
  */
-export function fetchReference(rawUrl, { resolve, transport = guardedRequest, timeoutMs, maxBytes, maxChars }) {
-  const signal = AbortSignal.timeout(timeoutMs);
-  const hop = (current, redirects) => {
-    const checked = checkUrl(current);
+function follow(rawUrl, { resolve, transport, signal, maxBytes, accept }) {
+  const hop = (current, redirects, secure) => {
+    const checked = checkUrl(current, { allowHttp: !secure });
     if (!checked.ok) return Promise.resolve({ ok: false, reason: checked.reason });
-    return transport(checked.url, { resolve, signal, maxBytes }).then((response) => {
+    return transport(checked.url, { resolve, signal, maxBytes, accept }).then((response) => {
       if (response.status >= 300 && response.status < 400) {
         const location = response.headers.location;
         if (!location || redirects >= MAX_REDIRECTS) return { ok: false, reason: "redirects" };
         const next = URL.canParse(location, checked.url) ? new URL(location, checked.url).href : "";
-        return hop(next, redirects + 1);
+        return hop(next, redirects + 1, secure || checked.url.protocol === "https:");
       }
       if (response.status !== 200) return { ok: false, reason: `status-${response.status}` };
-      if (!ACCEPTED_TYPES.test(String(response.headers["content-type"] ?? ""))) return { ok: false, reason: "content-type" };
-      const extracted = extractReference(response.body.toString("utf8"), maxChars);
-      if (extracted.text.length === 0 && extracted.title.length === 0) return { ok: false, reason: "empty" };
-      return { ok: true, host: checked.url.hostname, ...extracted, truncated: response.truncated };
+      return { ok: true, url: checked.url, response };
     });
   };
-  return hop(rawUrl, 0).catch((error) => ({ ok: false, reason: reasonOf(error) }));
+  return hop(rawUrl, 0, false);
+}
+
+/**
+ * One reference. Always resolves: a failure is `{ ok: false, reason }`, which the caller shows as it is.
+ * `transport` and `resolve` are injection points for tests; the defaults are the guarded ones. The deadline covers
+ * the page and its stylesheets; a stylesheet that fails is skipped, the page still counts.
+ */
+export function fetchReference(rawUrl, { resolve, transport = guardedRequest, timeoutMs, maxBytes, maxChars, sheetMaxBytes = STYLESHEET_MAX_BYTES }) {
+  const signal = AbortSignal.timeout(timeoutMs);
+  const page = follow(rawUrl, { resolve, transport, signal, maxBytes, accept: "text/html,text/plain;q=0.8" }).then(async (result) => {
+    if (!result.ok) return result;
+    const { url, response } = result;
+    if (!ACCEPTED_TYPES.test(String(response.headers["content-type"] ?? ""))) return { ok: false, reason: "content-type" };
+    const html = response.body.toString("utf8");
+    const sheets = await Promise.all(
+      stylesheetUrls(html, url).map((sheet) =>
+        follow(sheet, { resolve, transport, signal, maxBytes: sheetMaxBytes, accept: "text/css" })
+          .then((r) => (r.ok && CSS_TYPE.test(String(r.response.headers["content-type"] ?? "")) ? r.response.body.toString("utf8") : null))
+          .catch(() => null),
+      ),
+    );
+    const extracted = extractReference(html, maxChars, sheets.filter((sheet) => sheet !== null));
+    if (extracted.text.length === 0 && extracted.title.length === 0) return { ok: false, reason: "empty" };
+    return { ok: true, host: url.hostname, ...extracted, truncated: response.truncated };
+  });
+  return page.catch((error) => ({ ok: false, reason: reasonOf(error) }));
 }
 
 function reasonOf(error) {
