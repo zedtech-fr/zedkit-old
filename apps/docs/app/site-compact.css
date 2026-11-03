@@ -114,7 +114,7 @@
   box-shadow: var(--zk-shadow-sm);
 }
 
-#nd-home-layout .type-site-h1 {
+#nd-home-layout [data-home-hero-lead] [data-slot="heading"] {
   font-size: clamp(1.875rem, 1.2rem + 1.6vw, 2.5rem);
 }
 
