@@ -65,7 +65,7 @@ jobs:
       - run: pnpm build
       - name: Create Version PR or publish to npm
         id: changesets
-        uses: changesets/action@v1
+        uses: changesets/action@v2
         with:
           version: pnpm run changeset:version
           publish: pnpm exec changeset publish
