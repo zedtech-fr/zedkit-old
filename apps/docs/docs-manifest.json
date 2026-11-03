@@ -527,7 +527,8 @@
         "Feature grid": "FeatureGridDemo",
         "Steps": "HowItWorksDemo",
         "Header and footer": "MarketingChromeDemo",
-        "Language switch": "LocaleSwitchDemo"
+        "Language switch": "LocaleSwitchDemo",
+        "Use case": "MediaSectionDemo"
       }
     },
     "Switch the visual identity with one attribute": {

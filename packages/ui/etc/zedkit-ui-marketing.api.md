@@ -134,6 +134,19 @@ export type MarketingHeaderProps = Omit<React_2.ComponentProps<"header">, "child
     sticky?: boolean | undefined;
 };
 
+// @public
+export function MediaSection(input: MediaSectionProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type MediaSectionProps = Omit<React_2.ComponentProps<"section">, "title"> & {
+    title: React_2.ReactNode;
+    description?: React_2.ReactNode;
+    points?: React_2.ReactNode[] | undefined;
+    actions?: React_2.ReactNode;
+    media: React_2.ReactNode;
+    reverse?: boolean | undefined;
+};
+
 // (No @packageDocumentation comment for this package)
 
 ```

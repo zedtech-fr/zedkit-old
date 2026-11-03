@@ -14,6 +14,7 @@ import {
   LocaleSwitch,
   MarketingFooter,
   MarketingHeader,
+  MediaSection,
 } from "#marketing/index.js";
 import { assertNoValueArbitraries } from "./no-arbitraries.js";
 
@@ -331,6 +332,53 @@ describe("LocaleSwitch", () => {
         <MarketingFooter brand={<a href="/">Harbor</a>} columns={[{ title: "Product", links }]} legal={<p>© 2026</p>} />
       </>,
     );
+    for (const node of container.querySelectorAll("[class]")) {
+      assertNoValueArbitraries(node.getAttribute("class") ?? "");
+    }
+    expect((await axe(container)).violations).toEqual([]);
+  });
+});
+
+describe("MediaSection", () => {
+  it("renders a labelled region with title, description, points, actions and framed media", () => {
+    const { container } = render(
+      <MediaSection
+        title="An assistant that knows your catalog"
+        description="Ask in plain words."
+        points={["Reads your products", "Never changes an order"]}
+        actions={<a href="/docs">Read the docs</a>}
+        media={<p>Demo</p>}
+      />,
+    );
+    const region = screen.getByRole("region", { name: "An assistant that knows your catalog" });
+    expect(region.getAttribute("data-slot")).toBe("media-section");
+    expect(screen.getByRole("heading", { level: 2 })).toBeTruthy();
+    expect(screen.getAllByRole("listitem").map((item) => item.textContent)).toEqual([
+      "Reads your products",
+      "Never changes an order",
+    ]);
+    expect(screen.getByRole("link", { name: "Read the docs" })).toBeTruthy();
+    expect(container.querySelector("[data-slot='media-section-media']")?.textContent).toBe("Demo");
+  });
+
+  it("puts the text first in the DOM and flips the sides from lg on request", () => {
+    const { container, rerender } = render(<MediaSection title="T" media={<p>M</p>} />);
+    const text = () => container.querySelector("[data-slot='media-section'] > div > div");
+    expect(text()?.className).not.toContain("lg:order-last");
+    expect(text()?.querySelector("h2")).not.toBeNull();
+    rerender(<MediaSection title="T" media={<p>M</p>} reverse />);
+    expect(text()?.className).toContain("lg:order-last");
+    expect(text()?.querySelector("h2")).not.toBeNull();
+  });
+
+  it("omits empty points and actions, and has no axe violations", async () => {
+    const { container } = render(
+      <main>
+        <MediaSection title="T" points={[]} media={<p>M</p>} />
+      </main>,
+    );
+    expect(container.querySelector("ul")).toBeNull();
+    expect(container.querySelector("[data-slot='media-section-actions']")).toBeNull();
     for (const node of container.querySelectorAll("[class]")) {
       assertNoValueArbitraries(node.getAttribute("class") ?? "");
     }

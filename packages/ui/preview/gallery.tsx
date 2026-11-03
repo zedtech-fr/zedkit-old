@@ -92,6 +92,7 @@ import {
   LocaleSwitch,
   MarketingFooter,
   MarketingHeader,
+  MediaSection,
 } from "#marketing/index.js";
 import { X } from "lucide-react";
 import { FormDemo } from "./form-demo.js";
@@ -462,6 +463,12 @@ export function Gallery() {
               { title: "Create a key", description: "A staging key takes a minute." },
               { title: "See your first event", description: "It shows up in the console." },
             ]}
+          />
+          <MediaSection
+            title="An assistant that knows your catalog"
+            description="Visitors ask in plain words and get answers from your products."
+            points={["Reads your products and stock", "Never changes an order"]}
+            media={<p className="text-sm text-muted-foreground">Demo or screenshot goes here.</p>}
           />
           <CtaBand
             title="Try it on a staging key"

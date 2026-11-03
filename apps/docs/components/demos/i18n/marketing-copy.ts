@@ -48,4 +48,10 @@ export const marketingCopy = {
       { code: "fr", label: "Français" },
     ],
   },
+  media: {
+    title: "An assistant that knows your catalog",
+    description: "Visitors ask in plain words and get answers from your products.",
+    points: ["Reads your products and stock", "Never changes an order"],
+    caption: "Demo goes here",
+  },
 } as const;
