@@ -46,7 +46,7 @@ jobs:
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
           permission-contents: write
           permission-pull-requests: write
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # Changesets diff against origin/main; a shallow clone
           # without the main branch breaks version computation.
