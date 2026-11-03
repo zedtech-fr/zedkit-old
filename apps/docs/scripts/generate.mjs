@@ -642,6 +642,7 @@ const CATALOG_AREA_BY_FOLDER = {
   server: "backend",
   storage: "backend",
   flags: "backend",
+  live: "backend",
   devtools: "backend",
   nest: "backend",
   observability: "backend",
