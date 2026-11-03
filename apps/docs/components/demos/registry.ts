@@ -85,7 +85,15 @@ import { ToggleDemo } from "./toggle-demo";
 import { ValidatedFormDemo } from "./validated-form-demo";
 import { TypographyDemo } from "./typography-demo";
 import { UpdatedAgoDemo } from "./updated-ago-demo";
-import { CtaBandDemo, FeatureGridDemo, GlassSurfaceDemo, HeroDemo, HowItWorksDemo } from "./marketing-demo";
+import {
+  CtaBandDemo,
+  FeatureGridDemo,
+  GlassSurfaceDemo,
+  HeroDemo,
+  HowItWorksDemo,
+  LocaleSwitchDemo,
+  MarketingChromeDemo,
+} from "./marketing-demo";
 import { WizardComposedDemo } from "./wizard-composed-demo";
 import { WizardDemo } from "./wizard-demo";
 import { WizardSoloDemo } from "./wizard-solo-demo";
@@ -238,6 +246,8 @@ export const demoRegistry = {
   GlassSurfaceDemo: { Demo: GlassSurfaceDemo, file: "marketing-demo.tsx" },
   HeroDemo: { Demo: HeroDemo, file: "marketing-demo.tsx" },
   HowItWorksDemo: { Demo: HowItWorksDemo, file: "marketing-demo.tsx" },
+  LocaleSwitchDemo: { Demo: LocaleSwitchDemo, file: "marketing-demo.tsx", center: true },
+  MarketingChromeDemo: { Demo: MarketingChromeDemo, file: "marketing-demo.tsx" },
   WizardComposedDemo: { Demo: WizardComposedDemo, file: "wizard-composed-demo.tsx" },
   WizardDemo: { Demo: WizardDemo, file: "wizard-demo.tsx" },
   WizardSoloDemo: { Demo: WizardSoloDemo, file: "wizard-solo-demo.tsx" },

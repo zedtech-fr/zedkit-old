@@ -7,3 +7,10 @@ export { FeatureGrid, type FeatureGridProps, type FeatureItem } from "./feature-
 export { GlassSurface, glassSurfaceVariants, type GlassSurfaceProps } from "./glass-surface.js";
 export { Hero, type HeroProps } from "./hero.js";
 export { HowItWorks, type HowItWorksProps, type HowItWorksStep } from "./how-it-works.js";
+export { LocaleSwitch, type LocaleOption, type LocaleSwitchProps } from "./locale-switch.js";
+export {
+  MarketingFooter,
+  type MarketingFooterColumn,
+  type MarketingFooterProps,
+} from "./marketing-footer.js";
+export { MarketingHeader, type MarketingHeaderProps } from "./marketing-header.js";

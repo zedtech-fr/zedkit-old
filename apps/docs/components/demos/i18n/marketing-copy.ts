@@ -33,4 +33,19 @@ export const marketingCopy = {
       { title: "See your first event", description: "It shows up in the console." },
     ],
   },
+  chrome: {
+    brand: "Harbor Studio",
+    links: { docs: "Docs", pricing: "Pricing" },
+    signIn: "Sign in",
+    signUp: "Create an account",
+    tagline: "Live features for the shop you already run.",
+    product: "Product",
+    company: "Company",
+    about: "About",
+    legal: "© 2026 Harbor Studio",
+    locales: [
+      { code: "en", label: "English" },
+      { code: "fr", label: "Français" },
+    ],
+  },
 } as const;

@@ -88,6 +88,52 @@ export interface HowItWorksStep {
     title: React_2.ReactNode;
 }
 
+// @public (undocumented)
+export interface LocaleOption {
+    code: string;
+    href?: string | undefined;
+    label: string;
+}
+
+// @public
+export function LocaleSwitch(input: LocaleSwitchProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type LocaleSwitchProps = Omit<React_2.ComponentProps<"nav">, "children" | "onSelect"> & {
+    locales: LocaleOption[];
+    current: string;
+    onSelect?: ((code: string) => void) | undefined;
+};
+
+// @public
+export function MarketingFooter(input: MarketingFooterProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export interface MarketingFooterColumn {
+    id?: string | undefined;
+    links: React_2.ReactNode[];
+    title: string;
+}
+
+// @public (undocumented)
+export type MarketingFooterProps = Omit<React_2.ComponentProps<"footer">, "children"> & {
+    brand?: React_2.ReactNode;
+    description?: React_2.ReactNode;
+    columns?: MarketingFooterColumn[] | undefined;
+    legal?: React_2.ReactNode;
+};
+
+// @public
+export function MarketingHeader(input: MarketingHeaderProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type MarketingHeaderProps = Omit<React_2.ComponentProps<"header">, "children"> & {
+    brand: React_2.ReactNode;
+    links?: React_2.ReactNode[] | undefined;
+    actions?: React_2.ReactNode;
+    sticky?: boolean | undefined;
+};
+
 // (No @packageDocumentation comment for this package)
 
 ```
