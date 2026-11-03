@@ -148,6 +148,17 @@ test.describe("home adoption panel", () => {
       /** The kit raises controls to 44px on phones only (--zk-tap-min); wider screens keep their density. */
       const touch = (small: string[]) => expect(width < 640 ? small : []).toEqual([]);
       touch((await measure()).small);
+      // A control in a code frame's title bar sits inside the frame: the bar grows to fit a 44px select, it does not let it stick out.
+      const sticking = await panel.evaluate((root) =>
+        [...root.querySelectorAll("figure[data-adoption-frame]")].flatMap((frame) => {
+          const box = frame.getBoundingClientRect();
+          return [...frame.querySelectorAll('button, [role="combobox"]')]
+            .map((el) => el.getBoundingClientRect())
+            .filter((rect) => rect.height > 0 && (rect.top < box.top - 0.5 || rect.bottom > box.bottom + 0.5))
+            .map((rect) => `top ${Math.round(rect.top - box.top)} bottom ${Math.round(rect.bottom - box.bottom)}`);
+        }),
+      );
+      expect(sticking).toEqual([]);
       await panel.getByRole("tab", { name: "Copy source" }).click();
       touch((await measure()).small);
       await panel.getByRole("tab", { name: "Paste the files" }).click();

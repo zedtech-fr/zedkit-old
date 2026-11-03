@@ -124,7 +124,7 @@ export function HomeHeroPreview() {
           preview={preview}
           onPreviewChange={setPreview}
           onLook={setLook}
-          tour={{ playing: tour.playing, onTakeover: tour.takeover }}
+          tour={{ available: tour.available, playing: tour.playing, onTakeover: tour.takeover }}
         />
         <HomeHeroSatellites />
       </ThemeScope>

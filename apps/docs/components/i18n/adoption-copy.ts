@@ -31,7 +31,7 @@ export const adoptionCopy = {
     shadcn:
       "shadcn set up in the project: init creates components.json, the base colour tokens and the cn helper (src/lib/utils.ts).",
   },
-  fileAction: { replace: "Replace the contents", append: "Add to the end", create: "Create the file" },
+  fileAction: { replace: "Replace the contents", append: "Add to the end", create: "Create the file", merge: "Merge into your file, keeping what is there" },
   companions: (count: number) => `${count} companion ${plural(count, "file", "files")}`,
   companionsHint: "The first file imports these. Add all of them.",
   result: {

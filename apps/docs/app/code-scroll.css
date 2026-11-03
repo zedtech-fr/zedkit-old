@@ -46,3 +46,13 @@ figure.shiki [role="region"] {
   outline: 2px solid hsl(var(--ring));
   outline-offset: -2px;
 }
+
+/*
+ * The title bar of an adoption frame holds controls that are as tall as a touch target on a phone. The bar's own
+ * fixed height (38px) let them stick out over the frame's border, so it grows to fit them and stays 38px when
+ * the controls are smaller (a mouse).
+ */
+figure.shiki[data-adoption-frame] > div:has(> figcaption) {
+  height: auto;
+  min-height: max(var(--spacing-control-height, 2.25rem), 2.375rem);
+}

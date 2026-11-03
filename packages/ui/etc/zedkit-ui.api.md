@@ -1020,7 +1020,7 @@ export function Input(input: InputProps): React_2.JSX.Element;
 // @public (undocumented)
 export type InputProps = React_2.ComponentProps<"input">;
 
-// @public (undocumented)
+// @public
 export function isNamedIdentityId(id: string): boolean;
 
 // @public (undocumented)

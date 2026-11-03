@@ -104,6 +104,7 @@ export function CommandBlock({
 }) {
   return (
     <CodeBlock
+      data-adoption-frame=""
       title={adoptionCopy.terminalTitle}
       allowCopy={false}
       viewportProps={{ "aria-label": adoptionCopy.terminalTitle }}
@@ -141,6 +142,7 @@ export function FileBlock({
 }) {
   return (
     <CodeBlock
+      data-adoption-frame=""
       title={
         <Stack gap={1} className="min-w-0 gap-0 py-1">
           <Text as="span" className="truncate font-mono">
@@ -168,6 +170,7 @@ export function FileBlock({
 export function SnippetBlock({ title, code, highlighted }: { title: string; code: string; highlighted: ReactNode }) {
   return (
     <CodeBlock
+      data-adoption-frame=""
       title={title}
       allowCopy={false}
       viewportProps={{ "aria-label": title }}

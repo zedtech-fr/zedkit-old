@@ -1,7 +1,7 @@
 "use client";
 
 import { Pause, Play } from "lucide-react";
-import { Button } from "@zedtech/zedkit-ui";
+import { Button, Text } from "@zedtech/zedkit-ui";
 import { TOUR_CONTROL_ATTRIBUTE } from "@/ui/home/use-hero-tour";
 import { homeCopy } from "@/ui/home/i18n/home-copy";
 
@@ -13,10 +13,15 @@ const copy = homeCopy.heroTour;
  */
 export function HeroTourControl({ playing, onToggle }: { playing: boolean; onToggle: () => void }) {
   const control = { [TOUR_CONTROL_ATTRIBUTE]: "" };
+  const label = playing ? copy.pause : copy.play;
+  // Below xl the row under the example is full (the Apps page has a third select): the icon stays, the words stay for
+  // assistive technology and as a tooltip, so the footer never wraps and the frame never changes height.
   return (
-    <Button type="button" variant="ghost" size="sm" className="w-fit" onClick={onToggle} {...control}>
+    <Button type="button" variant="ghost" size="sm" className="w-fit" title={label} onClick={onToggle} {...control}>
       {playing ? <Pause className="size-4" aria-hidden /> : <Play className="size-4" aria-hidden />}
-      {playing ? copy.pause : copy.play}
+      <Text as="span" className="sr-only xl:not-sr-only">
+        {label}
+      </Text>
     </Button>
   );
 }

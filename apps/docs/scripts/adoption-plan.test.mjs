@@ -248,3 +248,18 @@ test("the home page's plan agrees with the tested quickstart snippets, so the tw
   const example = mode(built, "package").steps.at(-1).blocks[0];
   assert.match(example.code, /<Button>Save<\/Button>/);
 });
+
+test("a file two bricks share is listed once: the manual copy never repeats a path", () => {
+  const closure = registryClosure(registry, "confirm-dialog");
+  const paths = closure.files.map((file) => file.path);
+  assert.equal(new Set(paths).size, paths.length, `duplicates in ${paths.join(", ")}`);
+  for (const brick of registry.byName.keys()) {
+    const files = registryClosure(registry, brick).files.map((file) => file.path);
+    assert.equal(new Set(files).size, files.length, `${brick} lists a path twice`);
+  }
+});
+
+test("a config file is merged into, never replaced: it holds the reader's own settings", () => {
+  const file = mode(plan("Share one strict TypeScript base"), "package").steps.at(-1).blocks[0];
+  assert.equal(file.action, "merge");
+});

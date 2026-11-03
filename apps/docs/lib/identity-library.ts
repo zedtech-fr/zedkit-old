@@ -1,5 +1,5 @@
 import { tryCatch } from "@zedtech/zedkit-core";
-import { NAMED_IDENTITY_PREFIX, parseIdentityTokens } from "@zedtech/zedkit-ui";
+import { NAMED_IDENTITY_PREFIX, isNamedIdentityId, parseIdentityTokens } from "@zedtech/zedkit-ui";
 import type { IdentityTokens } from "@zedtech/zedkit-ui";
 
 /**
@@ -75,7 +75,7 @@ export function freeLabel(items: readonly SavedIdentity[], label: string): strin
 function parseItem(value: unknown, now: number): SavedIdentity | undefined {
   if (!value || typeof value !== "object") return undefined;
   const row = value as Record<string, unknown>;
-  if (typeof row.id !== "string" || !row.id.startsWith(NAMED_IDENTITY_PREFIX)) return undefined;
+  if (typeof row.id !== "string" || !isNamedIdentityId(row.id)) return undefined;
   if (typeof row.label !== "string" || cleanLabel(row.label) === "") return undefined;
   const tokens = parseIdentityTokens(row.tokens);
   if (!tokens.success) return undefined;

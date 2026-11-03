@@ -90,7 +90,7 @@ function referencesOf(value: unknown): ReferenceReport[] {
 
 function retryAfter(res: Response, body: Record<string, unknown>): number | undefined {
   const fromBody = typeof body.retryAfterSec === "number" ? body.retryAfterSec : Number(res.headers.get("retry-after"));
-  return Number.isFinite(fromBody) && fromBody > 0 ? Math.ceil(fromBody) : undefined;
+  return Number.isFinite(fromBody) && fromBody > 0 ? Math.min(Math.ceil(fromBody), 86_400) : undefined;
 }
 
 function readJson(res: Response): Promise<Record<string, unknown>> {
