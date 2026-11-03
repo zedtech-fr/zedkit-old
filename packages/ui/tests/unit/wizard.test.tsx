@@ -100,4 +100,17 @@ describe("OptionCard", () => {
     await user.click(screen.getByText("Alpha"));
     expect(onChange).toHaveBeenCalledTimes(1);
   });
+
+  it("shows a visible, decorative check indicator that follows the checked state", () => {
+    const { rerender } = render(<OptionCard title="Alpha" checked={false} onChange={() => {}} />);
+    const box = screen.getByRole("checkbox", { name: /Alpha/ });
+    const indicator = document.querySelector('[data-slot="option-card-indicator"]');
+    expect(indicator?.getAttribute("aria-hidden")).toBe("true");
+    expect(indicator?.querySelector("svg")).not.toBeNull();
+    expect(box.className).toContain("peer");
+    expect(indicator?.className).toContain("peer-checked:bg-primary");
+    expect(indicator?.className).toContain("text-transparent");
+    rerender(<OptionCard title="Alpha" checked onChange={() => {}} />);
+    expect((screen.getByRole("checkbox", { name: /Alpha/ }) as HTMLInputElement).checked).toBe(true);
+  });
 });
