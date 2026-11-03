@@ -47,12 +47,16 @@
 }
 
 /* Marketing type: a step down from the identity's display sizes. */
+:root {
+  --zk-type-home-h1-size: clamp(1.875rem, 1.2rem + 1.6vw, 2.5rem);
+  --zk-type-home-h2-size: clamp(1.25rem, 1rem + 0.6vw, 1.5rem);
+}
 #nd-home-layout h1:not([data-identity-scope] *, #demo *) {
-  font-size: clamp(1.875rem, 1.2rem + 1.6vw, 2.5rem);
+  font-size: var(--zk-type-home-h1-size);
   line-height: 1.1;
 }
 #nd-home-layout h2:not([data-identity-scope] *, #demo *) {
-  font-size: clamp(1.25rem, 1rem + 0.6vw, 1.5rem);
+  font-size: var(--zk-type-home-h2-size);
 }
 /* Scroll targets clear the compact header. */
 #nd-home-layout section[id] {
@@ -115,7 +119,7 @@
 }
 
 #nd-home-layout .type-site-h1 {
-  font-size: clamp(1.875rem, 1.2rem + 1.6vw, 2.5rem);
+  font-size: var(--zk-type-home-h1-size);
 }
 
 /* The hero example in Glass: the same calmer unit as the site, so its pages share one frame height. */

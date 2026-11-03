@@ -1,6 +1,6 @@
 /* Doc page hierarchy uses shared semantic type roles (PR A tokens). */
 #nd-page h1 {
-  font-size: 2rem;
+  font-size: var(--zk-type-h1-size);
   font-weight: 600;
   line-height: 2.375rem;
   letter-spacing: var(--zk-type-h1-tracking, -0.02em);
@@ -8,7 +8,6 @@
 
 @media (width < 48rem) {
   #nd-page h1 {
-    font-size: 1.75rem;
     line-height: 2.125rem;
   }
 }
