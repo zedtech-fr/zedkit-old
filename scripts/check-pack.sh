@@ -152,7 +152,8 @@ size_budget ui 43500
 size_budget ui 8000 marketing
 # Raised from 9800 to 11500 on 3 Nov 2026: init --adopt, per-skill Cursor
 # links, and lenses.md Status filtering (measured 11228).
-size_budget ai 11500
+# Raised to 11600 on 4 Nov 2026: `setup` command alias + onboarding next step (measured 11546).
+size_budget ai 11600
 
 if [ -f apps/docs/out/index.html ]; then
   if ! node apps/docs/scripts/check-first-load-budget.mjs; then
