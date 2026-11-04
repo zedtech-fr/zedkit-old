@@ -6,6 +6,7 @@ import { Stack } from "@zedtech/zedkit-ui";
 import { ViewSwitch, type View } from "@/components/identity-assistant-parts";
 import { ConversationComposer } from "@/components/identity-assistant-panes";
 import { IdentityDockAssistantGrid } from "@/components/identity-dock-assistant-grid";
+import { IdentityDockExportBlock } from "@/components/identity-dock-export-block";
 import { IdentityDockPanelToolbar } from "@/components/identity-dock-panel-toolbar";
 import { useAssistantSubmitHandlers } from "@/components/use-assistant-submit";
 import { useAssistantView } from "@/components/use-assistant-view";
@@ -94,7 +95,7 @@ export function IdentityDockAssistantPanel({
   onPreviewTokens: (tokens: IdentityTokens) => void;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const { brief, setBrief, setExpanded } = useIdentityAssistantStore();
+  const { brief, setBrief, setExpanded, previewTokens: acceptedTokens } = useIdentityAssistantStore();
   const { session, status, dispatch, submit, cancel } = useIdentityAssistant(previewTokens, true);
   const ui = useAssistantView({ proposalId: session.proposal?.requestId, onBrief: setBrief });
   const busy = session.pending !== null;
@@ -129,6 +130,7 @@ export function IdentityDockAssistantPanel({
         dispatch={dispatch}
         onPreviewTokens={onPreviewTokens}
       />
+      {acceptedTokens !== null ? <IdentityDockExportBlock tokens={acceptedTokens} /> : null}
       <Stack gap={2} className="shrink-0 border-t border-border bg-background px-3 py-3">
         <ConversationComposer
           session={session}

@@ -7,6 +7,7 @@ import { RootProvider } from "fumadocs-ui/provider/next";
 import { AnimateObserver } from "@zedtech/zedkit-ui";
 import { CustomIdentityBar } from "@/components/custom-identity-bar";
 import { IdentityDockGate } from "@/components/identity-dock-gate";
+import { IdentityAssistantStoreProvider } from "@/lib/identity-assistant-store";
 import { purgeLegacyIdentityStorage } from "@/lib/site-identity-storage";
 import { SiteChromeA11yPatch, SiteHeaderSurfacePatch } from "@/ui/site-chrome-a11y";
 import { ThemeColorMeta } from "@/ui/theme-color-meta";
@@ -32,8 +33,10 @@ export function Provider({ children }: { children: ReactNode }) {
       <RouteScrollReset />
       <AnimateObserver />
       <CustomIdentityBar />
-      <IdentityDockGate />
-      {children}
+      <IdentityAssistantStoreProvider>
+        <IdentityDockGate />
+        {children}
+      </IdentityAssistantStoreProvider>
     </RootProvider>
   );
 }
