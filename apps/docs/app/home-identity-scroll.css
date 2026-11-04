@@ -8,7 +8,7 @@
  * Everywhere else (phones, short windows, reduced motion) nothing is pinned and the section is the plain tabs it
  * always was, so the page stays short on a phone.
  *
- * The pinned frame has a fixed height (the window below the header), so the page below never moves while the examples
+ * The pinned frame has a fixed height (the window below the header, capped at the tallest example), so the page below never moves while the examples
  * change size. An example taller than the frame is clipped with a fade and stays reachable by keyboard focus.
  * Nothing in the pin may be `overflow: hidden` above it or carry a transform: the pin is `position: sticky`, and the
  * examples portal dialogs and drawers into the stage.
@@ -27,7 +27,11 @@
   [data-identity-track] {
     --zk-top: 4.25rem;
     --zk-bottom: 0.5rem;
-    --zk-pin: calc(100svh - var(--zk-top) - var(--zk-bottom));
+    /*
+     * The window below the header, capped at the tallest example (tabs + stage, ~53rem) so a tall window
+     * does not leave an empty band under every example; all examples share the cap, so tabs never jump.
+     */
+    --zk-pin: min(calc(100svh - var(--zk-top) - var(--zk-bottom)), 53rem);
     /* The pin stays stuck for one step per example. */
     --zk-step: 42svh;
     position: relative;
