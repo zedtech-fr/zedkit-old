@@ -137,7 +137,7 @@ Must fix = breaks the bar or duplicates the kit · Should fix = weakens it · Ni
 
 Design critique: <authority / competition / type roles / density / rhythm / whitespace — strongest remaining weakness>
 Lazy-client bar: <reassured / prefilled / next step / price-duration-guarantees / URL state / interrupted-resume / flaky-safe — pass or gap each>
-Handoffs: <a11y-auditor / copywriter / console-architecture — or none>
+Handoffs: <<!-- if:agent=a11y-auditor -->a11y-auditor / <!-- /if -->copywriter<!-- if:agent=console-architecture --> / console-architecture<!-- /if --> — or none>
 
 Verdict: NO BLOCKERS | BLOCKERS: <numbered>
 ```

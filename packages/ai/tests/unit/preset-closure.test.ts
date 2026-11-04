@@ -118,6 +118,7 @@ describe("preset closure", () => {
         "personas.template.md",
         join("agents", "orchestrator.md"),
         join("agents", "ui-designer.md"),
+        join("agents", "verifier.md"),
         join("skills", "definition-of-done", "SKILL.md"),
         join("skills", "review", "SKILL.md"),
         join("skills", "setup-ai", "SKILL.md"),
@@ -268,5 +269,22 @@ describe("preset closure", () => {
     appendFileSync(join(dest, ".agents/skills/review/SKILL.md"), "\nRun `/plan` before merging.\n");
     const found = validateKit(join(dest, ".agents")).map((issue) => `${issue.path}: ${issue.message}`);
     expect(found).toContain('skills/review/SKILL.md: references skill "plan", which this preset does not install');
+  });
+
+  it("flags the unbackticked handoffs line for setup and starter, except single-word names", () => {
+    const line = "Handoffs: <a11y-auditor / copywriter / console-architecture — or none>";
+    const rows: Array<[string, string]> = [
+      ["setup", "agents/ui-designer.md"],
+      ["starter", "skills/review/SKILL.md"],
+    ];
+    for (const [preset, file] of rows) {
+      const dest = tempDir();
+      install(dest, preset);
+      appendFileSync(join(dest, ".agents", ...file.split("/")), `\n${line}\n`);
+      const found = validateKit(join(dest, ".agents")).map((issue) => `${issue.path}: ${issue.message}`);
+      expect(found).toContain(`${file}: references agent "a11y-auditor", which this preset does not install`);
+      expect(found).toContain(`${file}: references agent "console-architecture", which this preset does not install`);
+      expect(found.some((entry) => entry.includes('"copywriter"'))).toBe(false);
+    }
   });
 });

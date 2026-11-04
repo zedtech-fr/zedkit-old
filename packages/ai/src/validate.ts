@@ -1,6 +1,6 @@
 // Original work by the same author.
 import { existsSync, lstatSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative, sep } from "node:path";
+import { dirname, join, relative, sep } from "node:path";
 import { tryCatch } from "@zedtech/zedkit-core";
 import { kitDir, kitUniverse, readManifest } from "./kit.js";
 import { parseFrontmatter } from "./frontmatter.js";
@@ -135,6 +135,42 @@ function checkLineEndings(root: string, issues: Issue[]): void {
   }
 }
 
+// Flag relative links that resolve nowhere in kit files (skip web, #anchor, fenced).
+function checkLinks(root: string, kit: string, issues: Issue[]): void {
+  const universe = refUniverse(kit);
+  const entries = readdirSync(root, { recursive: true, encoding: "utf8" });
+  for (const entry of entries) {
+    if (!entry.endsWith(".md") || entry.endsWith(".kit.md")) continue;
+    const [top, name, nested] = entry.split(sep);
+    const base = (name ?? "").replace(/\.md$/, "");
+    const scoped =
+      (entry === "personas.md" && existsSync(join(kit, "personas.template.md"))) ||
+      (top === "skills" && nested !== undefined && universe.skills.has(name ?? "")) ||
+      (nested === undefined &&
+        ((top === "agents" && universe.agents.has(base)) || (top === "commands" && universe.commands.has(base))));
+    if (!scoped) continue;
+    const full = join(root, entry);
+    if (!statSync(full).isFile()) continue;
+    const seen = new Set<string>();
+    let fenced = false;
+    for (const line of read(full).split("\n")) {
+      if (/^\s*(`{3,}|~{3,})/.test(line)) {
+        fenced = !fenced;
+        continue;
+      }
+      if (fenced) continue;
+      for (const match of line.matchAll(/!?\[[^\]]*\]\(([^)\s]+)(?:\s+[^)]*)?\)/g)) {
+        const target = match[1] ?? "";
+        if (/^(#|https?:\/\/)/.test(target) || seen.has(target)) continue;
+        seen.add(target);
+        if (!existsSync(join(dirname(full), target.split(/[?#]/)[0] ?? ""))) {
+          issues.push({ path: entry, message: `broken link to "${target}" (no such file)` });
+        }
+      }
+    }
+  }
+}
+
 const LADDER_SKILLS = ["plan", "implement", "review", "ponytail-review"];
 
 // The ponytail ladder must survive in the skills that ask it and in the
@@ -194,12 +230,9 @@ function namesIn(root: string, dir: string): string[] {
 
 // Reference closure over the kit universe: a skill, agent or command that
 // names a kit skill/agent must name one installed in this tree (in any
-// kind). Checked on the files present, so a preset that omitted the target
-// fails the same way the full kit would. Bare backticked tokens count only
-// in kit-origin files — same name ships in the bundled kit — where a kit
-// name is a reference by convention; in user-authored files the same token
-// is an ordinary word. A user file shadowing a kit name (kit sidecar
-// beside it) is user prose too.
+// kind). Backticked tokens and hyphenated whole words count only in
+// kit-origin files, where a kit name is a reference by convention; in
+// user-authored files the same token is an ordinary word.
 function refUniverse(kit: string): RefUniverse {
   const uni = tryCatch(() => kitUniverse(kit));
   if (!uni.ok) return { skills: new Set(), agents: new Set(), commands: new Set() };
@@ -283,6 +316,7 @@ function collect(root: string, kit: string): Issue[] {
   checkLineEndings(root, issues);
   checkSkillRefs(root, skills, kit, issues);
   checkLenses(root, skills, issues);
+  checkLinks(root, kit, issues);
   return issues;
 }
 
@@ -301,8 +335,8 @@ function checkLenses(root: string, skills: Set<string>, issues: Issue[]): void {
  * found; empty means valid. An unreadable entry (dangling symlink,
  * permissions) is reported as a problem instead of throwing. `kit`
  * locates the bundled kit for the reference universe (defaults to this
- * package's kit); an unreadable kit disables the /name and backticked
- * forms, while Skill-tool calls still count.
+ * package's kit); an unreadable kit disables the /name, backticked and
+ * whole-word forms, while Skill-tool calls still count.
  */
 export function validateKit(root: string, kit: string = kitDir()): Issue[] {
   if (!existsSync(root)) {
