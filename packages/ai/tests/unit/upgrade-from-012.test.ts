@@ -1,0 +1,94 @@
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { describe, expect, it } from "vitest";
+import { main } from "#cli.js";
+import { installKit } from "#install.js";
+import { checkDrift, validateKit } from "#validate.js";
+import { AGENT, COMMAND, put, SKILL, tempDir } from "./helpers.js";
+
+function run(...argv: string[]): { code: number; text: string; errors: string } {
+  const out: string[] = [];
+  const errors: string[] = [];
+  const code = main(argv, { out: (line) => out.push(line), err: (line) => errors.push(line) });
+  return { code, text: out.join("\n"), errors: errors.join("\n") };
+}
+
+function readSnap(dest: string, rels: readonly string[]): Record<string, string> {
+  const snap: Record<string, string> = {};
+  for (const rel of rels) {
+    const path = join(dest, rel);
+    if (existsSync(path)) snap[rel] = readFileSync(path, "utf8");
+  }
+  return snap;
+}
+
+/** Simulates an adopter on kit 0.12 (starter + cursor, real .cursor dirs, edited kit files). */
+function seed012Tree(dest: string): readonly string[] {
+  const result = installKit({ dest, preset: "starter", providers: ["cursor"] });
+  if (!result.ok) throw result.error;
+
+  put(dest, ".cursor/skills/team-own/SKILL.md", `${SKILL("team-own")}\nTeam skill kept from 0.12.\n`);
+  put(dest, ".cursor/agents/explorer.md", AGENT("explorer", "Custom explorer from 0.12.\n"));
+  put(dest, ".cursor/commands/review.md", COMMAND("review", "Custom review command from 0.12."));
+
+  const personasPath = join(dest, ".agents/personas.md");
+  const v1 = readFileSync(personasPath, "utf8");
+  expect(v1).toContain("Stressed user");
+  expect(v1).not.toContain("| Persona | Goals |");
+  writeFileSync(personasPath, v1.replace("Stressed user", "Stressed shopper"));
+
+  const reviewSkill = join(dest, ".agents/skills/review/SKILL.md");
+  writeFileSync(reviewSkill, `${SKILL("review")}\nOur ladder notes.\n`);
+
+  return [
+    ".agents/personas.md",
+    ".agents/skills/review/SKILL.md",
+    ".cursor/skills/team-own/SKILL.md",
+    ".cursor/agents/explorer.md",
+    ".cursor/commands/review.md",
+  ];
+}
+
+describe("Upgrading from 0.12 (README contract)", () => {
+  it("setup keeps user files, writes *.kit.md and zk-* sidecars, validates, then no-ops", () => {
+    const dest = tempDir();
+    const userPaths = seed012Tree(dest);
+    const before = readSnap(dest, userPaths);
+
+    const upgrade = run("setup", dest, "--provider", "cursor");
+    expect(upgrade.code).toBe(0);
+    expect(upgrade.errors).toBe("");
+
+    for (const rel of userPaths) {
+      expect(readSnap(dest, [rel])[rel], rel).toBe(before[rel]);
+    }
+
+    expect(readFileSync(join(dest, ".agents/personas.md"), "utf8")).toContain("Stressed shopper");
+    expect(readFileSync(join(dest, ".agents/personas.md"), "utf8")).not.toContain("# Project personas (v2)");
+
+    expect(existsSync(join(dest, ".agents/personas.kit.md"))).toBe(true);
+    expect(readFileSync(join(dest, ".agents/personas.kit.md"), "utf8")).toContain("# Project personas (v2)");
+
+    expect(existsSync(join(dest, ".agents/skills/zk-review/SKILL.md"))).toBe(true);
+    expect(readFileSync(join(dest, ".agents/skills/review/SKILL.md"), "utf8")).toBe(before[".agents/skills/review/SKILL.md"]);
+
+    expect(existsSync(join(dest, ".cursor/agents/explorer.kit.md"))).toBe(true);
+    expect(existsSync(join(dest, ".cursor/commands/review.kit.md"))).toBe(true);
+
+    expect(existsSync(join(dest, ".agents/skills/domain-modeling/SKILL.md"))).toBe(true);
+    expect(existsSync(join(dest, ".agents/agents/product-director.md"))).toBe(true);
+
+    expect(validateKit(join(dest, ".agents"))).toEqual([]);
+    expect(checkDrift(dest, join(dest, ".agents"))).toEqual([]);
+    expect(run("validate", dest)).toEqual({ code: 0, text: "ok", errors: "" });
+
+    const again = run("setup", dest, "--provider", "cursor");
+    expect(again.code).toBe(0);
+    const writes = again.text.split("\n").filter((line) => /^(copy|link|write)\s/u.test(line));
+    expect(writes).toEqual([]);
+
+    const third = installKit({ dest, preset: "setup", providers: ["cursor"], adopt: true });
+    if (!third.ok) throw third.error;
+    expect(third.value.filter((a) => a.kind === "copy" || a.kind === "link" || a.kind === "write")).toEqual([]);
+  });
+});

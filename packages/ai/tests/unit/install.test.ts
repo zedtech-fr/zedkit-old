@@ -79,9 +79,10 @@ describe("installKit", () => {
     const again = install(dest, { preset: "starter", providers: ["cursor"], adopt: true });
     expect(again.filter((a) => a.kind !== "skip")).toEqual([
       expect.objectContaining({ kind: "copy", path: join(".agents", "commands", "review.kit.md") }),
+      expect.objectContaining({ kind: "copy", path: join(".cursor", "commands", "review.kit.md") }),
     ]);
     expect(readFileSync(join(dest, ".agents/commands/review.md"), "utf8")).toBe("edited by user\n");
-    expect(existsSync(join(dest, ".cursor/commands/review.kit.md"))).toBe(false);
+    expect(existsSync(join(dest, ".cursor/commands/review.kit.md"))).toBe(true);
     expect(existsSync(join(dest, ".agents/skills/zk-review"))).toBe(false);
   });
 
@@ -148,6 +149,7 @@ describe("installKit", () => {
     expect(existsSync(join(dest, ".agents", "personas.kit.md"))).toBe(false);
     expect(again.filter((a) => a.kind !== "skip")).toEqual([
       expect.objectContaining({ kind: "copy", path: join(".agents", "commands", "review.kit.md") }),
+      expect.objectContaining({ kind: "copy", path: join(".cursor", "commands", "review.kit.md") }),
     ]);
   });
 
