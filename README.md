@@ -1,32 +1,94 @@
-# zedkit
-
-[![ci](https://github.com/zedtech-fr/zedkit/actions/workflows/ci.yml/badge.svg)](https://github.com/zedtech-fr/zedkit/actions/workflows/ci.yml)
-[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![docs](https://img.shields.io/badge/docs-zedkit.app-blue.svg)](https://zedkit.app)
-
-Open-source building blocks for modern apps: small, dependency-light TypeScript
-packages. MIT licensed; see [LICENSE](LICENSE).
-
-Use **npm packages** (`pnpm add @zedtech/…`) or **copy UI source** via the shadcn
-registry where published — [install or copy on the docs site](https://zedkit.app/docs/getting-started#install-or-copy).
+<div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/ui-proof/readme-gallery-dark.png">
-  <img alt="zedkit UI gallery: buttons, badges, status labels, inputs and typography" src="docs/ui-proof/readme-gallery-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/readme/hero-dark.webp">
+  <img alt="zedkit: a live project tracker built entirely from zedkit components, glass identity" src=".github/assets/readme/hero-light.webp">
 </picture>
 
+# zedkit
+
+### Why rebuild everything, or settle for what exists, when you can start from a top-notch setup?
+
+A polished React UI kit with real identities, an AI setup your agents actually follow,<br>
+and the server, SEO and quality packages behind them. Open source, MIT.
+
+[![ci](https://github.com/zedtech-fr/zedkit/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/zedtech-fr/zedkit/actions/workflows/ci.yml?query=branch%3Amain)
+[![npm](https://img.shields.io/npm/v/@zedtech/zedkit-ui?label=zedkit-ui&color=5b4bdb)](https://www.npmjs.com/package/@zedtech/zedkit-ui)
+[![license: MIT](https://img.shields.io/badge/license-MIT-5b4bdb.svg)](LICENSE)
+
+**[Docs](https://zedkit.app/docs)** · **[Live demo](https://zedkit.app)** · **[Catalog](docs/catalog/README.md)** · **[AI setup](https://zedkit.app/docs/ai/setup)**
+
+</div>
+
+---
+
+## What you get
+
+**🎨 A UI kit with taste built in** — React 19 + Tailwind 4 components driven by
+tokens. Pick an *identity* (type, shape, density, colour together) and the same
+components read as a newsroom, an invoicing tool, a boutique or a SaaS app.
+Install from npm or copy the source through the shadcn registry.
+
+**🤖 An AI setup in one prompt** — `zedkit-ai` gives Cursor, Claude Code, Codex
+and friends one shared set of rules, skills and checks, validated in CI.
+
+**🧱 The boring parts, done right** — SEO metadata, server helpers, storage,
+flags, i18n, observability: small, typed, dependency-light packages.
+
+**✅ Built to last** — strict TypeScript, API reports, changesets and tests on
+every package. No placeholders: a package exists only when real code backs it.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/readme/identities-dark.webp">
+  <img alt="The same zedkit components in four identities: newsroom, invoicing, boutique and SaaS" src=".github/assets/readme/identities-light.webp">
+</picture>
+
+<p align="center"><sub>Same components, four identities. <a href="https://zedkit.app">Try them live →</a></sub></p>
+
+## Start in 60 seconds
+
+**UI** (Node ≥ 22):
+
 ```sh
-pnpm add @zedtech/zedkit-ui          # React UI components (Tailwind v4)
-pnpm add -D @zedtech/zedkit-ai       # one agent setup for Cursor, Claude, Codex…
+pnpm add @zedtech/zedkit-ui
 ```
 
-Docs with live examples: [zedkit.app](https://zedkit.app). Full catalog by need
-below; five-minute start in [5-minute quickstart](#5-minute-quickstart).
+```tsx
+import { Button } from "@zedtech/zedkit-ui";
 
-## Packages
+export default () => <Button>Ship it</Button>;
+```
 
-All packages are public on npm. Maturity is the least mature catalog
-need per package (criteria: [docs/catalog/README.md](docs/catalog/README.md)).
+Styles and setup: [getting started](https://zedkit.app/docs/getting-started#install-or-copy).
+
+**AI setup** — paste this into your agent:
+
+```text
+Set up zedkit AI on this repo following https://zedkit.app/ai/setup.md
+```
+
+Or by hand:
+
+```sh
+pnpm add -D @zedtech/zedkit-ai
+npx @zedtech/zedkit-ai setup --provider cursor
+npx zedkit-ai validate                   # must print: ok
+```
+
+## Highlights
+
+| | Package | npm |
+|---|---|---|
+| 🎨 | [`@zedtech/zedkit-ui`](packages/ui/README.md) | [![npm](https://img.shields.io/npm/v/@zedtech/zedkit-ui?label=)](https://www.npmjs.com/package/@zedtech/zedkit-ui) |
+| 🤖 | [`@zedtech/zedkit-ai`](packages/ai/README.md) | [![npm](https://img.shields.io/npm/v/@zedtech/zedkit-ai?label=)](https://www.npmjs.com/package/@zedtech/zedkit-ai) |
+| 🔎 | [`@zedtech/zedkit-seo`](packages/seo/README.md) | [![npm](https://img.shields.io/npm/v/@zedtech/zedkit-seo?label=)](https://www.npmjs.com/package/@zedtech/zedkit-seo) |
+| 🧱 | [`@zedtech/zedkit-server`](packages/server/README.md) | [![npm](https://img.shields.io/npm/v/@zedtech/zedkit-server?label=)](https://www.npmjs.com/package/@zedtech/zedkit-server) |
+| ⚙️ | [`@zedtech/zedkit-core`](packages/core/README.md) | [![npm](https://img.shields.io/npm/v/@zedtech/zedkit-core?label=)](https://www.npmjs.com/package/@zedtech/zedkit-core) |
+
+<details>
+<summary><b>All packages</b> (version and maturity)</summary>
+
+Maturity criteria: [docs/catalog/README.md](docs/catalog/README.md).
 
 <!-- packages-table: generated by `pnpm catalog:build` — do not edit -->
 
@@ -51,21 +113,14 @@ need per package (criteria: [docs/catalog/README.md](docs/catalog/README.md)).
 
 <!-- /packages-table -->
 
-A package exists only when real, used code backs it — no placeholders.
-Each package README records its origin ("original work by the same
-author") and what it deliberately leaves out.
+</details>
 
-## Looking for something?
+## Using zedkit with your agent
 
-"I want X, what do you have to do it?" — search the
-[catalog index](docs/catalog/README.md) by need (machine-readable:
-[docs/catalog/catalog.json](docs/catalog/catalog.json)). Golden rule
-(advice): reach every third-party library through a thin wrapper that
-re-exports it, instead of importing it directly all over the code — see
-[docs/golden-rule.md](docs/golden-rule.md).
-
-Consumer projects: paste this into your agent instructions (canonical text:
-`.agents/skills/use-zedkit/SKILL.md` — keep in sync):
+Search the [catalog by need](docs/catalog/README.md)
+([JSON](docs/catalog/catalog.json)), and wrap third-party libraries behind a
+thin re-export ([golden rule](docs/golden-rule.md)). Paste this into your
+agent instructions:
 
 <!-- use-zedkit-snippet: must match .agents/skills/use-zedkit/SKILL.md core rule -->
 
@@ -76,30 +131,7 @@ exists; otherwise adopt a mature npm package behind a thin wrapper;
 otherwise propose adding it to zedkit with its domain.
 ```
 
-## 5-minute quickstart
-
-Prerequisites: Node ≥ 22 and pnpm 9. In your own repo:
-
-```sh
-pnpm add -D @zedtech/zedkit-ai
-npx @zedtech/zedkit-ai setup --provider cursor
-# in your agent: /setup-ai
-npx zedkit-ai validate                   # must print: ok
-```
-
-Details: [packages/ai/README.md](packages/ai/README.md). Every package
-installs the same way (`pnpm add @zedtech/zedkit-<name>`).
-
-## Tooling
-
-- pnpm workspaces with a pinned `packageManager` and a shared `catalog`
-- Turbo pipelines: `typecheck`, `lint`, `build`, `test`
-- TypeScript strict, ESM + types, vitest, ESLint (raw `try`/`catch` is banned;
-  use `tryCatch` from `@zedtech/zedkit-core`)
-- Changesets for versioning; the release workflow publishes public
-  packages to npm on every Version PR merge
-- Docs site: `pnpm dev` rebuilds the catalog, then serves `apps/docs` with
-  hot reload at <http://localhost:3100> (docs at `/docs`)
+## Contributing
 
 ```sh
 pnpm install
@@ -107,9 +139,12 @@ pnpm dev                                     # docs site, http://localhost:3100
 pnpm typecheck && pnpm lint && pnpm build && pnpm test
 ```
 
-## Public repo rules
+pnpm workspaces · Turbo · strict TypeScript · vitest · Changesets (every
+Version PR merge publishes to npm). Raw `try`/`catch` is banned; use
+`tryCatch` from `@zedtech/zedkit-core`.
 
-- No secrets, no customer data, no internal URLs.
-- No private names, endpoints, or domain terms from other projects.
-- Third-party material (e.g. vendored skills) requires its licence file and a
-  row in `packages/ai/kit/THIRD_PARTY_NOTICES.md`.
+Public repo rules: no secrets, customer data or internal URLs; no private
+names from other projects; third-party material needs its licence and a row in
+`packages/ai/kit/THIRD_PARTY_NOTICES.md`.
+
+<p align="center"><sub>MIT © zedtech-fr · <a href="https://zedkit.app">zedkit.app</a></sub></p>

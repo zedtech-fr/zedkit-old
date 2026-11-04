@@ -1,34 +1,19 @@
 // Original work by the same author.
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { err, ok, tryCatch, type Result } from "@zedtech/zedkit-core";
 import { ALL_PROVIDERS, installKit, type Provider } from "./install.js";
 import { installNextStepLines } from "./install-next-step.js";
-import { readManifest } from "./kit.js";
+import { kitDir, readManifest } from "./kit.js";
 import { checkDrift, checkKitDocs, validateKit } from "./validate.js";
 
-const USAGE = `zedkit-ai <command>
-
-  setup [dir] [--provider ...] [--preset starter|setup|core|full] [--dry-run]
-      One-shot onboarding: preset setup by default (override with --preset);
-      same as init --adopt (keeps your existing agent files on collision).
-      Then run /setup-ai in your agent.
-  init [dir] [--preset starter|setup|core|full] [--provider ...] [--adopt] [--dry-run]
-      Copy skills, subagents, commands and an AGENTS.md template into dir
-      (default .), then wire the providers (default all). Never overwrites
-      existing files (an existing AGENTS.md without the ladder gets the
-      ladder section appended). --adopt keeps a colliding user file and
-      writes the kit version beside it (review.kit.md or zk-review).
-      --provider takes cursor,claude,codex,muse,all; --target is an alias
-      of --provider.
-  validate [dir]
-      Check skills, subagents and commands, plus provider-copy drift
-      (default dir: .agents; a project root is accepted too). Exit 1
-      on problems.
-  list
-      Show presets, subagents and commands.
-`;
+// Help text lives in kit/usage.txt (shipped data, not code); the one-line
+// fallback keeps --help total on a broken install.
+function usage(): string {
+  const read = tryCatch(() => readFileSync(join(kitDir(), "usage.txt"), "utf8"));
+  return read.ok ? read.value.trimEnd() : "zedkit-ai <command>";
+}
 
 /** Where the CLI writes: normal lines and error lines. */
 export type Sinks = { out: (line: string) => void; err: (line: string) => void };
@@ -98,14 +83,6 @@ function runInstall(args: string[], sinks: Sinks, kind: "init" | "setup"): numbe
   return 0;
 }
 
-function runInit(args: string[], sinks: Sinks): number {
-  return runInstall(args, sinks, "init");
-}
-
-function runSetup(args: string[], sinks: Sinks): number {
-  return runInstall(args, sinks, "setup");
-}
-
 function runValidate(args: string[], sinks: Sinks): number {
   const parsed = parse(args, {}, 1);
   if (!parsed.ok) return fail(parsed.error.message, sinks);
@@ -142,11 +119,11 @@ function runList(args: string[], sinks: Sinks): number {
 /** Run the CLI. Returns the process exit code (0 ok, 1 validation problems, 2 usage or runtime error). */
 export function main(argv: string[], sinks: Sinks): number {
   const [command, ...rest] = argv;
-  if (command === "setup") return runSetup(rest, sinks);
-  if (command === "init") return runInit(rest, sinks);
+  if (command === "setup") return runInstall(rest, sinks, "setup");
+  if (command === "init") return runInstall(rest, sinks, "init");
   if (command === "validate") return runValidate(rest, sinks);
   if (command === "list") return runList(rest, sinks);
   const help = command === undefined || command === "--help" || command === "-h";
-  (help ? sinks.out : sinks.err)(USAGE.trimEnd());
+  (help ? sinks.out : sinks.err)(usage());
   return help ? 0 : 2;
 }

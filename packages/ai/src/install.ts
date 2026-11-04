@@ -15,7 +15,7 @@ import {
 import { dirname, join, sep } from "node:path";
 import { err, ok, tryCatch, type Result } from "@zedtech/zedkit-core";
 import { parseFrontmatter } from "./frontmatter.js";
-import { agentsForPreset, commandsForPreset, kitDir, kitUniverse, readManifest, type KitManifest } from "./kit.js";
+import { adoptRel, agentsForPreset, commandsForPreset, kitDir, kitUniverse, readManifest, type KitManifest } from "./kit.js";
 import { setLensStatus } from "./lenses.js";
 import { danglingKitRefs, skillRefFiles } from "./skill-refs.js";
 import { resolveConditionals, type Availability } from "./conditional.js";
@@ -123,13 +123,6 @@ function canAdopt(rel: string): boolean {
   return false;
 }
 
-function adoptRel(rel: string): string {
-  const base = rel.split(sep).pop() ?? rel;
-  const dir = dirname(rel);
-  if (base.endsWith(".md")) return join(dir, base.replace(/\.md$/, ".kit.md"));
-  return join(dir, `zk-${base}`);
-}
-
 function treeFiles(root: string): string[] | undefined {
   const entries = tryCatch(() => readdirSync(root, { recursive: true, encoding: "utf8" }));
   if (!entries.ok) return undefined;
@@ -223,9 +216,7 @@ function skillNames(manifest: KitManifest, kit: string, preset: string): string[
     throw new Error(`unknown preset "${preset}" (have: ${Object.keys(manifest.presets).join(", ")})`);
   }
   if (entry !== "*") return entry;
-  return readdirSync(join(kit, "skills"), { withFileTypes: true })
-    .filter((e) => e.isDirectory())
-    .map((e) => e.name);
+  return [...kitUniverse(kit).skills];
 }
 
 // Resolve everything the install needs from the kit before the first write,
@@ -245,12 +236,7 @@ function plan(kit: string, manifest: KitManifest, preset: string) {
   }
   const licences = readdirSync(join(kit, "skills")).filter((f) => f.startsWith("LICENSE-"));
   const avail: Availability = { skills: new Set(skills), agents: new Set(agents), commands: new Set(commands) };
-  const uni = kitUniverse(kit);
-  const universe: Availability = {
-    skills: new Set(uni.skills),
-    agents: new Set(uni.agents),
-    commands: new Set(uni.commands),
-  };
+  const universe = kitUniverse(kit);
   const files = skillRefFiles(kit, skills, agents, commands).map((file) => ({
     ...file,
     text: resolveConditionals(file.text, avail, universe),
@@ -355,15 +341,10 @@ function patchConditionals(folder: string, avail: Availability): void {
 
 function installContent(ctx: Ctx, content: ReturnType<typeof plan>): Map<string, string> {
   const installed = new Set([...content.skills, ...content.agents]);
-  const avail: Availability = {
-    skills: new Set(content.skills),
-    agents: new Set(content.agents),
-    commands: new Set(content.commands),
-  };
   const skillDest = new Map<string, string>();
   for (const name of content.skills) {
     const rel = join(".agents", "skills", name);
-    if (ctx.adopt && treesMatch(join(ctx.kit, "skills", name), join(ctx.dest, rel), installed, avail)) {
+    if (ctx.adopt && treesMatch(join(ctx.kit, "skills", name), join(ctx.dest, rel), installed, ctx.avail)) {
       ctx.actions.push({ kind: "skip", path: rel, note: "already installed" });
       skillDest.set(name, rel);
       continue;
@@ -371,7 +352,7 @@ function installContent(ctx: Ctx, content: ReturnType<typeof plan>): Map<string,
     const destRel = place(ctx, "copy", rel, (target) => {
       cpSync(join(ctx.kit, "skills", name), join(ctx.dest, target), { recursive: true, dereference: true });
       patchLenses(join(ctx.dest, target), installed);
-      patchConditionals(join(ctx.dest, target), avail);
+      patchConditionals(join(ctx.dest, target), ctx.avail);
     });
     skillDest.set(name, destRel ?? rel);
   }
@@ -446,21 +427,28 @@ function linkPresentSkills(
   }
 }
 
-function wireClaude(ctx: Ctx, content: ReturnType<typeof plan>, skillDest: Map<string, string>): void {
-  const skillsRel = join(".claude", "skills");
+function wireSkillsDir(ctx: Ctx, skillsRel: string, content: ReturnType<typeof plan>, skillDest: Map<string, string>): void {
   const existing = lstatOf(join(ctx.dest, skillsRel));
   if (existing?.isDirectory() && !existing.isSymbolicLink()) {
     linkPresentSkills(ctx, skillsRel, content.skills, skillDest);
   } else {
     link(ctx, skillsRel, "../.agents/skills");
   }
+}
+
+function copyLayerKind(ctx: Ctx, kind: "agents" | "commands", names: readonly string[], layerRel: string): void {
+  for (const name of names) {
+    copyFile(ctx, join(ctx.kit, kind, `${name}.md`), join(layerRel, `${name}.md`));
+  }
+}
+
+function wireClaude(ctx: Ctx, content: ReturnType<typeof plan>, skillDest: Map<string, string>): void {
+  wireSkillsDir(ctx, join(".claude", "skills"), content, skillDest);
   for (const kind of ["agents", "commands"] as const) {
     const layerRel = join(".claude", kind);
     const layer = lstatOf(join(ctx.dest, layerRel));
     if (layer?.isDirectory() && !layer.isSymbolicLink()) {
-      for (const name of content[kind]) {
-        copyFile(ctx, join(ctx.kit, kind, `${name}.md`), join(layerRel, `${name}.md`));
-      }
+      copyLayerKind(ctx, kind, content[kind], layerRel);
     } else {
       link(ctx, layerRel, `../.agents/${kind}`);
     }
@@ -471,19 +459,9 @@ function wireClaude(ctx: Ctx, content: ReturnType<typeof plan>, skillDest: Map<s
 }
 
 function wireCursor(ctx: Ctx, content: ReturnType<typeof plan>, skillDest: Map<string, string>): void {
-  const skillsRel = join(".cursor", "skills");
-  const existing = lstatOf(join(ctx.dest, skillsRel));
-  if (existing?.isDirectory() && !existing.isSymbolicLink()) {
-    linkPresentSkills(ctx, skillsRel, content.skills, skillDest);
-  } else {
-    link(ctx, skillsRel, "../.agents/skills");
-  }
-  for (const name of content.agents) {
-    copyFile(ctx, join(ctx.kit, "agents", `${name}.md`), join(".cursor", "agents", `${name}.md`));
-  }
-  for (const name of content.commands) {
-    copyFile(ctx, join(ctx.kit, "commands", `${name}.md`), join(".cursor", "commands", `${name}.md`));
-  }
+  wireSkillsDir(ctx, join(".cursor", "skills"), content, skillDest);
+  copyLayerKind(ctx, "agents", content.agents, join(".cursor", "agents"));
+  copyLayerKind(ctx, "commands", content.commands, join(".cursor", "commands"));
   writeCursorRule(ctx);
 }
 

@@ -1,7 +1,16 @@
 // Original work by the same author.
 import { readdirSync, readFileSync } from "node:fs";
+import { dirname, join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { err, ok, tryCatch, type Result } from "@zedtech/zedkit-core";
+
+/** Adopt sidecar path: `*.kit.md` for files, `zk-<name>` for skill folders. */
+export function adoptRel(rel: string): string {
+  const base = rel.split(sep).pop() ?? rel;
+  const dir = dirname(rel);
+  if (base.endsWith(".md")) return join(dir, base.replace(/\.md$/, ".kit.md"));
+  return join(dir, `zk-${base}`);
+}
 
 export type KitManifest = {
   /** Preset name -> skill names, or "*" for every skill in the kit. */
@@ -83,18 +92,20 @@ export function commandsForPreset(manifest: KitManifest, preset: string): string
   return manifest.presetCommands?.[preset] ?? manifest.commands ?? [];
 }
 
-export type KitUniverse = { skills: string[]; agents: string[]; commands: string[] };
+export type KitUniverse = { skills: Set<string>; agents: Set<string>; commands: Set<string> };
 
 /** Every installable name in a kit dir: skill folders, agent/command stems. Missing dirs read as empty (minimal foreign kits). */
 export function kitUniverse(dir: string = kitDir()): KitUniverse {
   const skills = tryCatch(() => readdirSync(`${dir}/skills`, { withFileTypes: true }));
-  const stems = (sub: string): string[] => {
+  const stems = (sub: string): Set<string> => {
     const files = tryCatch(() => readdirSync(`${dir}/${sub}`));
-    if (!files.ok) return [];
-    return files.value.filter((file) => file.endsWith(".md")).map((file) => file.replace(/\.md$/, ""));
+    if (!files.ok) return new Set();
+    return new Set(files.value.filter((file) => file.endsWith(".md")).map((file) => file.replace(/\.md$/, "")));
   };
   return {
-    skills: skills.ok ? skills.value.filter((entry) => entry.isDirectory()).map((entry) => entry.name) : [],
+    skills: new Set(
+      skills.ok ? skills.value.filter((entry) => entry.isDirectory()).map((entry) => entry.name) : [],
+    ),
     agents: stems("agents"),
     commands: stems("commands"),
   };
