@@ -24,6 +24,15 @@
   }
 }
 
+/* One glass layer: the header carries the kit bar tokens (globals.css); fumadocs'
+   inner bar must not tint or blur again, or the header turns opaque. */
+:root[data-identity] #nd-nav > div {
+  background-color: transparent;
+  border-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
 /* Header: fixed compact height, nav aligned to the content width. */
 #nd-nav,
 #nd-nav > div,
@@ -32,7 +41,7 @@
   height: var(--zk-site-header-height);
   min-height: 0;
 }
-#nd-nav nav a,
+#nd-nav nav a:not([data-slot="badge"]),
 #nd-nav nav button:not([class*="max-w"]) {
   border-radius: 9999px;
   padding-block: 0.375rem;
@@ -41,7 +50,7 @@
 }
 #nd-nav nav button,
 #nd-nav nav [data-search],
-#nd-nav nav a[aria-label] {
+#nd-nav nav a[aria-label]:not([data-slot="badge"]) {
   border: var(--zk-border-width, 1px) solid hsl(var(--border) / 0.35);
   background: hsl(var(--card) / 0.6);
 }
@@ -100,14 +109,8 @@
   background-image: var(--zk-site-sheen);
   box-shadow: var(--zk-shadow-sm);
 }
-:root[data-identity="glass"] #nd-nav > div,
-:root[data-identity="glass"] #nd-mobile-nav {
-  background-color: hsl(var(--background) / 0.6);
-  border-bottom-color: hsl(var(--zk-glass-edge) / var(--zk-glass-edge-alpha));
-  -webkit-backdrop-filter: var(--zk-glass-filter);
-  backdrop-filter: var(--zk-glass-filter);
-}
-:root[data-identity="glass"] #nd-nav nav :is(button, a[aria-label], [data-search]) {
+/* Glass header bars: see globals.css (one blurred layer, kit --zk-glass-bar-* tokens). */
+:root[data-identity="glass"] #nd-nav nav :is(button, a[aria-label], [data-search]):not([data-slot="badge"]) {
   background-image: var(--zk-site-sheen);
   background-color: hsl(var(--card) / var(--zk-glass-alpha));
   border-color: hsl(var(--zk-glass-edge) / var(--zk-glass-edge-alpha));

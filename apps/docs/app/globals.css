@@ -114,23 +114,20 @@ body:has([role="dialog"][data-state="open"]) [data-search-pill] {
 
 :root[data-identity] {
   /* Navbar and sidebar follow the identity border and surfaces (glass tokens default to solid). */
-  #nd-nav {
-    background-color: hsl(var(--background) / var(--zk-glass-alpha, 1));
-    border-bottom: var(--zk-border-width) solid hsl(var(--zk-glass-edge, var(--border)) / var(--zk-glass-edge-alpha, 1));
-    box-shadow: none;
-    -webkit-backdrop-filter: var(--zk-glass-filter, none);
-    backdrop-filter: var(--zk-glass-filter, none);
+  /* Site headers use the kit's glass bar tokens. The blur sits on the header only:
+     fumadocs' inner bar also blurs, and a blurred child of a blurred header has the
+     header as backdrop root, so it blurred nothing and stacked a second tint (opaque). */
+  #nd-nav,
+  #nd-mobile-nav {
+    background-color: hsl(var(--background) / var(--zk-glass-bar-alpha, var(--zk-glass-alpha, 1)));
+    border-bottom: var(--zk-border-width) solid hsl(var(--zk-glass-bar-edge, var(--border)) / var(--zk-glass-bar-edge-alpha, 1));
+    box-shadow: var(--zk-glass-bar-shadow, none);
+    -webkit-backdrop-filter: var(--zk-glass-bar-filter, var(--zk-glass-filter, none));
+    backdrop-filter: var(--zk-glass-bar-filter, var(--zk-glass-filter, none));
   }
   #nd-sidebar {
     background-color: hsl(var(--sidebar) / var(--zk-glass-alpha, 1));
     border-inline-end: var(--zk-border-width) solid hsl(var(--sidebar-border));
-    -webkit-backdrop-filter: var(--zk-glass-filter, none);
-    backdrop-filter: var(--zk-glass-filter, none);
-  }
-  #nd-mobile-nav {
-    background-color: hsl(var(--background) / var(--zk-glass-alpha, 1));
-    border-bottom: var(--zk-border-width) solid hsl(var(--zk-glass-edge, var(--border)) / var(--zk-glass-edge-alpha, 1));
-    box-shadow: none;
     -webkit-backdrop-filter: var(--zk-glass-filter, none);
     backdrop-filter: var(--zk-glass-filter, none);
   }
