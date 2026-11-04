@@ -65,4 +65,21 @@ export const marketingCopy = {
       { quote: "Stock on the page is always right.", name: "Grace Hopper", role: "Founder, North Shop", avatar: "GH" },
     ],
   },
+  pricing: {
+    title: "Simple pricing",
+    description: "Start on a staging key. Pay when you go live.",
+    period: "per month",
+    badge: "Most popular",
+    plans: [
+      { name: "Starter", price: "€0", features: ["1 staging key", "Community support"], action: "Start free" },
+      { name: "Growth", price: "€29", features: ["5 keys", "Email support"], action: "Choose Growth" },
+    ],
+  },
+  faq: {
+    title: "Questions",
+    items: [
+      { question: "Do I need to change my shop?", answer: "No. It runs next to the shop you already have." },
+      { question: "How long does a key take?", answer: "About a minute on staging." },
+    ],
+  },
 } as const;
