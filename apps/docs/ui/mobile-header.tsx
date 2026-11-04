@@ -217,7 +217,9 @@ export function MobileHeader({
           >
             <SiteBrand />
           </Link>
-          <KitVersionLabel version={version} releasesHref={releasesHref} tone="shell" />
+          <span className="hidden sm:inline-flex">
+            <KitVersionLabel version={version} releasesHref={releasesHref} tone="shell" />
+          </span>
         </div>
         <div className="flex shrink-0 items-center">
           <MobileSearchTrigger className={iconButtonClassName} />

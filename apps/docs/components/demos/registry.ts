@@ -28,6 +28,7 @@ import { BrandLogoDemo, BrandLogoHeaderDemo } from "./brand-logo-demo";
 import { ButtonDemo } from "./button-demo";
 import { ButtonSizesDemo } from "./button-sizes-demo";
 import { IdentityPickerDemo, IdentityScopeDemo, IdentitySwitcherDemo } from "./identity-demo";
+import { ScrollGalleryChipsDemo, ScrollGalleryIdentityDemo } from "./scroll-gallery-demo";
 import {
   ScrollScenesBeforeAfterDemo,
   ScrollScenesDemo,
@@ -243,6 +244,8 @@ export const demoRegistry = {
   IdentityPickerDemo: { Demo: IdentityPickerDemo, file: "identity-demo.tsx" },
   IdentityScopeDemo: { Demo: IdentityScopeDemo, file: "identity-demo.tsx" },
   IdentitySwitcherDemo: { Demo: IdentitySwitcherDemo, file: "identity-demo.tsx" },
+  ScrollGalleryChipsDemo: { Demo: ScrollGalleryChipsDemo, file: "scroll-gallery-demo.tsx" },
+  ScrollGalleryIdentityDemo: { Demo: ScrollGalleryIdentityDemo, file: "scroll-gallery-demo.tsx" },
   ScrollScenesBeforeAfterDemo: { Demo: ScrollScenesBeforeAfterDemo, file: "scroll-scenes-demo.tsx", pinned: true },
   ScrollScenesDemo: { Demo: ScrollScenesDemo, file: "scroll-scenes-demo.tsx", pinned: true },
   ScrollScenesLooksDemo: { Demo: ScrollScenesLooksDemo, file: "scroll-scenes-demo.tsx", pinned: true },
