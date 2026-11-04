@@ -301,7 +301,8 @@ function checkLenses(root: string, skills: Set<string>, issues: Issue[]): void {
  * found; empty means valid. An unreadable entry (dangling symlink,
  * permissions) is reported as a problem instead of throwing. `kit`
  * locates the bundled kit for the reference universe (defaults to this
- * package's kit); an unreadable kit disables only the backticked form.
+ * package's kit); an unreadable kit disables the /name and backticked
+ * forms, while Skill-tool calls still count.
  */
 export function validateKit(root: string, kit: string = kitDir()): Issue[] {
   if (!existsSync(root)) {

@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { appendFileSync, existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { resolveConditionals, withoutMarkers, type Availability } from "#conditional.js";
@@ -260,5 +260,13 @@ describe("preset closure", () => {
     expect(existsSync(join(dest, ".agents/skills/triage"))).toBe(false);
     expect(existsSync(join(dest, ".agents/agents/architect.md"))).toBe(false);
     expect(validateKit(join(dest, ".agents"))).toEqual([]);
+  });
+
+  it("flags a /name in the kit universe that the preset does not install", () => {
+    const dest = tempDir();
+    install(dest, "starter");
+    appendFileSync(join(dest, ".agents/skills/review/SKILL.md"), "\nRun `/plan` before merging.\n");
+    const found = validateKit(join(dest, ".agents")).map((issue) => `${issue.path}: ${issue.message}`);
+    expect(found).toContain('skills/review/SKILL.md: references skill "plan", which this preset does not install');
   });
 });

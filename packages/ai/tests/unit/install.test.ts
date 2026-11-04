@@ -388,6 +388,33 @@ describe("installKit", () => {
     if (!badResult.ok) expect(badResult.error.message).toContain("must be a string list");
   });
 
+  it("setup ignores a dirty v1 personas template when v2 is installed", () => {
+    const kit = tempDir();
+    put(kit, "kit.json", JSON.stringify({ presets: { setup: ["alpha"] }, agents: [] }));
+    put(kit, "skills/alpha/SKILL.md", "x");
+    put(kit, "skills/setup-ai/templates/personas-v2.template.md", "clean\n");
+    put(kit, "personas.template.md", 'Call the Skill tool with "ghost".\n');
+    put(kit, "AGENTS.template.md", "t");
+    put(kit, "THIRD_PARTY_NOTICES.md", "n");
+    const result = installKit({ dest: tempDir(), kit, preset: "setup", providers: [] });
+    expect(result.ok).toBe(true);
+  });
+
+  it("setup fails before writing when the installed v2 personas names a missing skill", () => {
+    const kit = tempDir();
+    put(kit, "kit.json", JSON.stringify({ presets: { setup: ["alpha"] }, agents: [] }));
+    put(kit, "skills/alpha/SKILL.md", "x");
+    put(kit, "skills/setup-ai/templates/personas-v2.template.md", 'Call the Skill tool with "ghost".\n');
+    put(kit, "personas.template.md", "clean\n");
+    put(kit, "AGENTS.template.md", "t");
+    put(kit, "THIRD_PARTY_NOTICES.md", "n");
+    const dest = tempDir();
+    const result = installKit({ dest, kit, preset: "setup", providers: [] });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.message).toContain('preset "setup" has dangling references');
+    expect(existsSync(join(dest, ".agents"))).toBe(false);
+  });
+
   it("returns an error when the kit manifest lists a missing skill", () => {
     const kit = tempDir();
     put(kit, "kit.json", JSON.stringify({ presets: { core: ["ghost"] }, agents: [] }));
