@@ -257,6 +257,21 @@ describe("setup-ai v2 kit", () => {
     expect(skill).toContain("edit (dependency added by setup)");
   });
 
+  it("installed setup-ai SKILL follow-up line has no kit-authoring notes on any preset", () => {
+    for (const preset of ["starter", "setup", "core", "full"] as const) {
+      const root = tempDir();
+      install(root, { preset });
+      const skill = readFileSync(
+        join(root, ".agents", "skills", "setup-ai", "SKILL.md"),
+        "utf8",
+      );
+      expect(skill, preset).toMatch(/give your agent the goal in one line/u);
+      expect(skill, preset).not.toMatch(
+        /presetCommands|When that skill is not installed|Slash commands|line\.When/u,
+      );
+    }
+  });
+
   it("installs templates beside setup-ai for every preset that ships setup-ai; validate stays clean", () => {
     const manifest = readManifest();
     if (!manifest.ok) throw manifest.error;

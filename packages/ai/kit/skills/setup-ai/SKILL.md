@@ -291,7 +291,7 @@ Then:
 - [ ] Sidecar cleanup recorded if any `*.kit.md` removed
 - [ ] Self-score mean and hard gates noted
 
-For a bigger follow-up task, <!-- if:skill=orchestrate -->use the **`orchestrate` skill** with the goal in one line.<!-- /if -->When that skill is not installed, describe the goal to your agent in one line. **Slash commands:** on the **`setup`** preset only **`setup-ai`** and **`review`** are installed commands (`presetCommands`); do not tell users to run other command ids as slash invocations — use skill names in conditional blocks (same pattern as the optional phase A invokes).
+For a bigger follow-up task, give your agent the goal in one line<!-- if:skill=orchestrate --> and point it at the **`orchestrate`** skill<!-- /if -->.
 
 ## Workspace mode
 
