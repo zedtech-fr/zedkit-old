@@ -69,7 +69,7 @@ function IdentityDockWidget() {
   );
 
   return (
-    <IdentityDock data-testid="identity-dock">
+    <IdentityDock data-testid="identity-dock" className="pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-0">
       {expanded ? (
         narrow ? (
           <IdentityDockSheet open={expanded} onOpenChange={setExpanded}>
