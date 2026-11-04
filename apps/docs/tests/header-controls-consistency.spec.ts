@@ -71,8 +71,7 @@ for (const theme of ["light", "dark"] as const) {
         "Start with the Nest bootstrap",
         "Open SEO docs",
         "Open agent setup docs",
-        "What gets installed",
-        "AI setup docs",
+        "Read the AI setup guide",
       ] as const;
       for (const label of entryCtas) {
         const link = page.getByRole("link", { name: label });

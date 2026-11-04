@@ -2,3 +2,201 @@
 export const AI_SETUP_MINI_PROMPT = "Set up zedkit AI on this repo following https://zedkit.app/ai/setup.md";
 export const AI_SETUP_LLMS_URL = "https://zedkit.app/ai/setup.md";
 export const AI_SETUP_DOCS_PATH = "/docs/ai/setup";
+export type AiSetupTreeRow = { readonly text: string; readonly kind: "dir" | "file" | "link"; readonly note?: string };
+export const AI_SETUP_KIT = {
+  "counts": {
+    "skills": 15,
+    "agents": 6,
+    "commands": 2
+  },
+  "skills": [
+    "setup-ai",
+    "ground-truth",
+    "review",
+    "definition-of-done",
+    "orchestrate",
+    "domain-modeling",
+    "persona-review",
+    "code-review",
+    "ponytail-review",
+    "retro",
+    "rules-upkeep",
+    "writing-for-agents",
+    "parallel-work",
+    "tdd",
+    "adversarial-tests"
+  ],
+  "agents": [
+    "explorer",
+    "verifier",
+    "orchestrator",
+    "product-director",
+    "ui-designer",
+    "copywriter"
+  ],
+  "commands": [
+    "setup-ai",
+    "review"
+  ],
+  "installed": [
+    {
+      "text": "├─ AGENTS.md",
+      "kind": "file"
+    },
+    {
+      "text": "├─ .agents/",
+      "kind": "dir"
+    },
+    {
+      "text": "│  ├─ skills/",
+      "kind": "dir",
+      "note": "15 skills"
+    },
+    {
+      "text": "│  │  ├─ setup-ai/",
+      "kind": "dir"
+    },
+    {
+      "text": "│  │  ├─ ground-truth/",
+      "kind": "dir"
+    },
+    {
+      "text": "│  │  ├─ review/",
+      "kind": "dir"
+    },
+    {
+      "text": "│  │  ├─ definition-of-done/",
+      "kind": "dir"
+    },
+    {
+      "text": "│  │  ├─ orchestrate/",
+      "kind": "dir"
+    },
+    {
+      "text": "│  │  ├─ domain-modeling/",
+      "kind": "dir"
+    },
+    {
+      "text": "│  │  ├─ persona-review/",
+      "kind": "dir"
+    },
+    {
+      "text": "│  │  ├─ code-review/",
+      "kind": "dir"
+    },
+    {
+      "text": "│  │  ├─ ponytail-review/",
+      "kind": "dir"
+    },
+    {
+      "text": "│  │  ├─ retro/",
+      "kind": "dir"
+    },
+    {
+      "text": "│  │  ├─ rules-upkeep/",
+      "kind": "dir"
+    },
+    {
+      "text": "│  │  ├─ writing-for-agents/",
+      "kind": "dir"
+    },
+    {
+      "text": "│  │  ├─ parallel-work/",
+      "kind": "dir"
+    },
+    {
+      "text": "│  │  ├─ tdd/",
+      "kind": "dir"
+    },
+    {
+      "text": "│  │  └─ adversarial-tests/",
+      "kind": "dir"
+    },
+    {
+      "text": "│  ├─ agents/",
+      "kind": "dir",
+      "note": "6 subagents"
+    },
+    {
+      "text": "│  │  ├─ explorer.md",
+      "kind": "file"
+    },
+    {
+      "text": "│  │  ├─ verifier.md",
+      "kind": "file"
+    },
+    {
+      "text": "│  │  ├─ orchestrator.md",
+      "kind": "file"
+    },
+    {
+      "text": "│  │  ├─ product-director.md",
+      "kind": "file"
+    },
+    {
+      "text": "│  │  ├─ ui-designer.md",
+      "kind": "file"
+    },
+    {
+      "text": "│  │  └─ copywriter.md",
+      "kind": "file"
+    },
+    {
+      "text": "│  ├─ commands/",
+      "kind": "dir"
+    },
+    {
+      "text": "│  │  ├─ setup-ai.md",
+      "kind": "file"
+    },
+    {
+      "text": "│  │  └─ review.md",
+      "kind": "file"
+    },
+    {
+      "text": "│  └─ personas.md",
+      "kind": "file"
+    },
+    {
+      "text": "└─ .cursor/",
+      "kind": "dir"
+    },
+    {
+      "text": "   ├─ skills -> ../.agents/skills",
+      "kind": "link"
+    },
+    {
+      "text": "   ├─ agents/, commands/",
+      "kind": "dir",
+      "note": "copies of .agents"
+    },
+    {
+      "text": "   └─ rules/project.mdc",
+      "kind": "file"
+    }
+  ],
+  "written": [
+    {
+      "path": ".agents/product.md"
+    },
+    {
+      "path": ".agents/domain/<area>.md",
+      "note": "one per area"
+    },
+    {
+      "path": ".agents/design.md",
+      "note": "if the repo has a UI"
+    },
+    {
+      "path": ".agents/glossary.md",
+      "note": "or GLOSSARY.md"
+    }
+  ]
+} as const satisfies {
+  counts: { skills: number; agents: number; commands: number };
+  skills: readonly string[];
+  agents: readonly string[];
+  commands: readonly string[];
+  installed: readonly AiSetupTreeRow[];
+  written: readonly { path: string; note?: string }[];
+};
