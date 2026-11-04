@@ -11,25 +11,35 @@ const NOT_SKILLS = new Set(["plugin", "reload-plugins", "tmp", "ask", "improve"]
 
 export type SkillRefIssue = { path: string; message: string };
 
-/** Skill names a file tells the agent to run: Skill tool calls and /commands. */
-export function skillRefNames(text: string): string[] {
-  text = withoutMarkers(text);
+/** Names passed to the Skill tool: the author asserts these are skills. */
+export function toolRefNames(text: string): string[] {
   const names = new Set<string>();
   const tool = new RegExp(
     `Skill tool (?:with|twice, for)\\s+["'\`](${NAME})["'\`](?:\\s+and\\s+["'\`](${NAME})["'\`])?`,
     "gu",
   );
-  for (const match of text.matchAll(tool)) {
+  for (const match of withoutMarkers(text).matchAll(tool)) {
     if (match[1]) names.add(match[1]);
     if (match[2]) names.add(match[2]);
   }
+  return [...names];
+}
+
+/** /command names: ambiguous with app routes, so callers gate by universe. */
+export function slashRefNames(text: string): string[] {
+  const names = new Set<string>();
   // `/name`, `` `/name` ``, or `` `/name extra` ``. Not `` `file`/segment ``.
   const slash = new RegExp(`(?:^|[\\s(["'])\`?\\/(${NAME})(?![A-Za-z0-9_/-])`, "gmu");
-  for (const match of text.matchAll(slash)) {
+  for (const match of withoutMarkers(text).matchAll(slash)) {
     const name = match[1];
     if (name && !NOT_SKILLS.has(name)) names.add(name);
   }
   return [...names];
+}
+
+/** Skill names a file tells the agent to run: Skill tool calls and /commands. */
+export function skillRefNames(text: string): string[] {
+  return [...new Set([...toolRefNames(text), ...slashRefNames(text)])];
 }
 
 export type RefFile = { path: string; text: string; kitOrigin: boolean };
@@ -79,11 +89,13 @@ function kindOf(name: string, universe: RefUniverse): "skill" | "agent" | "comma
 }
 
 /**
- * Refs whose name is installed in no kind. Explicit Skill-tool and /name
- * forms count everywhere; bare backticked tokens only in kit-origin files,
- * where a kit name is a reference by convention — in user-authored files
- * the same token is an ordinary word. `installed` is the union of installed
- * skill, agent and command names.
+ * Refs whose name is installed in no kind. Skill-tool calls count
+ * everywhere (the author asserts a skill); /names and bare backticked
+ * tokens only when they name the kit universe (/routes and prose words
+ * are not references). Backticked tokens additionally require a
+ * kit-origin file, where a kit name is a reference by convention — in
+ * user-authored files the same token is an ordinary word. `installed` is
+ * the union of installed skill, agent and command names.
  */
 export function danglingKitRefs(
   files: readonly RefFile[],
@@ -101,7 +113,10 @@ export function danglingKitRefs(
         message: `references ${kindOf(name, universe) ?? "skill"} "${name}", which this preset does not install`,
       });
     };
-    for (const name of skillRefNames(file.text)) report(name);
+    for (const name of toolRefNames(file.text)) report(name);
+    for (const name of slashRefNames(file.text)) {
+      if (kindOf(name, universe) !== undefined) report(name);
+    }
     if (!file.kitOrigin) continue;
     for (const name of backtickedRefNames(file.text)) {
       if (kindOf(name, universe) !== undefined) report(name);

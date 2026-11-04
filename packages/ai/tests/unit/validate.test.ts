@@ -58,12 +58,18 @@ describe("validateKit", () => {
     );
   });
 
+  it("ignores /names and words outside the kit universe (fiction routes)", () => {
+    const root = tempDir();
+    put(root, "skills/alpha/SKILL.md", `${SKILL("alpha")}\nRun \`/delta\` for the \`checkout\` step.\n`);
+    expect(validateKit(root)).toEqual([]);
+  });
+
   it("flags a skill, agent or command that runs a skill which is not installed", () => {
     const root = tempDir();
     put(root, "skills/alpha/SKILL.md", `${SKILL("alpha")}\nCall the Skill tool with "beta".\n`);
-    put(root, "skills/gamma/SKILL.md", `${SKILL("gamma")}\nRun \`/delta\`.\n`);
+    put(root, "skills/gamma/SKILL.md", `${SKILL("gamma")}\nRun the Skill tool with "delta".\n`);
     put(root, "agents/reader.md", `${AGENT("reader")}\nCall the Skill tool with "ghost".\n`);
-    put(root, "commands/go.md", `${COMMAND("alpha")}\nThen /missing-skill.\n`);
+    put(root, "commands/go.md", `${COMMAND("alpha")}\nCall the Skill tool with "missing-skill".\n`);
     const found = messages(root);
     expect(found).toContain('skills/alpha/SKILL.md: references skill "beta", which this preset does not install');
     expect(found).toContain('skills/gamma/SKILL.md: references skill "delta", which this preset does not install');

@@ -261,12 +261,10 @@ function plan(kit: string, manifest: KitManifest, preset: string) {
   // preset whose template names an uninstalled skill fails before writing.
   // (The attribution notice names every vendored skill by design and is
   // exempt from closure, markers still validated.)
-  const rootDocs: Array<[string, string]> = [
-    ["personas.template.md", "personas.md"],
-    ["AGENTS.template.md", "AGENTS.md"],
-  ];
-  for (const [template, installedPath] of rootDocs) {
-    const full = join(kit, template);
+  const rootDocs: Array<[string, string]> = [[join(kit, "AGENTS.template.md"), "AGENTS.md"]];
+  const personas = personasTemplate(kit, preset);
+  if (personas !== undefined) rootDocs.unshift([personas, "personas.md"]);
+  for (const [full, installedPath] of rootDocs) {
     if (!existsSync(full)) continue;
     const text = resolveConditionals(readFileSync(full, "utf8"), avail, universe);
     issues.push(...danglingKitRefs([{ path: installedPath, text, kitOrigin: true }], installed, universe));
@@ -285,7 +283,7 @@ function plan(kit: string, manifest: KitManifest, preset: string) {
       resolveConditionals(readFileSync(join(kit, single), "utf8"), avail, universe);
     }
   }
-  return { skills, licences, agents, commands, personas: personasTemplate(kit, preset) };
+  return { skills, licences, agents, commands, personas };
 }
 
 // setup ships the v2 schema so phase C edits `.agents/personas.md` in place
