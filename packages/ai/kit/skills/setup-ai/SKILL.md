@@ -275,8 +275,6 @@ git diff --name-only
 
 Compare to plan rows in **`PLAN.md`** or **`.agents/setup-log/plan.md`**. **Every changed path needs a matching row.** Any gap goes into the closing report, setup-log **Plan gaps** section, and (if kit-caused) a kit-issue draft — do not treat silent edits as success.
 
-<!-- setup-ai:validate-setup (enable after L1 merges — use if:command=validate-setup): Run `npx zedkit-ai validate --setup` (optional `--plan PLAN.md` or `--plan .agents/setup-log/plan.md`) and fix every issue before the closing report. Every path from `git status --porcelain -uall` must appear in the plan text; directory prefixes with a trailing `/` count; gate logs under `.agents/setup-log/gates/*.log` must start with `CMD:` and end with `EXIT:<n>`. -->
-
 ## Verify
 
 - Every command in the written files was run, or is marked `UNVERIFIED` with the reason.
@@ -299,9 +297,6 @@ Then:
 1. **Self-score** — open `templates/setup-rubric.md` and score 0–3 on each of the 10 axes. Cite evidence per axis (file path, `file:line`, or transcript quote); no evidence means no score above 1. The rubric sets the pass targets and hard gates.
 2. **Setup log** — append a retro entry to `.agents/setup-log.md` from `templates/setup-log.template.md`: date, what worked, what hurt, **Providers table + Wired**, scores, decisions (`source: owner` where the owner chose), **Sidecar cleanup**, gate outcomes (see template), open kit frictions.
 3. **Kit friction** — for **each** friction you observed (stale sidecar, validate gap, tool detour, bad gate log format, **missing plan row**, plan/git mismatch, intro not first, broken repo-skill links, …), draft **one** public-safe issue from `templates/kit-issue.template.md` with **Kit root cause** filled; map friction → kit file → fix. **Kit file** must be a path that **exists** in the kit tree — run **`test -e`** on `packages/ai/kit/…` in the kit monorepo or on the installed `@zedtech/zedkit-ai/kit/…` path; use **`grep`** / **`rg`** on the kit tree when unsure. Write **`UNVERIFIED: <why>`** only when the path truly cannot be confirmed. **Completion defects count** (log missing `CMD:`/`EXIT:`, prettier appended after `EXIT:`). If there were zero frictions, say so in the log — do not skip the checklist.
-
-<!-- setup-ai:validate-setup (enable after L1 merges — use if:command=validate-setup): Before the closing report, run `npx zedkit-ai validate --setup` and fix every issue. -->
-
 4. **Re-audit cadence** — set the next check: after the next release, or when product, domain rules, or providers change; record the trigger in the log entry.
 
 **Phase E checklist (before you finish):**

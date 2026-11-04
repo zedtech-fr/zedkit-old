@@ -88,7 +88,7 @@ Score each axis 0-3. Cite evidence (file path, `file:line`, or transcript quote)
 ## Hard gates (binary, any failure fails the run)
 
 1. **Zero dangling references.** `zedkit-ai validate` is green and no installed file references a skill or agent that is not installed.
-2. **Zero lost user files.** Every file that existed before setup is byte-identical or was changed on purpose and **listed in the plan table** (`PLAN.md` or `.agents/setup-log/plan.md`). Reviewer: re-run `git diff --name-only` (and `git status --porcelain -uall`) against the plan — **`package.json`**, **lockfile**, and **root `AGENTS.md`** (including **ladder append**) must each have a **dedicated plan row**. Paths derived from git before the plan, not from memory.<!-- setup-ai:validate-setup (after L1): also run `npx zedkit-ai validate --setup --plan <file>`; every status path must appear in plan text; dir prefixes with trailing `/` count; gate logs under `.agents/setup-log/gates/*.log` start `CMD:` and end `EXIT:<n>`. -->
+2. **Zero lost user files.** Every file that existed before setup is byte-identical or was changed on purpose and **listed in the plan table** (`PLAN.md` or `.agents/setup-log/plan.md`). Reviewer: re-run `git diff --name-only` (and `git status --porcelain -uall`) against the plan — **`package.json`**, **lockfile**, and **root `AGENTS.md`** (including **ladder append**) must each have a **dedicated plan row**. Paths derived from git before the plan, not from memory.
 3. **Zero manual file copies** between `.agents/` and a provider folder.
 4. **Gates ran.** The repo's main check ran or its absence is justified in the log.
 5. **No secrets** written to any file or transcript.

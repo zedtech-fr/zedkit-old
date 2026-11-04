@@ -299,7 +299,7 @@ describe("setup-ai v2 kit", () => {
     expect(issue).toMatch(/UNVERIFIED.*why/iu);
   });
 
-  it("documents run-4 scorer add-ons T3a and validate-setup-ready comments", () => {
+  it("documents run-4 scorer add-ons T3a and persisted plan file", () => {
     const raw = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
     expect(raw).toMatch(/State-bearing capabilities/iu);
     expect(raw).toMatch(/ingestion\/sync/iu);
@@ -307,14 +307,15 @@ describe("setup-ai v2 kit", () => {
     expect(raw).toMatch(/PLAN\.md/);
     expect(raw).toMatch(/setup-log\/plan\.md/);
     expect(raw).toMatch(/pnpm check.*unless/s);
-    expect(raw).toMatch(/setup-ai:validate-setup.*validate --setup/s);
-    expect(raw).toMatch(/git status --porcelain -uall/s);
+    expect(raw).not.toMatch(/setup-ai:validate-setup/iu);
+    expect(raw).not.toMatch(/\bL1\b/iu);
     const rubric = readFileSync(
       join(kitDir(), "skills", "setup-ai", "templates", "setup-rubric.md"),
       "utf8",
     );
     expect(rubric).toMatch(/AGENTS\.md.*ladder append/s);
-    expect(rubric).toMatch(/setup-ai:validate-setup/s);
+    expect(rubric).toMatch(/git status --porcelain -uall/s);
+    expect(rubric).not.toMatch(/setup-ai:validate-setup/iu);
   });
 
   it("installs templates beside setup-ai for every preset that ships setup-ai; validate stays clean", () => {
