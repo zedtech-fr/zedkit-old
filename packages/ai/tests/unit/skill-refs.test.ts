@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { backtickedRefNames, skillRefNames } from "#skill-refs.js";
+import { backtickedRefNames, skillRefNames, wordRefNames, type RefUniverse } from "#skill-refs.js";
+
+const UNIVERSE: RefUniverse = {
+  skills: new Set(["tdd", "codebase-design"]),
+  agents: new Set(["a11y-auditor", "copywriter"]),
+  commands: new Set(["plan"]),
+};
 
 describe("skillRefNames", () => {
   it("reads Skill tool quotes, backticks, and a pair", () => {
@@ -47,5 +53,20 @@ describe("backtickedRefNames", () => {
 
   it("ignores conditional markers", () => {
     expect(backtickedRefNames("a<!-- if:skill=tdd -->b<!-- /if -->c")).toEqual([]);
+  });
+});
+
+describe("wordRefNames", () => {
+  it("reads hyphenated universe names as whole words and skips single-word names", () => {
+    const text = "Handoffs: <a11y-auditor / copywriter / console-architecture — or none>. Use tdd; make a plan.";
+    expect(wordRefNames(text, UNIVERSE).sort()).toEqual(["a11y-auditor"]);
+  });
+
+  it("does not match inside longer hyphenated tokens", () => {
+    expect(wordRefNames("xa11y-auditor a11y-auditor-x pre-codebase-design-post", UNIVERSE)).toEqual([]);
+  });
+
+  it("ignores conditional markers", () => {
+    expect(wordRefNames("a<!-- if:agent=a11y-auditor -->b<!-- /if -->c", UNIVERSE)).toEqual([]);
   });
 });

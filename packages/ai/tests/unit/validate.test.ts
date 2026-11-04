@@ -64,6 +64,47 @@ describe("validateKit", () => {
     expect(validateKit(root)).toEqual([]);
   });
 
+  it("flags broken relative links but skips web links, anchors, and fenced code", () => {
+    const root = tempDir();
+    put(root, "skills/alpha/SKILL.md", SKILL("alpha"));
+    put(
+      root,
+      "skills/alpha/extra.md",
+      [
+        "# Extra",
+        "",
+        "See [ok](./SKILL.md), [broken](./missing.md), [web](https://example.com/x.md), [jump](#section), [frag](./SKILL.md#part).",
+        "",
+        "```md",
+        "- [fenced](./missing.md)",
+        "```",
+        "",
+      ].join("\n"),
+    );
+    const found = validateKit(root, root).map((issue) => `${issue.path}: ${issue.message}`);
+    expect(found).toEqual(['skills/alpha/extra.md: broken link to "./missing.md" (no such file)']);
+  });
+
+  it("ignores broken links in skills the kit does not ship", () => {
+    const kit = tempDir();
+    put(kit, "skills/alpha/SKILL.md", SKILL("alpha"));
+    const root = tempDir();
+    put(root, "skills/alpha/SKILL.md", SKILL("alpha"));
+    put(root, "skills/mine/SKILL.md", SKILL("mine"));
+    put(root, "skills/mine/notes.md", "See [broken](./missing.md).\n");
+    expect(validateKit(root, kit)).toEqual([]);
+  });
+
+  it("checks links in personas.md when the kit ships the template", () => {
+    const kit = tempDir();
+    put(kit, "personas.template.md", "t");
+    const root = tempDir();
+    put(root, "skills/alpha/SKILL.md", SKILL("alpha"));
+    put(root, "personas.md", "See [broken](./missing.md).\n");
+    const found = validateKit(root, kit).map((issue) => `${issue.path}: ${issue.message}`);
+    expect(found).toEqual(['personas.md: broken link to "./missing.md" (no such file)']);
+  });
+
   it("flags a skill, agent or command that runs a skill which is not installed", () => {
     const root = tempDir();
     put(root, "skills/alpha/SKILL.md", `${SKILL("alpha")}\nCall the Skill tool with "beta".\n`);

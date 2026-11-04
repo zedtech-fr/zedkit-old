@@ -63,6 +63,20 @@ export function skillRefFiles(
   return files;
 }
 
+/** Hyphenated universe names as whole words (single-word names stay backtick-only). Names match NAME: no escaping. */
+export function wordRefNames(text: string, universe: RefUniverse): string[] {
+  const hyphenated = [...universe.skills, ...universe.agents, ...universe.commands].filter((name) =>
+    name.includes("-"),
+  );
+  if (hyphenated.length === 0) return [];
+  const words = new RegExp(`(?<![A-Za-z0-9-])(${hyphenated.join("|")})(?![A-Za-z0-9-])`, "gu");
+  const names = new Set<string>();
+  for (const match of withoutMarkers(text).matchAll(words)) {
+    if (match[1]) names.add(match[1]);
+  }
+  return [...names];
+}
+
 /** Bare backticked tokens: possible references, filtered against the kit universe by the caller. */
 export function backtickedRefNames(text: string): string[] {
   text = withoutMarkers(text);
@@ -89,13 +103,9 @@ function kindOf(name: string, universe: RefUniverse): "skill" | "agent" | "comma
 }
 
 /**
- * Refs whose name is installed in no kind. Skill-tool calls count
- * everywhere (the author asserts a skill); /names and bare backticked
- * tokens only when they name the kit universe (/routes and prose words
- * are not references). Backticked tokens additionally require a
- * kit-origin file, where a kit name is a reference by convention — in
- * user-authored files the same token is an ordinary word. `installed` is
- * the union of installed skill, agent and command names.
+ * Refs installed in no kind. Skill-tool calls count everywhere; /names,
+ * backticked tokens and hyphenated whole words only for universe names,
+ * the latter two only in kit-origin files (user prose is exempt).
  */
 export function danglingKitRefs(
   files: readonly RefFile[],
@@ -121,6 +131,7 @@ export function danglingKitRefs(
     for (const name of backtickedRefNames(file.text)) {
       if (kindOf(name, universe) !== undefined) report(name);
     }
+    for (const name of wordRefNames(file.text, universe)) report(name);
   }
   return issues;
 }
