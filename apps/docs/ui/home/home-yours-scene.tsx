@@ -23,7 +23,7 @@ export function HomeYoursScene() {
 
   function start() {
     if (brief.trim() !== "") writeCreatorHandoff(window.sessionStorage, { brief });
-    router.push(`${IDENTITY_EDITOR_HREF}#create`);
+    router.push(IDENTITY_EDITOR_HREF);
   }
 
   return (

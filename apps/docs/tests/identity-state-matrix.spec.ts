@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page, type Route } from "@playwright/test";
 
-const EDITOR = "/features/identity-editor#create";
+const EDITOR = "/features/identity-editor";
 const SERVICE = "**/api/identity/suggest";
 
 const WARM = {

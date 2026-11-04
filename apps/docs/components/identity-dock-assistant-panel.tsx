@@ -13,6 +13,8 @@ import { useIdentityAssistant } from "@/components/use-identity-assistant";
 import { useIdentityAssistantStore } from "@/lib/identity-assistant-store";
 import { checkInput } from "@/lib/identity-assistant";
 import { applyWidgetSpecimenPreview } from "@/lib/identity-widget-specimen-preview";
+import { dispatchIdentityEditorDraftApply } from "@/lib/identity-editor-draft-apply";
+import { IDENTITY_EDITOR_HREF } from "@/lib/site-links.mjs";
 import { linksInText } from "@/lib/identity-links-in-text";
 import type { IdentityTokens } from "@zedtech/zedkit-ui";
 
@@ -21,6 +23,24 @@ function assistantFeedbackText(session: ReturnType<typeof useIdentityAssistant>[
   if (session.notice && session.notice.kind !== "unavailable") return noticeText(session.notice);
   if (session.proposal) return copy.views.proposalReady;
   return null;
+}
+
+function acceptProposal(
+  backToConversation: (action: () => void) => void,
+  onPreviewTokens: (tokens: IdentityTokens) => void,
+  dispatch: (action: { type: "accept" }) => void,
+  setBrief: (value: string) => void,
+  next: IdentityTokens,
+) {
+  backToConversation(() => {
+    onPreviewTokens(next);
+    applyWidgetSpecimenPreview(next);
+    if (typeof window !== "undefined" && window.location.pathname === IDENTITY_EDITOR_HREF) {
+      dispatchIdentityEditorDraftApply(next);
+    }
+    dispatch({ type: "accept" });
+    setBrief("");
+  });
 }
 
 export function IdentityDockAssistantPanel({
@@ -70,14 +90,7 @@ export function IdentityDockAssistantPanel({
           onBrief={setBrief}
           onSubmit={send}
           onCancel={cancel}
-          onUse={(next) =>
-            ui.backToConversation(() => {
-              onPreviewTokens(next);
-              applyWidgetSpecimenPreview(next);
-              dispatch({ type: "accept" });
-              setBrief("");
-            })
-          }
+          onUse={(next) => acceptProposal(ui.backToConversation, onPreviewTokens, dispatch, setBrief, next)}
           onDiscard={() => ui.backToConversation(() => dispatch({ type: "discard" }))}
         />
       </Stack>

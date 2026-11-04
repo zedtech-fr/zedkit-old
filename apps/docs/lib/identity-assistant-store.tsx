@@ -16,11 +16,7 @@ import type { IdentityTokens } from "@zedtech/zedkit-ui";
 
 import { fetchAssistantStatus, type AssistantStatus } from "@/lib/identity-assistant";
 import { initialSession, sessionReducer, type SessionAction, type SessionState } from "@/lib/identity-creator-session";
-import {
-  consumeIdentityDockOpenRequest,
-  readIdentityDockPersist,
-  writeIdentityDockPersist,
-} from "@/lib/identity-dock-persist";
+import { readIdentityDockPersist, writeIdentityDockPersist } from "@/lib/identity-dock-persist";
 import { useAssistantNetwork } from "@/lib/use-assistant-network";
 
 type IdentityAssistantStore = {
@@ -45,10 +41,6 @@ function IdentityAssistantStoreProvider({ children }: { children: ReactNode }) {
   const [brief, setBrief] = useState(boot.brief ?? "");
   const [expanded, setExpanded] = useState(false);
   const [status, setStatus] = useState<AssistantStatus | null>(null);
-
-  useEffect(() => {
-    if (consumeIdentityDockOpenRequest()) setExpanded(true);
-  }, []);
   const live = useRef({ thread: session.thread });
   const { submit, cancel } = useAssistantNetwork(dispatch, setStatus, live);
 

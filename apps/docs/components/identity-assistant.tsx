@@ -20,11 +20,11 @@ import { linksInText } from "@/lib/identity-links-in-text";
  * nothing until it is used, and using it changes the draft (and its preview) only: saving and applying to the site
  * stay the editor's own explicit steps. If the assistant is off, everything else in the editor works as before.
  *
- * The describe flow starts open so the prompt is visible; visitors can fold it to focus on manual tokens. Arriving with
- * a brief or `#create` scrolls to the form and focuses it. On a phone the conversation and the preview take turns.
+ * It starts folded on pages that still embed it inline; arriving with a brief or `#create` opens it.
+ * On a phone the conversation and the preview take turns.
  */
 export function IdentityAssistant({ tokens, onUse }: { tokens: IdentityTokens; onUse: (tokens: IdentityTokens) => void }) {
-  const [opened, setOpened] = useState(true);
+  const [opened, setOpened] = useState(false);
   const { session, status, dispatch, submit, cancel } = useIdentityAssistant(tokens, opened);
   const { brief, setBrief } = useIdentityAssistantStore();
   const ui = useAssistantView({ proposalId: session.proposal?.requestId, onBrief: setBrief });

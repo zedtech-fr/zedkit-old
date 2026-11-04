@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { tryCatch } from "@zedtech/zedkit-core";
 import {
@@ -22,6 +23,7 @@ import { identityDockCopy } from "@/components/i18n/identity-dock-copy";
 import { IdentityDockAssistantPanel } from "@/components/identity-dock-assistant-panel";
 import { useIdentityDockKeyboard } from "@/components/use-identity-dock-keyboard";
 import { DEFAULT_IDENTITY } from "@/lib/default-identity";
+import { IDENTITY_EDITOR_HREF } from "@/lib/site-links.mjs";
 import { useIdentityAssistantStore } from "@/lib/identity-assistant-store";
 import { docsSiteCustomStorageKey } from "@/lib/site-identity-storage";
 
@@ -54,12 +56,18 @@ function readSiteTokens(identityId: string): IdentityTokens {
 }
 
 function IdentityDockWidget() {
+  const pathname = usePathname();
+  const onEditor = pathname === IDENTITY_EDITOR_HREF;
   const identityId = useIdentity(DEFAULT_IDENTITY);
   const baseTokens = useMemo(() => readSiteTokens(identityId), [identityId]);
   const [previewTokens, setPreviewTokens] = useState(baseTokens);
   const { expanded, setExpanded } = useIdentityAssistantStore();
   const narrow = useNarrowViewport();
   const triggerRef = useIdentityDockKeyboard(expanded, setExpanded);
+
+  useEffect(() => {
+    if (onEditor) setExpanded(true);
+  }, [onEditor, setExpanded]);
 
   useEffect(() => {
     setPreviewTokens(baseTokens);
