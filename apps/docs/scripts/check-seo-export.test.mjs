@@ -73,11 +73,13 @@ test("checkLlms accepts the generated header and rejects anything else", () => {
 });
 
 test("checkLlmsFull accepts buildLlmsFull sections", () => {
-  const body = "# Install or copy\n\nnpm\n\n# Documentation index\n\n# zedkit docs\n";
+  const body =
+    "# Install or copy\n\nnpm\n\n# Set up zedkit AI in Cursor\n\nsteps\n\n# Documentation index\n\n# zedkit docs\n";
   assert.deepEqual(checkLlmsFull(body), []);
   assert.deepEqual(checkLlmsFull("# other"), [
     "llms-full.txt: expected # Install or copy header",
     "llms-full.txt: missing # Documentation index section",
+    "llms-full.txt: missing # Set up zedkit AI in Cursor section",
   ]);
 });
 

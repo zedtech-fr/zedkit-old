@@ -9,12 +9,13 @@ function personaRows(raw: string, path: string): string[] {
   // Only the persona table: rows under the `| Persona |` header, stopping at
   // the first non-table line, so a later table never mixes its rows in.
   // The `|---` separator never matches `| `, so no row is skipped.
-  const head = lines.findIndex((line) => line.startsWith("| Persona |"));
+  const head = lines.findIndex((line) => /^\|\s*Persona\s*\|/.test(line));
   if (head < 0) throw new Error(`${path} has no persona table`);
   const rows: string[] = [];
   for (const line of lines.slice(head + 1)) {
     if (!line.startsWith("|")) break;
-    if (line.startsWith("| ")) rows.push(line.split("|")[1]?.trim() ?? "");
+    const cell = line.split("|")[1]?.trim() ?? "";
+    if (cell && !/^:?-{3,}:?$/.test(cell)) rows.push(cell);
   }
   return rows;
 }

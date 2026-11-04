@@ -26,6 +26,7 @@ export type InstallOptions = {
     providers?: readonly (Provider | string)[];
     targets?: readonly (Provider | string)[];
     dryRun?: boolean;
+    adopt?: boolean;
     kit?: string;
 };
 
@@ -42,7 +43,7 @@ export type Provider = "claude" | "cursor" | "codex";
 export type Target = Provider;
 
 // @public
-export function validateKit(root: string): Issue[];
+export function validateKit(root: string, kit?: string): Issue[];
 
 // (No @packageDocumentation comment for this package)
 

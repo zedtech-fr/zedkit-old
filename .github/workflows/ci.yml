@@ -77,6 +77,8 @@ jobs:
       - run: bash scripts/check-pack.sh
       - run: bash scripts/check-e2e-registered.sh
       - run: pnpm exec turbo run test
+      - name: Kit markdown prettier
+        run: pnpm --filter @zedtech/zedkit-ai run kit:md
       - name: Coverage (vitest v8)
         run: pnpm test:coverage
       - name: Coverage summary

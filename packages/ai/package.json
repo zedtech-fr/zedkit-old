@@ -1,6 +1,6 @@
 {
   "name": "@zedtech/zedkit-ai",
-  "version": "0.12.0",
+  "version": "0.17.0",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
@@ -55,7 +55,8 @@
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.tests.json",
-    "lint": "eslint src tests"
+    "lint": "eslint src tests",
+    "kit:md": "prettier --check kit"
   },
   "dependencies": {
     "@zedtech/zedkit-core": "workspace:*",
@@ -64,6 +65,7 @@
   "devDependencies": {
     "@types/node": "catalog:",
     "@zedtech/zedkit-quality": "workspace:*",
+    "prettier": "3.9.10",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },

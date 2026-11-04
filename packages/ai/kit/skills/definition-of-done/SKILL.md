@@ -47,7 +47,12 @@ Exception: a non-visual change (N/A).
 - [ ] Lint, types, axe and screenshot diffs ran on the final state. Necessary, not sufficient.
 - [ ] A rendered-page critique names the strongest remaining weaknesses (composition, hierarchy, type roles, density, rhythm). A self-assigned score is not done.
 - [ ] Screenshots were opened and described (matching content/viewport/identity/mode, before vs after). `UNSEEN` if not looked at. Generated-but-unread shots do not count.
+
+<!-- if:agent=ui-designer -->
+
 - [ ] agent `ui-designer` verdict in hand.
+
+<!-- /if -->
 
 ## Review: two independent passes
 

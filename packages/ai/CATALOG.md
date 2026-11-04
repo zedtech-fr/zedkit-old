@@ -5,7 +5,6 @@
 - Purpose: Install one agent-agnostic setup (AGENTS.md, skills, subagents, commands) with a single CLI, instead of maintaining per-tool config.
 - Attribution: Original work by the same author.
 
-
 ## Set up AI agent instructions, skills, subagents and commands in a repo
 
 - Import: `@zedtech/zedkit-ai` — `installKit`, `InstallOptions`, `Action`, `Provider`, `Target`
@@ -20,19 +19,27 @@
 
 ```ts
 import { installKit } from "@zedtech/zedkit-ai";
-const result = installKit({ dest: ".", preset: "core", providers: ["claude", "cursor"] });
+const result = installKit({
+  dest: ".",
+  preset: "core",
+  providers: ["claude", "cursor"],
+});
 if (!result.ok) throw result.error;
 for (const action of result.value) console.log(action.kind, action.path);
 ```
 
-CLI equivalent: `zedkit-ai init .` (`--provider cursor,claude,codex,all`; `--target` is an alias; run `--help` for every provider id)
+CLI equivalent: `zedkit-ai setup . --provider cursor` (onboarding: **`--preset setup` by default**, same as `init --preset setup --adopt`) or `zedkit-ai init .` (`--provider cursor,claude,codex,all`; `--target` is an alias; `--adopt` keeps colliding user files and skips identical kit copies; run `--help` for every provider id)
 
-Presets: `starter` (onboard + review; default), `core` (planning and
-implement entry points), `full` (every skill).
+Presets: `starter` (onboard + review + test-first; default), `setup` (starter plus domain,
+review lenses, retro, rules-upkeep, product/UI/copy subagents, and setup-ai
+`templates/` under `.agents/skills/setup-ai/`, including the setup rubric and
+score-and-learn templates), `core`
+(planning and implement entry points), `full` (every skill).
 
-Providers: `cursor` (rules file, skills link, agents and commands as real-file
-copies), `claude` (`CLAUDE.md` and folder links), `codex` (no
-layer: reads the shared source directly; same for other no-layer ids in `--help`).
+Providers: `cursor` (rules file, skills link or per-skill links inside a
+real `.cursor/skills` dir, agents and commands as real-file copies),
+`claude` (`CLAUDE.md` and folder links, or per-skill links and copies inside pre-existing real dirs), `codex` and `muse` (no
+layer: read the shared source directly; same for other no-layer ids in `--help`).
 
 ## Check that skills, subagents, commands and provider copies are valid
 
@@ -41,7 +48,7 @@ layer: reads the shared source directly; same for other no-layer ids in `--help`
 - Status: beta
 - Short name: Kit validation
 - Audience: Teams keeping an installed agent setup healthy across providers.
-- Purpose: Validate installed skills, subagents and commands, and report drift between providers.
+- Purpose: Validate installed skills, subagents and commands, report drift between providers without asking to overwrite user files, and flag kit skills a provider layer does not expose.
 - When to use: In CI and after editing shared agent files, to catch invalid or drifted copies.
 - When not to use: For one-off local edits — run the install command again instead of validating by hand.
 - See also: `Set up AI agent instructions, skills, subagents and commands in a repo`
