@@ -82,6 +82,15 @@ async function onScreen(page: Page, target: Locator, height: number) {
   if (pin && pin.y < 80 && pin.x < 16) expect(box.y + 1).toBeGreaterThanOrEqual(pin.y + pin.height);
 }
 
+/** The contract: when a proposal arrives, the scroller brings it into view on its own (the test never scrolls),
+ * so its heading and its primary action are both fully inside the viewport. */
+async function proposalInView(page: Page) {
+  const proposal = page.locator("[data-assistant-proposal]");
+  await expect(proposal).toBeVisible();
+  await expect(proposal.getByText("Proposed look", { exact: true })).toBeInViewport({ ratio: 1 });
+  await expect(proposal.getByRole("button", { name: "Use this look" })).toBeInViewport({ ratio: 1 });
+}
+
 async function storedDockBrief(page: Page) {
   return page.evaluate(() => {
     const raw = window.localStorage.getItem("zk-identity-dock-v2");
@@ -137,7 +146,7 @@ test.describe("creator state matrix", () => {
       await page.getByRole("button", { name: "Generate" }).click();
       await onScreen(page, page.getByRole("button", { name: "Cancel" }), vp.height);
       release();
-      await onScreen(page, page.locator("[data-assistant-proposal]"), vp.height);
+      await proposalInView(page);
       expect(await siteBackground(page)).toBe(before);
     });
 

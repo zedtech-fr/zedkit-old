@@ -84,6 +84,8 @@ test.describe("IdentityDock", () => {
     await page.goto(BASE, { waitUntil: "networkidle" });
     await page.keyboard.press("Control+I");
     await brief(page).fill("A ceramics studio");
+    // No thread yet: the send control reads Generate, never Refine.
+    await expect(page.getByRole("button", { name: "Refine", exact: true })).toHaveCount(0);
     await page.getByRole("button", { name: "Generate", exact: true }).click();
     await expect(page.locator("[data-assistant-proposal]")).toBeVisible();
     await page.getByRole("button", { name: "Use this look" }).click();
@@ -99,7 +101,9 @@ test.describe("IdentityDock", () => {
     expect(specimenRadius).toBe("0.875rem");
     await page.keyboard.press("Control+I");
     await brief(page).fill("A bit calmer");
-    await page.getByRole("button", { name: "Generate", exact: true }).click();
+    // Once a look was accepted a thread exists, so the same control switches to Refine.
+    await expect(page.getByRole("button", { name: "Generate", exact: true })).toHaveCount(0);
+    await page.getByRole("button", { name: "Refine", exact: true }).click();
     await expect.poll(() => posts.length).toBe(2);
     expect(posts[1]!.current.radius).toBe("0.875rem");
   });

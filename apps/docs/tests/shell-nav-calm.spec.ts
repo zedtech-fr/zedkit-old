@@ -29,7 +29,11 @@ for (const theme of ["light", "dark"] as const) {
         await expect(page.locator("[data-shell-nav-drawer]")).toHaveScreenshot(`shell-nav-drawer-${theme}-${name}.png`);
         await page.keyboard.press("Escape");
       } else {
-        await expect(page.locator("#nd-nav")).toHaveScreenshot(`shell-nav-header-${theme}-${name}.png`);
+        // The kit version label changes with every release, so only that one element is masked; the rest of the
+        // header stays pixel-checked, and the label's text is still asserted in the guards below.
+        await expect(page.locator("#nd-nav")).toHaveScreenshot(`shell-nav-header-${theme}-${name}.png`, {
+          mask: [page.locator("#nd-nav [data-kit-version]")],
+        });
       }
     });
   }
