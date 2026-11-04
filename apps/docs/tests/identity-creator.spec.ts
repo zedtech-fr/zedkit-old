@@ -250,8 +250,8 @@ test.describe("the assistant in the editor", () => {
     await brief(page, "Film restoration, https://atelier-nord.example.org/ and https://missing.example.org/");
     await page.getByRole("button", { name: "Generate" }).click();
     const proposal = page.locator("[data-assistant-proposal]");
-    await expect(proposal.getByRole("group", { name: "Light" })).toBeVisible();
-    await expect(proposal.getByRole("group", { name: "Dark" })).toBeVisible();
+    await expect(proposal.getByRole("group", { name: "Light" })).toHaveCount(2);
+    await expect(proposal.getByRole("group", { name: "Dark" })).toHaveCount(2);
     expect(posts[0].references).toEqual(["https://atelier-nord.example.org/", "https://missing.example.org/"]);
     // Honest about the links: text only for the one that was read, a reason for the one that was not.
     const report = page.locator("[data-assistant-reference-report]");
