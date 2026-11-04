@@ -135,6 +135,23 @@ function checkLineEndings(root: string, issues: Issue[]): void {
   }
 }
 
+// Markdown link targets outside fenced blocks, in order, duplicates kept.
+function linkTargets(text: string): string[] {
+  const targets: string[] = [];
+  let fenced = false;
+  for (const line of text.split("\n")) {
+    if (/^\s*(`{3,}|~{3,})/.test(line)) {
+      fenced = !fenced;
+      continue;
+    }
+    if (fenced) continue;
+    for (const match of line.matchAll(/!?\[[^\]]*\]\(([^)\s]+)(?:\s+[^)]*)?\)/g)) {
+      targets.push(match[1] ?? "");
+    }
+  }
+  return targets;
+}
+
 // Flag relative links that resolve nowhere (skip web, mailto, #anchor, fenced).
 // Every skill dir counts, kit or repo-authored: a broken link in an
 // agent-facing skill is a defect whoever wrote it.
@@ -154,20 +171,11 @@ function checkLinks(root: string, kit: string, issues: Issue[]): void {
     const full = join(root, entry);
     if (!statSync(full).isFile()) continue;
     const seen = new Set<string>();
-    let fenced = false;
-    for (const line of read(full).split("\n")) {
-      if (/^\s*(`{3,}|~{3,})/.test(line)) {
-        fenced = !fenced;
-        continue;
-      }
-      if (fenced) continue;
-      for (const match of line.matchAll(/!?\[[^\]]*\]\(([^)\s]+)(?:\s+[^)]*)?\)/g)) {
-        const target = match[1] ?? "";
-        if (/^(#|https?:\/\/|mailto:)/.test(target) || seen.has(target)) continue;
-        seen.add(target);
-        if (!existsSync(join(dirname(full), target.split(/[?#]/)[0] ?? ""))) {
-          issues.push({ path: entry, message: `broken link to "${target}" (no such file)` });
-        }
+    for (const target of linkTargets(read(full))) {
+      if (/^(#|https?:\/\/|mailto:)/.test(target) || seen.has(target)) continue;
+      seen.add(target);
+      if (!existsSync(join(dirname(full), target.split(/[?#]/)[0] ?? ""))) {
+        issues.push({ path: entry, message: `broken link to "${target}" (no such file)` });
       }
     }
   }
@@ -489,34 +497,18 @@ export function checkKitDocs(projectRoot: string, source: string, kit: string = 
   return run.ok ? run.value : [];
 }
 
-/**
- * Flag markdown links whose target opens with `<`: a placeholder the adopter
- * must replace (`[AGENTS.md](<path>/AGENTS.md)` ships dead). Installed root
- * docs and `.agents` files are scanned; kit template sources are exempt
- * (they document the placeholder form), as are fenced blocks and symlinks
- * (a linked CLAUDE.md reports once, under AGENTS.md). Paths are relative
- * to `projectRoot`.
- */
+// Flag `](<…>)` placeholder links in installed root docs and `.agents`
+// files; kit templates, fenced blocks and symlinks are exempt.
 export function checkPlaceholders(projectRoot: string, source: string): Issue[] {
   const run = tryCatch(() => {
     const issues: Issue[] = [];
     const scan = (file: string, rel: string): void => {
-      const stat = tryCatch(() => lstatSync(file));
-      if (!stat.ok || stat.value.isSymbolicLink() || !stat.value.isFile()) return;
+      if (linkState(file) !== "file") return;
       const seen = new Set<string>();
-      let fenced = false;
-      for (const line of read(file).split("\n")) {
-        if (/^\s*(`{3,}|~{3,})/.test(line)) {
-          fenced = !fenced;
-          continue;
-        }
-        if (fenced) continue;
-        for (const match of line.matchAll(/!?\[[^\]]*\]\(([^)\s]+)(?:\s+[^)]*)?\)/g)) {
-          const target = match[1] ?? "";
-          if (!target.startsWith("<") || seen.has(target)) continue;
-          seen.add(target);
-          issues.push({ path: rel, message: `placeholder link to "${target}" (replace <...> with a real path)` });
-        }
+      for (const target of linkTargets(read(file))) {
+        if (!target.startsWith("<") || seen.has(target)) continue;
+        seen.add(target);
+        issues.push({ path: rel, message: `placeholder link to "${target}" (replace <...> with a real path)` });
       }
     };
     for (const name of ["AGENTS.md", "CLAUDE.md"]) scan(join(projectRoot, name), name);
