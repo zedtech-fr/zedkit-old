@@ -8,6 +8,12 @@ const RULES: { domain: SpecimenDomain; pattern: RegExp }[] = [
   { domain: "commerce", pattern: /\b(shop|store|commerce|product|cart|checkout|ceramic|handmade|retail)\b/i },
 ];
 
+/** Keeps the first user brief when follow-ups are short refinements. */
+export function specimenBriefFromThread(thread: readonly { role: string; text: string }[], fallback: string): string {
+  const first = thread.find((turn) => turn.role === "user")?.text.trim();
+  return first || fallback;
+}
+
 /** Picks the closest domain from plain text; commerce is the default. */
 export function specimenDomainFromBrief(text: string): SpecimenDomain {
   const trimmed = text.trim();

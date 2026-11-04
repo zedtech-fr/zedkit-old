@@ -14,11 +14,11 @@ These files ship in **this skill folder** at `.agents/skills/setup-ai/templates/
 
 Read in place, never copied wholesale:
 
-| Template                          | Use                                                                                                                |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `templates/setup-rubric.md`       | Ten axes (0–3 each), hard gates; mean >= 2.5 over **8 measurable axes**; Discovery and Domain rules reported apart |
-| `templates/setup-log.template.md` | Entry block to append to `.agents/setup-log.md`                                                                    |
-| `templates/kit-issue.template.md` | One public-safe kit issue draft per friction found                                                                 |
+| Template                          | Use                                                                                                                      |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `templates/setup-rubric.md`       | Ten axes (0–3 each), hard gates; mean >= 2.5 over **8 measurable axes**; Discovery and Domain rules reported apart       |
+| `templates/setup-log.template.md` | Entry block to append to `.agents/setup-log.md`; plan rows and gate logs checked by **`npx zedkit-ai validate --setup`** |
+| `templates/kit-issue.template.md` | One public-safe kit issue draft per friction found                                                                       |
 
 ## Catalog skills (repo copies)
 

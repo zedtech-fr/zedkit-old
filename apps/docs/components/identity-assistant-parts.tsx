@@ -4,7 +4,7 @@ import { useMemo, type Ref, type RefObject } from "react";
 import { Button, Field, FieldLabel, Stack, Text, Textarea, type IdentityTokens } from "@zedtech/zedkit-ui";
 
 import { identityAssistantCopy as copy } from "@/components/i18n/identity-assistant-copy";
-import { IdentityMiniPreview } from "@/components/identity-mini-preview";
+import { ProposalBeforeAfter } from "@/components/identity-proposal-compare";
 import { ReferenceReportList } from "@/components/identity-references";
 import type { Unavailable, Turn } from "@/lib/identity-assistant";
 import { LIMITS } from "@/lib/identity-assistant";
@@ -238,12 +238,14 @@ function ProposalApplyRow({
 export function ProposalCard({
   proposal,
   current,
+  domainBrief,
   busy,
   onUse,
   onDiscard,
 }: {
   proposal: Proposal;
   current: IdentityTokens;
+  domainBrief: string;
   busy: boolean;
   onUse: (tokens: IdentityTokens) => void;
   onDiscard: () => void;
@@ -251,6 +253,7 @@ export function ProposalCard({
   // Readable text is a promise of the kit, so a proposal that misses it is nudged by arithmetic, and the page says so.
   const repaired = useMemo(() => repairContrast(proposal.tokens), [proposal.tokens]);
   const rows = useMemo(() => tokenDiff(current, repaired.tokens), [current, repaired.tokens]);
+  const domain = useMemo(() => specimenDomainFromBrief(domainBrief), [domainBrief]);
   return (
     <Stack gap={3} role="region" aria-label={copy.proposal.title} aria-busy={busy || undefined} data-assistant-proposal="" className={busy ? "opacity-60" : undefined}>
       <Text as="span" className="text-base font-semibold text-foreground">
@@ -267,11 +270,7 @@ export function ProposalCard({
       <Text variant="muted" className="text-sm">
         {copy.proposal.changes(rows.length)}. {contrastNote(repaired)}
       </Text>
-      <IdentityMiniPreview
-        tokens={repaired.tokens}
-        id={`proposal-${proposal.requestId}`}
-        domain={specimenDomainFromBrief(proposal.prompt)}
-      />
+      <ProposalBeforeAfter current={current} proposed={repaired.tokens} requestId={proposal.requestId} domain={domain} />
       {rows.length > 0 ? (
         <details className="text-sm">
           <summary className="flex min-h-11 cursor-pointer items-center focus-ring">{copy.proposal.showChanges}</summary>
