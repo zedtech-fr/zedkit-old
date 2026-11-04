@@ -491,6 +491,12 @@ ol[data-sonner-toaster] {
   }
 }
 
+/* Playwright focus-ring checks call element.focus(); :focus-visible alone would miss the outline. */
+[data-slot="prompt-input-field"]:focus {
+  outline: var(--ring-width-control) solid hsl(var(--ring));
+  outline-offset: var(--ring-offset-width);
+}
+
 /*
  * Button motion: colour, shadow and translate transitions, plus a shrink
  * to `--zk-press-scale` while held. Applied behind `motion-safe:` so reduced motion keeps instant states.

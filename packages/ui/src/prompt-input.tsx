@@ -101,7 +101,7 @@ export function PromptInput({
         readOnly={busy}
         className={cn(
           "field-sizing-content max-h-40 min-h-textarea-min-height w-full min-w-0 resize-none border-0 bg-transparent py-2 pl-3 text-control shadow-none placeholder:text-muted-foreground",
-          "focus:outline-none focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+          "focus-ring-control disabled:cursor-not-allowed disabled:opacity-50",
           busy && onCancel ? "pr-20" : "pr-12",
         )}
         onKeyDown={(event) => {

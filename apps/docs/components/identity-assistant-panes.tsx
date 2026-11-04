@@ -165,6 +165,9 @@ export function PreviewPane(props: {
           busy={props.busy}
           onUse={props.onUse}
           onDiscard={props.onDiscard}
+          {...(compact
+            ? { className: "max-h-[min(52dvh,28rem)] overflow-y-auto overscroll-y-contain pr-1" }
+            : {})}
         />
       ) : (
         <Stack gap={3}>

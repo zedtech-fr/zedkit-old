@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type Ref, type RefObject } from "react";
-import { Button, PromptInput, Stack, Text, type IdentityTokens } from "@zedtech/zedkit-ui";
+import { Button, PromptInput, Stack, Text, cn, type IdentityTokens } from "@zedtech/zedkit-ui";
 
 import { identityAssistantCopy as copy } from "@/components/i18n/identity-assistant-copy";
 import { ProposalBeforeAfter } from "@/components/identity-proposal-compare";
@@ -250,6 +250,7 @@ export function ProposalCard({
   busy,
   onUse,
   onDiscard,
+  className,
 }: {
   proposal: Proposal;
   current: IdentityTokens;
@@ -257,13 +258,14 @@ export function ProposalCard({
   busy: boolean;
   onUse: (tokens: IdentityTokens) => void;
   onDiscard: () => void;
+  className?: string;
 }) {
   // Readable text is a promise of the kit, so a proposal that misses it is nudged by arithmetic, and the page says so.
   const repaired = useMemo(() => repairContrast(proposal.tokens), [proposal.tokens]);
   const rows = useMemo(() => tokenDiff(current, repaired.tokens), [current, repaired.tokens]);
   const domain = useMemo(() => specimenDomainFromBrief(domainBrief), [domainBrief]);
   return (
-    <Stack gap={3} role="region" aria-label={copy.proposal.title} aria-busy={busy || undefined} data-assistant-proposal="" className={busy ? "opacity-60" : undefined}>
+    <Stack gap={3} role="region" aria-label={copy.proposal.title} aria-busy={busy || undefined} data-assistant-proposal="" className={cn(busy && "opacity-60", className)}>
       <Text as="span" typeRole="label" className="font-semibold text-foreground">
         {copy.proposal.title}
       </Text>

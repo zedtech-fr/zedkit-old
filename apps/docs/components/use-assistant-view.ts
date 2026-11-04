@@ -33,7 +33,16 @@ function scrollToAssistant() {
  * goes next. Arriving to create opens it and puts focus in the form; a new proposal takes a phone to the preview and
  * focus with it (the button that had it is hidden by then); using or discarding it brings the visitor back.
  */
-export function useAssistantView({ proposalId, onBrief }: { proposalId: string | undefined; onBrief: (brief: string) => void }) {
+export function useAssistantView({
+  proposalId,
+  onBrief,
+  scrollAssistantOnProposal = true,
+}: {
+  proposalId: string | undefined;
+  onBrief: (brief: string) => void;
+  /** Inline `#create` assistant scrolls the page when a proposal lands; the dock keeps the page still. */
+  scrollAssistantOnProposal?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<View>("conversation");
   const [focus, setFocus] = useState<FocusRequest | null>(null);
@@ -62,7 +71,7 @@ export function useAssistantView({ proposalId, onBrief }: { proposalId: string |
     seenProposal.current = proposalId;
     if (arrived) {
       setView("preview");
-      scrollToAssistant();
+      if (scrollAssistantOnProposal) scrollToAssistant();
     }
     if (!arrived && view !== "preview") return;
     const focusPreview = () => {

@@ -46,16 +46,25 @@ function readSiteTokens(identityId: string): IdentityTokens {
   return identityPresets[isPresetId(DEFAULT_IDENTITY) ? DEFAULT_IDENTITY : "glass"];
 }
 
-function useEditorDockAutoOpen(onEditor: boolean, setBrief: (value: string) => void, setExpanded: (open: boolean) => void) {
+function useEditorDockAutoOpen(
+  onEditor: boolean,
+  pathname: string,
+  setBrief: (value: string) => void,
+  setExpanded: (open: boolean) => void,
+) {
   useCreatorHandoff((brief) => {
     if (brief) setBrief(brief);
     setExpanded(true);
   });
   useEffect(() => {
-    // Drained on every evaluation: a #create arrival followed by an editor revisit must not reopen from a stale flag.
+    if (!onEditor) return;
     const arrived = consumeCreateArrival();
-    if (onEditor && (window.location.hash === "#create" || arrived)) setExpanded(true);
-  }, [onEditor, setExpanded]);
+    if (window.location.hash === "#create" || arrived) {
+      setExpanded(true);
+      return;
+    }
+    setExpanded(false);
+  }, [onEditor, pathname, setExpanded]);
 }
 
 function useIdentityDockOpenRequest(setBrief: (value: string) => void, setExpanded: (open: boolean) => void) {
@@ -79,8 +88,16 @@ function IdentityDockWidget() {
   const { workingTokens, setPreviewTokens } = useIdentityDockPreview(baseTokens, identityId);
   const triggerRef = useIdentityDockKeyboard(expanded, setExpanded);
 
-  useEditorDockAutoOpen(onEditor, setBrief, setExpanded);
+  useEditorDockAutoOpen(onEditor, pathname, setBrief, setExpanded);
   useIdentityDockOpenRequest(setBrief, setExpanded);
+
+  useEffect(() => {
+    if (!expanded) {
+      document.body.style.pointerEvents = "";
+      return;
+    }
+    document.body.style.pointerEvents = "auto";
+  }, [expanded, pathname]);
 
   return (
     <>
@@ -101,7 +118,7 @@ function IdentityDockWidget() {
           </Text>
         </IdentityDockTrigger>
       </IdentityDock>
-      <Drawer open={expanded} onOpenChange={setExpanded} direction="right" mobile="sheet" modal={false} handleOnly>
+      <Drawer open={expanded} onOpenChange={setExpanded} direction="right" mobile="sheet" modal={false} handleOnly noBodyStyles>
         <DrawerContent
           size="lg"
           modal={false}
