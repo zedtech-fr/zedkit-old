@@ -51,23 +51,20 @@ function rules(root: string, issues: Issue[]): void {
   if (files.length === 0) {
     issues.push({ path: dir, message: "D2 domain rules: no .agents/domain/*.md (business and invariant rules extracted from the code)" });
   }
-  const unenforced: Array<{ id: string; file: string }> = [];
+  const unenforced: string[] = [];
   for (const file of files) {
     const body = text(join(dir, file)) ?? "";
     if (!EVIDENCE.test(body) && !body.includes("source: owner")) {
       issues.push({ path: join(dir, file), message: "D2 domain rules: no file:line or `source: owner` evidence" });
     }
-    for (const line of body.split("\n")) {
-      const m = /^\|\s*([A-Za-z][\w]*-\d+)\s*\|/u.exec(line);
-      if (m && m[1] && /\|\s*current\b/ui.test(line) && line.includes("documented, not enforced")) unenforced.push({ id: m[1], file });
+    for (const m of body.matchAll(/^\|\s*(\w+-\d+)\s*\|\s*current\b.*documented, not enforced/giu)) {
+      if (m[1]) unenforced.push(m[1]);
     }
   }
   if (unenforced.length > 0) {
     const inventory = `${text(join(root, "AGENTS.md")) ?? ""}\n${text(join(root, ".agents/setup-log.md")) ?? ""}`;
-    for (const { id, file } of unenforced) {
-      if (!inventory.includes(id)) {
-        issues.push({ path: join(dir, file), message: `D2 domain rules: ${id} is current (documented, not enforced) but missing from the Unenforced rules inventory (cite the ID in root AGENTS.md or .agents/setup-log.md)` });
-      }
+    for (const id of unenforced) {
+      if (!inventory.includes(id)) issues.push({ path: dir, message: `D2 domain rules: inventory misses ${id} (current, documented, not enforced)` });
     }
   }
   if (!listRepoFiles(root).some((p) => UI_FILE.test(p))) return;
