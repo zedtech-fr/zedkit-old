@@ -3240,11 +3240,15 @@
           "whenToUse": "Chat-style briefs where the send affordance sits inside the composer.",
           "whenNotToUse": "Plain forms with a separate submit row — use `Field` + `Textarea` + `Button`.",
           "derivedFrom": null,
-          "example": "import { PromptInput } from \"@zedtech/zedkit-ui\";\n<PromptInput sendLabel=\"Send\" value={text} onValue={setText} onSubmit={send} placeholder=\"Ask anything\" aria-label=\"Message\" />",
+          "example": "import { PromptInput } from \"@zedtech/zedkit-ui\";\n<PromptInput sendLabel=\"Send\" value={text} onChange={(e) => setText(e.target.value)} onSubmit={send} placeholder=\"Ask anything\" aria-label=\"Message\" />",
           "examples": [
             {
               "title": "Simple",
-              "code": "import { PromptInput } from \"@zedtech/zedkit-ui\";\n<PromptInput sendLabel=\"Send\" value={text} onValue={setText} onSubmit={send} placeholder=\"Ask anything\" aria-label=\"Message\" />"
+              "code": "import { PromptInput } from \"@zedtech/zedkit-ui\";\n<PromptInput sendLabel=\"Send\" value={text} onChange={(e) => setText(e.target.value)} onSubmit={send} placeholder=\"Ask anything\" aria-label=\"Message\" />"
+            },
+            {
+              "title": "Complete",
+              "code": "import { PromptInput } from \"@zedtech/zedkit-ui\";\n<PromptInput\n  id=\"chat\"\n  sendLabel=\"Send\"\n  value={text}\n  onChange={(e) => setText(e.target.value)}\n  onSubmit={send}\n  busy={pending}\n  onCancel={stop}\n  cancelLabel=\"Stop\"\n  rows={1}\n  maxLength={2000}\n  aria-label=\"Message\"\n/>"
             }
           ],
           "adoption": {
@@ -3259,7 +3263,6 @@
               }
             ]
           },
-          "registry": "(none)",
           "a11y": "Pass `sendLabel` (and `cancelLabel` when using cancel); the field keeps a visible label via `aria-label` or associated `FieldLabel`.",
           "troubleshooting": "Send stays disabled — value is trimmed; whitespace-only counts as empty. Field does not grow — use `field-sizing-content` (Tailwind v4) on the consumer stylesheet.",
           "seeAlso": [
@@ -3858,8 +3861,8 @@
           "status": "beta",
           "shortName": "Drawer",
           "audience": "Developers showing detail views beside a list without navigation.",
-          "purpose": "Slide-in panels from any edge (right-side detail on desktop, bottom sheet on mobile, left, right, or top on demand). Panel chrome (border, fill, edge shadow) comes from `Surface` elevation 3 (`shadow-overlay`). Pass `size=\"sm\" | \"md\" | \"lg\"` on `DrawerContent` for desktop side width (`md` is the default 28rem; `lg` is about min(600px, 92vw)).",
-          "whenToUse": "For list-detail previews and short side forms.",
+          "purpose": "Slide-in panels from any edge: right-side detail on desktop, bottom sheet on mobile; size sm, md or lg.",
+          "whenToUse": "For list-detail previews and short side forms. Panel chrome (border, fill, edge shadow) comes from `Surface` elevation 3 (`shadow-overlay`); `size=\"sm\" | \"md\" | \"lg\"` on `DrawerContent` sets desktop side width (`md` is the default 28rem; `lg` is about min(600px, 92vw)).",
           "whenNotToUse": "For multi-step flows — use a full page or wizard instead.",
           "derivedFrom": "shadcn/ui (drawer)",
           "example": "import { Button, Drawer, DrawerClose, DrawerContent, DrawerTitle, DrawerTrigger } from \"@zedtech/zedkit-ui\";\n<Drawer direction=\"right\">\n  <DrawerTrigger asChild><Button>Open</Button></DrawerTrigger>\n  <DrawerContent>\n    <DrawerClose asChild><Button variant=\"ghost\" size=\"sm\">Close</Button></DrawerClose>\n    <DrawerTitle>Details</DrawerTitle>\n  </DrawerContent>\n</Drawer>",
@@ -4614,7 +4617,7 @@
           "status": "alpha",
           "shortName": "Surface",
           "audience": "Developers building floating panels or composing kit overlays.",
-          "purpose": "One place for panel background (solid card, popover, or glass), elevation (`0`–`3`, token shadows including `shadow-overlay`), border, radius, and optional padding.",
+          "purpose": "One panel surface: solid card, popover or glass, elevation `0`–`3` with token shadows, border, radius and optional padding.",
           "whenToUse": "Custom panels that should match Dialog, Drawer, Card, and Popover chrome; floating assistant triggers via `WidgetButton`.",
           "whenNotToUse": "Marketing page sections — use `@zedtech/zedkit-ui/marketing` `GlassSurface` instead.",
           "derivedFrom": null,
