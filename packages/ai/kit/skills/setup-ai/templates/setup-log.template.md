@@ -18,7 +18,7 @@ Append one entry per `/setup-ai` run, newest first. Each entry records what the 
 | `muse`   | Reads the shared source directly; nothing extra to install |
 
 - **Wired:** cursor, claude (example)
-- **Plan gaps:** paths changed after the plan table but missing rows (or: none — reconciled with `git diff --name-only`)
+- **Plan gaps:** paths changed after the plan table but missing rows (or: none — reconciled with `git diff --name-only` and **`npx zedkit-ai validate --setup`** clean; use **`--plan <file>`** when the plan is not **`PLAN.md`** at the repo root or **`.agents/setup-log/plan.md`**)
 - **Unenforced rules:** (architecture score 3 — or: none)
 
 | Prose rule (AGENTS or nested) | Lint / CI proposal or ticket draft | Evidence                   |
@@ -32,7 +32,7 @@ Append one entry per `/setup-ai` run, newest first. Each entry records what the 
 | ------------- | ----------------------------------- |
 | domain-change | deferred — no money paths in v1 yet |
 
-- **Gate outcomes:** (one row per gate command; each log file ends with **`EXIT:<code>`** as its last line)
+- **Gate outcomes:** (one row per gate command; each **`.agents/setup-log/gates/*.log`** starts with **`CMD:`** and ends with **`EXIT:<code>`** as its last line — **`npx zedkit-ai validate --setup`** checks plan coverage and log shape)
 
 | Gate command | Exit | Duration | Did not run / why | Safe alternative used                                    |
 | ------------ | ---- | -------- | ----------------- | -------------------------------------------------------- |
