@@ -5,7 +5,7 @@ import { LIMITS } from "./identity-assistant-limits.ts";
  * A full http(s) link counts, and so does a bare name such as `linear.app` or `www.stripe.com` (read as https).
  * At most three, each once, in the order written.
  */
-const TLDS = "com|app|io|dev|co|org|net|fr|de|uk|eu|design|so|ai|xyz|studio|me|tech|site|shop|store|art|page|cc|be|ch|nl|es|it|ca|us";
+const TLDS = "com|app|io|dev|co|org|net|fr|de|uk|eu|design|so|ai|xyz|studio|me|tech|site|shop|store|art|page|cc|be|ch|nl|es|it|ca|us|digital|agency|works|tools|cloud|online|space|world|blog|media|studio|team|codes|ink|fm|tv|ly|to|sh|gg|is|pt|se|no|dk|fi|pl|at|ie|lu|jp|au|nz|in|br|mx|info|biz|pro|work|one|live|today|systems|solutions|consulting|company|network|zone|plus|fun|life|email|link|click|website|tech";
 const URL_IN_TEXT = new RegExp(
   `https?:\\/\\/[^\\s<>"'()[\\]{}]+|(?<![@\\w./-])(?:www\\.)?(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.){1,4}(?:${TLDS})(?![\\w-])(?:\\/[^\\s<>"'()[\\]{}]*)?`,
   "gi",

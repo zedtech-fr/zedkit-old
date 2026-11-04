@@ -104,6 +104,8 @@ export const identityAssistantCopy = {
     radius: (value: string) => `radius ${value}`,
     failed: (reason: string) => `Could not be used: ${referenceReason(reason)}.`,
     report: "What happened to your links",
+    used: "Used",
+    notUsed: "Not used",
   },
   unavailable: (reason: Unavailable) =>
     ({

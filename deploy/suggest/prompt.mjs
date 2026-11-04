@@ -26,7 +26,8 @@ Make the result recognisably shaped by the request: its mood, audience, density,
 
 Reference design signals: each reference may carry "signals" measured from its CSS (properties: CSS custom properties; colors: most used colours, most frequent first; fonts; radii; shadows; spacing). When a reference has signals, they are what the visitor wants: build from them, do not invent a stock look.
 - Palette: take primary, accent, background and foreground from its colours (convert to "H S% L%"), adjusting lightness only as far as the contrast rules require. Keep its hue and saturation.
-- Type: the "fonts" entry nearest to its fonts (same classification: geometric, grotesque, humanist, serif, mono).
+- Type: the "fonts" entry nearest to its fonts (same classification: geometric, grotesque, humanist, serif, mono). Keep the family: a sans-serif reference gets sans-serif fontSans and fontDisplay, never a serif, and a serif one never a sans.
+- Light and dark: "scheme" says which one the page opens in, and "darkColors" are the colours it sets for dark. A light page with white surfaces keeps a white or near-white light background; take the dark palette from darkColors when there are some.
 - Shape and depth: radius from its radii, shadowSm and shadowMd from its shadows (or flat if it has none), spacing from its spacing scale.
 - Several references: blend them; the request wins where it says otherwise.
 In summary, cite each reference you used by its host and name the signals you took from it (for example "From linear.app: #5e6ad2 as primary, Inter, 6px radius"). Never claim to have seen images or a rendered page.`;
@@ -85,6 +86,8 @@ export function worstCaseReferences(urls) {
         radii: Array.from({ length: FIELD_MAX.radii }, () => wide(FIELD_MAX.radiusChars)),
         shadows: Array.from({ length: FIELD_MAX.shadows }, () => wide(FIELD_MAX.shadowChars)),
         spacing: Array.from({ length: FIELD_MAX.spacing }, () => wide(FIELD_MAX.spacingChars)),
+        darkColors: Array.from({ length: FIELD_MAX.darkColors }, () => wide(FIELD_MAX.colorChars)),
+        scheme: wide(FIELD_MAX.scheme),
         stylesheets: 99,
       },
       text,
