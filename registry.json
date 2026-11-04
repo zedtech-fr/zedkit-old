@@ -134,6 +134,7 @@
       "name": "dialog",
       "type": "registry:ui",
       "dependencies": [
+        "@zedtech/zedkit-core",
         "@radix-ui/react-dialog",
         "lucide-react"
       ],
@@ -225,6 +226,7 @@
       "name": "drawer",
       "type": "registry:ui",
       "dependencies": [
+        "@zedtech/zedkit-core",
         "vaul",
         "lucide-react"
       ],

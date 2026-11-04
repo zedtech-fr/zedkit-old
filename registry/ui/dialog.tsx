@@ -6,9 +6,11 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
+  focusOverlayInitial,
   overlayDialogCloseClass,
   overlayDialogFooterClass,
   overlayDialogHeaderClass,
+  type OverlayInitialFocus,
 } from "@/components/ui/overlay-modal";
 import { OverlayMountContext, ScopeMirror } from "@/components/ui/theme-scope";
 import { useUiMessages } from "@/components/ui/ui-provider";
@@ -97,9 +99,18 @@ function DialogContent({
   className,
   children,
   closeLabel,
+  initialFocus,
   ref,
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Content> & { closeLabel?: string }) {
+}: React.ComponentProps<typeof DialogPrimitive.Content> & {
+  closeLabel?: string;
+  /**
+   * Opt-in field to focus on open (a ref, or a selector resolved inside the
+   * panel). Without it focus lands on the panel itself, never inside a
+   * field; a focused field gets the caret at the end, never a selection.
+   */
+  initialFocus?: OverlayInitialFocus;
+}) {
   const messages = useUiMessages();
   const fitRef = useDialogViewportFit<HTMLDivElement>();
   const contentRef = React.useRef<HTMLDivElement | null>(null);
@@ -124,7 +135,7 @@ function DialogContent({
           tabIndex={-1}
           onOpenAutoFocus={(event) => {
             event.preventDefault();
-            contentRef.current?.focus({ preventScroll: true });
+            focusOverlayInitial(contentRef.current, initialFocus);
           }}
           className={cn(
             "fixed dialog-center z-dialog grid max-h-dialog-max-height w-full max-w-dialog-mobile gap-4 overflow-y-auto overscroll-y-contain rounded-lg border bg-card p-dialog-padding text-card-foreground shadow-overlay outline-none focus:outline-none sm:max-w-lg",
