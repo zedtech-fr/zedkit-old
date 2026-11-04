@@ -1,10 +1,6 @@
 "use client";
 
-<<<<<<< HEAD
-import { useEffect, useLayoutEffect, useRef, type RefObject } from "react";
-=======
-import { useCallback, useEffect, useRef, type RefObject } from "react";
->>>>>>> origin/goal/reference
+import { useCallback, useEffect, useLayoutEffect, useRef, type RefObject } from "react";
 import { Stack } from "@zedtech/zedkit-ui";
 
 import { ViewSwitch, type View } from "@/components/identity-assistant-parts";
@@ -109,6 +105,14 @@ function useKeepSentBrief(brief: string, session: SessionState, setBrief: (value
   return send;
 }
 
+/** A proposal that arrives (or comes back into its pane) is brought into view inside the dock scroller. */
+function useProposalInView(scrollRef: RefObject<HTMLDivElement | null>, requestId: string | undefined, view: View) {
+  useLayoutEffect(() => {
+    if (!requestId) return;
+    scrollRef.current?.querySelector("[data-assistant-proposal]")?.scrollIntoView({ block: "nearest", behavior: "instant" });
+  }, [scrollRef, requestId, view]);
+}
+
 export function IdentityDockAssistantPanel({
   previewTokens,
   onPreviewTokens,
@@ -125,20 +129,12 @@ export function IdentityDockAssistantPanel({
   const off = status !== null && !status.available ? status.reason : null;
   const { send: sendBrief, quickRefine } = useAssistantSubmitHandlers(brief, submit, busy, off !== null, () => setBrief(""));
   const send = useKeepSentBrief(brief, session, setBrief, sendBrief);
-  const domainBrief = specimenBriefFromThread(session.thread, session.proposal?.prompt ?? brief);
 
   useEffect(() => {
     const field = panelRef.current?.querySelector<HTMLTextAreaElement>("#identity-assistant-brief:not([disabled])");
     if (field && field.offsetParent !== null) field.focus({ preventScroll: true });
   }, []);
-
-  useLayoutEffect(() => {
-    const id = session.proposal?.requestId;
-    if (!id) return;
-    const root = scrollRef.current;
-    const proposal = root?.querySelector("[data-assistant-proposal]");
-    proposal?.scrollIntoView({ block: "nearest", behavior: "instant" });
-  }, [session.proposal?.requestId, ui.view]);
+  useProposalInView(scrollRef, session.proposal?.requestId, ui.view);
 
   return (
     <Stack ref={panelRef} className="min-h-0 flex-1 gap-0 overflow-hidden" data-slot="identity-dock-body">
@@ -153,7 +149,7 @@ export function IdentityDockAssistantPanel({
         brief={brief}
         busy={busy}
         previewTokens={previewTokens}
-        domainBrief={domainBrief}
+        domainBrief={specimenBriefFromThread(session.thread, session.proposal?.prompt ?? brief)}
         inputRef={ui.field}
         setBrief={setBrief}
         send={send}
