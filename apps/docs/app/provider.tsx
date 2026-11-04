@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import { useEffect, useLayoutEffect } from "react";
 import dynamic from "next/dynamic";
 import { RootProvider } from "fumadocs-ui/provider/next";
-import { AnimateObserver } from "@zedtech/zedkit-ui";
 import { CustomIdentityBar } from "@/components/custom-identity-bar";
 import { IdentityDockGate } from "@/components/identity-dock-gate";
 import { IdentityAssistantStoreProvider } from "@/lib/identity-assistant-store";
@@ -13,6 +12,10 @@ import { SiteChromeA11yPatch, SiteHeaderSurfacePatch } from "@/ui/site-chrome-a1
 import { ThemeColorMeta } from "@/ui/theme-color-meta";
 import { RouteScrollReset } from "@/ui/route-scroll-reset";
 
+/** Scroll-reveal runtime runs after hydration; it stays out of the first load. */
+const AnimateObserver = dynamic(() => import("@zedtech/zedkit-ui").then((mod) => ({ default: mod.AnimateObserver })), {
+  ssr: false,
+});
 const StaticSearchDialog = dynamic(() => import("../components/search"));
 
 /** Client wrapper: search dialog JS loads on first open, not on every page. */

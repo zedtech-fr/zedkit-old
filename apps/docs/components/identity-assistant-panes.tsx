@@ -8,7 +8,7 @@ import { AssistantNoticeBubble, BriefForm, ProposalCard, Thread, UnavailableBann
 import { ChatLog } from "@/components/identity-chat-log";
 import { IdentityMiniPreview } from "@/components/identity-mini-preview";
 import { IdentityRefinementChips } from "@/components/identity-refinement-chips";
-import { DetectedLinks } from "@/components/identity-references";
+import { DetectedLinks } from "@/components/identity-detected-links";
 import type { Unavailable } from "@/lib/identity-assistant";
 import type { Proposal, SessionState } from "@/lib/identity-creator-session";
 
