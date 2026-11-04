@@ -61,10 +61,21 @@ const DOMAIN_KEYWORDS: Readonly<Record<SpecimenDomain, readonly string[]>> = {
 
 const DEFAULT_DOMAIN: SpecimenDomain = "saas-dashboard";
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Whole-token match (no substring hits); optional plural `s` on the keyword. */
+function briefContainsKeyword(text: string, keyword: string): boolean {
+  const escaped = escapeRegExp(keyword);
+  const pattern = new RegExp(`(?:^|[^a-z0-9])${escaped}s?(?=$|[^a-z0-9])`, "i");
+  return pattern.test(text);
+}
+
 function scoreDomain(text: string, keywords: readonly string[]): number {
   let score = 0;
   for (const keyword of keywords) {
-    if (text.includes(keyword)) score += keyword.length >= 7 ? 2 : 1;
+    if (briefContainsKeyword(text, keyword)) score += keyword.length >= 7 ? 2 : 1;
   }
   return score;
 }

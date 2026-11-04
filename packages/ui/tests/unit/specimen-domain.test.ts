@@ -36,4 +36,20 @@ describe("selectSpecimenDomain", () => {
   it("picks the domain with the stronger keyword score", () => {
     expect(selectSpecimenDomain("checkout dashboard")).toBe("commerce");
   });
+
+  it("does not match keywords inside unrelated words", () => {
+    expect(selectSpecimenDomain("capital markets")).toBe("saas-dashboard");
+    expect(selectSpecimenDomain("notebook shop")).toBe("commerce");
+    expect(selectSpecimenDomain("impressive portfolio")).toBe("saas-dashboard");
+    expect(selectSpecimenDomain("steam-powered brand")).toBe("saas-dashboard");
+  });
+
+  it("defaults for French briefs with no English domain tokens", () => {
+    expect(selectSpecimenDomain("Marque française pour artisans")).toBe("saas-dashboard");
+    expect(selectSpecimenDomain("Identité visuelle pour créateurs")).toBe("saas-dashboard");
+  });
+
+  it("still matches plural keywords", () => {
+    expect(selectSpecimenDomain("Online shops with carts")).toBe("commerce");
+  });
 });
