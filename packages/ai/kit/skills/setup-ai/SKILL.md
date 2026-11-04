@@ -9,12 +9,14 @@ Make the AI setup of **this** repo true and specific. Generic advice is already 
 
 ## Tell the user first
 
+**Output order:** This block is the **first message** of the run — before install announcements, inventory, subagent spawns, or file writes — including **headless**, **CI**, and **non-interactive** runs. Paste it as plain text at the top of the transcript; never skip it because nobody is chatting live.
+
 When `/setup-ai` starts (or the user asks to set up AI), say this in plain language before phase A — no interview yet:
 
 - **Modes:** **fresh** (little or no agent setup yet) or **improve** (you already have `AGENTS.md`, rules, or provider folders — audit and extend, do not replace blindly).
 - **Phases:** **A** audit (inventory + parallel explore + gaps) → **B** discovery (mine docs and code, then **one batched interview of at most 8 questions**) → **C** build deep artifacts from kit templates → **D** propose repo skills from the catalog → write provider layers, verify, report → **E** score and learn.
 - **What they get:** verified root `AGENTS.md`, `.agents/product.md`, domain rules under `.agents/domain/`, `.agents/personas.md`, `.agents/design.md` when the repo has UI, nested rules where folders differ, optional repo-specific skills and subagents, and thin Cursor/Claude layers that match `.agents/`.
-- **Time:** about **15–45 minutes** for a typical app repo; large monorepos or workspace roots can take longer. They approve the plan before writes; in phase B they **answer or delegate the batched interview** (do not skip it). One extra provider question, offering all four providers with their one-line value, only when wiring is unclear.
+- **Time:** about **15–45 minutes** for a typical app repo; large monorepos or workspace roots can take longer. They approve the plan before writes; in phase B they **answer or delegate the batched interview** (do not skip it). Asking **which** providers to wire is optional when names are already known; **recording all four provider values** (see Providers) in the plan and setup-log is **not** optional.
 
 ## Phases (whole run)
 
@@ -42,7 +44,7 @@ One shared source, then thin provider layers. Phases **A–D** are provider-neut
 
 ## Providers
 
-Always offer all four providers, each with its one-line value; wire every provider the owner names (several allowed).
+**Always record** the value table below in the **plan table appendix** and in **every setup-log entry** (even when the user pre-selected providers or the run is headless). Wire every provider the owner names (several allowed). Only the **selection question** ("which providers to wire?") is conditional — when names are already known, skip the question but **still paste the table**.
 
 | Provider | Value                                                      |
 | -------- | ---------------------------------------------------------- |
@@ -50,6 +52,8 @@ Always offer all four providers, each with its one-line value; wire every provid
 | `claude` | The same setup for Claude Code sessions, linked not copied |
 | `codex`  | Reads the shared source directly; nothing extra to install |
 | `muse`   | Reads the shared source directly; nothing extra to install |
+
+Add a **Wired:** line listing the providers you actually installed for this repo.
 
 ## Phase A — Audit
 
@@ -61,7 +65,7 @@ List, with paths: `AGENTS.md` (root and nested), `CLAUDE.md`, `GEMINI.md`, `.cur
 - Anything real: **improve**. Read all of it first. Note what each file is for and which tool reads it.
 - Audit only files the repo owns. A vendored or symlinked kit (for example `.agents/skills` pointing into a package) is listed once and not audited.
 - Note uncommitted changes. Treat the current working state as the baseline and do not revert anything.
-- Settle the providers: the names given after `setup-ai` win; otherwise reuse the providers the repo already wires (`.cursor/`, `.claude/`, `CLAUDE.md`, docs saying so). If neither tells you, ask exactly one question — which of cursor, claude, codex, muse, each with its one-line value from Providers above (several allowed) — before writing; with nobody to ask, wire all four.
+- Settle the providers: the names given after `setup-ai` win; otherwise reuse the providers the repo already wires (`.cursor/`, `.claude/`, `CLAUDE.md`, docs saying so). If neither tells you, ask exactly one question — which of cursor, claude, codex, muse to **wire** (several allowed) — before writing; with nobody to ask, wire all four. **Regardless, copy the full Providers value table into the plan and setup-log.**
 - Workspace check: two or more child directories that are themselves git checkouts, or a manifest listing member projects, means a multi-repo workspace root: switch to Workspace mode below instead of phases B–D.
 
 ### A2. Explore in parallel
@@ -79,6 +83,20 @@ Launch read-only `explorer` subagents in one batch, one question each, with the 
 | How the team works                                                     | `git log` (commit style, PR size, hotfix habits), templates, branch rules, CI jobs and what blocks a merge |
 
 Then **run the gate commands you found**, preferring forms without side effects (note any that write build output). Judge a command by its exit code, not by parsed output. A command that fails is a finding, not something to hide.<!-- if:agent=product-director --> Invoke **`product-director`** when the repo has a customer-facing product.<!-- /if --><!-- if:skill=domain-modeling --> Invoke **`domain-modeling`** when glossary or policy language is unclear.<!-- /if -->
+
+### Gate execution log (persisted evidence)
+
+Every gate you cite in setup-log, domain rules, or a repo skill must be **persisted**, not chat-only:
+
+| Field   | Required                                                              |
+| ------- | --------------------------------------------------------------------- |
+| Command | Exact shell line run                                                  |
+| Timing  | Start/end timestamp or duration                                       |
+| Result  | Final line **`EXIT:<code>`** (include non-zero; do not hide failures) |
+
+If a log file you referenced is **empty**, re-run the command and append before scoring. Table rows in setup-log are a summary; the persisted block or attached log must still include **`EXIT:<code>`**.
+
+**OOM-safe fallback:** When the repo's main gate is `pnpm check` (or similar) and it **cannot take flags** and dies from memory pressure, run the **underlying turbo chain explicitly** with `--concurrency=2` and a capped heap (for example `NODE_OPTIONS=--max-old-space-size=4096`, lower if the host requires). Record that exact command in setup-log and in **domain rules / generated repo skills** — never leave a generic `pnpm check` if that is not what you verified.
 
 ### A3. Find the gaps
 
@@ -128,6 +146,18 @@ Open **`templates/README.md`** in this skill folder (after install: `.agents/ski
 
 Each domain file includes **rules, invariants, edge cases**, sources (`file:line` or `source: owner`), and a **Test** column (test path or `no test — flag`).<!-- if:agent=ui-designer --> Use **`ui-designer`** and **`copywriter`** for `design.md` when UI exists.<!-- /if -->
 
+### Phase C close — stale adopt sidecars
+
+After you replace a kit placeholder (for example `.agents/personas.md`), a later `npx zedkit-ai setup` may write a `<basename>.kit.md` sidecar that still holds the old fictional template.
+
+Before phase D (or at phase C end):
+
+1. For each `*.kit.md` beside a file you created or heavily edited in phase C, read the sidecar and the user file.
+2. When the sidecar is **only** the superseded template placeholder (the user file is the real content now), **delete** the sidecar; keep the user file.
+3. Record each deletion in setup-log under **Sidecar cleanup** (path + reason).
+
+Do not delete sidecars that differ materially from the template in ways the user still needs to merge.
+
 ## Phase D — Catalog skills
 
 Propose copies from **`templates/catalog/`** (each skill folder has `SKILL.md.tmpl`) into `.agents/skills/<name>/SKILL.md` (see **`templates/README.md`**). Customize paths and gate commands. Prefer **domain-change** when money or policy edits are common; **add-migration** when schema changes are frequent; **add-capability** for full-stack features. After adding a repo skill, re-run `npx zedkit-ai setup` (no flags needed) to wire it into provider layers; never `ln` or `cp` by hand.
@@ -153,6 +183,8 @@ Present one table covering phase A gaps, phase C artifacts, phase D skills, hygi
 - **`package.json`** (and the lockfile that changes with it: `pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`, or `bun.lock`) when adding `@zedtech/zedkit-ai` or changing scripts — action `edit`, tier `must` or `safe`.
 - **Root `AGENTS.md`** when appending the ladder, replacing placeholders, or linking product/domain docs — action `edit` or `append`, not silent.
 - Any **`.prettierignore`**, **provider folder**, or **user-owned** path the install or your writes will touch (including adopt sidecars).
+
+**Appendix (always include):** paste the full **Providers** value table and **Wired:** line from the Providers section.
 
 **Wait for the user's go before writing.** If nobody can answer (non-interactive run), output the table and stop.
 
@@ -194,9 +226,17 @@ Short report first: what you created or changed, what you left alone and why, fi
 Then:
 
 1. **Self-score** — open `templates/setup-rubric.md` and score 0–3 on each of the 10 axes. Cite evidence per axis (file path, `file:line`, or transcript quote); no evidence means no score above 1. The rubric sets the pass targets and hard gates.
-2. **Setup log** — append a retro entry to `.agents/setup-log.md` from `templates/setup-log.template.md`: date, what worked, what hurt, scores, decisions (`source: owner` where the owner chose), open kit frictions, and a **gate outcomes** table (see template).
-3. **Kit friction** — for each setup friction caused by the kit, draft a short public-safe issue (title + body) from `templates/kit-issue.template.md`; give the owner the drafts to paste.
+2. **Setup log** — append a retro entry to `.agents/setup-log.md` from `templates/setup-log.template.md`: date, what worked, what hurt, **Providers table + Wired**, scores, decisions (`source: owner` where the owner chose), **Sidecar cleanup**, gate outcomes (see template), open kit frictions.
+3. **Kit friction** — for **each** friction you observed (stale sidecar, validate gap, tool detour, empty gate log, plan gap, …), draft **one** public-safe issue from `templates/kit-issue.template.md` with **Kit root cause** filled; map friction → kit file → fix. If there were zero frictions, say so in the log — do not skip the checklist.
 4. **Re-audit cadence** — set the next check: after the next release, or when product, domain rules, or providers change; record the trigger in the log entry.
+
+**Phase E checklist (before you finish):**
+
+- [ ] Providers value table + **Wired:** in setup-log
+- [ ] Gate rows match persisted logs with **`EXIT:<code>`**
+- [ ] One kit-issue draft per friction (or explicit "none")
+- [ ] Sidecar cleanup recorded if any `*.kit.md` removed
+- [ ] Self-score mean and hard gates noted
 
 For a bigger follow-up task, point the user at `/orchestrate` with the goal in one line.
 

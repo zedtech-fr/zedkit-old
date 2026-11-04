@@ -16,6 +16,10 @@ What the agent had to do, step by step, including any manual file copy, config e
 
 What the documented flow says should happen instead.
 
+## Kit root cause
+
+Which kit file or behavior caused the friction (for example `setup-ai` SKILL phase C sidecar step, validate message, CLI next-step).
+
 ## Kit file
 
 The kit file that caused the friction, for example `packages/ai/kit/skills/setup-ai/SKILL.md` or `packages/ai/src/validate.ts`.

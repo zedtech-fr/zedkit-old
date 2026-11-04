@@ -128,7 +128,8 @@ describe("provider matrix", () => {
       const line = section.split("\n").find((l) => l.includes(`\`${provider}\``) && l.includes("|"));
       expect(line, `${provider} value row`).toBeDefined();
     }
-    expect(raw).toContain("one-line value from Providers above");
+    expect(raw).toMatch(/Always record.*setup-log entry/iu);
+    expect(raw).toContain("**Wired:**");
   });
 
   for (const preset of presetNames()) {
