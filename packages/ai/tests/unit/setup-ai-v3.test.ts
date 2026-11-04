@@ -93,6 +93,21 @@ describe("setup-ai v3: domain, identity and nested rules", () => {
     expect(read("templates", "setup-rubric.md")).toMatch(/existing nested stubs left untouched and unlinked/u);
   });
 
+  it("maps what the repo already owns instead of copying it: provider rules, policy docs, run budgets", () => {
+    const raw = read("SKILL.md");
+    expect(raw).toMatch(/Provider-scoped rules and run budgets/u);
+    expect(raw).toMatch(/Respect the repo's own budgets/u);
+    expect(raw).toMatch(/stop after 5 files read with no write/u);
+    expect(raw).toMatch(/Map what already exists/u);
+    expect(raw).toMatch(/one law, one owner/u);
+    const log = read("templates", "reading-log.template.md");
+    expect(log).toMatch(/## Rule map/u);
+    expect(log).toMatch(/## Policy docs/u);
+    expect(read("templates", "reader-brief.template.md")).toMatch(/Documented law for this slice/u);
+    expect(read("templates", "reader-brief.template.md")).toMatch(/UX and interaction laws/u);
+    expect(read("templates", "model-routing.template.md")).toMatch(/## Roles in this repo/u);
+  });
+
   it("the nested template keeps to what differs, links instead of copying, and cites evidence", () => {
     const raw = read("templates", "nested-agents.template.md");
     expect(raw).toMatch(/Only what differs from the root/u);

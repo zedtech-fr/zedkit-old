@@ -10,6 +10,25 @@ Written in phase B to `.agents/setup-log/reading.md` after the readers report. `
 | 1     | `apps/web`         | scout | 14    | 3/3 opened, 3 held            | 1         | 2    |
 | 2     | `packages/billing` | scout | 9     | 3/3 opened, 2 held, 1 dropped | 0         | 1    |
 
+## Rule map
+
+Every rule or skill file the repo already owns for one provider (Cursor `.cursor/rules/*.mdc` with `globs:`, folder-level `<folder>/.cursor/rules` and `skills`, `.claude/rules`) is invisible to the other providers. One row per file, by full path (`npx zedkit-ai validate --setup` checks that none is missing). Never copy the law: one law, one owner.
+
+| File                                         | Scope (globs or folder) | Decision              | Where other providers find it                                  |
+| -------------------------------------------- | ----------------------- | --------------------- | -------------------------------------------------------------- |
+| `.cursor/rules/12-architecture.mdc`          | `packages/**`           | kept as owner         | `packages/core/AGENTS.md` points at it with a one-line summary |
+| `services/billing/.cursor/rules/00-team.mdc` | `services/billing`      | mirrored by pointer   | `services/billing/AGENTS.md`                                   |
+| `.cursor/rules/search.mdc`                   | all                     | not a rule: tool hint | none                                                           |
+
+## Policy docs
+
+Playbooks, ADRs, vision and runbooks that state rules. Each lands in a domain, design or nested file (cite its path), or is marked `not a rule: <reason>`.
+
+| Doc                                     | Lands in                    | Or                      |
+| --------------------------------------- | --------------------------- | ----------------------- |
+| `docs/playbooks/booking-concurrency.md` | `.agents/domain/booking.md` |                         |
+| `docs/playbooks/lab-demo.md`            |                             | not a rule: demo script |
+
 ## Merged rules
 
 Rules the lead kept after dedupe and spot-checks. These feed `.agents/domain/*.md`, `.agents/design.md`, nested `AGENTS.md` files and `AGENTS.md`.

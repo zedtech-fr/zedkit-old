@@ -53,6 +53,16 @@ describe("scanRepo", () => {
     expect(listRepoFiles(root)).toEqual(["src/a.ts"]);
   });
 
+  it("keeps provider folders only when asked, to find existing provider rules", () => {
+    const root = tempDir();
+    put(root, "src/a.ts", "x\n");
+    put(root, ".cursor/rules/r.mdc", "x\n");
+    put(root, ".claude/rules/c.md", "x\n");
+    put(root, "node_modules/p/.cursor/rules/x.mdc", "x\n");
+    expect(listRepoFiles(root, true).sort()).toEqual([".claude/rules/c.md", ".cursor/rules/r.mdc", "src/a.ts"]);
+    expect(listRepoFiles(root)).toEqual(["src/a.ts"]);
+  });
+
   it("honours .gitignore and sees untracked files inside a git repo", () => {
     const root = tempDir();
     execFileSync("git", ["init"], { cwd: root, stdio: "ignore" });

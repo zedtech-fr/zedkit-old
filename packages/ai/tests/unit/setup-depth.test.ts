@@ -125,6 +125,39 @@ describe("checkDepth", () => {
     expect(tags(kit)).toEqual(["D3"]);
   });
 
+  it("D3: the rule map must name every provider-scoped rule file the repo already owns", () => {
+    const root = tempDir();
+    deep(root);
+    put(root, ".cursor/rules/12-hexagonal.mdc", "---\nglobs:\n  - packages/**\n---\n");
+    put(root, "services/pay/.cursor/rules/00-team.mdc", "x\n");
+    put(root, ".claude/rules/style.md", "x\n");
+    put(root, ".cursor/rules/project.mdc", "kit-written\n");
+    const msg = checkDepth(root).map((i) => i.message);
+    expect(msg).toEqual([expect.stringMatching(/Rule map misses 3 provider rule file\(s\): .*(12-hexagonal|00-team|style)/u)]);
+    put(
+      root,
+      ".agents/setup-log/reading.md",
+      `${READING}\n.cursor/rules/12-hexagonal.mdc kept as owner\nservices/pay/.cursor/rules/00-team.mdc mirrored\n.claude/rules/style.md not a rule\n`,
+    );
+    expect(checkDepth(root)).toEqual([]);
+  });
+
+  it("D3: a bare name is not enough when two folders share a rule file name", () => {
+    const root = tempDir();
+    deep(root);
+    put(root, "a/.cursor/rules/00-team.mdc", "x\n");
+    put(root, "b/.cursor/rules/00-team.mdc", "x\n");
+    put(root, ".agents/setup-log/reading.md", `${READING}\na/.cursor/rules/00-team.mdc\n`);
+    expect(checkDepth(root).map((i) => i.message)).toEqual([expect.stringContaining("misses 1 provider rule file(s): b/.cursor/rules/00-team.mdc")]);
+  });
+
+  it("D3: provider rule files are only checked once a reading log exists (D1 owns the missing log)", () => {
+    const root = tempDir();
+    v2Style(root);
+    put(root, ".cursor/rules/02-budget.mdc", "x\n");
+    expect(checkDepth(root).filter((i) => i.message.includes("Rule map"))).toEqual([]);
+  });
+
   it("D2: a repo with UI files needs an Identity rules section with evidence", () => {
     const root = tempDir();
     deep(root);

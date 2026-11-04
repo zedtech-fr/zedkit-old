@@ -93,7 +93,7 @@ Four more axes, scored 0-3 like the others, each measurable from files. **Every 
 
 - 0: No reading phase; facts come from docs and the owner only.
 - 1: One agent skimmed the code, or readers ran with no log and no citations.
-- 2: `.agents/setup-log/reading.md` lists one numbered reader row per slice, scaled to repo size (1-5 small, 6-10 medium, 11-20 large; see `npx zedkit-ai scan`), with `file:line` evidence; the interview asked at most what the code left open.
+- 2: `.agents/setup-log/reading.md` lists one numbered reader row per slice (inside any run budget the repo already sets, such as a cap on files read), scaled to repo size (1-5 small, 6-10 medium, 11-20 large; see `npx zedkit-ai scan`), with `file:line` evidence; the interview asked at most what the code left open.
 - 3: As 2, plus the lead spot-checked citations per reader and dropped the failures, conflicts between code and docs are listed, and every interview question cites the gap it closes (an owner asked something the code answered counts against).
 
 ### D2. Domain and identity rules
@@ -101,21 +101,21 @@ Four more axes, scored 0-3 like the others, each measurable from files. **Every 
 - 0: No business, domain, invariant or brand rule written down.
 - 1: A traps line or glossary; rules without citations; template text left in.
 - 2: `.agents/domain/<area>.md` per state-, money- or policy-bearing area and an **Identity rules** section in `.agents/design.md` when UI exists, every rule with `file:line` or `source: owner`, from the reading log.
-- 3: As 2, plus **Status** (`current` / `target`) and **Enforced by** are honest (a checker opened, or `documented, not enforced`), and every `current` rule has a test cell or `no test — flag`.
+- 3: As 2, plus every policy doc (playbook, ADR, vision, runbook) is landed in a domain, design or nested file or marked `not a rule: <reason>`, **Status** (`current` / `target`) and **Enforced by** are honest (a checker opened, or `documented, not enforced`), and every `current` rule has a test cell or `no test — flag`.
 
 ### D3. Nested rules
 
 - 0: Only a root `AGENTS.md`, and folders with their own rules exist.
 - 1: A nested file that copies the root, a folder list without rules, or existing nested stubs left untouched and unlinked.
 - 2: Nested `AGENTS.md` (or an equivalent folder rule) in each folder that differs (features, ui, design, api, db), only what differs, with `file:line`, and linking the matching `.agents/domain` and `.agents/design` files; existing nested files were extended in place, not left alone as stubs; or `nested-agents: none|kept — <reason>` in the setup-log with a reason that holds.
-- 3: As 2, plus links to domain and design files instead of copies, about 60 lines or fewer, every link resolves, and the Cursor rule (when wired) only points at the nested file.
+- 3: As 2, plus the reading log's **Rule map** accounts for every provider-scoped rule file (kept as owner, mirrored by a pointer, or not a rule; none copied), links to domain and design files instead of copies, about 60 lines or fewer, every link resolves, and the Cursor rule (when wired) only points at the nested file.
 
 ### D4. Model routing
 
 - 0: Nothing; every spawn inherits the session model.
 - 1: A sentence in chat or in the setup-log, not written into the repo.
 - 2: `.agents/model-routing.md` names the provider the run executed on (from the tool, not the repo folders), the model list it read, and the scout / worker / lead tiers; root `AGENTS.md` points at it; reading spawns passed the scout model.
-- 3: As 2, plus the setup-log records the tier and model of each fan-out, a provider that cannot route per spawn is stated plainly instead of papered over, and kit subagent files still say `model` omitted or `inherit`.
+- 3: As 2, plus the repo's own subagents are mapped to tiers (**Roles in this repo**), the setup-log records the tier and model of each fan-out, a provider that cannot route per spawn is stated plainly instead of papered over, and kit subagent files still say `model` omitted or `inherit`.
 
 ## Hard gates (binary, any failure fails the run)
 

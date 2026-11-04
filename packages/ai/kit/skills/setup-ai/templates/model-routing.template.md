@@ -15,6 +15,16 @@ Copy to `.agents/model-routing.md`. Tells every future agent in this repo which 
 
 A scout never decides. A scout reports evidence; the lead decides.
 
+## Roles in this repo
+
+Map the subagents the repo already has (`.agents/agents`, `.cursor/agents`, `.claude/agents`) to a tier, by what each one does. Their frontmatter stays as it is; the tier is applied when the agent is spawned.
+
+| Agent         | Does                                | Tier   |
+| ------------- | ----------------------------------- | ------ |
+| `explorer`    | facts-only lookup, read-only        | scout  |
+| `implementer` | writes one unit from a frozen brief | worker |
+| `reviewer`    | judges a change                     | lead   |
+
 ## How a spawn picks its model
 
 | Provider | Mechanism (verify in the tool before relying on it)                                                                                                                                              |

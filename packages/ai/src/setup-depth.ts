@@ -78,6 +78,23 @@ function nested(root: string, issues: Issue[]): void {
   issues.push({ path: root, message });
 }
 
+const PROVIDER_RULE = /(^|\/)(\.cursor\/rules\/[^/]+\.mdc|\.claude\/rules\/[^/]+\.md)$/u;
+
+/**
+ * D3: provider-scoped rule files the repo already owns (Cursor `.mdc`, Claude rules) are
+ * invisible to the other providers. The reading log's rule map must account for each one.
+ */
+function ruleMap(root: string, issues: Issue[]): void {
+  const path = join(root, ".agents/setup-log/reading.md");
+  const log = text(path);
+  if (log === undefined) return;
+  const missing = listRepoFiles(root, true).filter((f) => PROVIDER_RULE.test(f) && !f.endsWith("/project.mdc") && !log.includes(f));
+  if (missing.length === 0) return;
+  const shown = missing.slice(0, 3).join(", ");
+  const more = missing.length > 3 ? ` and ${missing.length - 3} more` : "";
+  issues.push({ path, message: `D3 nested rules: the reading log's Rule map misses ${missing.length} provider rule file(s): ${shown}${more} (each is mirrored by a nested AGENTS.md pointer, kept as the owner, or marked not a rule)` });
+}
+
 /** D4: model routing is written down, names its provider and tiers, and the root AGENTS.md points at it. */
 function routing(root: string, issues: Issue[]): void {
   const path = join(root, ".agents/model-routing.md");
@@ -103,6 +120,7 @@ export function checkDepth(root: string): Issue[] {
   reading(root, issues);
   rules(root, issues);
   nested(root, issues);
+  ruleMap(root, issues);
   routing(root, issues);
   return issues;
 }

@@ -24,18 +24,24 @@ function gitEnv(): NodeJS.ProcessEnv {
   return env;
 }
 
-function walk(root: string, rel: string): string[] {
+function walk(root: string, rel: string, skipDir: (name: string) => boolean): string[] {
   const entries = tryCatch(() => readdirSync(join(root, rel), { withFileTypes: true }));
   if (!entries.ok) return [];
   return entries.value.flatMap((entry) => {
     const path = rel === "" ? entry.name : `${rel}/${entry.name}`;
-    if (entry.isDirectory()) return SKIP_DIRS.has(entry.name) ? [] : walk(root, path);
+    if (entry.isDirectory()) return skipDir(entry.name) ? [] : walk(root, path, skipDir);
     return entry.isFile() ? [path] : [];
   });
 }
 
-/** Repo-relative code and doc paths: git (tracked + untracked, ignore rules honoured), else a directory walk. */
-export function listRepoFiles(root: string): string[] {
+const KIT_DIRS = new Set([".agents", ".cursor", ".claude"]);
+
+/**
+ * Repo-relative code and doc paths: git (tracked + untracked, ignore rules honoured), else a directory walk.
+ * `withProviderDirs` keeps `.agents/`, `.cursor/` and `.claude/` (for finding existing provider rules).
+ */
+export function listRepoFiles(root: string, withProviderDirs = false): string[] {
+  const skipDir = (name: string): boolean => SKIP_DIRS.has(name) && !(withProviderDirs && KIT_DIRS.has(name));
   const git = tryCatch(() =>
     execFileSync("git", ["ls-files", "-co", "--exclude-standard", "-z"], {
       cwd: root,
@@ -45,10 +51,10 @@ export function listRepoFiles(root: string): string[] {
       stdio: ["ignore", "pipe", "ignore"],
     }),
   );
-  const all = git.ok ? git.value.split("\0").filter((p) => p !== "") : walk(root, "");
+  const all = git.ok ? git.value.split("\0").filter((p) => p !== "") : walk(root, "", skipDir);
   return all.filter((path) => {
     const parts = path.split("/");
-    return !parts.some((p) => SKIP_DIRS.has(p)) && !SKIP_FILES.has(parts.at(-1) ?? "") && !SKIP_EXT.test(path);
+    return !parts.some(skipDir) && !SKIP_FILES.has(parts.at(-1) ?? "") && !SKIP_EXT.test(path);
   });
 }
 

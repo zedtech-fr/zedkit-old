@@ -8,18 +8,19 @@ You are a **reader**. Read one slice of this repo and report the rules the code 
 
 **Slice:** {paths from `zedkit-ai scan`}
 **Repo, in one line:** {stack and purpose, from phase A}
-**Budget:** read the slice's entry points, schema, routes, tests and config first; skim the rest. Stop at {25} rules.
+**Budget:** read the slice's entry points, schema, routes, tests and config first; skim the rest. Stop at {25} rules. {The repo's own run budget when it has one (an always-on rule or `AGENTS.md` capping time, files read or retries): obey the stricter, and say so under Gaps if the slice does not fit.}
+**Documented law for this slice:** {rule files, playbooks and ADRs that name this slice's folders, with paths from phase A}. Read them, then report whether the code follows them.
 
 ## What to report (lanes)
 
-| Lane         | Looks for                                                                                                    |
-| ------------ | ------------------------------------------------------------------------------------------------------------ |
-| domain       | money, state machines, lifecycles, tenancy, auth, permissions, limits, retries, idempotency, data invariants |
-| business     | policies the code encodes: pricing, refunds, cancellation, quotas, eligibility, status transitions           |
-| identity     | brand voice and tone, languages, copy patterns, design tokens, naming of user-facing things                  |
-| architecture | layers, who may import whom, ownership, boundaries, generated or vendored code, where X lives                |
-| convention   | naming, error handling, logging, test layout, commit and PR habits visible in the slice                      |
-| enforcement  | the lint rule, type, test, CI job or DB constraint that makes a rule fail when broken (path and rule name)   |
+| Lane         | Looks for                                                                                                                                                                  |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| domain       | money, state machines, lifecycles, tenancy, auth, permissions, limits, retries, idempotency, data invariants                                                               |
+| business     | policies the code encodes: pricing, refunds, cancellation, quotas, eligibility, status transitions                                                                         |
+| identity     | brand voice and tone, languages, copy patterns, design tokens, naming of user-facing things, UX and interaction laws (feedback on waits, mobile-first, one primary action) |
+| architecture | layers, who may import whom, ownership, boundaries, generated or vendored code, where X lives                                                                              |
+| convention   | naming, error handling, logging, test layout, commit and PR habits visible in the slice                                                                                    |
+| enforcement  | the lint rule, type, test, CI job or DB constraint that makes a rule fail when broken (path and rule name)                                                                 |
 
 ## Rules of evidence
 
