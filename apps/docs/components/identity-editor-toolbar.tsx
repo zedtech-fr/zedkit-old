@@ -28,7 +28,9 @@ function LookSelect({
   const options = looks.length > 0 ? looks : identities;
   return (
     <Field className="w-full sm:w-48 sm:shrink-0">
-      <FieldLabel htmlFor="identity-editor-look">{identityEditorCopy.toolbar.look}</FieldLabel>
+      <FieldLabel htmlFor="identity-editor-look">
+        {identityEditorCopy.toolbar.look}
+      </FieldLabel>
       <select
         id="identity-editor-look"
         className="h-control-height w-full rounded-md border border-input bg-background px-3 text-control text-foreground focus-ring-control"
@@ -80,13 +82,28 @@ function IdentityEditorPreviewBar({
 }: PreviewBarProps) {
   const copy = identityEditorCopy.toolbar;
   return (
-    <Stack role="group" aria-label={copy.groups.preview} data-slot="identity-editor-toolbar" className={cn("min-w-0", className)}>
+    <Stack
+      role="group"
+      aria-label={copy.groups.preview}
+      data-slot="identity-editor-toolbar"
+      className={cn("min-w-0", className)}
+    >
       <Row>
         <LookSelect identity={identity} looks={looks} onIdentity={onIdentity} />
-        <Button type="button" variant="outline" aria-pressed={darkPreview} onClick={onDark}>
+        <Button
+          type="button"
+          variant="outline"
+          aria-pressed={darkPreview}
+          onClick={onDark}
+        >
           {copy.previewDark}
         </Button>
-        <Button type="button" variant="outline" disabled={!canUndo} onClick={onUndo}>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={!canUndo}
+          onClick={onUndo}
+        >
           {copy.undo}
         </Button>
         <Button type="button" variant="outline" onClick={onReset}>
@@ -97,12 +114,23 @@ function IdentityEditorPreviewBar({
   );
 }
 
-function DeleteLook({ disabled, onDelete }: { disabled: boolean; onDelete: () => void }) {
+function DeleteLook({
+  disabled,
+  onDelete,
+}: {
+  disabled: boolean;
+  onDelete: () => void;
+}) {
   const copy = identityEditorCopy.toolbar;
   return (
     <ConfirmDialog
       trigger={
-        <Button type="button" variant="outline" disabled={disabled} className="text-destructive">
+        <Button
+          type="button"
+          variant="outline"
+          disabled={disabled}
+          className="text-destructive"
+        >
           {copy.delete}
         </Button>
       }
@@ -114,7 +142,8 @@ function DeleteLook({ disabled, onDelete }: { disabled: boolean; onDelete: () =>
         // The trigger is disabled once the look is gone, so the dialog cannot hand focus back to it:
         // land on the Look select instead of the page body (after the dialog's exit has finished).
         window.setTimeout(() => {
-          if (document.activeElement === document.body) document.getElementById("identity-editor-look")?.focus();
+          if (document.activeElement === document.body)
+            document.getElementById("identity-editor-look")?.focus();
         }, 400);
       }}
     />
@@ -138,7 +167,15 @@ type KeepBarProps = {
 };
 
 /** What a save told the visitor: done, a clash to settle, or why it could not happen. Spoken as a status. */
-function SaveFeedback({ status, onSave, onSaveAsNew }: { status: SaveStatus | null; onSave: (replace?: boolean) => void; onSaveAsNew: () => void }) {
+function SaveFeedback({
+  status,
+  onSave,
+  onSaveAsNew,
+}: {
+  status: SaveStatus | null;
+  onSave: (replace?: boolean) => void;
+  onSaveAsNew: () => void;
+}) {
   const copy = identityEditorCopy.library;
   if (!status) return <Text role="status" typeRole="label" className="min-h-5" />;
   if (status.kind === "exists") {
@@ -156,15 +193,28 @@ function SaveFeedback({ status, onSave, onSaveAsNew }: { status: SaveStatus | nu
       </Stack>
     );
   }
-  if (status.kind === "failed") return <Text role="alert" typeRole="label" className="text-destructive">{copy.failed[status.reason]}</Text>;
+  if (status.kind === "failed")
+    return (
+      <Text role="alert" typeRole="label" className="text-destructive">
+        {copy.failed[status.reason]}
+      </Text>
+    );
   return (
     <Text role="status" typeRole="label">
-      {status.kind === "saved" ? copy.saved(status.label) : copy.renamed(status.label)}
+      {status.kind === "saved"
+        ? copy.saved(status.label)
+        : copy.renamed(status.label)}
     </Text>
   );
 }
 
-function LibraryHeading({ id, problem }: { id: string; problem: "unavailable" | "corrupt" | undefined }) {
+function LibraryHeading({
+  id,
+  problem,
+}: {
+  id: string;
+  problem: "unavailable" | "corrupt" | undefined;
+}) {
   const library = identityEditorCopy.library;
   return (
     <>
@@ -180,6 +230,32 @@ function LibraryHeading({ id, problem }: { id: string; problem: "unavailable" | 
         </Text>
       ) : null}
     </>
+  );
+}
+
+/** Apply the current look to this site, or remove it. */
+function ApplySiteRow({
+  appliedSite,
+  onApplySite,
+  onRemoveFromSite,
+}: Pick<KeepBarProps, "appliedSite" | "onApplySite" | "onRemoveFromSite">) {
+  return (
+    <Row>
+      {/* Same clearance as token fields: pinned preview + header above, dock below. */}
+      <Button
+        type="button"
+        variant="outline"
+        className="scroll-mt-28 scroll-mb-24 max-lg:[@media(min-height:48rem)]:scroll-mt-80"
+        onClick={onApplySite}
+      >
+        {identityEditorCopy.toolbar.applySite}
+      </Button>
+      {appliedSite ? (
+        <Button type="button" variant="outline" onClick={onRemoveFromSite}>
+          {identityEditorCopy.library.removeFromSite}
+        </Button>
+      ) : null}
+    </Row>
   );
 }
 
@@ -200,10 +276,15 @@ function IdentityEditorKeepBar({
   className,
 }: KeepBarProps) {
   const copy = identityEditorCopy.toolbar;
-  const library = identityEditorCopy.library;
   const titleId = useId();
   return (
-    <Stack gap={2} role="group" aria-labelledby={titleId} className={cn("min-w-0", className)} data-slot="identity-editor-keep">
+    <Stack
+      gap={2}
+      role="group"
+      aria-labelledby={titleId}
+      className={cn("min-w-0", className)}
+      data-slot="identity-editor-keep"
+    >
       <LibraryHeading id={titleId} problem={problem} />
       <Row>
         <Field className="w-full min-w-36 sm:w-56">
@@ -215,34 +296,37 @@ function IdentityEditorKeepBar({
             onChange={(event) => onName(event.target.value)}
           />
         </Field>
-        <Button type="button" onClick={() => onSave()} disabled={name.trim() === ""}>
+        <Button
+          type="button"
+          onClick={() => onSave()}
+          disabled={name.trim() === ""}
+        >
           {copy.saveLook}
         </Button>
-        <Button type="button" variant="outline" onClick={onRename} disabled={!namedSelected || name.trim() === ""}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onRename}
+          disabled={!namedSelected || name.trim() === ""}
+        >
           {copy.rename}
         </Button>
         <DeleteLook disabled={!namedSelected} onDelete={onDelete} />
       </Row>
-      <Text id="identity-editor-name-hint" variant="muted" typeRole="label" className="min-h-5">
+      <Text
+        id="identity-editor-name-hint"
+        variant="muted"
+        typeRole="label"
+        className="min-h-5"
+      >
         {name.trim() === "" ? copy.nameHint : null}
       </Text>
       <SaveFeedback status={status} onSave={onSave} onSaveAsNew={onSaveAsNew} />
-      <Row>
-        {/* Same clearance as token fields: pinned preview + header above, dock below. */}
-        <Button
-          type="button"
-          variant="outline"
-          className="scroll-mt-28 max-lg:[@media(min-height:48rem)]:scroll-mt-80 scroll-mb-24"
-          onClick={onApplySite}
-        >
-          {copy.applySite}
-        </Button>
-        {appliedSite ? (
-          <Button type="button" variant="outline" onClick={onRemoveFromSite}>
-            {library.removeFromSite}
-          </Button>
-        ) : null}
-      </Row>
+      <ApplySiteRow
+        appliedSite={appliedSite}
+        onApplySite={onApplySite}
+        onRemoveFromSite={onRemoveFromSite}
+      />
       <Text variant="muted" typeRole="label">
         {copy.applyHint}
       </Text>
