@@ -141,6 +141,8 @@ case "$(tail -1 "$LOG")" in EXIT:[0-9]*) ;; *) echo "bad gate log"; false;; esac
 
 If a log file you referenced is **empty**, or the last line is not **`EXIT:<n>`**, re-run and replace the file before scoring. Table rows in setup-log are a summary only.
 
+**Ignored logs:** gate logs under an ignored path (check with `git check-ignore <log>`) are invisible evidence — either track the file (`git add -f`, or narrow the ignore rule so `gates/*.log` is tracked) or mark the Gate outcomes row `ignored-locally` so the scorer knows. Do not rename logs to dodge the ignore: `validate --setup` only reads `*.log`.
+
 **Killed gates:** when the wrapper shell itself may be signaled (a timeout or OOM kill aimed at the process group), trap `TERM`/`INT` so the log still ends with a cause and **`EXIT:<code>`** — `validate --setup` accepts extra lines like `CAUSE:` between `END:` and `EXIT:`. Put the trap after `START:`, before the command, and disarm it with `trap - TERM INT` once the command returns:
 
 ```sh

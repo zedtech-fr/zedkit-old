@@ -252,6 +252,8 @@ describe("setup-ai v2 kit", () => {
     expect(gateBlock).toMatch(/tail -n 20 "\$LOG"/u);
     expect(gateBlock).toMatch(/trap .*CAUSE: killed by signal.*EXIT:143.*TERM INT/u);
     expect(gateBlock).toContain("trap - TERM INT");
+    expect(gateBlock).toMatch(/git check-ignore/);
+    expect(gateBlock).toContain("ignored-locally");
     const log = readFileSync(
       join(
         kitDir(),
