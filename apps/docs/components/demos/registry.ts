@@ -1,4 +1,7 @@
 import type { ComponentType } from "react";
+import { AnimateDemo } from "./animate-demo";
+import { AnimateStaggerDemo } from "./animate-stagger-demo";
+import { AnimateTriggersDemo } from "./animate-triggers-demo";
 import { AlertDemo } from "./alert-demo";
 import { BadgeVariantsDemo } from "./badge-variants-demo";
 import { BadgeTableRowDemo } from "./badge-table-row-demo";
@@ -166,6 +169,9 @@ export const demoRegistry = {
   AppShellNoTopbarDemo: { Demo: AppShellNoTopbarDemo, file: "app-shell-no-topbar-demo.tsx" },
   GuideSaveRowDemo: { Demo: GuideSaveRowDemo, file: "guide-save-row-demo.tsx" },
   AdminDashboardGuideDemo: { Demo: AdminDashboardGuideDemo, file: "admin-dashboard-guide-demo.tsx" },
+  AnimateDemo: { Demo: AnimateDemo, file: "animate-demo.tsx" },
+  AnimateStaggerDemo: { Demo: AnimateStaggerDemo, file: "animate-stagger-demo.tsx" },
+  AnimateTriggersDemo: { Demo: AnimateTriggersDemo, file: "animate-triggers-demo.tsx" },
   RevealOnScrollDemo: { Demo: RevealOnScrollDemo, file: "reveal-on-scroll-demo.tsx" },
   ConfirmDialogLabelsDemo: { Demo: ConfirmDialogLabelsDemo, file: "confirm-dialog-labels-demo.tsx", center: true },
   ConfirmDialogDemo: { Demo: ConfirmDialogDemo, file: "confirm-dialog-demo.tsx", center: true },
