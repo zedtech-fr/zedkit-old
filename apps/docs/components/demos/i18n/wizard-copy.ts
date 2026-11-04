@@ -29,6 +29,7 @@ export const wizardCopy = {
     `Ready to open: ${products.join(", ") || "no products yet"}; delivery by ${delivery.join(", ") || "none yet"}.`,
   back: "Back",
   continue: "Continue",
+  pickedOne: (name: string) => `Delivery: ${name}.`,
   solo: {
     title: "Weekly digest",
     description: "Every Monday: new projects, open tasks and what is due this week.",

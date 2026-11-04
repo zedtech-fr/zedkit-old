@@ -216,7 +216,8 @@
       "demo": "WizardDemo",
       "examples": {
         "Composed steps": "WizardComposedDemo",
-        "Solo card": "WizardSoloDemo"
+        "Solo card": "WizardSoloDemo",
+        "Pick one": "WizardPickOneDemo"
       }
     },
     "Show key-value details and a live indicator": {
@@ -520,7 +521,20 @@
       "component": "GlassSurface",
       "props": "GlassSurfaceProps",
       "source": "marketing/glass-surface.tsx",
-      "demo": "GlassSurfaceDemo"
+      "demo": "GlassSurfaceDemo",
+      "examples": {
+        "Hero": "HeroDemo",
+        "Closing call to action": "CtaBandDemo",
+        "Feature grid": "FeatureGridDemo",
+        "Steps": "HowItWorksDemo",
+        "Header and footer": "MarketingChromeDemo",
+        "Language switch": "LocaleSwitchDemo",
+        "Use case": "MediaSectionDemo",
+        "Logo band": "LogoBandDemo",
+        "Testimonials": "TestimonialsDemo",
+        "Pricing": "PricingDemo",
+        "Questions": "FaqDemo"
+      }
     },
     "Switch the visual identity with one attribute": {
       "package": "@zedtech/zedkit-ui",

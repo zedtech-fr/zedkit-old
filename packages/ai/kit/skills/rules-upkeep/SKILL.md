@@ -27,23 +27,23 @@ At the end of any coding task, and when one of these happened:
 
 ## Where things go
 
-| Content | Home |
-|---|---|
-| Non-negotiables for the whole repo, commands, map | root `AGENTS.md`, short (it is always loaded) |
-| Rules for one folder | `AGENTS.md` in that folder (read when working there) |
-| A repeatable workflow with steps | a skill |
-| A persona with a narrow job and fresh context | a subagent |
+| Content                                           | Home                                                 |
+| ------------------------------------------------- | ---------------------------------------------------- |
+| Non-negotiables for the whole repo, commands, map | root `AGENTS.md`, short (it is always loaded)        |
+| Rules for one folder                              | `AGENTS.md` in that folder (read when working there) |
+| A repeatable workflow with steps                  | a skill                                              |
+| A persona with a narrow job and fresh context     | a subagent                                           |
 
 Do not write down what the code already shows (file lists, signatures). Write only what a reader cannot get from the code: the why, the limits, the traps.
 
 ## Formats that fail silently
 
-| Artifact | Required | Otherwise |
-|---|---|---|
-| Skill | folder `<name>/SKILL.md`, `name` equals the folder | may never be loaded |
-| Subagent | file `<name>.md`, `description` on a single line | a folded or block description can be shown as `>` and the agent cannot decide when to be used |
-| Any file | LF line endings | a trailing `\r` breaks YAML values |
-| Subagent `model` | omit it, or `inherit` | an unknown model id can fall back silently; list the models the tool accepts before pinning one |
+| Artifact         | Required                                           | Otherwise                                                                                       |
+| ---------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Skill            | folder `<name>/SKILL.md`, `name` equals the folder | may never be loaded                                                                             |
+| Subagent         | file `<name>.md`, `description` on a single line   | a folded or block description can be shown as `>` and the agent cannot decide when to be used   |
+| Any file         | LF line endings                                    | a trailing `\r` breaks YAML values                                                              |
+| Subagent `model` | omit it, or `inherit`                              | an unknown model id can fall back silently; list the models the tool accepts before pinning one |
 
 Run `zedkit-ai validate` (package `@zedtech/zedkit-ai`, or the repo's equivalent) after editing. It checks these.
 

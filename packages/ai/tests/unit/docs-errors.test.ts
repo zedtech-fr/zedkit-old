@@ -4,8 +4,8 @@ import { describe, expect, it } from "vitest";
 
 /** Error fragments the validate-errors doc quotes, and the source file owning each. */
 const QUOTED: Array<{ fragment: string; src: string }> = [
-  { fragment: "drifted from", src: "validate.ts" },
-  { fragment: "copy it over (init never overwrites)", src: "validate.ts" },
+  { fragment: "differs from", src: "validate.ts" },
+  { fragment: "user copy kept", src: "validate.ts" },
   { fragment: "copy missing", src: "validate.ts" },
   { fragment: "or re-run init", src: "validate.ts" },
   { fragment: "names no installed skill", src: "validate.ts" },

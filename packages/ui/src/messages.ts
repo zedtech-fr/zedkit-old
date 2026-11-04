@@ -39,6 +39,12 @@ export type ZedkitUiMessages = {
   justNow: string;
   pickDate: string;
   pickDateRange: string;
+  /** Visible label of the mobile menu button (marketing header). */
+  menu: string;
+  /** Accessible name of the marketing header's main navigation. */
+  mainNavigation: string;
+  /** Accessible name of the language switch. */
+  language: string;
   locale: "en" | "fr";
 };
 
@@ -76,6 +82,9 @@ export const zedkitUiMessagesEn: ZedkitUiMessages = {
   justNow: "just now",
   pickDate: "Pick a date",
   pickDateRange: "Pick a date range",
+  menu: "Menu",
+  mainNavigation: "Main navigation",
+  language: "Language",
   locale: "en",
 };
 
@@ -113,5 +122,8 @@ export const zedkitUiMessagesFr: ZedkitUiMessages = {
   justNow: "à l'instant",
   pickDate: "Choisir une date",
   pickDateRange: "Choisir une période",
+  menu: "Menu",
+  mainNavigation: "Navigation principale",
+  language: "Langue",
   locale: "fr",
 };

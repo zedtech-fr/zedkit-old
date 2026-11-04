@@ -1,0 +1,24 @@
+# Add capability
+
+Template — copy to `.agents/skills/add-capability/SKILL.md` and add YAML frontmatter (`name`, `description`).
+
+Repo-specific workflow — paths and commands below are **placeholders**. Replace them with verified facts from this repo.
+
+## Before you start
+
+- Read `.agents/product.md` and the relevant `.agents/domain/*.md` rules.
+- Confirm the capability is in the plan tier **must** or **should** (not a one-off).
+
+## Steps
+
+1. **Spec the slice** — one journey, acceptance criteria, non-goals (link `product.md`).
+2. **Domain check** — list rules touched; add rows to domain docs if policy changes (`source: owner` when the owner confirmed).
+3. **Implement** — follow repo boundaries; smallest diff.
+4. **Prove** — run the repo gate commands from root `AGENTS.md`; add or extend tests for new rules.
+5. **Review** — run the repo review workflow before opening a PR.
+
+## Done when
+
+- Gates green (or skipped with reason in the PR).
+- Domain rules cite `file:line` or `source: owner`.
+- No dangling references in `.agents/`.

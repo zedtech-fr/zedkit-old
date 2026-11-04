@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -87,6 +87,69 @@ describe("OptionCards", () => {
     expect(card?.className).toContain("gap-3");
     expect(card?.className).not.toContain("gap-option-card-gap");
     expect(card?.classList.contains("p-4")).toBe(true);
+  });
+});
+
+describe("OptionCards pick one", () => {
+  const options = [
+    { id: "a", title: "Alpha" },
+    { id: "b", title: "Beta" },
+  ];
+
+  it("renders radios in a radiogroup that share one name", () => {
+    render(<OptionCards multiple={false} label="Pick" options={options} selected={["a"]} onChange={() => {}} />);
+    expect(screen.getByRole("radiogroup", { name: "Pick" })).toBeDefined();
+    const alpha = screen.getByRole("radio", { name: /Alpha/ }) as HTMLInputElement;
+    const beta = screen.getByRole("radio", { name: /Beta/ }) as HTMLInputElement;
+    expect(alpha.checked).toBe(true);
+    expect(beta.checked).toBe(false);
+    expect(alpha.name).not.toBe("");
+    expect(alpha.name).toBe(beta.name);
+    expect(screen.queryByRole("checkbox")).toBeNull();
+  });
+
+  it("replaces the selection with the clicked id", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<OptionCards multiple={false} options={options} selected={["a"]} onChange={onChange} />);
+    await user.click(screen.getByText("Beta"));
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith(["b"]);
+  });
+
+  it("does not report the card that is already picked", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<OptionCards multiple={false} options={options} selected={["a"]} onChange={onChange} />);
+    await user.click(screen.getByText("Alpha"));
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("moves the choice with the arrow keys", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<OptionCards multiple={false} options={options} selected={["a"]} onChange={onChange} />);
+    screen.getByRole("radio", { name: /Alpha/ }).focus();
+    await user.keyboard("{ArrowDown}");
+    expect(onChange).toHaveBeenCalledWith(["b"]);
+  });
+
+  it("draws a round indicator for radios and a square one for checkboxes", () => {
+    render(<OptionCards multiple={false} options={options} selected={["a"]} onChange={() => {}} />);
+    const radio = document.querySelector('[data-slot="option-card-indicator"]');
+    expect(radio?.className).toContain("rounded-full");
+    cleanup();
+    render(<OptionCards options={options} selected={["a"]} onChange={() => {}} />);
+    const box = document.querySelector('[data-slot="option-card-indicator"]');
+    expect(box?.className).toContain("rounded-sm");
+    expect(screen.getByRole("group")).toBeDefined();
+  });
+
+  it("composes a standalone radio card", () => {
+    render(<OptionCard title="Solo" type="radio" name="g" checked onChange={() => {}} />);
+    const radio = screen.getByRole("radio", { name: /Solo/ }) as HTMLInputElement;
+    expect(radio.name).toBe("g");
+    expect(radio.checked).toBe(true);
   });
 });
 

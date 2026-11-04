@@ -1,0 +1,58 @@
+---
+title: "Set up zedkit AI in Cursor"
+description: "One paste prompt for Cursor: install the kit with adopt mode, run /setup-ai, validate. Agent-executable steps and raw markdown for fetch."
+---
+
+Every command on this page is run in a scratch directory by automated checks (install + `setup` + `validate`).
+
+## Who this is for
+
+You use **Cursor** on a git repo (empty or already with team rules) and want one paste to hand the agent — no back-and-forth on how to start.
+
+## Cursor prompt (copy)
+
+<AiSetupPrompt />
+
+Agents should read the raw steps at [https://zedkit.app/ai/setup.md](https://zedkit.app/ai/setup.md) (plain markdown, no site chrome).
+
+## What the agent will do
+
+1. Add `@zedtech/zedkit-ai` if missing (`pnpm add -D -w` at a pnpm workspace root when `pnpm-workspace.yaml` exists).
+2. Run `npx zedkit-ai setup --provider cursor` (**`setup` preset by default**, adopt mode — keeps your files on collision; override with `--preset starter|core|full` if needed).
+3. Run **`/setup-ai`** — phases A–D (audit, **batched discovery interview** — answer or delegate, do not skip — build `product.md`, domain rules, personas, `design.md` when relevant, repo skills), then verify and report.
+4. Run `npx zedkit-ai validate` until stdout is `ok`.
+
+**Time:** about 15–45 minutes for a typical app repo once the agent starts (see the setup-ai skill intro).
+
+## Single-repo vs workspace
+
+| Situation | Where to paste the prompt |
+| --- | --- |
+| One git repository | That repo's root |
+| Workspace with several checkouts | The workspace root first; `/setup-ai` runs workspace mode and proposes per-repo setup inside each child |
+
+## Manual path (same result)
+
+```sh
+pnpm add -D @zedtech/zedkit-ai   # workspace root: pnpm add -D -w @zedtech/zedkit-ai
+npx zedkit-ai setup --provider cursor
+```
+
+Then **`/setup-ai`** in Cursor, then:
+
+```sh
+npx zedkit-ai validate
+```
+
+## Troubleshooting
+
+| Symptom | What to check |
+| --- | --- |
+| `validate` not `ok` | Run from repo root; fix each `path: message` line or re-run `setup` after resolving collisions. |
+| Agent skips `/setup-ai` | Paste the prompt again; mechanical install alone is not done. |
+| Unknown provider | Use `cursor`, `claude`, `codex`, `muse`, or comma-separated names only. |
+
+## Next steps
+
+- [Set up your coding agents](/docs/set-up-your-coding-agents) — full CLI tutorial (presets, undo, providers)
+- [Set up AI agent instructions](/docs/ai/set-up-ai-agent-instructions-skills-subagents-and-commands-in-a-repo) — catalog reference
