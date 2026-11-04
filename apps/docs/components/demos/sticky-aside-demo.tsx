@@ -42,14 +42,14 @@ export function StickyAsideDemo() {
 
 export function StickyAsideDocStepsDemo() {
   return (
-    <StickyAside side="left" from="md" ratio="2/5" className="[--zk-sticky-top:4.5rem]">
+    <StickyAside side="left" from="md" ratio="2/5" scrollable className="[--zk-sticky-top:4.5rem]">
       <StickyAside.Main>
         <Stack gap={3}>
           <Heading level={3}>Write the guide</Heading>
           <Text variant="muted">Steps stay in the main column for reading order.</Text>
         </Stack>
       </StickyAside.Main>
-      <StickyAside.Aside scrollable>
+      <StickyAside.Aside>
         <Card>
           <CardContent className="pt-card-padding">
             <Text variant="muted" className="text-sm">
