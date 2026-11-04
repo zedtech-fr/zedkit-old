@@ -55,6 +55,14 @@ function reasoningEffort(raw) {
   return effort === "minimal" ? "" : effort;
 }
 
+/** Only OpenAI reasoning SKUs accept `reasoning_effort`; Muse and other chat models reject it. */
+export function reasoningEffortForModel(model, raw) {
+  const effort = reasoningEffort(raw);
+  if (!effort) return "";
+  if (/^o[0-9]/i.test(model) || /^gpt-5/i.test(model)) return effort;
+  return "";
+}
+
 function provider(env, prefix) {
   const base = env[`${prefix}BASE_URL`];
   const key = env[`${prefix}API_KEY`];
@@ -62,11 +70,12 @@ function provider(env, prefix) {
   if (!base || !key || !model) return null;
   const input = microUsd(env[`${prefix}PRICE_INPUT_USD_PER_MTOK`]);
   const output = microUsd(env[`${prefix}PRICE_OUTPUT_USD_PER_MTOK`]);
+  const modelName = String(model);
   return {
     base: String(base).replace(/\/$/, ""),
     key: String(key),
-    model: String(model),
-    effort: reasoningEffort(env[`${prefix}REASONING_EFFORT`]),
+    model: modelName,
+    effort: reasoningEffortForModel(modelName, env[`${prefix}REASONING_EFFORT`]),
     /** Micro-dollars per million tokens. Null until the price is configured: no price, no spend. */
     priceInput: input,
     priceOutput: output,

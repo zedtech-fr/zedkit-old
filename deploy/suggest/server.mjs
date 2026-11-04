@@ -208,7 +208,14 @@ async function generate(ctx, request, references) {
     const worst = worstCaseMicro(provider, tokens, config.limits.maxOutputTokens);
     let result = await attempt(provider, { messages }, { client, deadline, now, fetchImpl, limits: config.limits });
     called += 1;
-    if (!result.ok && result.kind === "http" && result.status === 400 && provider.effort) {
+    if (
+      !result.ok &&
+      result.kind === "http" &&
+      result.status >= 400 &&
+      result.status < 500 &&
+      result.status !== 429 &&
+      provider.effort
+    ) {
       result = await attempt(provider, { messages }, { client, deadline, now, fetchImpl, limits: config.limits, effort: "" });
       called += 1;
     }
