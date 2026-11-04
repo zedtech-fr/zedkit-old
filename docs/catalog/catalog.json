@@ -63,7 +63,7 @@
           "status": "beta",
           "shortName": "Kit validation",
           "audience": "Teams keeping an installed agent setup healthy across providers.",
-          "purpose": "Validate installed skills, subagents and commands, report drift between providers without asking to overwrite user files, and flag kit skills Cursor cannot see.",
+          "purpose": "Validate installed skills, subagents and commands, report drift between providers without asking to overwrite user files, and flag kit skills a provider layer does not expose.",
           "whenToUse": "In CI and after editing shared agent files, to catch invalid or drifted copies.",
           "whenNotToUse": "For one-off local edits — run the install command again instead of validating by hand.",
           "derivedFrom": null,

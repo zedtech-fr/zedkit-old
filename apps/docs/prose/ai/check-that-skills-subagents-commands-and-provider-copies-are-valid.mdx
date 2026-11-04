@@ -32,6 +32,9 @@ available programmatically via `validateKit` + `checkDrift`, which return
   user file that differs from the kit (identical kit copies are left as-is).
 - `copy missing: copy it from … or re-run init` — a provider file was
   deleted. Either restore that one file or re-run `init`.
+- `link missing … re-run init` — a provider link (`.claude/…`, `CLAUDE.md`,
+  `.cursor/skills`) was deleted or points at a removed target. Re-run `init`
+  to restore it; user files are left as-is.
 - `names no installed skill` — the installed preset does not ship that
   skill (for example `diagnosing-bugs` needs `--preset full`). Re-run `init` with the
   wider preset, or remove the command.

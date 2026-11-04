@@ -34,8 +34,8 @@ review lenses, retro, rules-upkeep, product/UI/copy subagents, and setup-ai
 
 Providers: `cursor` (rules file, skills link or per-skill links inside a
 real `.cursor/skills` dir, agents and commands as real-file copies),
-`claude` (`CLAUDE.md` and folder links), `codex` (no
-layer: reads the shared source directly; same for other no-layer ids in `--help`).
+`claude` (`CLAUDE.md` and folder links), `codex` and `muse` (no
+layer: read the shared source directly; same for other no-layer ids in `--help`).
 
 ## Check that skills, subagents, commands and provider copies are valid
 
@@ -44,7 +44,7 @@ layer: reads the shared source directly; same for other no-layer ids in `--help`
 - Status: beta
 - Short name: Kit validation
 - Audience: Teams keeping an installed agent setup healthy across providers.
-- Purpose: Validate installed skills, subagents and commands, report drift between providers without asking to overwrite user files, and flag kit skills Cursor cannot see.
+- Purpose: Validate installed skills, subagents and commands, report drift between providers without asking to overwrite user files, and flag kit skills a provider layer does not expose.
 - When to use: In CI and after editing shared agent files, to catch invalid or drifted copies.
 - When not to use: For one-off local edits — run the install command again instead of validating by hand.
 - See also: `Set up AI agent instructions, skills, subagents and commands in a repo`

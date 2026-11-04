@@ -84,6 +84,10 @@ One shared source (`.agents/`), then a thin layer per provider:
 | `cursor` | `.cursor/rules/project.mdc`, `.cursor/skills` link (or per-skill links if that path is already a real directory), agents and commands as real-file copies | its `.cursor/` layer |
 | `claude` | `CLAUDE.md` link, `.claude/{skills,agents,commands}` links | its `.claude/` layer |
 | `codex` | none | `AGENTS.md` and `.agents/skills` directly |
+| `muse` | none | `.agents/` directly |
+
+Every preset × provider cell is install-tested: install green, validate
+clean, re-run a no-op, drift clean.
 
 Other provider ids with no install layer behave like `codex` (see `zedkit-ai init --help`).
 
