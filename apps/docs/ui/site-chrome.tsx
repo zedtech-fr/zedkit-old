@@ -37,15 +37,17 @@ export function SiteSearchTrigger({ hideIfDisabled, className }: SearchTriggerPr
 
 export function SiteFullSearchTrigger(props: FullSearchTriggerProps) {
   const label = "Search documentation";
-  return <FullSearchTrigger {...props} title={label} aria-label={label} />;
+  return <FullSearchTrigger {...props} title={label} aria-label={label} data-search="" />;
 }
 
 export function SiteThemeSwitch({ className, mode = "light-dark" }: ThemeSwitchProps) {
   return (
-    <ThemeSwitch
-      mode={mode}
-      className={cn("h-control-height-sm shrink-0 gap-0.5 border-border/35 p-0.5", className)}
-    />
+    <div data-theme-toggle="" className="inline-flex shrink-0">
+      <ThemeSwitch
+        mode={mode}
+        className={cn("h-control-height-sm shrink-0 gap-0.5 border-border/35 p-0.5", className)}
+      />
+    </div>
   );
 }
 

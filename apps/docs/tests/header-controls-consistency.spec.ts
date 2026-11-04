@@ -24,7 +24,7 @@ for (const theme of ["light", "dark"] as const) {
         const header = page.locator("#nd-nav");
         await header.screenshot({ path: shotPath(`consistency-after-${name}-${theme}.png`), animations: "disabled" });
         const toggle = header.locator("[data-theme-toggle]");
-        const search = header.locator("[data-search]").first();
+        const search = header.locator('[data-search], [aria-label="Search documentation"]').first();
         const github = header.locator('a[aria-label*="GitHub"]').first();
         await expect(toggle).toBeVisible();
         await expect(search).toBeVisible();
@@ -44,8 +44,9 @@ for (const theme of ["light", "dark"] as const) {
       }
 
       await page.locator("#get-started").scrollIntoViewIfNeeded();
-      const fullSteps = page.locator("[data-home-full-steps]");
-      await expect(fullSteps.getByRole("link", { name: homeCopy.getStarted.quickStart.fullSteps })).toBeVisible();
+      const fullSteps = page.locator("a[data-home-full-steps]");
+      await expect(fullSteps).toBeVisible();
+      await expect(fullSteps).toHaveAttribute("href", homeCopy.getStarted.quickStart.fullStepsHref);
       const padding = await fullSteps.evaluate((el) => {
         const style = getComputedStyle(el);
         return {
