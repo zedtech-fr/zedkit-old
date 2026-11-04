@@ -5,7 +5,10 @@ import type * as React from "react";
 import { IconButton } from "./icon-button.js";
 import { cn } from "./utils.js";
 
-export type PromptInputProps = Omit<React.ComponentProps<"textarea">, "onSubmit"> & {
+export type PromptInputProps = Omit<
+  React.ComponentProps<"textarea">,
+  "onSubmit"
+> & {
   /** Accessible name for the send control (and native tooltip). */
   sendLabel: string;
   onSubmit: () => void;
@@ -14,6 +17,47 @@ export type PromptInputProps = Omit<React.ComponentProps<"textarea">, "onSubmit"
   cancelLabel?: string;
   busy?: boolean;
 };
+
+type PromptInputActionsProps = {
+  sendLabel: string;
+  onCancel: (() => void) | undefined;
+  cancelLabel: string | undefined;
+  busy: boolean | undefined;
+  sendDisabled: boolean;
+};
+
+function PromptInputActions({
+  sendLabel,
+  onCancel,
+  cancelLabel,
+  busy,
+  sendDisabled,
+}: PromptInputActionsProps) {
+  return (
+    <>
+      {busy && onCancel && cancelLabel ? (
+        <IconButton
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="absolute right-10 bottom-1.5"
+          label={cancelLabel}
+          onClick={onCancel}
+        />
+      ) : null}
+      <IconButton
+        type="submit"
+        size="sm"
+        className="absolute right-1.5 bottom-1.5 size-8 shrink-0 rounded-full"
+        label={sendLabel}
+        disabled={sendDisabled}
+        aria-busy={busy || undefined}
+      >
+        <ArrowUp aria-hidden="true" className="size-4" />
+      </IconButton>
+    </>
+  );
+}
 
 /** Chat-style composer: one rounded surface, auto-growing field, send affordance inside at bottom-right. */
 export function PromptInput({
@@ -67,26 +111,13 @@ export function PromptInput({
         }}
         {...props}
       />
-      {busy && onCancel && cancelLabel ? (
-        <IconButton
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="absolute bottom-1.5 right-10"
-          label={cancelLabel}
-          onClick={onCancel}
-        />
-      ) : null}
-      <IconButton
-        type="submit"
-        size="sm"
-        className="absolute bottom-1.5 right-1.5 size-8 shrink-0 rounded-full"
-        label={sendLabel}
-        disabled={empty || blocked}
-        aria-busy={busy || undefined}
-      >
-        <ArrowUp aria-hidden="true" className="size-4" />
-      </IconButton>
+      <PromptInputActions
+        sendLabel={sendLabel}
+        onCancel={onCancel}
+        cancelLabel={cancelLabel}
+        busy={busy}
+        sendDisabled={empty || blocked}
+      />
     </form>
   );
 }

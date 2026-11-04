@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { PromptInput } from "../../src/prompt-input.js";
+import { PromptInput } from "#prompt-input.js";
 
 describe("PromptInput", () => {
   it("submits on Enter and keeps Shift+Enter as a newline", async () => {
