@@ -24,7 +24,7 @@
   }
 }
 
-/* One glass layer: the header carries the kit bar tokens (globals.css); fumadocs'
+/* One glass layer: the header frost is on #nd-nav::before (globals.css); fumadocs'
    inner bar must not tint or blur again, or the header turns opaque. */
 :root[data-identity] #nd-nav > div {
   background-color: transparent;
@@ -33,13 +33,18 @@
   backdrop-filter: none;
 }
 
-/* Header: fixed compact height, nav aligned to the content width. */
+/* Header: fixed compact height, nav aligned to the content width.
+   Overflow stays visible so the Guides viewport can paint below the bar. */
 #nd-nav,
 #nd-nav > div,
 #nd-nav nav,
 #nd-mobile-nav {
   height: var(--zk-site-header-height);
   min-height: 0;
+}
+#nd-nav,
+#nd-nav > div {
+  overflow: visible;
 }
 #nd-nav nav a:not([data-slot="badge"]),
 #nd-nav nav button:not([class*="max-w"]) {

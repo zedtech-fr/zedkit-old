@@ -114,16 +114,50 @@ body:has([role="dialog"][data-state="open"]) [data-search-pill] {
 
 :root[data-identity] {
   /* Navbar and sidebar follow the identity border and surfaces (glass tokens default to solid). */
-  /* Site headers use the kit's glass bar tokens. The blur sits on the header only:
-     fumadocs' inner bar also blurs, and a blurred child of a blurred header has the
-     header as backdrop root, so it blurred nothing and stacked a second tint (opaque). */
+  /* Site headers use the kit's glass bar tokens. Header frost lives on ::before
+     (a sibling of the Guides viewport): nested backdrop-filter under a blurred
+     #nd-nav would use the header as backdrop root and frost nothing. */
   #nd-nav,
   #nd-mobile-nav {
     background-color: hsl(var(--background) / var(--zk-glass-bar-alpha, var(--zk-glass-alpha, 1)));
     border-bottom: var(--zk-border-width) solid hsl(var(--zk-glass-bar-edge, var(--border)) / var(--zk-glass-bar-edge-alpha, 1));
     box-shadow: var(--zk-glass-bar-shadow, none);
+  }
+  #nd-mobile-nav {
     -webkit-backdrop-filter: var(--zk-glass-bar-filter, var(--zk-glass-filter, none));
     backdrop-filter: var(--zk-glass-bar-filter, var(--zk-glass-filter, none));
+  }
+  #nd-nav::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    z-index: 0;
+    height: var(--zk-site-header-height, 3.5rem);
+    pointer-events: none;
+    -webkit-backdrop-filter: var(--zk-glass-bar-filter, var(--zk-glass-filter, none));
+    backdrop-filter: var(--zk-glass-bar-filter, var(--zk-glass-filter, none));
+  }
+  #nd-nav > * {
+    position: relative;
+    z-index: 1;
+  }
+  /* Open Guides menu: a real popover panel. Glass frosts the page; other looks stay solid.
+     Fumadocs' viewport is the child of the `flex w-full justify-center` wrapper (no data attr). */
+  #nd-nav:has(button[aria-expanded="true"]) > div > .flex.w-full.justify-center > * {
+    background-color: hsl(var(--popover));
+    color: hsl(var(--popover-foreground));
+    border: var(--zk-border-width, 1px) solid hsl(var(--border));
+    border-radius: var(--radius-xl, 0.75rem);
+    box-shadow: var(--zk-shadow-md, 0 2px 6px hsl(0 0% 0% / 0.08));
+    overflow: hidden;
+  }
+  &[data-identity="glass"] #nd-nav:has(button[aria-expanded="true"]) > div > .flex.w-full.justify-center > * {
+    background-color: hsl(var(--popover) / 0.8);
+    border-color: hsl(var(--zk-glass-bar-edge, var(--zk-glass-edge, var(--border))) / var(--zk-glass-bar-edge-alpha, var(--zk-glass-edge-alpha, 1)));
+    box-shadow: var(--zk-shadow-lg);
+    -webkit-backdrop-filter: blur(12px) saturate(var(--zk-glass-saturate, 1));
+    backdrop-filter: blur(12px) saturate(var(--zk-glass-saturate, 1));
   }
   #nd-sidebar {
     background-color: hsl(var(--sidebar) / var(--zk-glass-alpha, 1));
@@ -159,6 +193,14 @@ body:has([role="dialog"][data-state="open"]) [data-search-pill] {
     border: 0;
     border-radius: 0;
     box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root[data-identity="glass"] #nd-nav:has(button[aria-expanded="true"]) > div > .flex.w-full.justify-center > * {
+    background-color: hsl(var(--popover));
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
