@@ -74,6 +74,19 @@ describe("checkSetup", () => {
     gitInit(root);
     put(root, "PLAN.md", "PLAN.md\n.agents/\nintro-first: printed before any tool call (fresh)\n");
     put(root, ".agents/setup-log/gates/run.log", GOOD_LOG);
+    put(root, ".agents/setup-log.md", "| gates/run.log | pnpm test | 0 |\n");
+    expect(checkSetup(root)).toEqual({ issues: [], notes: [] });
+  });
+
+  it("issues when a persisted gate log has no setup-log inventory row", () => {
+    const root = tempDir();
+    gitInit(root);
+    put(root, "PLAN.md", "PLAN.md\n.agents/\nintro-first: printed before any tool call (fresh)\n");
+    put(root, ".agents/setup-log/gates/run.log", GOOD_LOG);
+    put(root, ".agents/setup-log/gates/killed.log", "CMD: pnpm test\nSTART\nEND\nCAUSE: killed by signal\nEXIT:143\n");
+    const messages = checkSetup(root).issues.map((i) => i.message).sort();
+    expect(messages).toEqual(["gate inventory misses killed.log (one setup-log row per persisted gate log, killed logs included)", "gate inventory misses run.log (one setup-log row per persisted gate log, killed logs included)"]);
+    put(root, ".agents/setup-log.md", "| gates/run.log | pnpm lint | 0 |\n| gates/killed.log | pnpm test | 143 |\n");
     expect(checkSetup(root)).toEqual({ issues: [], notes: [] });
   });
 

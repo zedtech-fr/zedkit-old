@@ -50,6 +50,7 @@ function gates(root: string): Issue[] {
   const listed = tryCatch(() => readdirSync(join(root, ".agents/setup-log/gates")));
   if (!listed.ok) return [];
   const issues: Issue[] = [];
+  const inventory = tryCatch(() => readFileSync(join(root, ".agents/setup-log.md"), "utf8"));
   for (const name of listed.value.filter((n) => n.endsWith(".log"))) {
     const path = join(root, ".agents/setup-log/gates", name);
     const raw = tryCatch(() => readFileSync(path, "utf8"));
@@ -60,6 +61,9 @@ function gates(root: string): Issue[] {
     if (!body.some((l) => /^START\b/.test(l))) issues.push({ path, message: "missing START line" });
     if (!body.some((l) => /^END\b/.test(l))) issues.push({ path, message: "missing END line" });
     if (!/^EXIT:\d+$/.test(body.at(-1) ?? "")) issues.push({ path, message: "last line must match EXIT:<code>" });
+    if (!inventory.ok || !inventory.value.includes(name)) {
+      issues.push({ path, message: `gate inventory misses ${name} (one setup-log row per persisted gate log, killed logs included)` });
+    }
   }
   return issues;
 }
