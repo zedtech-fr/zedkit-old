@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button, Container, Heading, Stack, Text } from "@zedtech/zedkit-ui";
 
+import "@/app/identity-creator-type.css";
 import { identityEditorCopy } from "@/app/i18n/identity-editor-copy";
 import { IdentityEditorPanel } from "@/components/identity-editor-panel";
 import { docsPageMetadata } from "@/lib/docs-metadata";
@@ -20,8 +21,12 @@ export default function IdentityEditorFeaturePage() {
           <Button asChild variant="link" size="sm" className="-mx-2 -my-3 w-fit" data-editor-back="">
             <Link href="/#identities">{identityEditorCopy.back}</Link>
           </Button>
-          <Heading level={1}>{identityEditorCopy.heading}</Heading>
-          <Text variant="muted">{identityEditorCopy.body}</Text>
+          <Heading level={1} typeRole="section">
+            {identityEditorCopy.heading}
+          </Heading>
+          <Text variant="muted" typeRole="body">
+            {identityEditorCopy.body}
+          </Text>
         </Stack>
         <IdentityEditorPanel />
       </Stack>

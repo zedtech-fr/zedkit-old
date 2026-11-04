@@ -77,7 +77,7 @@ function TokenField({
 function FieldGroup({ legend, className, children }: { legend: string; className?: string; children: ReactNode }) {
   return (
     <fieldset className={cn("m-0 min-w-0 border-0 p-0", className)}>
-      <legend className="mb-3 text-sm font-semibold text-foreground">{legend}</legend>
+      <legend className="mb-3 font-semibold text-foreground">{legend}</legend>
       <Stack className="grid min-w-0 gap-4 sm:grid-cols-2">{children}</Stack>
     </fieldset>
   );
@@ -138,10 +138,12 @@ function SpecimenBody() {
   return (
     <>
       <Stack direction="horizontal" gap={2} className="justify-between">
-        <Heading level={2}>{identityEditorCopy.fields.draftTitle}</Heading>
+        <Heading level={2} typeRole="band">
+          {identityEditorCopy.fields.draftTitle}
+        </Heading>
         <Badge variant="success">{copy.status}</Badge>
       </Stack>
-      <Text variant="muted" className="max-lg:hidden">
+      <Text variant="muted" typeRole="body" className="max-lg:hidden">
         {identityEditorCopy.fields.draftBody}
       </Text>
       <Stack direction="horizontal" gap={2} className="flex-wrap">
@@ -161,7 +163,7 @@ function SpecimenBody() {
         <Input id="identity-editor-sample" defaultValue={copy.inputValue} />
       </Field>
       <Stack gap={3} className="hidden lg:flex">
-        <dl className="m-0 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2 rounded-lg border border-border p-3 text-sm">
+        <dl className="m-0 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2 rounded-lg border border-border p-3">
           {copy.rows.map(([term, detail]) => (
             <Fragment key={term}>
               <dt className="text-muted-foreground">{term}</dt>
@@ -198,7 +200,7 @@ function DraftCard({ darkPreview }: { darkPreview: boolean }) {
       <Stack gap={3} inert>
         <SpecimenBody />
       </Stack>
-      <Text variant="muted" className="text-xs">
+      <Text variant="muted" typeRole="label">
         {identityEditorCopy.fields.specimenNote}
       </Text>
     </Stack>

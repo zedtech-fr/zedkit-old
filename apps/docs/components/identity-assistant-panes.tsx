@@ -56,7 +56,7 @@ export function PreviewPane(props: {
         <ProposalCard proposal={props.proposal} current={props.tokens} busy={props.busy} onUse={props.onUse} onDiscard={props.onDiscard} />
       ) : (
         <Stack gap={3}>
-          <Text variant="muted" className="text-sm">
+          <Text variant="muted" typeRole="label">
             {copy.views.draftNow}
           </Text>
           <IdentityMiniPreview tokens={props.tokens} id="draft-now" />
