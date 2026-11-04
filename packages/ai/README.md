@@ -54,7 +54,7 @@ Developing the kit itself? From a zedkit checkout, build once and call
 the binary directly: `pnpm --filter @zedtech/zedkit-ai build`, then
 `node packages/ai/dist/bin.js init <dir>`.
 
-`init` options: `--preset starter|core|full`, `--provider cursor,claude,codex,all`
+`init` options: `--preset starter|setup|core|full`, `--provider cursor,claude,codex,all`
 (`--target` is an alias; `--help` lists every provider id), `--adopt`, `--dry-run`. It copies files (you own them
 afterwards) and never overwrites an existing one; the one exception is an
 existing `AGENTS.md` without the ladder, which gets the ladder section
@@ -155,13 +155,15 @@ director briefs — the full table (role + when to call) lives in
 `docs/agents-catalog.md`, the installed set in `kit.json`.
 
 **Presets:** `starter` (default: onboard, review, done — five skills, three
-subagents, two commands), `core` (planning, implement, and the rest;
+subagents, two commands), `setup` (starter plus domain modeling, the review
+lenses, retro, rules-upkeep, and subagents `product-director`, `ui-designer`,
+`copywriter`), `core` (planning, implement, and the rest;
 `zedkit-ai list` shows the skill list), and `full` (every skill). Keep the
 skill count low: every skill's name and description is loaded into context
 up front (Codex caps that list at about 2%
-of the context window and shortens descriptions past it). With `starter` or
-`core`, only that preset's subagents and commands are copied; `full` still
-installs the full agent and command lists from `kit.json`.
+of the context window and shortens descriptions past it). With `starter`,
+`setup` or `core`, only that preset's subagents and commands are copied;
+`full` still installs the full agent and command lists from `kit.json`.
 
 ## Choices worth knowing
 

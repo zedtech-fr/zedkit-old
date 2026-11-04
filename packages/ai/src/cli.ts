@@ -9,7 +9,7 @@ import { checkDrift, validateKit } from "./validate.js";
 
 const USAGE = `zedkit-ai <command>
 
-  init [dir] [--preset starter|core|full] [--provider ...] [--adopt] [--dry-run]
+  init [dir] [--preset starter|setup|core|full] [--provider ...] [--adopt] [--dry-run]
       Copy skills, subagents, commands and an AGENTS.md template into dir
       (default .), then wire the providers (default all). Never overwrites
       existing files (an existing AGENTS.md without the ladder gets the

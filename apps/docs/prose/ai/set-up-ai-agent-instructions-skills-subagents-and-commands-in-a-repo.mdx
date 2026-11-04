@@ -10,7 +10,9 @@ One shared source plus a thin layer per provider. With
 .cursor/            # rules/project.mdc + skills link, agents/commands as copies
 ```
 
-`full` adds the remaining skills and `AGENTS.md`/`CLAUDE.md` templates.
+Presets: `starter` (default), `setup` (starter plus domain, review lenses,
+retro, and product/UI/copy subagents), `core` (planning and implement),
+`full` (every skill). `init` also writes `AGENTS.md`/`CLAUDE.md` templates.
 Supported providers: `claude`, `cursor`, `codex`, `muse`. `init` never
 overwrites existing files; `validate` reports drifted provider copies.
 
