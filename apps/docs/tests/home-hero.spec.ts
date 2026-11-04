@@ -249,6 +249,51 @@ test("a guided cursor tours the pages by itself, and stops the moment the visito
   await expect(page.locator("#demo [data-hero-cursor]")).toHaveCSS("opacity", "0");
 });
 
+const agentPanel = (page: Page) => page.locator("#demo [data-hero-agent-panel]");
+const AGENT_PROMPT = "Set up zedkit AI on this repo following https://zedkit.app/ai/setup.md";
+
+test("the tour ends its lap in the Agent panel: it pastes the one prompt, runs the scripted phases, closes, and loops", async ({ page }) => {
+  test.setTimeout(150_000);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const requests: string[] = [];
+  await page.goto(BASE, { waitUntil: "networkidle" });
+  page.on("request", (request) => requests.push(request.url()));
+  await expect(windowOf(page)).toHaveAttribute("data-tour", "on", { timeout: 2500 });
+  await expect(agentPanel(page)).toHaveCount(0);
+
+  await expect(agentPanel(page)).toBeVisible({ timeout: 90_000 });
+  await expect(agentPanel(page).getByRole("textbox", { name: "Message to the agent" })).toHaveValue(AGENT_PROMPT);
+  await expect(agentPanel(page)).toHaveAttribute("data-status", "running");
+  await expect(agentPanel(page).locator("[data-phase='read']")).toHaveAttribute("data-state", "running");
+  await expect(agentPanel(page)).toHaveAttribute("data-status", "done", { timeout: 12_000 });
+  await expect(agentPanel(page).locator("li[data-state='done']")).toHaveCount(4);
+  await expect(agentPanel(page)).toContainText("UTC midnight");
+  await expect(windowOf(page)).toHaveAttribute("data-tour", "on");
+  // The run is scripted: nothing was fetched while it played (the panel's own chunk was loaded ahead of it).
+  expect(requests.filter((url) => !/\/_next\/static\//.test(url) && !url.startsWith("data:"))).toEqual([]);
+
+  // Then the panel closes and the tour carries on from the first page.
+  await expect(agentPanel(page)).toHaveCount(0, { timeout: 8000 });
+  await expect.poll(() => nav(page).locator("[aria-current='page']").innerText(), { timeout: 8000 }).toBe("Overview");
+});
+
+test("the Agent panel also works for the visitor, and using it ends the tour", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(BASE, { waitUntil: "networkidle" });
+  const open = page.locator("#demo").getByRole("button", { name: "Agent", exact: true });
+  await open.click();
+  await expect(windowOf(page)).toHaveAttribute("data-tour", "off");
+  await expect(open).toHaveAttribute("aria-expanded", "true");
+  const send = agentPanel(page).getByRole("button", { name: "Send to the agent" });
+  await expect(send).toBeDisabled();
+  await agentPanel(page).getByRole("textbox", { name: "Message to the agent" }).fill(AGENT_PROMPT);
+  await send.click();
+  await expect(agentPanel(page)).toHaveAttribute("data-status", "done", { timeout: 12_000 });
+  await agentPanel(page).getByRole("button", { name: "Close agent" }).click();
+  await expect(agentPanel(page)).toHaveCount(0);
+  await expect(open).toHaveAttribute("aria-expanded", "false");
+});
+
 test("the tour also changes the look in the Display row, and a look the visitor leaves in place stays", async ({ page }) => {
   test.setTimeout(45_000);
   await page.setViewportSize({ width: 1440, height: 900 });

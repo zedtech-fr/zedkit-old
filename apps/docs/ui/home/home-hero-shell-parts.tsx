@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, LayoutDashboard, Server, Settings, Users, type LucideIcon } from "lucide-react";
+import { CalendarDays, LayoutDashboard, Server, Settings, Sparkles, Users, type LucideIcon } from "lucide-react";
 import { Button, LivePulse, ProgressBar, Stack, Text } from "@zedtech/zedkit-ui";
 import { projectTrackerDemoCopy } from "@/components/i18n/project-tracker-demo-copy";
 import { DOCS_TYPE_LABEL_CLASS } from "@/lib/docs-type-roles";
@@ -88,7 +88,28 @@ export function HeroSidebar({ page, onPage }: NavProps) {
   );
 }
 
-export function HeroTopBar({ page, onPage }: NavProps) {
+type AgentToggle = { open: boolean; panelId: string; onToggle: () => void };
+
+/** Opens the agent panel. The tour presses it like any other control (`data-hero-agent-open`). */
+function AgentButton({ open, panelId, onToggle }: AgentToggle) {
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      className="max-md:min-h-11"
+      aria-expanded={open}
+      aria-controls={open ? panelId : undefined}
+      onClick={onToggle}
+      data-hero-agent-open=""
+    >
+      <Sparkles className="size-4" aria-hidden />
+      {copy.agent.open}
+    </Button>
+  );
+}
+
+export function HeroTopBar({ page, onPage, agent }: NavProps & { agent: AgentToggle }) {
   return (
     <Stack gap={1}>
       <Stack direction="horizontal" gap={2} className="min-h-12 items-center justify-between px-4">
@@ -101,6 +122,7 @@ export function HeroTopBar({ page, onPage }: NavProps) {
           </Text>
         </Text>
         <Stack direction="horizontal" gap={3} className="shrink-0 items-center">
+          <AgentButton {...agent} />
           <LivePulse />
           <HeroAvatar initials={projectTrackerDemoCopy.initials} />
         </Stack>
