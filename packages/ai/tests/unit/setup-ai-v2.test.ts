@@ -61,6 +61,28 @@ describe("setup-ai v2 kit", () => {
     expect(raw).toMatch(/\*\*`source: owner`\*\*/u);
   });
 
+  it("documents scorer gaps G1–G4 in setup-ai SKILL.md", () => {
+    const raw = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
+    expect(raw).toMatch(/approved plan|nothing may change outside this table/iu);
+    expect(raw).toContain("package.json");
+    expect(raw).toMatch(/pnpm-lock|lockfile/iu);
+    expect(raw).toMatch(/gate outcomes/iu);
+    expect(raw).toMatch(/Re-open every `file:line`/u);
+    expect(raw).toContain("no test — flag");
+    expect(raw).toMatch(/cut short/iu);
+    expect(raw).toMatch(/main gate last/iu);
+    const log = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "setup-log.template.md"),
+      "utf8",
+    );
+    expect(log).toContain("Gate outcomes");
+    const rubric = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "setup-rubric.md"),
+      "utf8",
+    );
+    expect(rubric).toContain("gate outcomes");
+  });
+
   it("installs templates beside setup-ai for every preset that ships setup-ai; validate stays clean", () => {
     const manifest = readManifest();
     if (!manifest.ok) throw manifest.error;
