@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
-import { FEATURED_EXAMPLE, buildAdoptionPlan, loadRegistry } from "../lib/adoption-plan.mjs";
+import { FEATURED_EXAMPLE, buildAdoptionPlan, loadRegistry } from "../apps/docs/lib/adoption-plan.mjs";
 import {
   commandsFromPlan,
   installCommandKey,
@@ -13,10 +13,10 @@ import {
   shownInstallCommands,
   uncoveredInstallCommands,
   workspacePackageDir,
-} from "../lib/adoption-shown-commands.mjs";
-import { CASES } from "../../../scripts/adoption-smoke.mjs";
+} from "../apps/docs/lib/adoption-shown-commands.mjs";
+import { CASES } from "./adoption-smoke.mjs";
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../..");
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const catalog = JSON.parse(readFileSync(join(ROOT, "docs/catalog/catalog.json"), "utf8"));
 const registry = loadRegistry(ROOT);
 

@@ -200,13 +200,6 @@ async function serve(project) {
   throw new Error("next start did not answer");
 }
 
-function leftoverGettingStartedAdds() {
-  const executed = Object.values(CASES)
-    .filter((spec) => spec.plan && spec.mode)
-    .flatMap((spec) => commandsFromPlan(spec.plan(), spec.mode));
-  return uncoveredInstallCommands(shownInstallCommands(ROOT), executed).filter(isWorkspacePackageAdd);
-}
-
 async function runShownPackageAdds() {
   const executed = Object.values(CASES)
     .filter((spec) => spec.plan && spec.mode)
@@ -318,7 +311,6 @@ async function main() {
   for (const name of names) assert(CASES[name], `unknown case ${name} (${Object.keys(CASES).join(", ")})`);
 
   const appCases = names.filter((name) => CASES[name].kind !== "shown-package-adds");
-  const shownCases = names.filter((name) => CASES[name].kind === "shown-package-adds");
   if (appCases.length > 0) {
     assert(existsSync(join(REGISTRY_DIR, "button.json")), `missing ${REGISTRY_DIR}/button.json (run pnpm registry:build)`);
   }
