@@ -1,4 +1,4 @@
-import { readFileSync, symlinkSync } from "node:fs";
+import { mkdirSync, readFileSync, symlinkSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { installKit } from "#install.js";
@@ -287,6 +287,101 @@ describe("validateKit", () => {
     put(root, ".cursor/commands/run.md", COMMAND("alpha"));
     symlinkSync(join(agents, "agents"), join(root, ".cursor", "agents"));
     expect(checkDrift(root, agents)).toEqual([]);
+  });
+
+  it("flags a claude layer entry deleted after install, without destructive advice", () => {
+    const root = tempDir();
+    const agents = join(root, ".agents");
+    put(root, ".agents/skills/alpha/SKILL.md", SKILL("alpha"));
+    put(root, "AGENTS.md", "agents\n");
+    mkdirSync(join(root, ".claude"));
+    symlinkSync(join(agents, "agents"), join(root, ".claude", "agents"));
+    const found = checkDrift(root, agents).map((i) => `${i.path}: ${i.message}`);
+    expect(found.some((m) => m.includes(".claude/skills") && m.includes("link missing"))).toBe(true);
+    expect(found.some((m) => m.includes("CLAUDE.md") && m.includes("link missing"))).toBe(true);
+    expect(found.every((m) => m.includes("re-run init"))).toBe(true);
+    expect(found.some((m) => /copy it over|overwrite/i.test(m))).toBe(false);
+  });
+
+  it("flags a dangling claude layer link", () => {
+    const root = tempDir();
+    const agents = join(root, ".agents");
+    put(root, ".agents/skills/alpha/SKILL.md", SKILL("alpha"));
+    mkdirSync(join(root, ".claude"));
+    symlinkSync(join(agents, "skills"), join(root, ".claude", "skills"));
+    symlinkSync(join(root, ".agents", "agents-gone"), join(root, ".claude", "agents"));
+    const found = checkDrift(root, agents).map((i) => `${i.path}: ${i.message}`);
+    expect(found.some((m) => m.includes(".claude/agents") && m.includes("removed target"))).toBe(true);
+  });
+
+  it("flags a dangling CLAUDE.md and skips a real one", () => {
+    const root = tempDir();
+    const agents = join(root, ".agents");
+    put(root, ".agents/skills/alpha/SKILL.md", SKILL("alpha"));
+    mkdirSync(join(root, ".claude"));
+    symlinkSync(join(agents, "skills"), join(root, ".claude", "skills"));
+    symlinkSync(join(root, "AGENTS-gone.md"), join(root, "CLAUDE.md"));
+    const found = checkDrift(root, agents).map((i) => `${i.path}: ${i.message}`);
+    expect(found.some((m) => m.includes("CLAUDE.md") && m.includes("removed target"))).toBe(true);
+    const owned = tempDir();
+    const ownedAgents = join(owned, ".agents");
+    put(owned, ".agents/skills/alpha/SKILL.md", SKILL("alpha"));
+    put(owned, ".agents/agents/beta.md", AGENT("beta"));
+    put(owned, ".agents/commands/run.md", COMMAND("alpha"));
+    put(owned, "AGENTS.md", "agents\n");
+    mkdirSync(join(owned, ".claude"));
+    symlinkSync(join(ownedAgents, "skills"), join(owned, ".claude", "skills"));
+    symlinkSync(join(ownedAgents, "agents"), join(owned, ".claude", "agents"));
+    symlinkSync(join(ownedAgents, "commands"), join(owned, ".claude", "commands"));
+    put(owned, "CLAUDE.md", "my own pointer\n");
+    expect(checkDrift(owned, ownedAgents)).toEqual([]);
+  });
+
+  it("flags a kit skill that a real .claude/skills directory does not expose", () => {
+    const root = tempDir();
+    const agents = join(root, ".agents");
+    put(root, ".agents/skills/alpha/SKILL.md", SKILL("alpha"));
+    put(root, ".claude/skills/team-own/SKILL.md", SKILL("team-own"));
+    const found = checkDrift(root, agents).map((i) => `${i.path}: ${i.message}`);
+    expect(found).toContainEqual(expect.stringContaining('kit skill "alpha" is unreachable from .claude/skills'));
+  });
+
+  it("flags a drifted copy inside a real .claude/agents directory", () => {
+    const root = tempDir();
+    const agents = join(root, ".agents");
+    put(root, ".agents/agents/beta.md", AGENT("beta"));
+    put(root, ".claude/agents/beta.md", "edited\n");
+    const found = checkDrift(root, agents).map((i) => `${i.path}: ${i.message}`);
+    expect(found).toContainEqual(expect.stringContaining("differs from"));
+    expect(found).toContainEqual(expect.stringContaining("user copy kept"));
+    expect(found.some((m) => /copy it over|overwrite/i.test(m))).toBe(false);
+  });
+
+  it("skips a hand-made .claude folder with no layer entries", () => {
+    const root = tempDir();
+    const agents = join(root, ".agents");
+    put(root, ".agents/skills/alpha/SKILL.md", SKILL("alpha"));
+    put(root, ".claude/settings.json", "{}\n");
+    put(root, ".claude/skills-note.md", "notes\n");
+    expect(checkDrift(root, agents)).toEqual([]);
+  });
+
+  it("skips a .claude path that is a file, not a folder", () => {
+    const root = tempDir();
+    const agents = join(root, ".agents");
+    put(root, ".agents/skills/alpha/SKILL.md", SKILL("alpha"));
+    put(root, ".claude", "not a folder\n");
+    expect(checkDrift(root, agents)).toEqual([]);
+  });
+
+  it("flags a dangling .cursor/skills link", () => {
+    const root = tempDir();
+    const agents = join(root, ".agents");
+    put(root, ".agents/skills/alpha/SKILL.md", SKILL("alpha"));
+    mkdirSync(join(root, ".cursor"));
+    symlinkSync(join(root, ".agents", "skills-gone"), join(root, ".cursor", "skills"));
+    const found = checkDrift(root, agents).map((i) => `${i.path}: ${i.message}`);
+    expect(found.some((m) => m.includes(".cursor/skills") && m.includes("removed target"))).toBe(true);
   });
 
   it("flags ladder skills that lost the ladder", () => {

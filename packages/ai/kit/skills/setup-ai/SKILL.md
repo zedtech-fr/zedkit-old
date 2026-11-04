@@ -14,7 +14,7 @@ When `/setup-ai` starts (or the user asks to set up AI), say this in plain langu
 - **Modes:** **fresh** (little or no agent setup yet) or **improve** (you already have `AGENTS.md`, rules, or provider folders — audit and extend, do not replace blindly).
 - **Phases:** **A** audit (inventory + parallel explore + gaps) → **B** discovery (mine docs and code, then **one batched interview of at most 8 questions**) → **C** build deep artifacts from kit templates → **D** propose repo skills from the catalog → write provider layers, verify, report.
 - **What they get:** verified root `AGENTS.md`, `.agents/product.md`, domain rules under `.agents/domain/`, `.agents/personas.md`, `.agents/design.md` when the repo has UI, nested rules where folders differ, optional repo-specific skills and subagents, and thin Cursor/Claude layers that match `.agents/`.
-- **Time:** about **15–45 minutes** for a typical app repo; large monorepos or workspace roots can take longer. They approve the plan before writes; in phase B they **answer or delegate the batched interview** (do not skip it). One extra provider question only when wiring is unclear.
+- **Time:** about **15–45 minutes** for a typical app repo; large monorepos or workspace roots can take longer. They approve the plan before writes; in phase B they **answer or delegate the batched interview** (do not skip it). One extra provider question, offering all four providers with their one-line value, only when wiring is unclear.
 
 ## Phases (whole run)
 
@@ -39,6 +39,17 @@ One shared source, then thin provider layers. Phases **A–D** are provider-neut
 - **Prefer enforcement to prose.** If a linter, type check, test or CI job can enforce a rule, configure that and mention it in one line. Prose is for what tools cannot check.
 - A public repo gets no private names, customer data or internal URLs in any file you write.
 
+## Providers
+
+Always offer all four providers, each with its one-line value; wire every provider the owner names (several allowed).
+
+| Provider | Value                                                      |
+| -------- | ---------------------------------------------------------- |
+| `cursor` | Rules, skills, agents and commands inside the IDE          |
+| `claude` | The same setup for Claude Code sessions, linked not copied |
+| `codex`  | Reads the shared source directly; nothing extra to install |
+| `muse`   | Reads the shared source directly; nothing extra to install |
+
 ## Phase A — Audit
 
 ### A1. Inventory what exists
@@ -49,7 +60,7 @@ List, with paths: `AGENTS.md` (root and nested), `CLAUDE.md`, `GEMINI.md`, `.cur
 - Anything real: **improve**. Read all of it first. Note what each file is for and which tool reads it.
 - Audit only files the repo owns. A vendored or symlinked kit (for example `.agents/skills` pointing into a package) is listed once and not audited.
 - Note uncommitted changes. Treat the current working state as the baseline and do not revert anything.
-- Settle the providers: the names given after `setup-ai` win; otherwise reuse the providers the repo already wires (`.cursor/`, `.claude/`, `CLAUDE.md`, docs saying so). If neither tells you, ask exactly one question — which of cursor, claude, codex, muse (several allowed) — before writing; with nobody to ask, wire all four.
+- Settle the providers: the names given after `setup-ai` win; otherwise reuse the providers the repo already wires (`.cursor/`, `.claude/`, `CLAUDE.md`, docs saying so). If neither tells you, ask exactly one question — which of cursor, claude, codex, muse, each with its one-line value from Providers above (several allowed) — before writing; with nobody to ask, wire all four.
 - Workspace check: two or more child directories that are themselves git checkouts, or a manifest listing member projects, means a multi-repo workspace root: switch to Workspace mode below instead of phases B–D.
 
 ### A2. Explore in parallel
@@ -145,7 +156,7 @@ Present one table covering phase A gaps, phase C artifacts, phase D skills, and 
 | Provider | Layer on top of `AGENTS.md` + `.agents/`                                                                                                                                   |
 | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `cursor` | `.cursor/rules/project.mdc` (skip it when an always-on rule exists), `.cursor/skills` link, agents and commands as real-file copies (a linked folder shows up empty there) |
-| `claude` | `CLAUDE.md` link, `.claude/{skills,agents,commands}` links                                                                                                                 |
+| `claude` | `CLAUDE.md` link, `.claude/{skills,agents,commands}` links (per-skill links and file copies when those paths are already real directories)                                 |
 | `codex`  | none: reads `AGENTS.md` and `.agents/skills` directly                                                                                                                      |
 | `muse`   | none: reads `.agents/` directly                                                                                                                                            |
 

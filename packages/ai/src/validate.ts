@@ -255,9 +255,25 @@ function kitSidecar(file: string): string {
   return file.replace(/\.md$/, ".kit.md");
 }
 
-function checkCursorSkills(projectRoot: string, source: string, issues: Issue[]): void {
+function linkState(path: string): "missing" | "dangling" | "link" | "dir" | "file" {
+  const stat = tryCatch(() => lstatSync(path));
+  if (!stat.ok) return "missing";
+  if (stat.value.isSymbolicLink()) return existsSync(path) ? "link" : "dangling";
+  if (stat.value.isDirectory()) return "dir";
+  return "file";
+}
+
+function checkDanglingLink(projectRoot: string, path: string, issues: Issue[]): void {
+  if (linkState(path) !== "dangling") return;
+  issues.push({
+    path: relative(projectRoot, path),
+    message: "link points at a removed target: re-run init to restore it",
+  });
+}
+
+function checkLayerSkills(projectRoot: string, source: string, layer: string, issues: Issue[]): void {
   const from = join(source, "skills");
-  const to = join(projectRoot, ".cursor", "skills");
+  const to = join(projectRoot, layer, "skills");
   if (!isRealDir(from) || !existsSync(to)) return;
   const stat = tryCatch(() => lstatSync(to));
   if (!stat.ok) return;
@@ -269,53 +285,97 @@ function checkCursorSkills(projectRoot: string, source: string, issues: Issue[])
     if (aliases.some((alias) => existsSync(join(to, alias)))) continue;
     issues.push({
       path: relative(projectRoot, join(to, name)),
-      message: `kit skill "${name}" is unreachable from .cursor/skills`,
+      message: `kit skill "${name}" is unreachable from ${layer}/skills`,
     });
   }
 }
 
+function checkLayerCopies(projectRoot: string, source: string, layer: string, kind: string, issues: Issue[]): void {
+  const from = join(source, kind);
+  const to = join(projectRoot, layer, kind);
+  if (!isRealDir(from) || !isRealDir(to)) return;
+  for (const file of readdirSync(from).filter((f) => f.endsWith(".md") && !f.endsWith(".kit.md"))) {
+    const want = relative(projectRoot, join(from, file));
+    const sidecar = join(to, kitSidecar(file));
+    const target = join(to, file);
+    if (existsSync(sidecar)) {
+      if (read(sidecar) !== read(join(from, file))) {
+        issues.push({
+          path: relative(projectRoot, sidecar),
+          message: `differs from ${want}; user copy kept`,
+        });
+      }
+      continue;
+    }
+    if (!existsSync(target)) {
+      issues.push({ path: relative(projectRoot, target), message: `copy missing: copy it from ${want} or re-run init` });
+    } else if (read(target) !== read(join(from, file))) {
+      issues.push({
+        path: relative(projectRoot, target),
+        message: `differs from ${want}; user copy kept`,
+      });
+    }
+  }
+}
+
+// The provider was wired when at least one of its layer entries exists: a
+// hand-made provider folder holding only user files is not drift.
+function layerWired(projectRoot: string, layer: string): boolean {
+  return ["skills", "agents", "commands"].some((kind) => linkState(join(projectRoot, layer, kind)) !== "missing");
+}
+
+function checkClaudeLayer(projectRoot: string, source: string, issues: Issue[]): void {
+  if (!existsSync(join(projectRoot, ".claude")) || !layerWired(projectRoot, ".claude")) return;
+  for (const kind of ["skills", "agents", "commands"]) {
+    const entry = join(projectRoot, ".claude", kind);
+    if (linkState(entry) === "missing") {
+      issues.push({
+        path: relative(projectRoot, entry),
+        message: `link missing: re-run init to restore it from ${relative(projectRoot, join(source, kind))}`,
+      });
+    } else {
+      checkDanglingLink(projectRoot, entry, issues);
+    }
+  }
+  checkLayerCopies(projectRoot, source, ".claude", "agents", issues);
+  checkLayerCopies(projectRoot, source, ".claude", "commands", issues);
+  checkLayerSkills(projectRoot, source, ".claude", issues);
+  const pointer = join(projectRoot, "CLAUDE.md");
+  const state = linkState(pointer);
+  if (state === "dangling") {
+    checkDanglingLink(projectRoot, pointer, issues);
+  } else if (state === "missing") {
+    const agentsMd = tryCatch(() => statSync(join(projectRoot, "AGENTS.md")));
+    if (agentsMd.ok && agentsMd.value.isFile()) {
+      issues.push({ path: "CLAUDE.md", message: "link missing: re-run init to restore it from AGENTS.md" });
+    }
+  }
+  // A real CLAUDE.md is the user's own and is skipped silently.
+}
+
 /**
- * Compare the provider copies (`.cursor/agents`, `.cursor/commands`) against
- * the shared `source` (usually the project's `.agents/`). Copies are real
- * files because that provider does not follow a symlinked folder here; when
- * the source changes they go stale, and init never overwrites them. Reports
- * each missing or drifted copy. A kit sidecar (`*.kit.md`) matching the
- * source means the user file may differ. Links and missing folders cannot
- * drift and are skipped silently, as are extra files on the provider side
- * (the user's own). Also flags kit skills that a real `.cursor/skills`
- * directory does not expose. Paths are relative to `projectRoot`.
+ * Compare the provider layers against the shared `source` (usually the
+ * project's `.agents/`). Real-file copies (Cursor agents/commands, and the
+ * same entries under `.claude/` when they are real dirs) go stale when the
+ * source changes, and init never overwrites them: reports each missing or
+ * drifted copy. A kit sidecar (`*.kit.md`) matching the source means the
+ * user file may differ. A claude layer entry deleted after install, or any
+ * provider link pointing at a removed target, is reported with a re-run
+ * hint; nothing here ever asks to overwrite a user file. Resolving links
+ * and missing folders cannot drift and are skipped silently, as are extra
+ * files on the provider side (the user's own) and a hand-made provider
+ * folder with no layer entries. Also flags kit skills that a real
+ * `skills` directory on either layer does not expose. Paths are relative
+ * to `projectRoot`.
  */
 export function checkDrift(projectRoot: string, source: string): Issue[] {
   const run = tryCatch(() => {
     const issues: Issue[] = [];
-    for (const kind of ["agents", "commands"]) {
-      const from = join(source, kind);
-      const to = join(projectRoot, ".cursor", kind);
-      if (!isRealDir(from) || !isRealDir(to)) continue;
-      for (const file of readdirSync(from).filter((f) => f.endsWith(".md") && !f.endsWith(".kit.md"))) {
-        const want = relative(projectRoot, join(from, file));
-        const sidecar = join(to, kitSidecar(file));
-        const target = join(to, file);
-        if (existsSync(sidecar)) {
-          if (read(sidecar) !== read(join(from, file))) {
-            issues.push({
-              path: relative(projectRoot, sidecar),
-              message: `differs from ${want}; user copy kept`,
-            });
-          }
-          continue;
-        }
-        if (!existsSync(target)) {
-          issues.push({ path: relative(projectRoot, target), message: `copy missing: copy it from ${want} or re-run init` });
-        } else if (read(target) !== read(join(from, file))) {
-          issues.push({
-            path: relative(projectRoot, target),
-            message: `differs from ${want}; user copy kept`,
-          });
-        }
-      }
-    }
-    checkCursorSkills(projectRoot, source, issues);
+    checkLayerCopies(projectRoot, source, ".cursor", "agents", issues);
+    checkLayerCopies(projectRoot, source, ".cursor", "commands", issues);
+    checkDanglingLink(projectRoot, join(projectRoot, ".cursor", "skills"), issues);
+    checkLayerSkills(projectRoot, source, ".cursor", issues);
+    checkClaudeLayer(projectRoot, source, issues);
     return issues;
   });
   return run.ok ? run.value : [{ path: projectRoot, message: `cannot check drift: ${run.error.message}` }];
