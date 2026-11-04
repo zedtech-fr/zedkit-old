@@ -7,10 +7,6 @@ export const homeGetStartedCopy = {
     fullSteps: "Full install steps in the docs",
     fullStepsHref: "/docs/getting-started#install-or-copy",
   },
-  quickStart: {
-    fullSteps: "Full install steps in the docs",
-    fullStepsHref: "/docs/getting-started#install-or-copy",
-  },
   ai: {
     leadPrefix: "Run init in your repo, then ",
     leadSuffix: " in the agent. Full walkthrough in the docs.",
