@@ -10,7 +10,7 @@ import { Drawer as DrawerPrimitive } from "vaul";
 import { buttonVariants } from "@/components/ui/button";
 import { resolveModalMountAutoFocus, overlayDrawerFooterClass, overlayDrawerHeaderClass } from "@/components/ui/overlay-modal";
 import { cn } from "@/lib/utils";
-import { usePortalContainer } from "@/components/ui/theme-scope";
+import { OverlayMountContext, ScopeMirror } from "@/components/ui/theme-scope";
 import { useNarrowViewport } from "@/components/ui/use-narrow-viewport";
 import { useUiMessages } from "@/components/ui/ui-provider";
 
@@ -71,10 +71,10 @@ function DrawerPortal({
   container,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Portal>) {
-  const scoped = usePortalContainer();
-  return (
-    <DrawerPrimitive.Portal data-slot="drawer-portal" {...props} container={container ?? scoped} />
-  );
+  // Default mount is document.body: a scoped mount inherits whatever stacking context traps the trigger
+  // (a transform, filter, or isolation) and the site header then paints above the overlay. An explicit
+  // `container` still wins for consumers that need a subtree mount.
+  return <DrawerPrimitive.Portal data-slot="drawer-portal" {...props} container={container} />;
 }
 
 function DrawerOverlay({ className, ...props }: React.ComponentProps<typeof DrawerPrimitive.Overlay>) {
@@ -96,6 +96,7 @@ function DrawerContent({
   className,
   children,
   modal = true,
+  ref,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Content> & {
   /**
@@ -104,13 +105,24 @@ function DrawerContent({
    */
   modal?: boolean;
 }) {
+  const [mount, setMount] = React.useState<HTMLDivElement | null>(null);
+  const setRef = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      setMount(node);
+      if (typeof ref === "function") ref(node);
+      else if (ref) ref.current = node;
+    },
+    [ref],
+  );
   return (
     <DrawerPortal>
-      {modal ? <DrawerOverlay /> : null}
-      <DrawerPrimitive.Content
-        data-slot="drawer-content"
-        className={cn(
-          "fixed z-overlay flex flex-col border bg-card text-card-foreground outline-none",
+      <ScopeMirror>
+        {modal ? <DrawerOverlay /> : null}
+        <DrawerPrimitive.Content
+          data-slot="drawer-content"
+          ref={setRef}
+          className={cn(
+            "fixed z-drawer flex flex-col border bg-card text-card-foreground outline-none",
           // Safety net for content composed without DrawerHeader/Body/Footer (a bare form, text, a list): it still
           // gets the shared side gutters and a bottom inset that clears the home indicator. Buttons and the
           // kit slots keep their own spacing.
@@ -123,8 +135,9 @@ function DrawerContent({
         )}
         {...props}
       >
-        {children}
+        <OverlayMountContext.Provider value={mount}>{children}</OverlayMountContext.Provider>
       </DrawerPrimitive.Content>
+      </ScopeMirror>
     </DrawerPortal>
   );
 }
