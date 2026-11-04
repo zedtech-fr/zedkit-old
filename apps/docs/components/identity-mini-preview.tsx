@@ -9,6 +9,13 @@ import type { SpecimenDomain } from "@/lib/brief-specimen-domain";
 
 const SCOPE = "[data-identity-proposal]";
 
+const SPECIMEN_DOMAIN_ATTR: Record<SpecimenDomain, string> = {
+  commerce: "commerce",
+  "saas-dashboard": "saas-dashboard",
+  editorial: "editorial",
+  booking: "service-booking",
+};
+
 const HEADINGS = `${SCOPE} h3, ${SCOPE} h4 { font-family: var(--zk-font-display); letter-spacing: var(--zk-heading-tracking); line-height: var(--zk-heading-leading, 1.1); }`;
 
 export function IdentityMiniPreview({
@@ -22,7 +29,7 @@ export function IdentityMiniPreview({
 }) {
   const copy = identitySpecimenCompositions[domain];
   return (
-    <Stack gap={2} data-assistant-preview="" data-slot="brief-specimen" data-specimen-domain={domain}>
+    <Stack gap={2} data-assistant-preview="" data-slot="brief-specimen" data-specimen-domain={SPECIMEN_DOMAIN_ATTR[domain]}>
       <style>{`${tokensToCss(tokens, SCOPE)}\n${HEADINGS}`}</style>
       <Text as="span" className="text-sm font-medium text-foreground">
         {identityAssistantCopy.proposal.preview}
