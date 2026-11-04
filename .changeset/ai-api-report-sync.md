@@ -1,5 +1,5 @@
 ---
-"@zedtech/zedkit-ai": patch
+"@zedtech/zedkit-ai": minor
 ---
 
-ai: sync the API report with `validateKit(root, kit?)` (signature already shipped).
+ai: sync the API report with `validateKit(root, kit?)` (optional `kit` argument, additive).
