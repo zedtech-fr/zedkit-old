@@ -11,8 +11,10 @@ import {
   overlayDialogFooterClass,
   overlayDialogHeaderClass,
   type OverlayInitialFocus,
+  useExitUnmountFallback,
 } from "@/components/ui/overlay-modal";
 import { OverlayMountContext, ScopePortal } from "@/components/ui/theme-scope";
+import { surfaceVariants } from "@/components/ui/surface";
 import { useUiMessages } from "@/components/ui/ui-provider";
 
 /** Air between the panel and the visual viewport edge (same 16px as the docs search sheet). */
@@ -85,10 +87,24 @@ function DialogPortal({
   return <ScopePortal container={container}>{props.children}</ScopePortal>;
 }
 
-function DialogOverlay({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
+function DialogOverlay({
+  className,
+  ref,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
+  const exitRef = useExitUnmountFallback<HTMLDivElement>();
+  const setRef = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      exitRef(node);
+      if (typeof ref === "function") ref(node);
+      else if (ref) ref.current = node;
+    },
+    [exitRef, ref],
+  );
   return (
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
+      ref={setRef}
       className={cn(
         "fixed inset-0 z-overlay bg-overlay/80",
         "motion-safe:data-[state=open]:animate-[zk-fade-in_var(--motion-base)_var(--ease-enter)]",
@@ -120,15 +136,17 @@ function DialogContent({
   const fitRef = useDialogViewportFit<HTMLDivElement>();
   const contentRef = React.useRef<HTMLDivElement | null>(null);
   const [mount, setMount] = React.useState<HTMLDivElement | null>(null);
+  const exitRef = useExitUnmountFallback<HTMLDivElement>();
   const setRef = React.useCallback(
     (node: HTMLDivElement | null) => {
       contentRef.current = node;
       setMount(node);
       fitRef(node);
+      exitRef(node);
       if (typeof ref === "function") ref(node);
       else if (ref) ref.current = node;
     },
-    [fitRef, ref],
+    [exitRef, fitRef, ref],
   );
   return (
     <DialogPortal>
@@ -142,7 +160,8 @@ function DialogContent({
           focusOverlayInitial(contentRef.current, initialFocus);
         }}
         className={cn(
-          "fixed dialog-center z-dialog grid max-h-dialog-max-height w-full max-w-dialog-mobile gap-4 overflow-y-auto overscroll-y-contain rounded-lg border bg-card p-dialog-padding text-card-foreground shadow-overlay outline-none focus:outline-none sm:max-w-lg",
+          "fixed dialog-center z-dialog grid max-h-dialog-max-height w-full max-w-dialog-mobile gap-4 overflow-y-auto overscroll-y-contain outline-none focus:outline-none sm:max-w-lg",
+          surfaceVariants({ variant: "solid", elevation: 3, radius: "lg", padding: "dialog" }),
           "motion-safe:data-[state=open]:animate-[zk-zoom-in_var(--motion-base)_var(--ease-enter)]",
           "motion-safe:data-[state=closed]:animate-[zk-zoom-out_var(--motion-base)_var(--ease-exit)]",
           className,

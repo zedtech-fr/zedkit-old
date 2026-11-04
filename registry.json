@@ -139,7 +139,8 @@
         "lucide-react"
       ],
       "registryDependencies": [
-        "utils"
+        "utils",
+        "@zedkit/surface"
       ],
       "files": [
         {
@@ -232,7 +233,8 @@
       ],
       "registryDependencies": [
         "@zedkit/button",
-        "utils"
+        "utils",
+        "@zedkit/surface"
       ],
       "files": [
         {
@@ -589,7 +591,8 @@
       "name": "card",
       "type": "registry:ui",
       "registryDependencies": [
-        "utils"
+        "utils",
+        "@zedkit/surface"
       ],
       "files": [
         {
@@ -603,6 +606,22 @@
           "spacing-card-padding": "1.5rem"
         }
       }
+    },
+    {
+      "name": "surface",
+      "type": "registry:ui",
+      "dependencies": [
+        "class-variance-authority"
+      ],
+      "registryDependencies": [
+        "utils"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/surface.tsx",
+          "type": "registry:ui"
+        }
+      ]
     },
     {
       "name": "app-shell",
@@ -694,7 +713,8 @@
       "type": "registry:ui",
       "registryDependencies": [
         "@zedkit/skeleton",
-        "utils"
+        "utils",
+        "@zedkit/surface"
       ],
       "files": [
         {
