@@ -150,12 +150,12 @@ size_budget() {
 size_budget ui 43500
 # Marketing entry (separate from the main budget); measured 785 with GlassSurface only, 4437 on 3 Nov 2026 with LogoBand and Testimonials.
 size_budget ui 8000 marketing
-# 4 Nov 2026: measured 17051 on a clean build (rm -rf dist + tsbuildinfo) after
-# merging the GA setup fixes (repo-skill wiring, personas v2, closure v2 with
-# conditional install filters and Skill-tool//name reference split); budget is
-# measured + ~3%. Supersedes the 14000 shared bump. Follow-up before GA:
-# review dist size (70% above the 9800 baseline) and shrink, not raise again.
-size_budget ai 17600
+# 4 Nov 2026: dist-size review. Clean-measured 17148 (USAGE to kit data, drift
+# frontmatter/wiring/universe dedup; no behavior change); budget lowered to
+# 17400 to lock the gain. Note: measured + 3% would be 17662, above the old
+# budget, so headroom is ~1.5%. A 10%+ shrink needs a comment-strip step
+# (measured at -4196, proposed in the PR, not taken here).
+size_budget ai 17400
 
 if [ -f apps/docs/out/index.html ]; then
   if ! node apps/docs/scripts/check-first-load-budget.mjs; then

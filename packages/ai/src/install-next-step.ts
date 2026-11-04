@@ -14,7 +14,7 @@ const PRETTIER_CONFIG = [
   "prettier.config.mjs",
 ] as const;
 
-export function kitPrettierIgnoreCandidates(providers: readonly Provider[] | undefined): string[] {
+function kitPrettierIgnoreCandidates(providers: readonly Provider[] | undefined): string[] {
   const all = providers === undefined;
   const paths = [".agents/"];
   if (all || providers.some((p) => p === "cursor")) {
