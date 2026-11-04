@@ -923,6 +923,9 @@ importers:
       '@tanstack/react-table':
         specifier: 'catalog:'
         version: 9.3.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@zedtech/zedkit-core':
+        specifier: workspace:*
+        version: link:../core
       '@zedtech/zedkit-i18n':
         specifier: workspace:*
         version: link:../i18n
@@ -984,9 +987,6 @@ importers:
       '@types/react-dom':
         specifier: 'catalog:'
         version: 19.3.0(@types/react@19.3.0)
-      '@zedtech/zedkit-core':
-        specifier: workspace:*
-        version: link:../core
       '@zedtech/zedkit-quality':
         specifier: workspace:*
         version: link:../quality
