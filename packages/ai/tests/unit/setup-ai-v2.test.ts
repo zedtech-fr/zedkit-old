@@ -83,6 +83,33 @@ describe("setup-ai v2 kit", () => {
     expect(rubric).toContain("gate outcomes");
   });
 
+  it("documents run-3 scorer fixes S1–S5 in setup-ai SKILL and templates", () => {
+    const raw = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
+    expect(raw).toMatch(/Output order.*first message/iu);
+    expect(raw).toMatch(/headless/iu);
+    expect(raw).toMatch(/Always record.*every setup-log entry/iu);
+    expect(raw).toMatch(/selection question.*conditional/iu);
+    expect(raw).toContain("EXIT:<code>");
+    expect(raw).toMatch(/OOM-safe fallback/iu);
+    expect(raw).toMatch(/--concurrency=2/);
+    expect(raw).toMatch(/Sidecar cleanup/iu);
+    expect(raw).toMatch(/Phase C close — stale adopt sidecars/iu);
+    expect(raw).toMatch(/Phase E checklist/iu);
+    expect(raw).toMatch(/one.*kit-issue draft per friction/iu);
+    const log = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "setup-log.template.md"),
+      "utf8",
+    );
+    expect(log).toContain("Providers (always paste");
+    expect(log).toContain("EXIT:0");
+    expect(log).toMatch(/Sidecar cleanup/);
+    const issue = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "kit-issue.template.md"),
+      "utf8",
+    );
+    expect(issue).toContain("Kit root cause");
+  });
+
   it("installs templates beside setup-ai for every preset that ships setup-ai; validate stays clean", () => {
     const manifest = readManifest();
     if (!manifest.ok) throw manifest.error;

@@ -55,7 +55,7 @@ Score each axis 0-3. Cite evidence (file path, `file:line`, or transcript quote)
 - 0: Commands copied from docs, never run.
 - 1: Some run; the main gate untested and unexplained.
 - 2: Every gate (`check`, test, lint, typecheck, build) was run, or skipped with a stated reason and a safe alternative (for example a throwaway worktree).
-- 3: As 2, plus real durations, prerequisites (services, env) and known-flaky steps recorded in **`.agents/setup-log.md` gate outcomes** (exit code, duration, what did not run and why, safe alternative per row).
+- 3: As 2, plus real durations, prerequisites (services, env) and known-flaky steps recorded in **`.agents/setup-log.md` gate outcomes**, and each persisted gate log ends with **`EXIT:<code>`** (empty cited logs redone).
 
 ### 7. Skills and subagents relevance
 
@@ -68,7 +68,7 @@ Score each axis 0-3. Cite evidence (file path, `file:line`, or transcript quote)
 
 - 0: One provider, others never mentioned.
 - 1: Others mentioned without value.
-- 2: Cursor, Claude, Codex and Muse offered with a one-line value each; at least two wired from the same `.agents` source.
+- 2: Cursor, Claude, Codex and Muse **value table recorded** in plan and setup-log (all four one-line values); at least two wired from the same `.agents` source.
 - 3: As 2, and `validate` is green for every wired provider with no manual copy.
 
 ### 9. UX friction
@@ -76,7 +76,7 @@ Score each axis 0-3. Cite evidence (file path, `file:line`, or transcript quote)
 - 0: The user had to leave the flow to fix the tool (copy files by hand, edit config).
 - 1: Several detours or surprise questions.
 - 2: Zero manual file copies; at most the batched interview; a clear next step at each phase.
-- 3: As 2, with intro (modes, phases, deliverables, time) and an end summary the owner could act on in a minute.
+- 3: As 2, with **Tell the user first** as the first transcript output (including headless runs), and an end summary the owner could act on in a minute.
 
 ### 10. Self-improvement
 
