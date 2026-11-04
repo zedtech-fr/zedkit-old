@@ -10,6 +10,16 @@ These files ship in **this skill folder** at `.agents/skills/setup-ai/templates/
 | `templates/design.template.md`         | `.agents/design.md`                          |
 | `templates/glossary.template.md`       | `GLOSSARY.md` or `.agents/glossary.md`       |
 
+## Score and learn (phase E)
+
+Read in place, never copied wholesale:
+
+| Template                          | Use                                                       |
+| --------------------------------- | --------------------------------------------------------- |
+| `templates/setup-rubric.md`       | The 10-axis rubric (0–3 each) plus hard gates; self-score |
+| `templates/setup-log.template.md` | Entry block to append to `.agents/setup-log.md`           |
+| `templates/kit-issue.template.md` | One public-safe kit issue draft per friction found        |
+
 ## Catalog skills (repo copies)
 
 Copy from `templates/catalog/<name>/SKILL.md.tmpl` to `.agents/skills/<name>/SKILL.md` when the plan tier says **must** or **should**. Add YAML frontmatter (`name`, `description`) on copy.

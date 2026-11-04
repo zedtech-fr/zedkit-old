@@ -30,11 +30,11 @@
           "whenToUse": "When every developer and agent should share the same instructions and review workflow.",
           "whenNotToUse": "When you only need one provider's config — write that provider's file by hand instead.",
           "derivedFrom": null,
-          "example": "import { installKit } from \"@zedtech/zedkit-ai\";\nconst result = installKit({ dest: \".\", preset: \"core\", providers: [\"claude\", \"cursor\"] });\nif (!result.ok) throw result.error;\nfor (const action of result.value) console.log(action.kind, action.path);",
+          "example": "import { installKit } from \"@zedtech/zedkit-ai\";\nconst result = installKit({\n  dest: \".\",\n  preset: \"core\",\n  providers: [\"claude\", \"cursor\"],\n});\nif (!result.ok) throw result.error;\nfor (const action of result.value) console.log(action.kind, action.path);",
           "examples": [
             {
               "title": "Simple",
-              "code": "import { installKit } from \"@zedtech/zedkit-ai\";\nconst result = installKit({ dest: \".\", preset: \"core\", providers: [\"claude\", \"cursor\"] });\nif (!result.ok) throw result.error;\nfor (const action of result.value) console.log(action.kind, action.path);"
+              "code": "import { installKit } from \"@zedtech/zedkit-ai\";\nconst result = installKit({\n  dest: \".\",\n  preset: \"core\",\n  providers: [\"claude\", \"cursor\"],\n});\nif (!result.ok) throw result.error;\nfor (const action of result.value) console.log(action.kind, action.path);"
             }
           ],
           "adoption": {

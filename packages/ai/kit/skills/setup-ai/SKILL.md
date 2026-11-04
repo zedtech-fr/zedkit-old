@@ -12,19 +12,20 @@ Make the AI setup of **this** repo true and specific. Generic advice is already 
 When `/setup-ai` starts (or the user asks to set up AI), say this in plain language before phase A — no interview yet:
 
 - **Modes:** **fresh** (little or no agent setup yet) or **improve** (you already have `AGENTS.md`, rules, or provider folders — audit and extend, do not replace blindly).
-- **Phases:** **A** audit (inventory + parallel explore + gaps) → **B** discovery (mine docs and code, then **one batched interview of at most 8 questions**) → **C** build deep artifacts from kit templates → **D** propose repo skills from the catalog → write provider layers, verify, report.
+- **Phases:** **A** audit (inventory + parallel explore + gaps) → **B** discovery (mine docs and code, then **one batched interview of at most 8 questions**) → **C** build deep artifacts from kit templates → **D** propose repo skills from the catalog → write provider layers, verify, report → **E** score and learn.
 - **What they get:** verified root `AGENTS.md`, `.agents/product.md`, domain rules under `.agents/domain/`, `.agents/personas.md`, `.agents/design.md` when the repo has UI, nested rules where folders differ, optional repo-specific skills and subagents, and thin Cursor/Claude layers that match `.agents/`.
 - **Time:** about **15–45 minutes** for a typical app repo; large monorepos or workspace roots can take longer. They approve the plan before writes; in phase B they **answer or delegate the batched interview** (do not skip it). One extra provider question, offering all four providers with their one-line value, only when wiring is unclear.
 
 ## Phases (whole run)
 
-| Phase | Name      | What happens                                                                              |
-| ----- | --------- | ----------------------------------------------------------------------------------------- |
-| **A** | Audit     | Inventory, parallel explore, gap list (provider-neutral)                                  |
-| **B** | Discovery | Mine README, docs, vision, routes, schema; then **one batched interview** (≤ 8 questions) |
-| **C** | Build     | Deep artifacts under `.agents/` from kit templates (evidence + owner answers)             |
-| **D** | Skills    | Propose repo skills from the kit **catalog**; tier the plan (must / should / could)       |
-| **—** | Write     | Shared source, provider layers, verify, report, self-improvement                          |
+| Phase | Name            | What happens                                                                              |
+| ----- | --------------- | ----------------------------------------------------------------------------------------- |
+| **A** | Audit           | Inventory, parallel explore, gap list (provider-neutral)                                  |
+| **B** | Discovery       | Mine README, docs, vision, routes, schema; then **one batched interview** (≤ 8 questions) |
+| **C** | Build           | Deep artifacts under `.agents/` from kit templates (evidence + owner answers)             |
+| **D** | Skills          | Propose repo skills from the kit **catalog**; tier the plan (must / should / could)       |
+| **—** | Write           | Shared source, provider layers, verify, report                                            |
+| **E** | Score and learn | Self-score against the rubric, setup-log retro, kit-issue drafts, re-audit cadence        |
 
 Two modes, decided in phase A step 1: **fresh** (little or nothing exists) and **improve** (a setup exists: keep it, fix it, extend it).
 
@@ -176,15 +177,16 @@ Present one table covering phase A gaps, phase C artifacts, phase D skills, and 
 - The repo's own lint ignores the installed kit dirs (`.agents/`, provider folders): skills ship helper scripts, and a bare lint run must stay green — run it once to prove it.
 - A fresh reader, or a subagent given only the new files, can answer: what does this product do, what are the refund rules, how do I run the tests, where does X live, what must I never do here?
 
-## Report and self-improvement
+## Phase E — Score and learn
 
-Short report: what you created or changed, what you left alone and why, findings not fixed, everything marked `UNVERIFIED`.
+Short report first: what you created or changed, what you left alone and why, findings not fixed, everything marked `UNVERIFIED`.
 
 Then:
 
-1. **Self-score** — score 0–3 on each axis: discovery, personas, domain rules, design/identity, architecture, gates verified, skills relevance, provider parity, UX friction, self-improvement. Cite evidence per axis. (When the kit ships `setup-rubric.md`, use its definitions.)
-2. **`.agents/setup-log.md`** — append a retro entry (date, what worked, what hurt, scores, open kit frictions).
-3. **Kit friction** — for each setup friction caused by the kit, draft a short public issue title + body (no private repo names); give the owner the draft to paste.
+1. **Self-score** — open `templates/setup-rubric.md` and score 0–3 on each of the 10 axes. Cite evidence per axis (file path, `file:line`, or transcript quote); no evidence means no score above 1. The rubric sets the pass targets and hard gates.
+2. **Setup log** — append a retro entry to `.agents/setup-log.md` from `templates/setup-log.template.md`: date, what worked, what hurt, scores, decisions (`source: owner` where the owner chose), open kit frictions.
+3. **Kit friction** — for each setup friction caused by the kit, draft a short public-safe issue (title + body) from `templates/kit-issue.template.md`; give the owner the drafts to paste.
+4. **Re-audit cadence** — set the next check: after the next release, or when product, domain rules, or providers change; record the trigger in the log entry.
 
 For a bigger follow-up task, point the user at `/orchestrate` with the goal in one line.
 
