@@ -22,7 +22,7 @@ Which kit file or behavior caused the friction (for example `setup-ai` SKILL pha
 
 ## Kit file
 
-Path in the **kit** repo (for example `packages/ai/kit/skills/setup-ai/SKILL.md`). **Verify** it exists (`test -e` or search the installed kit tree) before filing. If you cannot verify, write **`UNVERIFIED: <why>`** instead of guessing.
+Path in the **installed kit** (`.agents/skills/setup-ai/…` in the repo) or **runtime package** (`node_modules/@zedtech/zedkit-ai/kit/…`). Run **`test -e`** on that path before filing. Kit monorepo authors may use `packages/ai/kit/…`. If you cannot verify, write **`UNVERIFIED: <why>`** instead of guessing.
 
 ## Proposed fix
 
