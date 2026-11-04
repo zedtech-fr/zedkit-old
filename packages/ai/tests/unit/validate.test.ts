@@ -105,6 +105,71 @@ describe("validateKit", () => {
     expect(found).toEqual(['personas.md: broken link to "./missing.md" (no such file)']);
   });
 
+  it("demands the command for /names the kit defines as commands", () => {
+    const kit = tempDir();
+    put(kit, "skills/alpha/SKILL.md", SKILL("alpha"));
+    put(kit, "skills/duo/SKILL.md", SKILL("duo"));
+    put(kit, "commands/duo.md", COMMAND("duo"));
+    const root = tempDir();
+    put(root, "skills/alpha/SKILL.md", `${SKILL("alpha")}\nPoint big tasks at \`/duo\`.\n`);
+    put(root, "skills/duo/SKILL.md", SKILL("duo"));
+    const found = validateKit(root, kit).map((issue) => `${issue.path}: ${issue.message}`);
+    expect(found).toEqual(['skills/alpha/SKILL.md: references command "duo", which this preset does not install']);
+  });
+
+  it("satisfies a /self mention from the file's own skill without the command", () => {
+    const kit = tempDir();
+    put(kit, "skills/duo/SKILL.md", SKILL("duo"));
+    put(kit, "commands/duo.md", COMMAND("duo"));
+    const root = tempDir();
+    put(root, "skills/duo/SKILL.md", `${SKILL("duo")}\nWhen \`/duo\` starts, say hello.\n`);
+    expect(validateKit(root, kit)).toEqual([]);
+  });
+
+  it("lets /names fall back to an installed skill when the kit defines no command", () => {
+    const kit = tempDir();
+    put(kit, "skills/alpha/SKILL.md", SKILL("alpha"));
+    put(kit, "skills/solo/SKILL.md", SKILL("solo"));
+    const root = tempDir();
+    put(root, "skills/alpha/SKILL.md", `${SKILL("alpha")}\nRun \`/solo\`.\n`);
+    put(root, "skills/solo/SKILL.md", SKILL("solo"));
+    expect(validateKit(root, kit)).toEqual([]);
+  });
+
+  it("demands the skill for Skill-tool refs even when an agent shares the name", () => {
+    const kit = tempDir();
+    put(kit, "skills/alpha/SKILL.md", SKILL("alpha"));
+    put(kit, "agents/beta.md", AGENT("beta"));
+    const root = tempDir();
+    put(root, "skills/alpha/SKILL.md", `${SKILL("alpha")}\nCall the Skill tool with "beta".\n`);
+    put(root, "agents/beta.md", AGENT("beta", "model: inherit\n"));
+    const found = validateKit(root, kit).map((issue) => `${issue.path}: ${issue.message}`);
+    expect(found).toEqual(['skills/alpha/SKILL.md: references skill "beta", which this preset does not install']);
+  });
+
+  it("demands the skill for skill `x` refs and the agent for agent `x` refs, even in user files", () => {
+    const kit = tempDir();
+    put(kit, "skills/duo/SKILL.md", SKILL("duo"));
+    put(kit, "agents/beta.md", AGENT("beta"));
+    const root = tempDir();
+    put(root, "skills/mine/SKILL.md", `${SKILL("mine")}\nUse skill \`duo\` and agent \`beta\`; the skill \`description\` holds the trigger.\n`);
+    const found = validateKit(root, kit).map((issue) => `${issue.path}: ${issue.message}`);
+    expect(found).toEqual([
+      'skills/mine/SKILL.md: references skill "duo", which this preset does not install',
+      'skills/mine/SKILL.md: references agent "beta", which this preset does not install',
+    ]);
+  });
+
+  it("satisfies refs to an adopt-shadowed skill installed as zk-<name>", () => {
+    const kit = tempDir();
+    put(kit, "skills/alpha/SKILL.md", SKILL("alpha"));
+    put(kit, "skills/duo/SKILL.md", SKILL("duo"));
+    const root = tempDir();
+    put(root, "skills/alpha/SKILL.md", `${SKILL("alpha")}\nUse skill \`duo\`.\n`);
+    put(root, "skills/zk-duo/SKILL.md", SKILL("duo"));
+    expect(validateKit(root, kit)).toEqual([]);
+  });
+
   it("flags a skill, agent or command that runs a skill which is not installed", () => {
     const root = tempDir();
     put(root, "skills/alpha/SKILL.md", `${SKILL("alpha")}\nCall the Skill tool with "beta".\n`);

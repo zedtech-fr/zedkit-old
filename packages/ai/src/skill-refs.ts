@@ -1,6 +1,6 @@
 // Original work by the same author.
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, sep } from "node:path";
 import { withoutMarkers } from "./conditional.js";
 
 const NAME = "[a-z0-9]+(?:-[a-z0-9]+)*";
@@ -40,6 +40,16 @@ export function slashRefNames(text: string): string[] {
 /** Skill names a file tells the agent to run: Skill tool calls and /commands. */
 export function skillRefNames(text: string): string[] {
   return [...new Set([...toolRefNames(text), ...slashRefNames(text)])];
+}
+
+/** "skill `x`" / "agent `x`" pairs, gated by that kind's universe. */
+function kindWordRefNames(text: string, universe: RefUniverse): ["skill" | "agent", string][] {
+  const names: ["skill" | "agent", string][] = [];
+  const labeled = new RegExp(`\\b(skill|agent)\\s+\`(${NAME})\``, "gu");
+  for (const [, word, name] of withoutMarkers(text).matchAll(labeled)) {
+    if (name && (word === "skill" ? universe.skills : universe.agents).has(name)) names.push([word as "skill" | "agent", name]);
+  }
+  return names;
 }
 
 export type RefFile = { path: string; text: string; kitOrigin: boolean };
@@ -102,36 +112,38 @@ function kindOf(name: string, universe: RefUniverse): "skill" | "agent" | "comma
   return undefined;
 }
 
-/**
- * Refs installed in no kind. Skill-tool calls count everywhere; /names,
- * backticked tokens and hyphenated whole words only for universe names,
- * the latter two only in kit-origin files (user prose is exempt).
- */
+/** Refs whose demanded kind is missing (Skill-tool/"skill `x`" = skill, "agent `x`" = agent, /name = command if the kit defines one, else any kind; bare backticked/hyphenated words match any kind in kit-origin files; /self satisfied). */
 export function danglingKitRefs(
   files: readonly RefFile[],
-  installed: ReadonlySet<string>,
+  installed: RefUniverse,
   universe: RefUniverse,
 ): SkillRefIssue[] {
   const issues: SkillRefIssue[] = [];
+  const all = new Set([...installed.skills, ...installed.agents, ...installed.commands]);
   for (const file of files) {
     const seen = new Set<string>();
-    const report = (name: string): void => {
-      if (installed.has(name) || seen.has(name)) return;
+    const report = (name: string, has: boolean, kind: "skill" | "agent" | "command"): void => {
+      if (has || seen.has(name)) return;
       seen.add(name);
-      issues.push({
-        path: file.path,
-        message: `references ${kindOf(name, universe) ?? "skill"} "${name}", which this preset does not install`,
-      });
+      issues.push({ path: file.path, message: `references ${kind} "${name}", which this preset does not install` });
     };
-    for (const name of toolRefNames(file.text)) report(name);
+    for (const name of toolRefNames(file.text)) report(name, installed.skills.has(name), "skill");
+    const self = file.path.split(sep)[1]?.replace(/\.md$/, "");
     for (const name of slashRefNames(file.text)) {
-      if (kindOf(name, universe) !== undefined) report(name);
+      if (universe.commands.has(name) && name !== self) {
+        report(name, installed.commands.has(name), "command");
+      } else {
+        const kind = kindOf(name, universe);
+        if (kind !== undefined) report(name, all.has(name), kind);
+      }
     }
+    for (const [word, name] of kindWordRefNames(file.text, universe)) report(name, installed[`${word}s`].has(name), word);
     if (!file.kitOrigin) continue;
     for (const name of backtickedRefNames(file.text)) {
-      if (kindOf(name, universe) !== undefined) report(name);
+      const kind = kindOf(name, universe);
+      if (kind !== undefined) report(name, all.has(name), kind);
     }
-    for (const name of wordRefNames(file.text, universe)) report(name);
+    for (const name of wordRefNames(file.text, universe)) report(name, all.has(name), kindOf(name, universe) ?? "skill");
   }
   return issues;
 }
