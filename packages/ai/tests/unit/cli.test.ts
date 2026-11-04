@@ -50,23 +50,33 @@ describe("cli", () => {
     expect(existsSync(join(dest, ".cursor"))).toBe(false);
   });
 
-  it("setup installs like init and prints the /setup-ai next step", () => {
+  it("setup installs with setup preset and prints the /setup-ai next step", () => {
     const dest = tempDir();
     const { code, text } = run("setup", dest, "--provider", "cursor");
     expect(code).toBe(0);
     expect(text).toContain("/setup-ai");
     expect(text).toContain("validate");
     expect(existsSync(join(dest, ".cursor/commands/setup-ai.md"))).toBe(true);
+    expect(existsSync(join(dest, ".agents/skills/domain-modeling/SKILL.md"))).toBe(true);
   });
 
-  it("setup twice is a no-op and validate stays ok", () => {
+  it("setup on an empty dir uses the setup preset, validate ok, second run no-op", () => {
     const dest = tempDir();
     expect(run("setup", dest, "--provider", "cursor").code).toBe(0);
+    expect(existsSync(join(dest, ".agents/skills/domain-modeling/SKILL.md"))).toBe(true);
+    expect(existsSync(join(dest, ".agents/agents/product-director.md"))).toBe(true);
+    expect(run("validate", dest)).toEqual({ code: 0, text: "ok", errors: "" });
     const again = run("setup", dest, "--provider", "cursor");
     expect(again.code).toBe(0);
     const writes = again.text.split("\n").filter((line) => /^(copy|link|write)\s/u.test(line));
     expect(writes).toEqual([]);
-    expect(run("validate", dest)).toEqual({ code: 0, text: "ok", errors: "" });
+  });
+
+  it("setup --preset starter installs starter skills only", () => {
+    const dest = tempDir();
+    expect(run("setup", dest, "--provider", "cursor", "--preset", "starter").code).toBe(0);
+    expect(existsSync(join(dest, ".agents/skills/domain-modeling/SKILL.md"))).toBe(false);
+    expect(existsSync(join(dest, ".agents/skills/ground-truth/SKILL.md"))).toBe(true);
   });
 
   it("setup keeps pre-existing .cursor skills, agents, and commands", () => {

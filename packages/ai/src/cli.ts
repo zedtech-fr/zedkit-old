@@ -10,8 +10,9 @@ import { checkDrift, validateKit } from "./validate.js";
 const USAGE = `zedkit-ai <command>
 
   setup [dir] [--provider ...] [--preset starter|setup|core|full] [--dry-run]
-      One-shot onboarding: same as init --adopt (keeps your existing agent
-      files on collision). Then run /setup-ai in your agent.
+      One-shot onboarding: preset setup by default (override with --preset);
+      same as init --adopt (keeps your existing agent files on collision).
+      Then run /setup-ai in your agent.
   init [dir] [--preset starter|setup|core|full] [--provider ...] [--adopt] [--dry-run]
       Copy skills, subagents, commands and an AGENTS.md template into dir
       (default .), then wire the providers (default all). Never overwrites
@@ -76,7 +77,8 @@ function runInstall(args: string[], sinks: Sinks, kind: "init" | "setup"): numbe
   const providers = parseProviders(values.provider ?? values.target);
   if (!providers.ok) return fail(providers.error.message, sinks);
   const dryRun = values["dry-run"] === true;
-  const preset = typeof values.preset === "string" ? values.preset : undefined;
+  const presetFlag = typeof values.preset === "string" ? values.preset : undefined;
+  const preset = presetFlag ?? (kind === "setup" ? "setup" : undefined);
   const adopt = kind === "setup" || values.adopt === true;
   const result = installKit({
     dest: resolve(positionals[0] ?? "."),

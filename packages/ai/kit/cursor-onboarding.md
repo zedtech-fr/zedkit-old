@@ -16,7 +16,7 @@ Install `@zedtech/zedkit-ai`, wire Cursor with adopt mode, run `/setup-ai` to ta
 
    Use `npm install -D @zedtech/zedkit-ai` when the repo has no pnpm lockfile.
 
-2. **Install the kit with adopt** (keeps existing agent files on name collision):
+2. **Install the kit with adopt** (keeps existing agent files on name collision; **`setup` uses the `setup` preset by default** — override with `--preset` when needed):
 
    ```sh
    npx zedkit-ai setup --provider cursor
