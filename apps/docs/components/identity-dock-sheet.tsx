@@ -70,6 +70,18 @@ function IdentityDockSheetDetents({
   );
 }
 
+function useShortViewport(): boolean {
+  return React.useSyncExternalStore(
+    (onStoreChange) => {
+      const mql = window.matchMedia("(max-height: 600px)");
+      mql.addEventListener("change", onStoreChange);
+      return () => mql.removeEventListener("change", onStoreChange);
+    },
+    () => window.matchMedia("(max-height: 600px)").matches,
+    () => false,
+  );
+}
+
 /** Non-modal bottom sheet with peek / half / full detents (docs IdentityDock only). */
 function IdentityDockSheet({
   open,
@@ -80,7 +92,9 @@ function IdentityDockSheet({
   detentGroupLabel,
   detentLabels,
 }: IdentityDockSheetProps) {
-  const [snap, setSnap] = React.useState<number | string | null>(SNAP_HALF);
+  const short = useShortViewport();
+  const [snap, setSnap] = React.useState<number | string | null>(null);
+  const activeSnap = snap ?? (short ? SNAP_FULL : SNAP_HALF);
   return (
     <DrawerPrimitive.Root
       data-slot="identity-dock-sheet-root"
@@ -88,7 +102,7 @@ function IdentityDockSheet({
       modal={false}
       direction="bottom"
       snapPoints={[SNAP_PEEK, SNAP_HALF, SNAP_FULL]}
-      activeSnapPoint={snap}
+      activeSnapPoint={activeSnap}
       setActiveSnapPoint={setSnap}
       fadeFromIndex={0}
       onOpenChange={onOpenChange}
@@ -105,12 +119,12 @@ function IdentityDockSheet({
         >
           <DrawerHandle />
           <IdentityDockSheetDetents
-            snap={snap}
+            snap={activeSnap}
             onSnap={setSnap}
             detentGroupLabel={detentGroupLabel}
             detentLabels={detentLabels}
           />
-          {children}
+          <Stack className="min-h-0 flex-1 gap-0 overflow-hidden">{children}</Stack>
         </DrawerPrimitive.Content>
       </DrawerPrimitive.Portal>
     </DrawerPrimitive.Root>

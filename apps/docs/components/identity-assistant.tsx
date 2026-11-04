@@ -9,12 +9,13 @@ import { ConversationPane, PreviewPane } from "@/components/identity-assistant-p
 import { ReferenceReportList } from "@/components/identity-references";
 import { AssistantHeading, UnavailableBanner, ViewSwitch, noticeText } from "@/components/identity-assistant-parts";
 import { useAssistantView } from "@/components/use-assistant-view";
+import { useAssistantSubmitHandlers } from "@/components/use-assistant-submit";
 import { useIdentityAssistant } from "@/components/use-identity-assistant";
 import { writeCreatorSessionBrief } from "@/lib/creator-session-brief";
-import { checkInput, type Unavailable } from "@/lib/identity-assistant";
+import { type Unavailable } from "@/lib/identity-assistant";
 import { useIdentityAssistantStore } from "@/lib/identity-assistant-store";
 import type { SessionState } from "@/lib/identity-creator-session";
-import { linksInText } from "@/lib/identity-links-in-text";
+import { specimenBriefFromThread } from "@/lib/brief-specimen-domain";
 
 /**
  * The identity assistant inside the editor: describe, generate, inspect, refine, then use. A proposal changes
@@ -46,13 +47,8 @@ export function IdentityAssistant({ tokens, onUse }: { tokens: IdentityTokens; o
   }, [ui.open]);
   const busy = session.pending !== null;
   const off = status !== null && !status.available ? status.reason : null;
-
-  function send() {
-    // The links are the ones written in the brief; there is no other place to put one.
-    const references = linksInText(brief).urls;
-    if (checkInput({ prompt: brief, references }) !== "ok") return;
-    submit(brief, references);
-  }
+  const { send, quickRefine } = useAssistantSubmitHandlers(brief, submit, busy, off !== null);
+  const domainBrief = specimenBriefFromThread(session.thread, brief);
 
   return (
     <Stack gap={4} id="create" role="region" aria-labelledby="identity-assistant-title" data-slot="identity-assistant" className="scroll-mt-24">
@@ -68,7 +64,7 @@ export function IdentityAssistant({ tokens, onUse }: { tokens: IdentityTokens; o
           <AssistantHeading />
           <ViewSwitch view={ui.view} onView={ui.setView} waiting={session.proposal !== null} previewRef={ui.previewButton} />
           <ReferenceReportList report={session.references} />
-          <ConversationPane view={ui.view} session={session} off={off} brief={brief} busy={busy} onBrief={setBrief} onSubmit={send} onCancel={cancel} textareaRef={ui.textarea} />
+          <ConversationPane view={ui.view} session={session} off={off} brief={brief} busy={busy} onBrief={setBrief} onSubmit={send} onQuickRefine={quickRefine} onCancel={cancel} textareaRef={ui.textarea} />
           <AssistantFeedback
             text={busy ? copy.working : session.notice && session.notice.kind !== "unavailable" ? noticeText(session.notice) : session.proposal ? copy.views.proposalReady : null}
             off={off}
@@ -78,6 +74,7 @@ export function IdentityAssistant({ tokens, onUse }: { tokens: IdentityTokens; o
             view={ui.view}
             proposal={session.proposal}
             tokens={tokens}
+            domainBrief={domainBrief}
             busy={busy}
             onUse={(next) =>
               ui.backToConversation(() => {
