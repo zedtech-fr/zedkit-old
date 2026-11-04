@@ -4,7 +4,7 @@ Placeholder rows for fictional **Acme Bookings** — **replace in phase C**.
 Used by `persona-review`. Each row is a **named audience**, not a job title
 alone. Keep evidence links.
 
-| Persona                          | Goals                                             | Jobs to be done                                   | Frustrations                      | Key journeys (routes)                     | Journey tests                          | Partial coverage                                                  | Evidence                                          |
+| Persona                          | Goals                                             | Jobs to be done                                   | Frustrations                      | Key journeys (routes or code paths)       | Journey tests                          | Partial coverage                                                  | Evidence                                          |
 | -------------------------------- | ------------------------------------------------- | ------------------------------------------------- | --------------------------------- | ----------------------------------------- | -------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------- |
 | **Rushed booker** (end customer) | Book the next available slot in under two minutes | Pick service → time → pay → done                  | Hidden fees, unclear cancel rules | `/book`, `/checkout`, `/confirm`          | `tests/e2e/booking-happy-path.test.ts` | —                                                                 | README audience; `source: owner` on cancel policy |
 | **Studio owner** (operator)      | Fill the calendar without manual DMs              | Publish services, set cancel policy, view payouts | Payout delays, no-show losses     | `/studio/calendar`, `/studio/payouts`     | no test — flag                         | `tests/e2e/payout-view.test.ts` covers payouts; calendar untested | `src/routes/studio/`                              |
@@ -16,4 +16,4 @@ alone. Keep evidence links.
 
 Keep the high bars from the installed `personas.md` template (loading states, mobile, security) where they apply to this product's UI. Link each bar to routes or tests when you customize.
 
-**Journey tests column:** a file path here must cover the **whole** **Key journeys (routes)** row after you open the test; otherwise write **`no test — flag`** exactly, and say what the nearest test does cover under **Partial coverage**.
+**Journey tests column:** a file path here must cover the **whole** **Key journeys** row after you open the test; otherwise write **`no test — flag`** exactly, and say what the nearest test does cover under **Partial coverage**. A journey may be a code path (`import → call → assert`) exercised by unit tests, not only a route exercised by e2e — the whole-journey rule still applies.

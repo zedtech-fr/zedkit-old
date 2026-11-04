@@ -1,6 +1,6 @@
 # Setup log
 
-Append one entry per `/setup-ai` run, newest first. Each entry records what the run learned so the next run (or the next repo) starts smarter.
+Append one entry per `/setup-ai` run, newest first. Each entry records what the run learned so the next run (or the next repo) starts smarter. Write each entry in one atomic write after all gates finished — never a stub grown by appends; `validate --setup` reads the finished file.
 
 <!-- setup-ai: copy the entry block below into `.agents/setup-log.md`, newest first -->
 
@@ -35,11 +35,11 @@ Append one entry per `/setup-ai` run, newest first. Each entry records what the 
 | ------------- | ----------------------------------- |
 | domain-change | deferred — no money paths in v1 yet |
 
-- **Gate outcomes:** (one row per gate command; each **`.agents/setup-log/gates/*.log`** starts with **`CMD:`** and ends with **`EXIT:<code>`** as its last line — **`npx zedkit-ai validate --setup`** checks plan coverage and log shape)
+- **Gate outcomes:** (one row per persisted gate log: every file in **`.agents/setup-log/gates/`** appears below by name, killed logs included; each `*.log` starts with **`CMD:`** and ends with **`EXIT:<code>`** as its last line — **`npx zedkit-ai validate --setup`** checks plan coverage, log shape, and that every log file is inventoried)
 
-| Gate command | Exit | Duration | Did not run / why | Safe alternative used                                    |
-| ------------ | ---- | -------- | ----------------- | -------------------------------------------------------- |
-| `pnpm test`  | 137  | 45s      | OOM kill          | `pnpm exec turbo run test --concurrency=2` with heap cap |
+| Log              | Gate command | Exit | Duration | Did not run / why | Safe alternative used                                    |
+| ---------------- | ------------ | ---- | -------- | ----------------- | -------------------------------------------------------- |
+| `gates/test.log` | `pnpm test`  | 137  | 45s      | OOM kill          | `pnpm exec turbo run test --concurrency=2` with heap cap |
 
 Example persisted log (`.agents/setup-log/gates/example.log` — **`EXIT:` must be the last line**; run validate/prettier in separate files). Capture with a redirect (not `tee` in a pipeline — subshell drops `$code`):
 

@@ -82,6 +82,17 @@ describe("cli", () => {
     expect(text).toContain(".cursor/skills/");
   });
 
+  it("scan prints the prettier hint early when kit paths are missing from .prettierignore", () => {
+    const dest = tempDir();
+    put(dest, "package.json", JSON.stringify({ devDependencies: { prettier: "3.9.0" } }));
+    const { code, text } = run("scan", dest);
+    expect(code).toBe(0);
+    expect(text).toContain("prettier: add to .prettierignore:");
+    expect(text).toContain(".agents/");
+    const plain = tempDir();
+    expect(run("scan", plain).text).not.toContain("prettier:");
+  });
+
   it("setup on an empty dir uses the setup preset, validate ok, second run no-op", () => {
     const dest = tempDir();
     expect(run("setup", dest, "--provider", "cursor").code).toBe(0);

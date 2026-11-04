@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type RefObject } from "react";
+import { useCallback, useEffect, useRef, type RefObject } from "react";
 import { Stack } from "@zedtech/zedkit-ui";
 
 import { ViewSwitch, type View } from "@/components/identity-assistant-parts";
@@ -87,6 +87,23 @@ function IdentityDockPanelScroll(props: {
   );
 }
 
+/** The composer empties on send like any chat; a failed or cancelled request puts the words back, so a retry costs no retyping. */
+function useKeepSentBrief(brief: string, session: SessionState, setBrief: (value: string) => void, sendBrief: () => void) {
+  const sent = useRef<{ text: string; notice: SessionState["notice"] } | null>(null);
+  const send = useCallback(() => {
+    sent.current = { text: brief, notice: session.notice };
+    sendBrief();
+  }, [brief, session.notice, sendBrief]);
+  useEffect(() => {
+    const last = sent.current;
+    if (!last || session.proposal !== null) return void (sent.current = null);
+    if (session.notice === null || session.notice === last.notice) return;
+    sent.current = null;
+    if (brief === "") setBrief(last.text);
+  }, [session.notice, session.proposal, brief, setBrief]);
+  return send;
+}
+
 export function IdentityDockAssistantPanel({
   previewTokens,
   onPreviewTokens,
@@ -100,8 +117,9 @@ export function IdentityDockAssistantPanel({
   const ui = useAssistantView({ proposalId: session.proposal?.requestId, onBrief: setBrief });
   const busy = session.pending !== null;
   const off = status !== null && !status.available ? status.reason : null;
-  const { send, quickRefine } = useAssistantSubmitHandlers(brief, submit, busy, off !== null, () => setBrief(""));
-  const domainBrief = specimenBriefFromThread(session.thread, brief);
+  const { send: sendBrief, quickRefine } = useAssistantSubmitHandlers(brief, submit, busy, off !== null, () => setBrief(""));
+  const send = useKeepSentBrief(brief, session, setBrief, sendBrief);
+  const domainBrief = specimenBriefFromThread(session.thread, session.proposal?.prompt ?? brief);
 
   useEffect(() => {
     const field = panelRef.current?.querySelector<HTMLTextAreaElement>("#identity-assistant-brief:not([disabled])");

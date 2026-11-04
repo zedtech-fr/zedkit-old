@@ -209,6 +209,7 @@ describe("setup-ai v2 kit", () => {
       "utf8",
     );
     expect(personas).toContain("Journey tests");
+    expect(personas).toContain("Key journeys (routes or code paths)");
     expect(personas).toContain("Partial coverage");
     const design = readFileSync(
       join(kitDir(), "skills", "setup-ai", "templates", "design.template.md"),
@@ -263,6 +264,7 @@ describe("setup-ai v2 kit", () => {
     );
     expect(log).not.toMatch(/\|\s*tee\s/);
     expect(log).toContain("| Rule ID |");
+    expect(log).toContain("one row per persisted gate log");
     expect(log).toContain("sed 's/^EXIT://'");
   });
 
@@ -377,6 +379,13 @@ describe("setup-ai v2 kit", () => {
     expect(rubric).toMatch(/AGENTS\.md.*ladder append/s);
     expect(rubric).toMatch(/git status --porcelain -uall/s);
     expect(rubric).not.toMatch(/setup-ai:validate-setup/iu);
+  });
+
+  it("keeps inventories in setup-log by default with root pointers", () => {
+    const skill = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
+    expect(skill).toMatch(/Unenforced rules.*inventory to setup-log.*not root/iu);
+    expect(skill).toMatch(/root `AGENTS\.md` keeps a one-line pointer/iu);
+    expect(skill).toMatch(/moving inventories to setup-log, root keeps pointers/iu);
   });
 
   it("documents diligence r6 scorer fixes in setup-ai SKILL and templates", () => {
