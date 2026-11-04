@@ -6,7 +6,8 @@ import { homeCopy } from "../ui/home/i18n/home-copy";
 import { persistDocsSiteLook, waitForAppliedLook } from "./identity-helpers";
 
 const BASE = "http://127.0.0.1:3100";
-const SHOTS = "/data/zk-work/home-link-shots";
+const SHOTS = process.env.HOME_LINK_SHOTS;
+const shotPath = (name: string) => (SHOTS ? `${SHOTS}/${name}` : `test-results/${name}`);
 
 for (const theme of ["light", "dark"] as const) {
   for (const { width, name } of [
@@ -21,7 +22,7 @@ for (const theme of ["light", "dark"] as const) {
 
       if (width >= 768) {
         const header = page.locator("#nd-nav");
-        await header.screenshot({ path: `${SHOTS}/consistency-after-${name}-${theme}.png`, animations: "disabled" });
+        await header.screenshot({ path: shotPath(`consistency-after-${name}-${theme}.png`), animations: "disabled" });
         const toggle = header.locator("[data-theme-toggle]");
         const search = header.locator("[data-search]").first();
         const github = header.locator('a[aria-label*="GitHub"]').first();
@@ -61,7 +62,7 @@ for (const theme of ["light", "dark"] as const) {
       expect(padding.bottom).toBeGreaterThanOrEqual(4);
       expect(padding.cursor).not.toBe("default");
 
-      await fullSteps.screenshot({ path: `${SHOTS}/consistency-after-full-steps-${name}-${theme}.png` });
+      await fullSteps.screenshot({ path: shotPath(`consistency-after-full-steps-${name}-${theme}.png`) });
     });
   }
 }
@@ -106,6 +107,6 @@ for (const theme of ["light", "dark"] as const) {
     expect(panelStyle.filter).toContain("blur(12px");
     const contrast = await readComputedContrast(page, link);
     expect(contrast).toBeGreaterThanOrEqual(4.5);
-    await panel.screenshot({ path: `${SHOTS}/guides-menu-after-1440-${theme}.png` });
+    await panel.screenshot({ path: shotPath(`guides-menu-after-1440-${theme}.png`) });
   });
 }
