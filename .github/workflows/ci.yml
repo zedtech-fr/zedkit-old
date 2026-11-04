@@ -55,11 +55,28 @@ jobs:
     if: needs.changes.outputs.workflow_only == 'true'
     steps:
       - uses: actions/checkout@v7
-      - uses: rhysd/actionlint@v1.7.10
-      - name: YAML lint workflow files
+        with:
+          fetch-depth: 0
+      - name: actionlint and yamllint on changed workflow files
         run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch origin "${{ github.base_ref }}"
+            base="origin/${{ github.base_ref }}"
+          elif [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            base="${{ github.event.before }}"
+          else
+            base="HEAD~1"
+          fi
+          mapfile -t files < <(git diff --name-only "$base"...HEAD -- '.github/workflows/')
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No workflow files in diff; skipping actionlint/yamllint."
+            exit 0
+          fi
+          curl -sSfL https://github.com/rhysd/actionlint/releases/download/v1.7.10/actionlint_1.7.10_linux_amd64.tar.gz | tar xz
+          ./actionlint "${files[@]}"
           python3 -m pip install --disable-pip-version-check yamllint==1.35.1
-          yamllint -d "{extends: default, rules: {line-length: disable, truthy: disable}}" .github/workflows/
+          yamllint -d "{extends: default, rules: {line-length: disable, truthy: disable}}" "${files[@]}"
 
   hygiene:
     runs-on: ubuntu-latest
