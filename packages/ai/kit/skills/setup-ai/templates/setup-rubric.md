@@ -27,14 +27,14 @@ Score each axis 0-3. Cite evidence (file path, `file:line`, or transcript quote)
 - 0: None, or the template untouched.
 - 1: Renamed template rows.
 - 2: Each persona has goals, jobs, frustrations, key journeys and routes, from evidence.
-- 3: As 2, plus evidence per persona, **Journey tests** column filled (path or `no test — flag`), and each journey linked to a test that covers it when claimed.
+- 3: As 2, plus evidence per persona, **Journey tests** column filled (path or `no test — flag`), and each positive test path covers the **whole** **Key journeys** column when claimed (reviewer: open the test).
 
 ### 3. Domain rules
 
 - 0: No domain artifact.
 - 1: A "traps" line or a glossary only.
 - 2: `.agents/domain/<area>.md` for each money-, state- or policy-bearing area: rules, invariants, edge cases, source `file:line`.
-- 3: As 2, plus each **current** rule has a test you opened and verified, **target** rules labelled, refund/cancel policies owner-confirmed, and a domain-change skill when money paths exist.
+- 3: As 2, plus each **current** rule has a test you opened and verified, **target** rules labelled, refund/cancel policies owner-confirmed, domain-change skill when money paths exist, and **Status** consistent (no **current** row that is prose-only unenforced without **`documented, not enforced`** in **Status**).
 
 ### 4. Design and identity
 
@@ -48,7 +48,7 @@ Score each axis 0-3. Cite evidence (file path, `file:line`, or transcript quote)
 - 0: Wrong or invented.
 - 1: Directory listing.
 - 2: Boundaries, ownership, ADRs and conventions with paths; unenforced rules found and listed.
-- 3: As 2, plus **Unenforced rules** inventory in `AGENTS.md` or setup-log with a lint proposal or ticket draft per rule.
+- 3: As 2, plus **Unenforced rules** inventory in `AGENTS.md` or setup-log with a lint proposal or ticket draft per **genuinely** unenforced rule (no **`enforced by`** without opening the checker; no already-enforced rules listed as prose-only).
 
 ### 6. Commands and gates verified
 
@@ -104,3 +104,5 @@ Score each axis 0-3. Cite evidence (file path, `file:line`, or transcript quote)
 5. **Report format (required):** one line `mean (8 axes) | <value> | pass|fail`; one line `Owner-dependent axes | discovery <n>, domain rules <n> | <optional: simulated owner cap>`.
 6. For hard gate 2, compare `git diff --name-only` and status to the plan in the transcript, **`PLAN.md`**, or **`.agents/setup-log/plan.md`** — confirm an **`AGENTS.md` ladder** row exists when the ladder changed.
 7. List friction in the form: what happened, which kit file caused it, proposed fix. Each item becomes a fix PR or a kit issue.
+8. **Personas:** any positive **Journey tests** cell must cite a test that covers the **whole** stated journey (open the test); otherwise expect **`no test — flag`**.
+9. **Domain / AGENTS:** **Status** vs **Unenforced rules** must agree; spot-check **`enforced by`** claims against opened checkers.

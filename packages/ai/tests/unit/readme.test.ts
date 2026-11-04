@@ -55,6 +55,24 @@ describe("package README", () => {
     }
   });
 
+  it("upgrade notes name the real CLI, sidecars, and measured score", () => {
+    const readme = readFileSync(fileURLToPath(new URL("../../README.md", import.meta.url)), "utf8");
+    const at = readme.indexOf("## Upgrading from 0.12");
+    expect(at, "upgrade section").toBeGreaterThanOrEqual(0);
+    const next = readme.indexOf("\n## ", at + 1);
+    const section = readme.slice(at, next === -1 ? undefined : next);
+    expect(section).toContain("npx @zedtech/zedkit-ai setup");
+    expect(section).toContain(".kit.md");
+    expect(section).toContain("zk-review");
+    expect(section).toContain("validate --setup");
+    expect(section).toContain(".agents/setup-log");
+    expect(section).toContain("2.25/3");
+    expect(section).toContain("composer-2.5");
+    expect(section).toContain("simulated owner");
+    expect(section).not.toMatch(/\bGA\b/);
+    expect(section).not.toMatch(/generally available/i);
+  });
+
   it("pins no kit counts that rot as the kit grows", () => {
     const readme = readFileSync(fileURLToPath(new URL("../../README.md", import.meta.url)), "utf8");
     const counts = [...readme.matchAll(/\b\d+ (subagents|skills|commands|agents)\b/g)].map(

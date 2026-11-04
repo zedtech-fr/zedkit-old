@@ -6,6 +6,8 @@ Fictional **Acme Bookings** example. Copy to `.agents/domain/<area>.md` (rename 
 
 Rules for **slot lifecycle**, **cancellation**, **refunds**, and **studio payout timing**. Money-bearing: every rule cites code or `source: owner`.
 
+**Status column:** `current` means the rule applies today. Do not mark a rule **`current`** while listing the same prose only under **Unenforced rules** — use **`current (documented, not enforced)`** in **Status** (or **`target`**) until a test or linter enforces it.
+
 ## Rules
 
 | ID   | Status  | Rule                                                                                        | Source                            | Test                                  |

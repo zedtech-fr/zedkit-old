@@ -15,3 +15,5 @@ alone. Keep evidence links.
 ## Review bars (unchanged from kit)
 
 Keep the high bars from the installed `personas.md` template (loading states, mobile, security) where they apply to this product's UI. Link each bar to routes or tests when you customize.
+
+**Journey tests column:** a file path here must cover the **whole** **Key journeys (routes)** row after you open the test; otherwise write **`no test — flag`** exactly.
