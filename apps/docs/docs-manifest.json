@@ -400,6 +400,16 @@
         "Controlled": "TabsControlledDemo"
       }
     },
+    "Horizontal scroll gallery row": {
+      "package": "@zedtech/zedkit-ui",
+      "component": "ScrollGallery",
+      "props": "ScrollGalleryProps",
+      "source": "scroll-gallery.tsx",
+      "demo": "ScrollGalleryIdentityDemo",
+      "examples": {
+        "Filter chips": "ScrollGalleryChipsDemo"
+      }
+    },
     "Show toast notifications": {
       "package": "@zedtech/zedkit-ui",
       "component": "Toaster",
