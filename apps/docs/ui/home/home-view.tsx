@@ -1,5 +1,5 @@
 import dynamic from "next/dynamic";
-import { Stack } from "@zedtech/zedkit-ui";
+import { SectionScroll, Stack } from "@zedtech/zedkit-ui";
 import type { HomeEntryPoint } from "@/content/home-entry-points";
 
 const HomeHero = dynamic(() => import("@/ui/home/home-hero").then((mod) => ({ default: mod.HomeHero })));
@@ -28,13 +28,13 @@ export function HomeView({
   entryPoints: HomeEntryPoint[];
 }) {
   return (
-    <div id="home-page" className="min-w-0" data-home-marketing="">
+    <SectionScroll id="home-page" className="min-w-0" data-home-marketing="">
       <HomeHero />
       <HomeBelowHero
         featuredPackage={featuredPackage}
         uiGalleryStats={uiGalleryStats}
         entryPoints={entryPoints}
       />
-    </div>
+    </SectionScroll>
   );
 }

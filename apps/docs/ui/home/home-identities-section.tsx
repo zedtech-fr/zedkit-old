@@ -19,6 +19,7 @@ export function HomeIdentitiesSection() {
       containerWidth="wide"
       id="identities"
       title={homeIdentityLooksCopy.title}
+      snap="none"
       {...HOME_SECTION_REVEAL_PROPS}
       {...HOME_MARKETING_ROOT_PROPS}
     >
