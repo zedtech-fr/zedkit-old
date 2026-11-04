@@ -376,6 +376,16 @@ describe("a11y", () => {
           selected={["a"]}
           onChange={() => {}}
         />
+        <OptionCards
+          multiple={false}
+          label="Delivery"
+          options={[
+            { id: "a", title: "Alpha" },
+            { id: "b", title: "Beta" },
+          ]}
+          selected={["a"]}
+          onChange={() => {}}
+        />
       </>,
     );
     await expectNoViolations(container);

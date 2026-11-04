@@ -1112,10 +1112,12 @@ export interface OptionCardProps {
     className?: string;
     // (undocumented)
     description?: React_2.ReactNode;
+    name?: string | undefined;
     // (undocumented)
     onChange: () => void;
     // (undocumented)
     title: React_2.ReactNode;
+    type?: "checkbox" | "radio";
 }
 
 // @public (undocumented)
@@ -1127,6 +1129,7 @@ export interface OptionCardsProps {
     className?: string;
     // (undocumented)
     label?: string;
+    multiple?: boolean;
     // (undocumented)
     onChange: (ids: string[]) => void;
     // (undocumented)

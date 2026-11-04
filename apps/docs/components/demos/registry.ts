@@ -101,6 +101,7 @@ import {
 } from "./marketing-demo";
 import { WizardComposedDemo } from "./wizard-composed-demo";
 import { WizardDemo } from "./wizard-demo";
+import { WizardPickOneDemo } from "./wizard-pick-one-demo";
 import { WizardSoloDemo } from "./wizard-solo-demo";
 import { FourStateEmptyDemo } from "./four-state-empty-demo";
 import { FourStateErrorDemo } from "./four-state-error-demo";
@@ -260,6 +261,7 @@ export const demoRegistry = {
   MarketingChromeDemo: { Demo: MarketingChromeDemo, file: "marketing-demo.tsx" },
   WizardComposedDemo: { Demo: WizardComposedDemo, file: "wizard-composed-demo.tsx" },
   WizardDemo: { Demo: WizardDemo, file: "wizard-demo.tsx" },
+  WizardPickOneDemo: { Demo: WizardPickOneDemo, file: "wizard-pick-one-demo.tsx" },
   WizardSoloDemo: { Demo: WizardSoloDemo, file: "wizard-solo-demo.tsx" },
 } as const satisfies Record<string, DemoEntry>;
 
