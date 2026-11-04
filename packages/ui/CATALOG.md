@@ -145,7 +145,7 @@ cn("px-4", "px-2"); // "px-2" — last conflicting utility wins
 - See also: `Theme an admin app (dark/light included)`, `Group content in a card section`, `Reveal and react with motion on any element`
 - Examples: Entrance with stagger, Hover feedback, Staggered children
 - A11y: Every utility and attribute is switched off under `prefers-reduced-motion: reduce`, with content left visible and in place. Hover lift only applies on devices that hover, so it never sticks after a tap.
-- Troubleshooting: Nothing animates — check the OS reduced-motion setting first. Content stays hidden — `data-reveal="pending"` and `data-stagger="pending"` hide content until your code sets them to `"in"`. Stagger has no delay — `stagger-*` delays an animation class (`animate-fade-up stagger-2`), not a transition.
+- Troubleshooting: Nothing animates — check the OS reduced-motion setting first. Content stays hidden — `data-reveal="pending"` and `data-stagger="pending"` hide content until your code sets them to `"in"`. Stagger has no delay — `stagger-*` delays an animation class (`animate-fade-up stagger-2`), not a transition. Parallax travel follows `--zk-motion-intensity` (default 1, `0` = no shift) times `--zk-motion-mobile` (`0.5` under 40rem); override on a subtree (`.hero { --zk-motion-intensity: 0.3 }`), not as an identity token. Derived amplitude is `min(calc(var(--zk-reveal-distance) * 8), var(--zk-parallax-max-shift, 120px))` (x-axis cap `12vw`). Sticky offset is `--zk-pin-top` (`calc(var(--zk-header-height) + 1rem)`).
 
 ```ts
 import { Card } from "@zedtech/zedkit-ui";
