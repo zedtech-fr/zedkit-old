@@ -183,6 +183,13 @@ describe("setup-ai v3: scored", () => {
     for (const field of ["**Reading:**", "**Routing:**", "**Nested:**"]) expect(log, field).toContain(field);
   });
 
+  it("phase E writes the setup-log entry atomically and validates the finished file", () => {
+    const raw = read("SKILL.md");
+    expect(raw).toMatch(/write the entry in \*\*one atomic write\*\*/u);
+    expect(raw).toMatch(/run `validate --setup` only against the finished file/u);
+    expect(read("templates", "setup-log.template.md")).toMatch(/one atomic write after all gates finished/u);
+  });
+
   it("the CLI documents scan and the depth checks", () => {
     const usage = usageText();
     expect(usage).toMatch(/^ {2}scan \[dir\]/mu);

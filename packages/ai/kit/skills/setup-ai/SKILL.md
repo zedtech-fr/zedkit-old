@@ -364,7 +364,7 @@ Run **`npx zedkit-ai validate --setup`** (add **`--plan <file>`** if the plan is
 
 ## Phase E — Score and learn
 
-If the run may be **cut short** (time, OOM, or a long main gate): still attempt Phase E **first as a minimal closing report** — append the **setup-log entry** (scores stub + gate table below) **before** starting the heaviest gate; run the **main gate last** (or in the background) and update the log when it finishes.
+If the run may be **cut short** (time, OOM, or a long main gate): still attempt Phase E **first as a minimal closing report** — append the **setup-log entry** (scores stub + gate table below) **before** starting the heaviest gate; run the **main gate last** (or in the background) and update the log when it finishes. On the normal path do the reverse: capture every gate's persisted output first, write the entry in **one atomic write** (no stub, no progressive appends), and run `validate --setup` only against the finished file — validation reads whatever is on disk, so a half-written log fails on rows you meant to add.
 
 Short report first: what you created or changed, what you left alone and why, findings not fixed, everything marked `UNVERIFIED`.
 
