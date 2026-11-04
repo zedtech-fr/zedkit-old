@@ -112,6 +112,7 @@
     "RouteModalDirection",
     "RouteModalSize",
     "RouteModalVariant",
+    "ScrollReset",
     "ScrollScene",
     "ScrollScenes",
     "SecretField",

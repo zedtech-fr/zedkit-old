@@ -1263,6 +1263,20 @@ export type RouteModalVariant = "drawer" | "dialog";
 // @public
 export const SCROLL_SCENES_MAX = 8;
 
+// @public
+export function ScrollReset(input: ScrollResetProps): null;
+
+// @public (undocumented)
+export interface ScrollResetOptions {
+    behavior?: "auto" | "smooth";
+    target?: () => HTMLElement | null;
+}
+
+// @public (undocumented)
+export interface ScrollResetProps extends ScrollResetOptions {
+    routeKey: string;
+}
+
 // @public (undocumented)
 export interface ScrollScene {
     caption: React_2.ReactNode;
@@ -1544,6 +1558,9 @@ export function useOnlineStatus(): boolean;
 
 // @public
 export function usePortalContainer(): HTMLElement | undefined;
+
+// @public
+export function useScrollReset(routeKey: string, options?: ScrollResetOptions): void;
 
 // @public (undocumented)
 export function useUiMessages(): ZedkitUiMessages;
