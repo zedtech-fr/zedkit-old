@@ -33,6 +33,22 @@ test.describe("IdentityDock", () => {
     await expect(brief(page)).toHaveValue("A calm SaaS dashboard");
   });
 
+  test("Escape and close return focus to the dock trigger", async ({ page }) => {
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const trigger = dock(page).locator("[data-slot='identity-dock-trigger']");
+    await trigger.focus();
+    await page.keyboard.press("Control+I");
+    await expect(brief(page)).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(trigger).toBeFocused();
+
+    await page.keyboard.press("Control+I");
+    await expect(brief(page)).toBeVisible();
+    await page.getByRole("button", { name: "Close identity assistant" }).click();
+    await expect(trigger).toBeFocused();
+  });
+
   test("390px: quota feedback stays visible inside the dock panel", async ({ page }) => {
     await service(page, (_posted, route) =>
       route.fulfill({

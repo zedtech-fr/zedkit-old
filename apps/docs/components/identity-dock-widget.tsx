@@ -10,6 +10,7 @@ import {
   IdentityDockTrigger,
   Stack,
   Text,
+  cn,
   identityPresets,
   isPresetId,
   parseIdentityTokens,
@@ -70,13 +71,31 @@ function IdentityDockWidget() {
 
   return (
     <IdentityDock data-testid="identity-dock" className="pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-0">
+      <IdentityDockTrigger
+        ref={triggerRef}
+        aria-expanded={expanded}
+        aria-label={identityDockCopy.pillLabel}
+        aria-keyshortcuts="Control+I Meta+I"
+        title={identityDockCopy.shortcutHint}
+        tabIndex={expanded ? -1 : undefined}
+        className={cn(expanded && "pointer-events-none fixed size-px overflow-hidden opacity-0")}
+        onClick={() => setExpanded(true)}
+      >
+        <IdentityDockSwatch />
+        <Text typeRole="label" className="truncate">{identityDockCopy.pillLabel}</Text>
+      </IdentityDockTrigger>
       {expanded ? (
         narrow ? (
-          <IdentityDockSheet open={expanded} onOpenChange={setExpanded}>
+          <IdentityDockSheet
+            open={expanded}
+            onOpenChange={setExpanded}
+            aria-label={identityDockCopy.panelTitle}
+            detentLabels={identityDockCopy.detentLabels}
+            detentGroupLabel={identityDockCopy.detentGroupLabel}
+          >
             <Stack
               data-slot="identity-dock-panel"
               data-state="open"
-              aria-label={identityDockCopy.panelTitle}
               className="min-h-0 flex-1 gap-0 overflow-hidden"
             >
               {panel}
@@ -87,19 +106,7 @@ function IdentityDockWidget() {
             {panel}
           </IdentityDockPanel>
         )
-      ) : (
-        <IdentityDockTrigger
-          ref={triggerRef}
-          aria-expanded={false}
-          aria-label={identityDockCopy.pillLabel}
-          aria-keyshortcuts="Control+I Meta+I"
-          title={identityDockCopy.shortcutHint}
-          onClick={() => setExpanded(true)}
-        >
-          <IdentityDockSwatch />
-          <Text typeRole="label" className="truncate">{identityDockCopy.pillLabel}</Text>
-        </IdentityDockTrigger>
-      )}
+      ) : null}
     </IdentityDock>
   );
 }

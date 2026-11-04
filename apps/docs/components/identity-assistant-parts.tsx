@@ -167,9 +167,13 @@ export function Thread({ turns }: { turns: readonly Turn[] }) {
   );
 }
 
-export function UnavailableBanner({ reason }: { reason: Unavailable }) {
+export function UnavailableBanner({ reason, live = true }: { reason: Unavailable; live?: boolean }) {
   return (
-    <Text role="status" className="rounded-md border border-border bg-muted px-3 py-2 text-sm" data-assistant-unavailable="">
+    <Text
+      role={live ? "status" : undefined}
+      className="rounded-md border border-border bg-muted px-3 py-2 text-sm"
+      data-assistant-unavailable=""
+    >
       {copy.unavailable(reason)}
     </Text>
   );

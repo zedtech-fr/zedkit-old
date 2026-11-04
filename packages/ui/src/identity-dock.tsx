@@ -55,7 +55,9 @@ function IdentityDockPanel({ open, className, children, ...props }: IdentityDock
       className={cn(
         "flex max-h-drawer-sheet-max-height w-full flex-col overflow-hidden rounded-t-lg border border-border bg-background shadow-lg motion-safe:transition-[transform,opacity] motion-reduce:transition-none sm:w-full sm:max-w-sm sm:rounded-lg",
         signatureMotionClass.glide,
-        open ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none translate-y-full opacity-0 sm:translate-y-2 sm:opacity-0",
+        open
+          ? "pointer-events-auto opacity-100 motion-safe:translate-y-0 motion-reduce:translate-y-0"
+          : "pointer-events-none opacity-0 motion-reduce:translate-y-0 motion-safe:translate-y-full motion-safe:sm:translate-y-2",
         className,
       )}
       {...props}

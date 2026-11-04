@@ -42,7 +42,7 @@ export function IdentityDockAssistantGrid(props: {
       />
       <Stack gap={4} className="min-w-0">
         <ReferenceReportList report={props.session.references} />
-        <DockFeedback text={props.feedbackText} off={props.off} />
+        <DockFeedback text={props.feedbackText} off={props.off} busy={props.busy} />
         <PreviewPane
           view={props.view}
           proposal={props.session.proposal}

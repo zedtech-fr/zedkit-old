@@ -603,4 +603,7 @@ html [data-vaul-drawer-direction="right"] [data-vaul-handle] {
     animation: none !important;
     transition: none !important;
   }
+  html [data-slot="identity-dock-sheet"][data-vaul-drawer] {
+    transform: none !important;
+  }
 }

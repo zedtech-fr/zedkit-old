@@ -18,11 +18,17 @@ export function useIdentityDockKeyboard(expanded: boolean, setExpanded: (open: b
       if (event.key === "Escape" && expanded) {
         event.preventDefault();
         setExpanded(false);
-        triggerRef.current?.focus();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [expanded, setExpanded]);
+
+  useEffect(() => {
+    if (expanded) return;
+    const id = requestAnimationFrame(() => triggerRef.current?.focus());
+    return () => cancelAnimationFrame(id);
+  }, [expanded]);
+
   return triggerRef;
 }
