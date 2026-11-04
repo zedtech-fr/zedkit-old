@@ -7,7 +7,7 @@ import { ALL_PROVIDERS, installKit, type Provider } from "./install.js";
 import { installNextStepLines } from "./install-next-step.js";
 import { kitDir, readManifest } from "./kit.js";
 import { checkSetup } from "./setup-check.js";
-import { checkDrift, checkKitDocs, validateKit } from "./validate.js";
+import { checkDrift, checkKitDocs, checkPlaceholders, validateKit } from "./validate.js";
 
 // Help text lives in kit/usage.txt (shipped data, not code); the one-line
 // fallback keeps --help total on a broken install.
@@ -103,7 +103,12 @@ function runValidate(args: string[], sinks: Sinks): number {
   const nested = join(dir, ".agents");
   const agentsDir = existsSync(nested) ? nested : dir;
   const projectRoot = agentsDir === dir ? dirname(dir) : dir;
-  const issues = [...validateKit(agentsDir), ...checkDrift(projectRoot, agentsDir), ...checkKitDocs(projectRoot, agentsDir)];
+  const issues = [
+    ...validateKit(agentsDir),
+    ...checkDrift(projectRoot, agentsDir),
+    ...checkKitDocs(projectRoot, agentsDir),
+    ...checkPlaceholders(projectRoot, agentsDir),
+  ];
   if (parsed.value.values.setup === true) {
     const plan = parsed.value.values.plan;
     const extra = checkSetup(projectRoot, typeof plan === "string" ? { plan } : {});

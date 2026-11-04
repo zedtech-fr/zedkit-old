@@ -488,3 +488,45 @@ export function checkKitDocs(projectRoot: string, source: string, kit: string = 
   });
   return run.ok ? run.value : [];
 }
+
+/**
+ * Flag markdown links whose target opens with `<`: a placeholder the adopter
+ * must replace (`[AGENTS.md](<path>/AGENTS.md)` ships dead). Installed root
+ * docs and `.agents` files are scanned; kit template sources are exempt
+ * (they document the placeholder form), as are fenced blocks and symlinks
+ * (a linked CLAUDE.md reports once, under AGENTS.md). Paths are relative
+ * to `projectRoot`.
+ */
+export function checkPlaceholders(projectRoot: string, source: string): Issue[] {
+  const run = tryCatch(() => {
+    const issues: Issue[] = [];
+    const scan = (file: string, rel: string): void => {
+      const stat = tryCatch(() => lstatSync(file));
+      if (!stat.ok || stat.value.isSymbolicLink() || !stat.value.isFile()) return;
+      const seen = new Set<string>();
+      let fenced = false;
+      for (const line of read(file).split("\n")) {
+        if (/^\s*(`{3,}|~{3,})/.test(line)) {
+          fenced = !fenced;
+          continue;
+        }
+        if (fenced) continue;
+        for (const match of line.matchAll(/!?\[[^\]]*\]\(([^)\s]+)(?:\s+[^)]*)?\)/g)) {
+          const target = match[1] ?? "";
+          if (!target.startsWith("<") || seen.has(target)) continue;
+          seen.add(target);
+          issues.push({ path: rel, message: `placeholder link to "${target}" (replace <...> with a real path)` });
+        }
+      }
+    };
+    for (const name of ["AGENTS.md", "CLAUDE.md"]) scan(join(projectRoot, name), name);
+    if (existsSync(source)) {
+      for (const entry of readdirSync(source, { recursive: true, encoding: "utf8" })) {
+        if (!entry.endsWith(".md") || entry.endsWith(".kit.md") || entry.endsWith(".template.md")) continue;
+        scan(join(source, entry), relative(projectRoot, join(source, entry)));
+      }
+    }
+    return issues;
+  });
+  return run.ok ? run.value : [];
+}
