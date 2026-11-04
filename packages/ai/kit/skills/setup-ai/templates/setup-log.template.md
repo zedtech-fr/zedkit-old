@@ -22,11 +22,11 @@ Append one entry per `/setup-ai` run, newest first. Each entry records what the 
 - **Routing:** provider cursor; scout = {cheap fast model}, worker = {mid}, lead = inherit; readers passed the scout model on every spawn; file at `.agents/model-routing.md`.
 - **Nested:** extended `apps/web/AGENTS.md` and `packages/billing/AGENTS.md` in place, linked to `.agents/domain/` (log it as `nested-agents: extended — <files>`, `none — <reason>` or `kept — <reason>`)
 - **Plan gaps:** paths changed after the plan table but missing rows (or: none — reconciled with `git diff --name-only` and **`npx zedkit-ai validate --setup`** clean; use **`--plan <file>`** when the plan is not **`PLAN.md`** at the repo root or **`.agents/setup-log/plan.md`**)
-- **Unenforced rules:** (architecture score 3 — or: none)
+- **Unenforced rules:** (architecture score 3 — or: none; cite the domain rule ID for domain rules, e.g. `B-01`)
 
-| Prose rule (AGENTS or nested) | Lint / CI proposal or ticket draft | Evidence                   |
-| ----------------------------- | ---------------------------------- | -------------------------- |
-| "Never commit secrets"        | add gitleaks to CI job X           | `.github/workflows/ci.yml` |
+| Rule ID | Prose rule (AGENTS or nested) | Lint / CI proposal or ticket draft | Evidence                   |
+| ------- | ----------------------------- | ---------------------------------- | -------------------------- |
+| —       | "Never commit secrets"        | add gitleaks to CI job X           | `.github/workflows/ci.yml` |
 
 - **Sidecar cleanup:** removed `.agents/personas.kit.md` — sidecar was only the superseded Acme template after phase C edit (or: none)
 - **Deferred skill stubs:** (or: none — all high-risk types installed)

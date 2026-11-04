@@ -265,6 +265,7 @@ describe("setup-ai v2 kit", () => {
       "utf8",
     );
     expect(log).not.toMatch(/\|\s*tee\s/);
+    expect(log).toContain("| Rule ID |");
     expect(log).toContain("one row per persisted gate log");
     expect(log).toContain("sed 's/^EXIT://'");
   });

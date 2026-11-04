@@ -137,4 +137,4 @@ Four more axes, scored 0-3 like the others, each measurable from files. **Every 
 6. For hard gate 2, compare `git diff --name-only` and status to the plan in the transcript, **`PLAN.md`**, or **`.agents/setup-log/plan.md`** — confirm an **`AGENTS.md` ladder** row exists when the ladder changed.
 7. List friction in the form: what happened, which kit file caused it, proposed fix. Each item becomes a fix PR or a kit issue.
 8. **Personas:** any positive **Journey tests** cell must cite a test that covers the **whole** stated journey (open the test); otherwise expect **`no test — flag`**.
-9. **Domain / AGENTS:** **Status** vs **Unenforced rules** must agree; spot-check **`enforced by`** claims against opened checkers.
+9. **Domain / AGENTS:** **Status** vs **Unenforced rules** must agree; spot-check **`enforced by`** claims against opened checkers. Reconcile: walk every `current` rule in root/nested `AGENTS.md` and `.agents/domain/*.md` — each genuinely unenforced one is inventoried (domain rows by ID); no inventoried rule is actually enforced.
