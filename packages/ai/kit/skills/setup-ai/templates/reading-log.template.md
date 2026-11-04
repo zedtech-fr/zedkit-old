@@ -1,9 +1,11 @@
 # Reading log
 
-Written in phase B to `.agents/setup-log/reading.md` after the readers report. `npx zedkit-ai validate --setup` checks it (axis D1): one numbered row per reader, scaled to the repo (see `npx zedkit-ai scan`), plus `file:line` evidence.
+Written in phase B to `.agents/setup-log/reading.md` after the readers report. `npx zedkit-ai validate --setup` checks it (axis D1): one numbered row per reader, scaled to the repo (see `npx zedkit-ai scan`), plus `file:line` evidence, and a run-budget statement.
 
 **Repo size:** {small|medium|large} ({n} files) — {n} readers, one per slice (from `npx zedkit-ai scan`).
 **Tier:** readers ran on the **scout** tier ({model or `inherit`}); synthesis on the **lead** tier. See `.agents/model-routing.md`.
+**Budget:** {A1 run budget, or `none found`} — every reader stayed within it. The only overrun allowed is owner-approved, one line under **Budget exceptions**.
+**Budget exceptions:** none — or `owner-approved: reader {n} read {x} files (budget {y}), approved by interview Q{k}`.
 
 | Slice | Reader paths       | Tier  | Rules | Spot-checked                  | Conflicts | Gaps |
 | ----- | ------------------ | ----- | ----- | ----------------------------- | --------- | ---- |

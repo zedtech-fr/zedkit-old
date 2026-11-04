@@ -209,6 +209,8 @@ describe("setup-ai v2 kit", () => {
       "utf8",
     );
     expect(personas).toContain("Journey tests");
+    expect(personas).toContain("Key journeys (routes or code paths)");
+    expect(personas).toContain("Partial coverage");
     const design = readFileSync(
       join(kitDir(), "skills", "setup-ai", "templates", "design.template.md"),
       "utf8",
@@ -226,6 +228,7 @@ describe("setup-ai v2 kit", () => {
       "utf8",
     );
     expect(domain).toContain("| Status");
+    expect(domain).toContain("Enforced by");
     const rubric = readFileSync(
       join(kitDir(), "skills", "setup-ai", "templates", "setup-rubric.md"),
       "utf8",
@@ -247,6 +250,8 @@ describe("setup-ai v2 kit", () => {
     expect(gateBlock).toContain("sed 's/^EXIT://'");
     expect(gateBlock).toContain('} > "$LOG" 2>&1');
     expect(gateBlock).toMatch(/tail -n 20 "\$LOG"/u);
+    expect(gateBlock).toMatch(/trap .*CAUSE: killed by signal.*EXIT:143.*TERM INT/u);
+    expect(gateBlock).toContain("trap - TERM INT");
     const log = readFileSync(
       join(
         kitDir(),
@@ -258,6 +263,7 @@ describe("setup-ai v2 kit", () => {
       "utf8",
     );
     expect(log).not.toMatch(/\|\s*tee\s/);
+    expect(log).toContain("one row per persisted gate log");
     expect(log).toContain("sed 's/^EXIT://'");
   });
 
@@ -372,6 +378,13 @@ describe("setup-ai v2 kit", () => {
     expect(rubric).toMatch(/AGENTS\.md.*ladder append/s);
     expect(rubric).toMatch(/git status --porcelain -uall/s);
     expect(rubric).not.toMatch(/setup-ai:validate-setup/iu);
+  });
+
+  it("keeps inventories in setup-log by default with root pointers", () => {
+    const skill = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
+    expect(skill).toMatch(/Unenforced rules.*inventory to setup-log.*not root/iu);
+    expect(skill).toMatch(/root `AGENTS\.md` keeps a one-line pointer/iu);
+    expect(skill).toMatch(/moving inventories to setup-log, root keeps pointers/iu);
   });
 
   it("documents diligence r6 scorer fixes in setup-ai SKILL and templates", () => {

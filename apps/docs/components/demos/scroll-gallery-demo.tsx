@@ -1,4 +1,12 @@
-import { ScrollGallery, Stack, Tabs, TabsList, TabsTrigger } from "@zedtech/zedkit-ui";
+import { ScrollGallery, Stack, Tabs, TabsContent, TabsList, TabsTrigger } from "@zedtech/zedkit-ui";
+
+const LOOKS = [
+  ["one", "One"],
+  ["two", "Two"],
+  ["three", "Three"],
+  ["four", "Four"],
+  ["five", "Five"],
+] as const;
 
 /** Identity chips in a single scroll row (tabs inside ScrollGallery). */
 export function ScrollGalleryIdentityDemo() {
@@ -6,13 +14,18 @@ export function ScrollGalleryIdentityDemo() {
     <Tabs defaultValue="one">
       <ScrollGallery className="w-full max-w-sm">
         <TabsList className="inline-flex w-max flex-nowrap" aria-label="Looks">
-          <TabsTrigger value="one">One</TabsTrigger>
-          <TabsTrigger value="two">Two</TabsTrigger>
-          <TabsTrigger value="three">Three</TabsTrigger>
-          <TabsTrigger value="four">Four</TabsTrigger>
-          <TabsTrigger value="five">Five</TabsTrigger>
+          {LOOKS.map(([value, label]) => (
+            <TabsTrigger key={value} value={value}>
+              {label}
+            </TabsTrigger>
+          ))}
         </TabsList>
       </ScrollGallery>
+      {LOOKS.map(([value, label]) => (
+        <TabsContent key={value} value={value} className="text-sm text-muted-foreground">
+          {label}
+        </TabsContent>
+      ))}
     </Tabs>
   );
 }

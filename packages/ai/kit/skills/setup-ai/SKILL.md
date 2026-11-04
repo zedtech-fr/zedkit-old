@@ -21,6 +21,8 @@ Make the AI setup of **this** repo true and specific. Generic advice is already 
 
 **Output order:** This block is the **first output after `/setup-ai` starts** (the opening text of your first reply once the skill is loaded) — before phase A inventory, subagent spawns, or file writes — including **headless**, **CI**, and **non-interactive** runs. Paste it as plain text; never skip it because nobody is chatting live. **Do not** open with "Running phase A…", inventory lists, or tool calls — the intro **is** phase A's start from the user's perspective. Once it is printed, **immediately continue with phase A in the same turn** — do not stop or wait for the user after the intro. **Exclude** mechanical install output that ran **before** the skill loaded (for example `npx zedkit-ai setup` or package manager lines); those stay above this block in the transcript.
 
+**Resume:** when a plan or setup-log from an earlier run already exists, the intro is resume-aware: its first line says `resumed at phase <X>` (the actual resume point), not the fresh-start "straight into phase A" wording.
+
 When `/setup-ai` starts (or the user asks to set up AI), say this in plain language before phase A — no interview yet, and no pause after it:
 
 - **Modes:** **fresh** (little or no agent setup yet) or **improve** (you already have `AGENTS.md`, rules, or provider folders — audit and extend, do not replace blindly).
@@ -139,6 +141,14 @@ case "$(tail -1 "$LOG")" in EXIT:[0-9]*) ;; *) echo "bad gate log"; false;; esac
 
 If a log file you referenced is **empty**, or the last line is not **`EXIT:<n>`**, re-run and replace the file before scoring. Table rows in setup-log are a summary only.
 
+**Killed gates:** when the wrapper shell itself may be signaled (a timeout or OOM kill aimed at the process group), trap `TERM`/`INT` so the log still ends with a cause and **`EXIT:<code>`** — `validate --setup` accepts extra lines like `CAUSE:` between `END:` and `EXIT:`. Put the trap after `START:`, before the command, and disarm it with `trap - TERM INT` once the command returns:
+
+```sh
+trap 'echo "END: $(date -Iseconds)"; echo "CAUSE: killed by signal"; echo "EXIT:143"; exit 143' TERM INT
+```
+
+A `SIGKILL`ed wrapper cannot trap — re-run smaller (see below) and replace the file.
+
 **OOM-safe fallback:** When the repo's main gate is `pnpm check` (or similar) and it **cannot take flags** and dies from memory pressure, run the **underlying turbo chain explicitly** with `--concurrency=2` and a capped heap (for example `NODE_OPTIONS=--max-old-space-size=4096`, lower if the host requires). Record that exact command in setup-log and in **domain rules / generated repo skills** — never leave a generic `pnpm check` if that is not what you verified.
 
 ### A3. Find the gaps
@@ -151,7 +161,7 @@ In **improve** mode, audit each existing file and report before you edit:
 | Contradictory              | two files giving different commands or rules                                                                                                                                                                                                       |
 | Duplicated                 | a paragraph, or three or more lines, repeated across files; keep one home and link to it                                                                                                                                                           |
 | Copied shared config       | a local copy of what a published `@zedtech/*` package ships (ESLint preset/boundaries, tsconfig base): replace the copy with the install, thin wrapper only, never copy-paste; verify with the package's verify command                            |
-| Too long for always-loaded | root file over about 100 lines, nested file over about 60, skill over about 150; or details only one folder needs                                                                                                                                  |
+| Too long for always-loaded | root file over about 100 lines, nested file over about 60, skill over about 150; or details only one folder needs; fix by moving inventories to setup-log, root keeps pointers                                                                     |
 | Missing trigger            | skills or agents whose `description` does not say when to use them                                                                                                                                                                                 |
 | Unenforced                 | prose rules a tool could check. Before calling a rule unenforced, open the lint, type and CI configs and search them for it.                                                                                                                       |
 | Missing ladder             | root `AGENTS.md`, or the <!-- if:skill=plan -->`plan` / `implement` / <!-- /if -->`review` skills, does not state the 7-question ladder. Search for the ladder section or the 7 rungs; an existing `AGENTS.md` without it is a gap like any other. |
@@ -178,11 +188,11 @@ The owner should not be asked what the code already says. Before any interview q
 | medium (~300–2000 files) | 6–10           |
 | large (over ~2000 files) | 11–20 (cap 20) |
 
-2. **Respect the repo's own budgets.** A run budget found in A1 (for example "stop after 5 files read with no write", one broad pass, 30 minutes) caps every reader: cut slices smaller (up to 20 readers) and read entry points first rather than exceed it; if it still cannot fit, that is an interview gap, not a license to overrun.
+2. **Respect the repo's own budgets.** A run budget found in A1 (for example "stop after 5 files read with no write", one broad pass, 30 minutes) caps every reader: cut slices smaller (up to 20 readers) and read entry points first rather than exceed it; if it still cannot fit, that is an interview gap, not a license to overrun: the only exception is owner-approved, recorded in reading.md (reader, files read vs budget, approving interview question).
 3. **Spawn one reader per slice, in one batch** (waves of the tool's parallel limit if it has one), on the **scout** tier, each with the brief from `templates/reader-brief.template.md` filled in. Readers are read-only: no writes, no installs. Each returns rules with `path:line` evidence across six lanes: **domain**, **business**, **identity**, **architecture**, **convention**, **enforcement**; plus conflicts, owner-only gaps and folder notes. If you cannot spawn subagents, read the slices yourself one after the other with the same brief and the same log.
 4. **Synthesize on the lead tier.** Merge and dedupe; open at least three cited lines per reader and drop any rule the line does not support (and re-read a reader whose spot-checks fail); mark each rule `current`, `target` or `UNVERIFIED`; list code vs docs conflicts; collect the folder notes that need a nested `AGENTS.md`.
 5. **Map what already exists.** Fill the **Rule map** (every provider-scoped rule file from A1, by full path: kept as owner, mirrored by a nested `AGENTS.md` pointer, or not a rule) and the **Policy docs** table (each playbook, ADR, vision or runbook that states rules lands in a domain, design or nested file, or is `not a rule: <reason>`). Do not copy a rule from its owner into `.agents/`: one law, one owner; point at it.
-6. **Persist** the result as `.agents/setup-log/reading.md` from `templates/reading-log.template.md`: one numbered row per reader, the rule map, the policy docs, the merged rules, the interview gaps, and the "found in code, confirm" list. `npx zedkit-ai validate --setup` checks that the log exists, that the reader count fits the repo size, and that it cites `file:line`, and that its rule map names every provider rule file.
+6. **Persist** the result as `.agents/setup-log/reading.md` from `templates/reading-log.template.md`: one numbered row per reader, the rule map, the policy docs, the merged rules, the interview gaps, and the "found in code, confirm" list. `npx zedkit-ai validate --setup` checks that the log exists, that the reader count fits the repo size, that it cites `file:line`, that it states the run budget, and that its rule map names every provider rule file.
 
 ### B2. Mine the docs
 
@@ -238,13 +248,13 @@ Compare **product docs, README, ADRs**, and other policy sources against each `.
 
 From **VISION**, **ADRs**, README, and code, **enumerate state-bearing capabilities** — for example **ingestion/sync**, **payments**, **booking**, **auth**, **queues**, and any area where docs describe lifecycle or policy (raw-before-parse, quarantine, trace linkage, refunds, etc.). For **each** capability that has rules in docs, ship **one** `.agents/domain/<area>.md` (or one file with clear sections per capability). If a documented capability has **no** domain file, record **why** in setup-log or product open questions — not silent omission.
 
-**Personas (score 3 path):** add a **Journey tests** column — test path per persona or **`no test — flag`** (see `templates/personas-v2.template.md`). A **positive** test cell (not **`no test — flag`**) must cite a test you **opened** that exercises the **whole** journey in **Key journeys (routes)** — every listed route or step, not a subset. If only part of the journey is covered, use **`no test — flag`** or narrow **Key journeys** to what the test actually hits. When the journey column names a **route**, the test must exercise that route (e2e or integration); otherwise use **`no test — flag`**. When the cell names a **script or test file**, **open** it and confirm the repo's **main gate** actually runs it (`package.json` scripts, CI workflow) — do not claim a path is part of **`pnpm check`** unless that chain invokes it.
+**Personas (score 3 path):** add a **Journey tests** column — test path per persona or **`no test — flag`** (see `templates/personas-v2.template.md`). A **positive** test cell (not **`no test — flag`**) must cite a test you **opened** that exercises the **whole** journey in **Key journeys** — every listed route, step, or code path, not a subset. If only part of the journey is covered, use **`no test — flag`** or narrow **Key journeys** to what the test actually hits. When the journey column names a **route**, the test must exercise that route (e2e or integration); when it names a **code path**, unit tests exercising the whole path qualify; otherwise use **`no test — flag`**. When the cell names a **script or test file**, **open** it and confirm the repo's **main gate** actually runs it (`package.json` scripts, CI workflow) — do not claim a path is part of **`pnpm check`** unless that chain invokes it.
 
 **AGENTS and domain enforcement wording:** never write **`enforced by`** (or equivalent) in root **`AGENTS.md`**, nested **`AGENTS.md`**, or **`.agents/domain/*.md`** unless you **opened** that checker (script, CI job, linter rule) and confirmed it **fails when the rule is broken**. Otherwise say **`documented, not enforced`** (or omit enforcement claims). Do **not** list rules that are already enforced (or **partially** enforced — say which part is enforced and which is prose-only) in the **Unenforced rules** inventory; each **genuinely** unenforced rule gets its own row with a **concrete** lint/CI proposal or ticket draft line and evidence `file:line`.
 
 **Design (score 3 path, multilingual repos):** add **Do / don't by language** with real UI strings from cited screens (`file:line`), not generic placeholders.
 
-**Architecture (score 3 path):** add an **Unenforced rules** inventory to root `AGENTS.md` (or setup-log if `AGENTS.md` is frozen): each **genuinely** prose-only rule only (skip rules already covered by lint/CI/tests, or split partial coverage explicitly), one lint/CI proposal or ticket draft line per row, evidence `file:line`. Never claim **`enforced by`** without opening the checker and verifying it catches violations.
+**Architecture (score 3 path):** add an **Unenforced rules** inventory to setup-log (`.agents/setup-log.md`), not root: root `AGENTS.md` keeps a one-line pointer (`Unenforced rules: see .agents/setup-log.md`) so the file stays under the ~100-line target; inline the table in root only when the owner asks for it. Each **genuinely** prose-only rule only (skip rules already covered by lint/CI/tests, or split partial coverage explicitly), one lint/CI proposal or ticket draft line per row, evidence `file:line`. Never claim **`enforced by`** without opening the checker and verifying it catches violations.
 
 ### Phase C close — stale adopt sidecars
 
@@ -306,7 +316,7 @@ Present one table covering phase A gaps, phase C artifacts, phase D skills, hygi
 
 After the owner approves the table, **persist** it as **`PLAN.md`** at the repo root **or** **`.agents/setup-log/plan.md`** (one path; record which in setup-log).
 
-**Appendix (always include):** paste the full **Providers** value table and **Wired:** line from the Providers section, the **Routing** line (provider, tier to model mapping), and the **Reading** line (repo size, reader count, slices from `npx zedkit-ai scan`).
+**Appendix (always include):** paste the full **Providers** value table and **Wired:** line from the Providers section, the **Routing** line (provider, tier to model mapping), the **Reading** line (repo size, reader count, slices from `npx zedkit-ai scan`), and an **Intro-first** line (`intro-first: printed before any tool call (<fresh|improve>)`, or `intro-first: resumed at phase <X>` on a resume) — `npx zedkit-ai validate --setup` checks it is there.
 
 **Wait for the user's go before writing.** If nobody can answer (non-interactive run), output the table and stop.
 
@@ -339,7 +349,7 @@ git diff --name-only
 
 Compare to plan rows in **`PLAN.md`** or **`.agents/setup-log/plan.md`**. **Every changed path needs a matching row.** Any gap goes into the closing report, setup-log **Plan gaps** section, and (if kit-caused) a kit-issue draft — do not treat silent edits as success.
 
-Run **`npx zedkit-ai validate --setup`** (add **`--plan <file>`** if the plan is not **`PLAN.md`** at the repo root or **`.agents/setup-log/plan.md`**) and fix every issue before the closing report; it checks that every **`git status --porcelain -uall`** path is covered by the plan text (a parent folder with a trailing slash counts) and that each **`.agents/setup-log/gates/*.log`** starts with **`CMD:`** and ends with **`EXIT:<code>`**.
+Run **`npx zedkit-ai validate --setup`** (add **`--plan <file>`** if the plan is not **`PLAN.md`** at the repo root or **`.agents/setup-log/plan.md`**) and fix every issue before the closing report; it checks that every **`git status --porcelain -uall`** path is covered by the plan text (a parent folder with a trailing slash counts) and that each **`.agents/setup-log/gates/*.log`** starts with **`CMD:`**, ends with **`EXIT:<code>`**, and is inventoried by name in `.agents/setup-log.md`.
 
 ## Verify
 
@@ -349,12 +359,12 @@ Run **`npx zedkit-ai validate --setup`** (add **`--plan <file>`** if the plan is
 - Every link exists: check each one (`test -e`).
 - No placeholder like `<Project>` is left.
 - `zedkit-ai validate` is clean, the tool folders (`.claude/`, `.cursor/`) resolve, and the `.cursor` copies match `.agents/` (no drift).
-- The repo's own lint ignores the installed kit dirs (`.agents/`, provider folders): skills ship helper scripts, and a bare lint run must stay green — run it once to prove it. When Prettier is in use, add the kit paths to `.prettierignore` (approve as a plan row if the CLI printed a `prettier:` hint).
+- The repo's own lint ignores the installed kit dirs (`.agents/`, provider folders): skills ship helper scripts, and a bare lint run must stay green — run it once to prove it. When Prettier is in use, add the kit paths to `.prettierignore` (approve as a plan row when `scan` or install printed a `prettier:` hint — `validate --setup` requires the row).
 - A fresh reader, or a subagent given only the new files, can answer: what does this product do, what are the refund rules, how do I run the tests, where does X live, what must I never do here?
 
 ## Phase E — Score and learn
 
-If the run may be **cut short** (time, OOM, or a long main gate): still attempt Phase E **first as a minimal closing report** — append the **setup-log entry** (scores stub + gate table below) **before** starting the heaviest gate; run the **main gate last** (or in the background) and update the log when it finishes.
+If the run may be **cut short** (time, OOM, or a long main gate): still attempt Phase E **first as a minimal closing report** — append the **setup-log entry** (scores stub + gate table below) **before** starting the heaviest gate; run the **main gate last** (or in the background) and update the log when it finishes. On the normal path do the reverse: capture every gate's persisted output first, write the entry in **one atomic write** (no stub, no progressive appends), and run `validate --setup` only against the finished file — validation reads whatever is on disk, so a half-written log fails on rows you meant to add.
 
 Short report first: what you created or changed, what you left alone and why, findings not fixed, everything marked `UNVERIFIED`.
 

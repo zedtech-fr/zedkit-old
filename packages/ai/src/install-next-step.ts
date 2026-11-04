@@ -72,6 +72,14 @@ export function repoUsesPrettier(root: string): boolean {
   return packageJsonSignalsPrettier(root) || hasPrettierConfigFile(root);
 }
 
+/** `prettier:` hint lines when the repo uses prettier and kit paths are missing from .prettierignore. */
+export function prettierHintLines(root: string, providers: readonly Provider[] | undefined): string[] {
+  if (!repoUsesPrettier(root)) return [];
+  const missing = kitPathsMissingFromPrettierIgnore(root, providers);
+  if (missing.length === 0) return [];
+  return ["prettier: add to .prettierignore:", ...missing];
+}
+
 /** Lines printed after a successful init/setup (not dry-run). */
 export function installNextStepLines(
   root: string,
@@ -84,10 +92,6 @@ export function installNextStepLines(
       : "note: setup+validate ok ≠ product.md; phase C adds product.md, domain/*.md, personas.md, design.md, glossary — .agents/skills/setup-ai/templates/README.md",
     "note: /setup-ai reads the code first with read-only subagents (npx zedkit-ai scan sizes them), asks only what the code cannot answer, and writes domain rules, nested AGENTS.md and .agents/model-routing.md",
   ];
-  if (!repoUsesPrettier(root)) return lines;
-  const missing = kitPathsMissingFromPrettierIgnore(root, providers);
-  if (missing.length === 0) return lines;
-  lines.push("prettier: add to .prettierignore:");
-  lines.push(...missing);
+  lines.push(...prettierHintLines(root, providers));
   return lines;
 }
