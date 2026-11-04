@@ -344,6 +344,40 @@ describe("setup-ai v2 kit", () => {
     expect(rubric).not.toMatch(/setup-ai:validate-setup/iu);
   });
 
+  it("documents diligence r6 scorer fixes in setup-ai SKILL and templates", () => {
+    const skill = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
+    expect(skill).toMatch(/whole.*Key journeys/iu);
+    expect(skill).toMatch(/documented, not enforced/);
+    expect(skill).toMatch(/never write.*enforced by/iu);
+    expect(skill).toMatch(/node_modules\/@zedtech\/zedkit-ai\/kit/);
+    expect(skill).toMatch(/Consistency pass/iu);
+    expect(skill).toMatch(/intro skipped/iu);
+    const rubric = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "setup-rubric.md"),
+      "utf8",
+    );
+    expect(rubric).toMatch(/whole.*stated journey/iu);
+    expect(rubric).toMatch(/documented, not enforced/);
+    expect(rubric).toMatch(/spot-check.*enforced by/iu);
+    const personas = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "personas-v2.template.md"),
+      "utf8",
+    );
+    expect(personas).toMatch(/whole.*Key journeys/iu);
+    const domain = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "domain", "booking.template.md"),
+      "utf8",
+    );
+    expect(domain).toMatch(/current \(documented, not enforced\)/);
+    const issue = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "kit-issue.template.md"),
+      "utf8",
+    );
+    expect(issue).toMatch(/\.agents\/skills\/setup-ai/);
+    expect(issue).toMatch(/node_modules\/@zedtech\/zedkit-ai\/kit/);
+    expect(skill).toMatch(/\[ \].*Consistency pass/s);
+  });
+
   it("documents validate --setup completion check in skill, rubric, and phase E checklist", () => {
     const cmd = "npx zedkit-ai validate --setup";
     const skill = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");

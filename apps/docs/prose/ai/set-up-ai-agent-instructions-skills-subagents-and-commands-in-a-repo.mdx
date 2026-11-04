@@ -105,5 +105,11 @@ every Pass/Rough/Fail. Customize names and bars per project.
   lists, re-run `init`, then `validate` to catch drift.
 - Repo rules live in `AGENTS.md` (the ladder section is appended, never
   overwritten).
-- Upgrade: re-run `init` and diff `.agents/`; the `verifier` agent plus the
-  definition of done is the CI-side quality gate.
+- Upgrade from 0.12: re-run `npx @zedtech/zedkit-ai setup` (adopt on, preset
+  `setup`). Colliding files stay yours; the kit copy lands as `*.kit.md` or
+  `zk-<name>`. Then `/setup-ai` for discovery artifacts. Opt-in
+  `zedkit-ai validate --setup` checks that the plan covers every git-changed
+  path and that `.agents/setup-log/gates/*.log` start with `CMD:` and end
+  with `EXIT:<code>`. Details: the package README `Upgrading from 0.12`
+  section. The `verifier` agent plus the definition of done is the CI-side
+  quality gate.
