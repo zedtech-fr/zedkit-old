@@ -22,7 +22,13 @@ describe("ScrollGallery", () => {
 
   it("keeps track spacing and non-shrinking snap peers in styles.css", () => {
     expect(stylesCss).toMatch(
-      /\[data-slot="scroll-gallery"\] \[data-scroll-gallery-track\][\s\S]*gap: var\(--zk-gap-sm\)/,
+      /\[data-slot="scroll-gallery"\] \[data-scroll-gallery-track\][\s\S]*gap: var\(--zk-gap-md\)/,
+    );
+    expect(stylesCss).toMatch(
+      /\[data-slot="scroll-gallery"\] \[data-slot="tabs-list"\][\s\S]*gap: var\(--zk-gap-md\)/,
+    );
+    expect(stylesCss).toMatch(
+      /\[data-slot="tabs-trigger"\]:has\(\[data-tab-label\]\)[\s\S]*width: max-content/,
     );
     expect(stylesCss).toMatch(
       /\[data-scroll-gallery-track\] > \*[\s\S]*flex-shrink: 0[\s\S]*scroll-snap-align: start/,

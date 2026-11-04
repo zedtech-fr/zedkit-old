@@ -540,8 +540,8 @@ a[class*="px-badge-inline"] {
   }
 
   [data-slot="scroll-gallery"] [data-scroll-gallery-track] {
-    gap: var(--zk-gap-sm);
-    padding-inline: var(--zk-gap-sm);
+    gap: var(--zk-gap-md);
+    padding-inline: var(--zk-gap-md);
   }
 
   [data-slot="scroll-gallery"] [data-scroll-gallery-track] > * {
@@ -550,11 +550,19 @@ a[class*="px-badge-inline"] {
   }
 
   [data-slot="scroll-gallery"] [data-slot="tabs-list"] {
-    gap: var(--zk-gap-sm);
+    gap: var(--zk-gap-md);
+    max-width: none;
+    overflow-x: visible;
   }
 
   [data-slot="scroll-gallery"] [data-slot="tabs-trigger"]:has([data-tab-label]) {
+    box-sizing: border-box;
     gap: var(--zk-gap-sm);
+    width: max-content;
+    max-width: none;
+    overflow: visible;
+    padding-inline: var(--zk-gap-md);
+    padding-block: var(--zk-gap-sm);
     white-space: normal;
   }
 }
