@@ -45,7 +45,7 @@ export function IdentityAssistant({ tokens, onUse }: { tokens: IdentityTokens; o
   }, [ui.open]);
   const busy = session.pending !== null;
   const off = status !== null && !status.available ? status.reason : null;
-  const { send, quickRefine } = useAssistantSubmitHandlers(brief, submit, busy, off !== null);
+  const { send, quickRefine } = useAssistantSubmitHandlers(brief, submit, busy, off !== null, () => setBrief(""));
   const domainBrief = specimenBriefFromThread(session.thread, brief);
 
   return (
