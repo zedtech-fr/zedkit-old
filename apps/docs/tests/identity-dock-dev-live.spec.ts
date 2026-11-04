@@ -1,7 +1,6 @@
 import { expect, test } from "@playwright/test";
 
 const LIVE = process.env.DOCS_E2E_LIVE_DEV === "1";
-const SERVICE = "**/api/identity/suggest";
 
 test.describe("IdentityDock on dev (live suggest)", () => {
   test.skip(!LIVE, "Set DOCS_E2E_LIVE_DEV=1 and DOCS_E2E_BASE_URL=https://dev.zedkit.app");
