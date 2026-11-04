@@ -289,7 +289,7 @@ export function ProposalCard({
   const domain = useMemo(() => specimenDomainFromBrief(domainBrief), [domainBrief]);
   return (
     <Stack gap={3} role="region" aria-label={copy.proposal.title} aria-busy={busy || undefined} data-assistant-proposal="" className={busy ? "opacity-60" : undefined}>
-      <Text as="span" typeRole="cardTitle" className="text-foreground">
+      <Text as="span" typeRole="label" className="text-foreground font-semibold">
         {copy.proposal.title}
       </Text>
       {proposal.summary ? (
