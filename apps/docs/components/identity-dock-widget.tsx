@@ -46,20 +46,25 @@ function readSiteTokens(identityId: string): IdentityTokens {
   return identityPresets[isPresetId(DEFAULT_IDENTITY) ? DEFAULT_IDENTITY : "glass"];
 }
 
-function useEditorDockAutoOpen(onEditor: boolean, setBrief: (value: string) => void, setExpanded: (open: boolean) => void) {
+function useEditorDockAutoOpen(
+  onEditor: boolean,
+  pathname: string,
+  setBrief: (value: string) => void,
+  setExpanded: (open: boolean) => void,
+) {
   useCreatorHandoff((brief) => {
     if (brief) setBrief(brief);
     setExpanded(true);
   });
   useEffect(() => {
-    const arrived = consumeCreateArrival();
     if (!onEditor) return;
+    const arrived = consumeCreateArrival();
     if (window.location.hash === "#create" || arrived) {
       setExpanded(true);
-    } else {
-      setExpanded(false);
+      return;
     }
-  }, [onEditor, setExpanded]);
+    setExpanded(false);
+  }, [onEditor, pathname, setExpanded]);
 }
 
 function useIdentityDockOpenRequest(setBrief: (value: string) => void, setExpanded: (open: boolean) => void) {
@@ -83,7 +88,7 @@ function IdentityDockWidget() {
   const { workingTokens, setPreviewTokens } = useIdentityDockPreview(baseTokens, identityId);
   const triggerRef = useIdentityDockKeyboard(expanded, setExpanded);
 
-  useEditorDockAutoOpen(onEditor, setBrief, setExpanded);
+  useEditorDockAutoOpen(onEditor, pathname, setBrief, setExpanded);
   useIdentityDockOpenRequest(setBrief, setExpanded);
 
   useEffect(() => {
