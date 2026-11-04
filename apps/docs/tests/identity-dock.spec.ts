@@ -184,4 +184,36 @@ test.describe("IdentityDock", () => {
     expect(posts).toHaveLength(2);
     expect(posts[1].prompt).toMatch(/calmer/i);
   });
+
+  test("390px: generation completes and shows a proposal", async ({ page }) => {
+    const tokens = {
+      spacing: "0.25rem",
+      borderWidth: "1px",
+      radius: "0.5rem",
+      bodyLeading: "1.55",
+      headingLeading: "1.1",
+      headingTracking: "-0.02em",
+      labelTracking: "0.025em",
+      fontSans: '"Jost Variable", Jost, ui-sans-serif, system-ui, sans-serif',
+      fontDisplay: "Georgia, serif",
+      light: { background: "30 40% 96%", foreground: "20 20% 12%", primary: "14 55% 34%", primaryForeground: "30 40% 96%", accent: "14 45% 42%", border: "25 20% 52%", mutedForeground: "20 12% 32%" },
+      dark: { background: "20 18% 8%", foreground: "30 35% 92%", primary: "20 70% 68%", primaryForeground: "20 18% 8%", accent: "20 30% 45%", border: "20 15% 40%", mutedForeground: "30 15% 70%" },
+      shadowSm: "0 1px 2px hsl(20 20% 12% / 0.08)",
+      shadowMd: "0 6px 16px -8px hsl(20 20% 12% / 0.2)",
+    };
+    await service(page, (_posted, route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        json: { requestId: _posted.requestId, summary: "Softer type and calmer contrast.", changed: ["radius"], references: [], tokens },
+      }),
+    );
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.keyboard.press("Control+I");
+    await brief(page).fill("A calm ceramics studio");
+    await page.getByRole("button", { name: "Generate" }).click();
+    await expect(page.locator("[data-assistant-proposal]")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Use this look" })).toBeVisible();
+  });
 });
