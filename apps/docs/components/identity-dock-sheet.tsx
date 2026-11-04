@@ -3,23 +3,11 @@
 import * as React from "react";
 import { useState, type ReactNode } from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
-import {
-  Button,
-  DrawerHandle,
-  Stack,
-  cn,
-  signatureMotionClass,
-} from "@zedtech/zedkit-ui";
+import { DrawerHandle, Stack, cn, signatureMotionClass } from "@zedtech/zedkit-ui";
 
 const SNAP_PEEK = 0.22;
 const SNAP_HALF = 0.55;
 const SNAP_FULL = 1;
-
-export type IdentityDockSheetDetentLabels = {
-  peek: string;
-  half: string;
-  full: string;
-};
 
 type IdentityDockSheetProps = {
   open: boolean;
@@ -27,49 +15,7 @@ type IdentityDockSheetProps = {
   children: ReactNode;
   className?: string;
   "aria-label": string;
-  detentGroupLabel: string;
-  detentLabels: IdentityDockSheetDetentLabels;
 };
-
-function IdentityDockSheetDetents({
-  snap,
-  onSnap,
-  detentGroupLabel,
-  detentLabels,
-}: {
-  snap: number | string | null;
-  onSnap: (next: number) => void;
-  detentGroupLabel: string;
-  detentLabels: IdentityDockSheetDetentLabels;
-}) {
-  const rows: { value: number; label: string }[] = [
-    { value: SNAP_PEEK, label: detentLabels.peek },
-    { value: SNAP_HALF, label: detentLabels.half },
-    { value: SNAP_FULL, label: detentLabels.full },
-  ];
-  return (
-    <Stack
-      direction="horizontal"
-      gap={2}
-      role="group"
-      aria-label={detentGroupLabel}
-      className="shrink-0 justify-center px-3 pt-2 pb-1"
-    >
-      {rows.map((row) => (
-        <Button
-          key={row.value}
-          type="button"
-          size="sm"
-          variant={snap === row.value ? "secondary" : "outline"}
-          aria-pressed={snap === row.value}
-          onClick={() => onSnap(row.value)}
-        >
-          {row.label}
-        </Button>
-      ))}
-    </Stack>
-  );
-}
 
 function useShortViewport(): boolean {
   return React.useSyncExternalStore(
@@ -83,16 +29,8 @@ function useShortViewport(): boolean {
   );
 }
 
-/** Non-modal bottom sheet with peek / half / full detents (docs IdentityDock only). */
-function IdentityDockSheet({
-  open,
-  onOpenChange,
-  children,
-  className,
-  "aria-label": ariaLabel,
-  detentGroupLabel,
-  detentLabels,
-}: IdentityDockSheetProps) {
+/** Non-modal bottom sheet with peek / half / full snap points (drag the handle only). */
+function IdentityDockSheet({ open, onOpenChange, children, className, "aria-label": ariaLabel }: IdentityDockSheetProps) {
   const short = useShortViewport();
   const [snap, setSnap] = useState<number | string | null>(null);
   const base = snap ?? SNAP_FULL;
@@ -119,12 +57,9 @@ function IdentityDockSheet({
             className,
           )}
         >
-          <DrawerHandle />
-          <IdentityDockSheetDetents
-            snap={activeSnap}
-            onSnap={setSnap}
-            detentGroupLabel={detentGroupLabel}
-            detentLabels={detentLabels}
+          <DrawerHandle
+            className="mt-2 mb-1 h-1 w-10 shrink-0 bg-border/50 motion-reduce:opacity-100"
+            aria-label="Drag to resize"
           />
           <Stack className="min-h-0 flex-1 gap-0 overflow-hidden">{children}</Stack>
         </DrawerPrimitive.Content>

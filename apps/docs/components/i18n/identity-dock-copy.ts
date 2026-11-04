@@ -7,10 +7,4 @@ export const identityDockCopy = {
   close: "Close",
   closeLabel: "Close identity assistant",
   shortcutHint: "Open the identity assistant (Ctrl+I or ⌘I)",
-  detentGroupLabel: "Sheet height",
-  detentLabels: {
-    peek: "Peek height",
-    half: "Half height",
-    full: "Full height",
-  },
 } as const;
