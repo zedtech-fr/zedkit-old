@@ -15,10 +15,13 @@ export interface ScrollResetOptions {
 const useIsomorphicLayoutEffect =
   typeof window === "undefined" ? useEffect : useLayoutEffect;
 
-let popPending = false;
+// A popstate only marks the route change that follows it right away; a
+// hash-only back/forward (same route key) must not swallow the next link click.
+const POP_WINDOW_MS = 1000;
+let lastPop = -Infinity;
 let popListeners = 0;
 const onPop = () => {
-  popPending = true;
+  lastPop = Date.now();
 };
 
 function prefersReducedMotion(): boolean {
@@ -75,8 +78,8 @@ export function useScrollReset(
   useIsomorphicLayoutEffect(() => {
     if (previous.current === routeKey) return;
     previous.current = routeKey;
-    if (popPending) {
-      popPending = false;
+    if (Date.now() - lastPop < POP_WINDOW_MS) {
+      lastPop = -Infinity;
       return;
     }
     const mode: ScrollBehavior =

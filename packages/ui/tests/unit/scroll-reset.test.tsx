@@ -69,6 +69,16 @@ describe("ScrollReset", () => {
     expect(scrollTo).toHaveBeenCalledTimes(1);
   });
 
+  it("a hash-only back/forward does not swallow a later navigation", () => {
+    const now = vi.spyOn(Date, "now").mockReturnValue(10_000);
+    const { rerender } = render(<ScrollReset routeKey="/a" />);
+    window.dispatchEvent(new PopStateEvent("popstate"));
+    now.mockReturnValue(20_000);
+    rerender(<ScrollReset routeKey="/b" />);
+    now.mockRestore();
+    expect(scrollTo).toHaveBeenCalledTimes(1);
+  });
+
   it("scrolls a custom container when given", () => {
     const box = document.createElement("main");
     box.scrollTo = vi.fn();
