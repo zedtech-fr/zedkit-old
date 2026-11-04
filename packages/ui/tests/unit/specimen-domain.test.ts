@@ -24,4 +24,16 @@ describe("selectSpecimenDomain", () => {
     expect(selectSpecimenDomain("Hair salon appointment booking")).toBe("service-booking");
     expect(selectSpecimenDomain("Clinic schedule and reservations")).toBe("service-booking");
   });
+
+  it("trims the brief and ignores case", () => {
+    expect(selectSpecimenDomain("  SHOP  ")).toBe("commerce");
+  });
+
+  it("returns the default when no keyword matches", () => {
+    expect(selectSpecimenDomain("Acme rebrand")).toBe("saas-dashboard");
+  });
+
+  it("picks the domain with the stronger keyword score", () => {
+    expect(selectSpecimenDomain("checkout dashboard")).toBe("commerce");
+  });
 });
