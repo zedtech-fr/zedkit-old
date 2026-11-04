@@ -73,7 +73,7 @@ export const identityAssistantCopy = {
     contrastOk: "Text and controls keep their contrast in light and dark.",
     contrastUnresolved: (count: number) =>
       `${count} ${count === 1 ? "pair still misses" : "pairs still miss"} the contrast target after adjustment; check them before applying.`,
-    note: "Nothing is applied until you use it. Your saved looks and this page are not touched.",
+    note: "Applies to demo specimens on this site only, not the docs chrome. Saved looks and the site default are not changed until you export or save elsewhere.",
   },
   /** Sample content the proposal is shown in: a small shop, so type, colour, shape and density have something to act on. */
   preview: {

@@ -75,6 +75,7 @@ function DemoStyleScope({ children }: { children: ReactNode }) {
         identity={demo.look}
         mode={resolvedTheme === "dark" ? "dark" : "light"}
         className="min-w-0"
+        data-demo-specimen=""
       >
         {children}
       </ThemeScope>

@@ -12,6 +12,7 @@ import { useAssistantView } from "@/components/use-assistant-view";
 import { useIdentityAssistant } from "@/components/use-identity-assistant";
 import { writeCreatorSessionBrief } from "@/lib/creator-session-brief";
 import { checkInput, type Unavailable } from "@/lib/identity-assistant";
+import { useIdentityAssistantStore } from "@/lib/identity-assistant-store";
 import type { SessionState } from "@/lib/identity-creator-session";
 import { linksInText } from "@/lib/identity-links-in-text";
 
@@ -20,8 +21,8 @@ import { linksInText } from "@/lib/identity-links-in-text";
  * nothing until it is used, and using it changes the draft (and its preview) only: saving and applying to the site
  * stay the editor's own explicit steps. If the assistant is off, everything else in the editor works as before.
  *
- * It starts folded, so the editor keeps its own order (look, preview, first adjustment, keep); arriving with a brief
- * or with `#create` opens it. On a phone the conversation and the preview take turns.
+ * It starts folded on pages that still embed it inline; arriving with a brief or `#create` opens it.
+ * On a phone the conversation and the preview take turns.
  */
 function usePersistCreatorBrief(brief: string) {
   const ready = useRef(false);
@@ -37,7 +38,7 @@ function usePersistCreatorBrief(brief: string) {
 export function IdentityAssistant({ tokens, onUse }: { tokens: IdentityTokens; onUse: (tokens: IdentityTokens) => void }) {
   const [opened, setOpened] = useState(false);
   const { session, status, dispatch, submit, cancel } = useIdentityAssistant(tokens, opened);
-  const [brief, setBrief] = useState("");
+  const { brief, setBrief } = useIdentityAssistantStore();
   const ui = useAssistantView({ proposalId: session.proposal?.requestId, onBrief: setBrief });
   usePersistCreatorBrief(brief);
   useEffect(() => {
