@@ -308,11 +308,10 @@ test.describe("domain compositions", () => {
         page.waitForResponse((response) => response.url().includes("/api/identity/suggest") && response.ok()),
         page.getByRole("button", { name: "Generate" }).click(),
       ]);
-<<<<<<< HEAD
-      await expect(page.locator(`[data-specimen-domain='${row.domain}']`)).toHaveCount(2);
-=======
-      await expect(page.locator(`[data-specimen-domain='${row.domain}']`).first()).toBeVisible();
->>>>>>> ffa8e4df (fix(docs): wait for suggest and relax domain locator strictness)
+      // The compare view renders the specimen twice (before, then the proposal): both carry the domain.
+      const specimens = page.locator(`[data-assistant-proposal-compare] [data-specimen-domain='${row.domain}']`);
+      await expect(specimens).toHaveCount(2);
+      await expect(specimens.last()).toBeVisible();
     });
   }
 });
