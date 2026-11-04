@@ -33,6 +33,15 @@ Fictional **Acme Bookings** starter — replace with tokens and components from 
 - **Do:** Show cancel deadline in the user's locale and studio timezone.
 - **Don't:** Use a generic "Loading…" without naming what is loading (see persona bars).
 
+## Do / don't by language (multilingual repos)
+
+Cite real strings from UI code (`file:line`). One pair per language you ship.
+
+| Language | Do (example from repo)                          | Don't (example from repo)              | Source             |
+| -------- | ----------------------------------------------- | -------------------------------------- | ------------------ |
+| FR       | « Annuler gratuitement jusqu'à 24 h avant »     | « Error » without code                 | `src/i18n/fr.json` |
+| EN       | "Free cancellation until 24 hours before start" | "Something went wrong" on payment fail | `src/i18n/en.json` |
+
 ## Subagents
 
 - `ui-designer` — layout, hierarchy, tokens, responsive behavior.
