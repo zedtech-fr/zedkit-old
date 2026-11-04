@@ -65,11 +65,13 @@ export function IdentitySpecimenCard({
   dark,
   label,
   id,
+  proposal,
   copy,
 }: {
   dark: boolean;
   label: string;
   id: string;
+  proposal: string;
   copy: SpecimenCopy;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -80,7 +82,7 @@ export function IdentitySpecimenCard({
     <Stack
       ref={ref}
       data-identity-scope=""
-      data-identity-proposal=""
+      data-identity-proposal={proposal}
       data-identity="proposal"
       role="group"
       aria-label={label}
