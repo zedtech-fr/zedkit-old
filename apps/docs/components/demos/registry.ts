@@ -92,8 +92,10 @@ import {
   HeroDemo,
   HowItWorksDemo,
   LocaleSwitchDemo,
+  LogoBandDemo,
   MarketingChromeDemo,
   MediaSectionDemo,
+  TestimonialsDemo,
 } from "./marketing-demo";
 import { WizardComposedDemo } from "./wizard-composed-demo";
 import { WizardDemo } from "./wizard-demo";
@@ -248,6 +250,8 @@ export const demoRegistry = {
   HeroDemo: { Demo: HeroDemo, file: "marketing-demo.tsx" },
   HowItWorksDemo: { Demo: HowItWorksDemo, file: "marketing-demo.tsx" },
   LocaleSwitchDemo: { Demo: LocaleSwitchDemo, file: "marketing-demo.tsx", center: true },
+  LogoBandDemo: { Demo: LogoBandDemo, file: "marketing-demo.tsx" },
+  TestimonialsDemo: { Demo: TestimonialsDemo, file: "marketing-demo.tsx" },
   MediaSectionDemo: { Demo: MediaSectionDemo, file: "marketing-demo.tsx" },
   MarketingChromeDemo: { Demo: MarketingChromeDemo, file: "marketing-demo.tsx" },
   WizardComposedDemo: { Demo: WizardComposedDemo, file: "wizard-composed-demo.tsx" },

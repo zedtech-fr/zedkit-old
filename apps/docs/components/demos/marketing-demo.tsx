@@ -7,8 +7,10 @@ import {
   HowItWorks,
   LocaleSwitch,
   MarketingFooter,
+  LogoBand,
   MarketingHeader,
   MediaSection,
+  Testimonials,
 } from "@zedtech/zedkit-ui/marketing";
 import { marketingCopy } from "@/components/demos/i18n/marketing-copy";
 
@@ -138,4 +140,26 @@ export function MediaSectionDemo() {
       media={<Text variant="muted">{media.caption}</Text>}
     />
   );
+}
+
+export function LogoBandDemo() {
+  const { logos } = marketingCopy;
+  return (
+    <LogoBand
+      title={logos.title}
+      logos={logos.names.map((name) => ({
+        name,
+        logo: (
+          <Text as="span" className="font-semibold">
+            {name}
+          </Text>
+        ),
+      }))}
+    />
+  );
+}
+
+export function TestimonialsDemo() {
+  const { testimonials } = marketingCopy;
+  return <Testimonials title={testimonials.title} items={[...testimonials.items]} />;
 }
