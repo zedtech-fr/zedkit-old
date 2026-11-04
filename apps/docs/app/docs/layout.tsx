@@ -5,7 +5,7 @@ import { featuredPackageChangelogUrl, featuredPackageReleasesUrl, featuredPackag
 import { SiteBrand } from "@/ui/site-brand";
 import { siteHeaderLinks } from "@/lib/site-header-links";
 import { KitVersionLabel } from "@/ui/kit-version-label";
-import { docsChromeSlots } from "@/ui/site-chrome";
+import { docsChromeSlots } from "@/ui/site-chrome-slots";
 import { DocsSiteHeader } from "@/ui/site-headers";
 
 export default function Layout({ children }: { children: ReactNode }) {
