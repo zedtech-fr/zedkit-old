@@ -166,6 +166,19 @@ export {
 export { Separator, type SeparatorProps } from "./separator.js";
 export { Surface, surfaceVariants, surfaceGlassPanelClass, applySurfaceGlassPanel, type SurfaceProps } from "./surface.js";
 export { SCROLL_SCENES_MAX, ScrollScenes, type ScrollScene, type ScrollScenesProps } from "./scroll-scenes.js";
+export {
+  StickyAside,
+  StickyAsideAside,
+  StickyAsideMain,
+  type StickyAsideAsideProps,
+  type StickyAsideFrom,
+  type StickyAsideGap,
+  type StickyAsideMainProps,
+  type StickyAsideMobile,
+  type StickyAsideProps,
+  type StickyAsideRatioPreset,
+  type StickyAsideSide,
+} from "./sticky-aside.js";
 export { ScrollGallery, type ScrollGalleryProps } from "./scroll-gallery.js";
 export { Skeleton, type SkeletonProps } from "./skeleton.js";
 export {

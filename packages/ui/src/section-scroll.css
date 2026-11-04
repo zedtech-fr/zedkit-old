@@ -23,4 +23,9 @@
     [data-slot="section"][data-snap="none"] {
     scroll-snap-align: none;
   }
+
+  html:has([data-slot="section-scroll"])
+    [data-slot="section"]:has([data-sticky-aside], [data-scroll-scenes]) {
+    scroll-snap-align: none;
+  }
 }

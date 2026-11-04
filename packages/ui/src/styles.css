@@ -11,6 +11,7 @@
 @import "./type-roles.css";
 @import "./section-scroll.css";
 @import "./scroll-scenes.css";
+@import "./sticky-aside.css";
 @import "./identities/volt.css";
 @import "./shared-type-scale.css";
 @import "./identities/tide.css";

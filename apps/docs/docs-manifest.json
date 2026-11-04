@@ -545,6 +545,16 @@
         "Pricing walkthrough": "ScrollScenesPricingDemo"
       }
     },
+    "Keep a side panel in view": {
+      "package": "@zedtech/zedkit-ui",
+      "component": "StickyAside",
+      "props": "StickyAsideProps",
+      "source": "sticky-aside.tsx",
+      "demo": "StickyAsideDemo",
+      "examples": {
+        "Doc steps with preview": "StickyAsideDocStepsDemo"
+      }
+    },
     "Compose a public marketing page": {
       "package": "@zedtech/zedkit-ui",
       "component": "GlassSurface",

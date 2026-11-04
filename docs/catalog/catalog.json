@@ -5188,6 +5188,56 @@
           ]
         },
         {
+          "need": "Keep a side panel in view",
+          "import": "`@zedtech/zedkit-ui` — `StickyAside`, `StickyAsideMain`, `StickyAsideAside`, `StickyAsideProps`, `StickyAsideMainProps`, `StickyAsideAsideProps`, `StickyAsideSide`, `StickyAsideFrom`, `StickyAsideGap`, `StickyAsideMobile`, `StickyAsideRatioPreset`",
+          "wraps": "none (CSS `position: sticky`)",
+          "status": "alpha",
+          "shortName": "StickyAside",
+          "audience": "Developers building docs, onboarding, or pricing pages where steps scroll on one side and a summary or preview should stay visible until the section ends.",
+          "purpose": "Main column scrolls; aside sticks under the header until the section ends. Pure CSS, server components, no scroll hijacking.",
+          "whenToUse": "Long step lists beside a short preview, install instructions beside a rendered example, or any section where reading order is main then aside.",
+          "whenNotToUse": "Pinning a single stage that crossfades through scenes — use `ScrollScenes`. A sticky bar that spans the whole viewport outside a section — use your shell header. Tall aside content without `scrollable` when you need the full block visible at once on small viewports — stack on mobile or shorten the aside.",
+          "derivedFrom": null,
+          "example": "import { StickyAside, Stack, Text } from \"@zedtech/zedkit-ui\";\nimport { GlassSurface } from \"@zedtech/zedkit-ui/marketing\";\n\n<StickyAside side=\"right\" ratio=\"1/3\" className=\"[--zk-sticky-top:7rem]\">\n  <StickyAside.Main>\n    <Stack gap={4}>{/* numbered steps */}</Stack>\n  </StickyAside.Main>\n  <StickyAside.Aside asChild>\n    <GlassSurface padding=\"md\">\n      <Text>Rendered example</Text>\n    </GlassSurface>\n  </StickyAside.Aside>\n</StickyAside>",
+          "examples": [
+            {
+              "title": "Get started steps with live preview",
+              "code": "import { StickyAside, Stack, Text } from \"@zedtech/zedkit-ui\";\nimport { GlassSurface } from \"@zedtech/zedkit-ui/marketing\";\n\n<StickyAside side=\"right\" ratio=\"1/3\" className=\"[--zk-sticky-top:7rem]\">\n  <StickyAside.Main>\n    <Stack gap={4}>{/* numbered steps */}</Stack>\n  </StickyAside.Main>\n  <StickyAside.Aside asChild>\n    <GlassSurface padding=\"md\">\n      <Text>Rendered example</Text>\n    </GlassSurface>\n  </StickyAside.Aside>\n</StickyAside>"
+            },
+            {
+              "title": "Doc page with summary card",
+              "code": "import { Card, CardContent, StickyAside, Text } from \"@zedtech/zedkit-ui\";\n\n// Aside on the left from the md breakpoint; stack main first on phones.\n<StickyAside side=\"left\" from=\"md\" mobile=\"stack-after\">\n  <StickyAside.Main>\n    <Text>Form fields…</Text>\n  </StickyAside.Main>\n  <StickyAside.Aside scrollable>\n    <Card>\n      <CardContent>Order summary</CardContent>\n    </Card>\n  </StickyAside.Aside>\n</StickyAside>"
+            }
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "StickyAside",
+                  "StickyAsideMain",
+                  "StickyAsideAside",
+                  "StickyAsideProps",
+                  "StickyAsideMainProps",
+                  "StickyAsideAsideProps",
+                  "StickyAsideSide",
+                  "StickyAsideFrom",
+                  "StickyAsideGap",
+                  "StickyAsideMobile",
+                  "StickyAsideRatioPreset"
+                ]
+              }
+            ]
+          },
+          "a11y": "DOM order is always main then aside; use `mobile=\"before\"` only when the aside should appear first visually on phones. Put headings and steps in the main column; label specimen previews (for example with `role=\"group\"` and `aria-label`). In-section links in the main column get `scroll-margin-top` from `--zk-pin-top`. With `scrollable`, the aside scrolls internally — keep focusable controls reachable.",
+          "troubleshooting": "Aside never sticks — check that `data-from` matches your breakpoint, the section is tall enough to scroll, and no ancestor between this root and the viewport uses `overflow: hidden|auto|scroll` or a transform. Aside hides under the site header — set `--zk-sticky-top` (or `--zk-pin-top` globally) to the header offset. Columns too narrow — pass `ratio=\"1/2\"` or `--zk-sticky-cols`. Aside taller than the window — pass `scrollable` so it keeps sticky with an internal scroll area. Snap fights a long section — parent sections that contain `StickyAside` disable scroll-snap when `SectionScroll` is active.",
+          "seeAlso": [
+            "Stack content and group titled sections",
+            "Pin a stage and change scene as the page scrolls"
+          ]
+        },
+        {
           "need": "Pin a stage and change scene as the page scrolls",
           "import": "`@zedtech/zedkit-ui` — `ScrollScenes`, `ScrollScene`, `ScrollScenesProps`, `SCROLL_SCENES_MAX`",
           "wraps": "none (CSS scroll-driven animation)",
