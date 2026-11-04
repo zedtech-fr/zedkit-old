@@ -10,7 +10,7 @@ A change can be correct and still useless to the person it is for. Name the audi
 ## Steps
 
 1. **Name the recipient** of the deliverable and the task they are trying to do. If the repo's docs do not say, ask.
-2. **Pick 2 to 4 personas** whose view differs. First read the repo's `.agents/personas.md` (installed from the kit template, customized per project); fall back to these generics only when it is missing:
+2. **Pick 2 to 4 personas** whose view differs. First read the repo's `.agents/personas.md` (kit template: v1 Task/Bar columns, or v2 Goals / jobs / frustrations / journeys / evidence / routes). Use the columns that are present. Fall back to these generics only when the file is missing:
 
 | Persona                                | Question                                                                                              |
 | -------------------------------------- | ----------------------------------------------------------------------------------------------------- |

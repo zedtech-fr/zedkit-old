@@ -116,13 +116,13 @@ In both modes, list **gaps**: repo facts an agent would otherwise get wrong.
 
 ## Phase C — Build artifacts
 
-Open **`templates/README.md`** in this skill folder (after install: `.agents/skills/setup-ai/templates/README.md`). Copy from the **`templates/`** files below; replace fiction with repo facts.
+Open **`templates/README.md`** in this skill folder (after install: `.agents/skills/setup-ai/templates/README.md`). Copy from the **`templates/`** files below; replace fiction with repo facts. **Personas:** the `setup` preset already installed `.agents/personas.md` from `templates/personas-v2.template.md` — **edit the installed v2 file in place** (do not recopy the template over it).
 
 | Artifact          | Path                                   | Template                                             |
 | ----------------- | -------------------------------------- | ---------------------------------------------------- |
 | Product summary   | `.agents/product.md`                   | `templates/product.template.md`                      |
 | Domain rules      | `.agents/domain/<area>.md`             | `templates/domain/booking.template.md` (rename area) |
-| Personas v2       | `.agents/personas.md`                  | `templates/personas-v2.template.md`                  |
+| Personas v2       | `.agents/personas.md`                  | edit the installed v2 file in place                  |
 | Design / identity | `.agents/design.md`                    | `templates/design.template.md`                       |
 | Glossary          | `GLOSSARY.md` or `.agents/glossary.md` | `templates/glossary.template.md`                     |
 
