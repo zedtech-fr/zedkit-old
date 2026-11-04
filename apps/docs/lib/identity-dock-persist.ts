@@ -145,3 +145,8 @@ export function writeIdentityDockPersist(data: IdentityDockPersist): void {
     ),
   );
 }
+
+export function clearIdentityDockPersist(): void {
+  if (typeof window === "undefined") return;
+  tryCatch(() => window.localStorage.removeItem(IDENTITY_DOCK_STORAGE_KEY));
+}

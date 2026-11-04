@@ -16,7 +16,7 @@ import type { IdentityTokens } from "@zedtech/zedkit-ui";
 
 import { fetchAssistantStatus, type AssistantStatus } from "@/lib/identity-assistant";
 import { initialSession, sessionReducer, type SessionAction, type SessionState } from "@/lib/identity-creator-session";
-import { readIdentityDockPersist, writeIdentityDockPersist } from "@/lib/identity-dock-persist";
+import { readIdentityDockPersist, writeIdentityDockPersist, clearIdentityDockPersist } from "@/lib/identity-dock-persist";
 import { useAssistantNetwork } from "@/lib/use-assistant-network";
 
 type IdentityAssistantStore = {
@@ -31,6 +31,7 @@ type IdentityAssistantStore = {
   setExpanded: (open: boolean) => void;
   toggleExpanded: () => void;
   ensureAssistantStatus: () => () => void;
+  startNewConversation: () => void;
 };
 
 const IdentityAssistantStoreContext = createContext<IdentityAssistantStore | null>(null);
@@ -49,6 +50,17 @@ function IdentityAssistantStoreProvider({ children }: { children: ReactNode }) {
   }, [session.thread]);
 
   useEffect(() => {
+    const empty =
+      brief === "" &&
+      session.thread.length === 0 &&
+      session.proposal === null &&
+      session.pending === null &&
+      session.notice === null &&
+      session.references.length === 0;
+    if (empty) {
+      clearIdentityDockPersist();
+      return;
+    }
     writeIdentityDockPersist({ session, brief });
   }, [session, brief]);
 
@@ -65,6 +77,13 @@ function IdentityAssistantStoreProvider({ children }: { children: ReactNode }) {
 
   const toggleExpanded = useCallback(() => setExpanded((open) => !open), []);
 
+  const startNewConversation = useCallback(() => {
+    cancel();
+    clearIdentityDockPersist();
+    dispatch({ type: "reset" });
+    setBrief("");
+  }, [cancel]);
+
   const value = useMemo(
     () => ({
       session,
@@ -78,8 +97,9 @@ function IdentityAssistantStoreProvider({ children }: { children: ReactNode }) {
       setExpanded,
       toggleExpanded,
       ensureAssistantStatus,
+      startNewConversation,
     }),
-    [session, status, submit, cancel, brief, expanded, toggleExpanded, ensureAssistantStatus],
+    [session, status, submit, cancel, brief, expanded, toggleExpanded, ensureAssistantStatus, startNewConversation],
   );
 
   return <IdentityAssistantStoreContext.Provider value={value}>{children}</IdentityAssistantStoreContext.Provider>;

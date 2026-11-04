@@ -2,7 +2,7 @@
 
 import { X } from "lucide-react";
 import { useEffect, useRef } from "react";
-import { IconButton, Stack, Text } from "@zedtech/zedkit-ui";
+import { IconButton, Stack, Text, Button, cn } from "@zedtech/zedkit-ui";
 
 import { identityAssistantCopy as copy } from "@/components/i18n/identity-assistant-copy";
 import { identityDockCopy } from "@/components/i18n/identity-dock-copy";
@@ -51,7 +51,7 @@ export function IdentityDockAssistantPanel({
   onPreviewTokens: (tokens: IdentityTokens) => void;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const { brief, setBrief, setExpanded } = useIdentityAssistantStore();
+  const { brief, setBrief, setExpanded, startNewConversation } = useIdentityAssistantStore();
   const { session, status, dispatch, submit, cancel } = useIdentityAssistant(previewTokens, true);
   const ui = useAssistantView({ proposalId: session.proposal?.requestId, onBrief: setBrief });
   const busy = session.pending !== null;
@@ -71,6 +71,17 @@ export function IdentityDockAssistantPanel({
     <Stack ref={panelRef} className="min-h-0 flex-1 gap-0 overflow-hidden" data-slot="identity-dock-body">
       <Stack direction="horizontal" gap={2} className="items-center border-b border-border px-3 py-2">
         <Text typeRole="label" className="min-w-0 flex-1">{identityDockCopy.panelTitle}</Text>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          data-testid="identity-dock-new-conversation"
+          className={cn("h-8 shrink-0 px-2 text-xs text-muted-foreground")}
+          aria-label={identityDockCopy.newConversationLabel}
+          onClick={startNewConversation}
+        >
+          {identityDockCopy.newConversation}
+        </Button>
         <IconButton type="button" variant="ghost" size="sm" label={identityDockCopy.closeLabel} onClick={() => setExpanded(false)}>
           <X aria-hidden="true" />
         </IconButton>

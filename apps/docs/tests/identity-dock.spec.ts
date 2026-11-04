@@ -49,6 +49,33 @@ test.describe("IdentityDock", () => {
     await expect(trigger).toBeFocused();
   });
 
+  test("Nouvelle conversation clears brief, thread, and persisted dock state", async ({ page }) => {
+    await page.addInitScript((key) => {
+      window.localStorage.setItem(
+        key,
+        JSON.stringify({
+          brief: "Saved brief",
+          session: {
+            thread: [{ role: "user", text: "Hello" }],
+            pending: null,
+            proposal: null,
+            notice: null,
+            references: [],
+          },
+        }),
+      );
+    }, "zk-identity-dock-v2");
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.keyboard.press("Control+I");
+    await expect(brief(page)).toHaveValue("Saved brief");
+    await expect(page.getByText("Hello")).toBeVisible();
+    await page.getByTestId("identity-dock-new-conversation").click();
+    await expect(brief(page)).toHaveValue("");
+    await expect(page.getByText("Hello")).toHaveCount(0);
+    const stored = await page.evaluate(() => window.localStorage.getItem("zk-identity-dock-v2"));
+    expect(stored).toBeNull();
+  });
+
   test("390px: quota feedback stays visible inside the dock panel", async ({ page }) => {
     await service(page, (_posted, route) =>
       route.fulfill({

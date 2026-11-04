@@ -6,6 +6,8 @@ export const identityDockCopy = {
   panelTitle: "Make it yours",
   close: "Close",
   closeLabel: "Close identity assistant",
+  newConversation: "Nouvelle conversation",
+  newConversationLabel: "Start a new identity assistant conversation",
   shortcutHint: "Open the identity assistant (Ctrl+I or ⌘I)",
   detentGroupLabel: "Sheet height",
   detentLabels: {
