@@ -130,7 +130,7 @@ Each domain file includes **rules, invariants, edge cases**, sources (`file:line
 
 ## Phase D — Catalog skills
 
-Propose copies from **`templates/catalog/`** (each skill folder has `SKILL.md.tmpl`) into `.agents/skills/<name>/SKILL.md` (see **`templates/README.md`**). Customize paths and gate commands. Prefer **domain-change** when money or policy edits are common; **add-migration** when schema changes are frequent; **add-capability** for full-stack features.
+Propose copies from **`templates/catalog/`** (each skill folder has `SKILL.md.tmpl`) into `.agents/skills/<name>/SKILL.md` (see **`templates/README.md`**). Customize paths and gate commands. Prefer **domain-change** when money or policy edits are common; **add-migration** when schema changes are frequent; **add-capability** for full-stack features. After adding a repo skill, re-run `npx zedkit-ai setup` (no flags needed) to wire it into provider layers; never `ln` or `cp` by hand.
 
 | Tier       | Meaning                                          |
 | ---------- | ------------------------------------------------ |

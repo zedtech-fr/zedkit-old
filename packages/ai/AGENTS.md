@@ -26,8 +26,9 @@
    subagent fits; a preset entry only if most projects benefit.
 7. Installer never overwrites. `--adopt` keeps a different user file and
    writes a kit sidecar (`*.kit.md` or `zk-<name>`); a copy that already
-   matches the kit is skipped. New behavior needs a test in
-   `tests/unit/install.test.ts`.
+   matches the kit is skipped. Per-skill provider links cover dirs that
+   exist under `.agents/skills`, not only the preset list. New behavior
+   needs a test in `tests/unit/install.test.ts`.
 8. Explicit named exports in `src/index.ts`, each in `CATALOG.md`.
 9. Definition of done: `pnpm --filter @zedtech/zedkit-ai typecheck && pnpm --filter @zedtech/zedkit-ai lint && pnpm --filter @zedtech/zedkit-ai build && pnpm --filter @zedtech/zedkit-ai test`
    green (each separately), `pnpm catalog:check` green. On a fresh clone build
