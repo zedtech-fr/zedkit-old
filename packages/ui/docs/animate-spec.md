@@ -16,7 +16,7 @@ the bar, not copied source.
 ## Comparison
 
 **AOS** ([michalsnik/aos](https://github.com/michalsnik/aos) v2.3.4,
-MIT) is the bar for *declarative data-attribute scroll-reveal*.
+MIT) is the bar for _declarative data-attribute scroll-reveal_.
 `data-aos="fade-up"` plus `data-aos-offset` (default 120px),
 `data-aos-delay`, `data-aos-duration` (50–3000, CSS tables),
 `data-aos-easing`, `data-aos-once` (default `false` — re-hide on
@@ -25,25 +25,25 @@ starts hidden (`[data-aos^=fade]{opacity:0}`) until `.aos-animate`.
 Engine: throttled `scroll` + lodash, plus `AOS.init()`.
 
 **anime.js** ([juliangarnier/anime](https://github.com/juliangarnier/anime)
-v4, MIT) is the bar for *quality and composition*. JS API:
+v4, MIT) is the bar for _quality and composition_. JS API:
 `animate(targets, { duration, delay: stagger(65), ease, loop })`,
 `createTimeline()`, `spring({ bounce, stiffness, damping })`,
 `onScroll({ sync: true })`. WAAPI path ~3KB vs JS `animate` ~10KB;
 full toolbox ~24.5KB. Not an attribute API.
 
-| | AOS | anime.js | This kit |
-| --- | --- | --- | --- |
-| Primary API | `data-aos` | `animate()` / timeline | `data-animate-*` + `<Animate on>` |
-| Appear | scroll hide/show | `onScroll` trigger | IntersectionObserver, once |
-| Scroll progress | no | `onScroll({ sync })` | CSS `view()` + rAF fallback |
-| Press / hover / focus / longpress | no | JS playback | CSS, plus JS longpress |
-| Delay | `data-aos-delay` | `delay` / `stagger()` | `data-animate-delay` + CSS stagger |
-| Duration / ease | per element | per tween / spring | identity `--zk-reveal-*` |
-| Offset / anchor | per element | scroll observer thresholds | one `rootMargin: 0 0 -10% 0` |
-| Once vs mirror | default mirror | playback settings | always once (unobserve) |
-| SSR | CSS hides without JS | n/a | visible until JS sets `pending` |
-| Reduced motion | `disable` option | Scope / media | total CSS + runtime kill |
-| 3D / flip / SVG / spring | flip presets | yes | no (transform/opacity only) |
+|                                   | AOS                  | anime.js                   | This kit                           |
+| --------------------------------- | -------------------- | -------------------------- | ---------------------------------- |
+| Primary API                       | `data-aos`           | `animate()` / timeline     | `data-animate-*` + `<Animate on>`  |
+| Appear                            | scroll hide/show     | `onScroll` trigger         | IntersectionObserver, once         |
+| Scroll progress                   | no                   | `onScroll({ sync })`       | CSS `view()` + rAF fallback        |
+| Press / hover / focus / longpress | no                   | JS playback                | CSS, plus JS longpress             |
+| Delay                             | `data-aos-delay`     | `delay` / `stagger()`      | `data-animate-delay` + CSS stagger |
+| Duration / ease                   | per element          | per tween / spring         | identity `--zk-reveal-*`           |
+| Offset / anchor                   | per element          | scroll observer thresholds | one `rootMargin: 0 0 -10% 0`       |
+| Once vs mirror                    | default mirror       | playback settings          | always once (unobserve)            |
+| SSR                               | CSS hides without JS | n/a                        | visible until JS sets `pending`    |
+| Reduced motion                    | `disable` option     | Scope / media              | total CSS + runtime kill           |
+| 3D / flip / SVG / spring          | flip presets         | yes                        | no (transform/opacity only)        |
 
 We take AOS’s attribute ergonomics (preset name + delay + once) and
 anime’s composition (`on` maps several triggers, stagger, named
@@ -55,7 +55,8 @@ scope (VISUAL-CONTRACT: calm, no layout shift, no extra JS engine).
 ## Types
 
 ```ts
-type AnimateTrigger = "appear" | "scroll" | "press" | "longpress" | "hover" | "focus";
+type AnimateTrigger =
+  "appear" | "scroll" | "press" | "longpress" | "hover" | "focus";
 
 type AnimatePreset =
   | "fade-up"
@@ -87,30 +88,42 @@ Public exports: `Animate`, `AnimateObserver`, `observeAnimate`,
 
 ## Attribute grammar
 
-| Attribute | Value | Trigger |
-| --- | --- | --- |
-| `data-animate` | motion name | appear (shorthand) |
-| `data-animate-appear` | motion name | appear (wins over `data-animate`) |
-| `data-animate-scroll` | motion name | scroll |
-| `data-animate-press` | motion name | press |
-| `data-animate-longpress` | motion name | longpress |
-| `data-animate-hover` | motion name | hover |
-| `data-animate-focus` | motion name | focus |
-| `data-animate-delay` | integer milliseconds | appear delay |
-| `data-animate-stagger` | present | stagger children on appear |
-| `data-animate-state` | `pending` \| `in` | runtime, appear only |
-| `data-animate-longpress-on` | present | runtime, longpress held |
+| Attribute                   | Value                | Trigger                           |
+| --------------------------- | -------------------- | --------------------------------- |
+| `data-animate`              | motion name          | appear (shorthand)                |
+| `data-animate-appear`       | motion name          | appear (wins over `data-animate`) |
+| `data-animate-scroll`       | motion name          | scroll                            |
+| `data-animate-press`        | motion name          | press                             |
+| `data-animate-longpress`    | motion name          | longpress                         |
+| `data-animate-hover`        | motion name          | hover                             |
+| `data-animate-focus`        | motion name          | focus                             |
+| `data-animate-delay`        | integer milliseconds | appear delay                      |
+| `data-animate-stagger`      | present              | stagger children on appear        |
+| `data-animate-state`        | `pending` \| `in`    | runtime, appear only              |
+| `data-animate-longpress-on` | present              | runtime, longpress held           |
 
 Bare `data-animate="fade-up"` is appear. Combine freely:
 
 ```html
-<Card data-animate="fade-up" data-animate-delay="100" data-animate-press="scale-down" />
+<Card
+  data-animate="fade-up"
+  data-animate-delay="100"
+  data-animate-press="scale-down"
+/>
 ```
 
 `<Animate>` writes the same attributes:
 
 ```tsx
-<Animate on={{ appear: "fade-up", press: "scale-down", longpress: "pulse", scroll: "parallax" }} delay={100} />
+<Animate
+  on={{
+    appear: "fade-up",
+    press: "scale-down",
+    longpress: "pulse",
+    scroll: "parallax",
+  }}
+  delay={100}
+/>
 ```
 
 Custom motion: any kebab-case name that is not a preset is used as
@@ -118,19 +131,19 @@ Custom motion: any kebab-case name that is not a preset is used as
 
 ## Presets
 
-| Name | Properties | Typical trigger |
-| --- | --- | --- |
-| `fade-up` | opacity + translateY(distance) | appear |
-| `fade-in` | opacity | appear |
-| `fade-down` | opacity + translateY(−distance) | appear |
-| `pop-in` | opacity + scale 0.96→1 | appear |
-| `lift` | translateY(lift) | hover, focus |
-| `scale-down` | scale `--zk-press-scale` | press |
-| `scale-up` | scale 1.03 | hover |
-| `pulse` | scale 1↔1.03 loop | longpress |
-| `parallax` | translateY linked to view progress | scroll |
+| Name         | Properties                         | Typical trigger |
+| ------------ | ---------------------------------- | --------------- |
+| `fade-up`    | opacity + translateY(distance)     | appear          |
+| `fade-in`    | opacity                            | appear          |
+| `fade-down`  | opacity + translateY(−distance)    | appear          |
+| `pop-in`     | opacity + scale 0.96→1             | appear          |
+| `lift`       | translateY(lift)                   | hover, focus    |
+| `scale-down` | scale `--zk-press-scale`           | press           |
+| `scale-up`   | scale 1.03                         | hover           |
+| `pulse`      | scale 1↔1.03 loop                  | longpress       |
+| `parallax`   | translateY linked to view progress | scroll          |
 
-A preset can be used on any trigger; the trigger only decides *when*.
+A preset can be used on any trigger; the trigger only decides _when_.
 
 ## Trigger semantics
 
