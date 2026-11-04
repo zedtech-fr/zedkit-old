@@ -61,21 +61,15 @@ const DOMAIN_KEYWORDS: Readonly<Record<SpecimenDomain, readonly string[]>> = {
 
 const DEFAULT_DOMAIN: SpecimenDomain = "saas-dashboard";
 
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-/** Whole-token match (no substring hits); optional plural `s` on the keyword. */
-function briefContainsKeyword(text: string, keyword: string): boolean {
-  const escaped = escapeRegExp(keyword);
-  const pattern = new RegExp(`(?:^|[^a-z0-9])${escaped}s?(?=$|[^a-z0-9])`, "i");
-  return pattern.test(text);
-}
-
-function scoreDomain(text: string, keywords: readonly string[]): number {
+function scoreDomain(tokens: readonly string[], keywords: readonly string[]): number {
   let score = 0;
   for (const keyword of keywords) {
-    if (briefContainsKeyword(text, keyword)) score += keyword.length >= 7 ? 2 : 1;
+    for (const token of tokens) {
+      if (token === keyword || token === `${keyword}s`) {
+        score += keyword.length >= 7 ? 2 : 1;
+        break;
+      }
+    }
   }
   return score;
 }
@@ -85,10 +79,11 @@ export function selectSpecimenDomain(brief: string): SpecimenDomain {
   const text = brief.trim().toLowerCase();
   if (text.length === 0) return DEFAULT_DOMAIN;
 
+  const tokens = text.split(/[^a-z0-9]+/);
   let best = DEFAULT_DOMAIN;
   let bestScore = 0;
   for (const domain of Object.keys(DOMAIN_KEYWORDS) as SpecimenDomain[]) {
-    const score = scoreDomain(text, DOMAIN_KEYWORDS[domain]);
+    const score = scoreDomain(tokens, DOMAIN_KEYWORDS[domain]);
     if (score > bestScore) {
       bestScore = score;
       best = domain;
