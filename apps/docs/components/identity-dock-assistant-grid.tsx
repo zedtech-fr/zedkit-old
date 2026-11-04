@@ -20,9 +20,11 @@ export function IdentityDockAssistantGrid(props: {
   busy: boolean;
   feedbackText: string | null;
   previewTokens: IdentityTokens;
+  domainBrief: string;
   textareaRef: RefObject<HTMLTextAreaElement | null>;
   onBrief: (brief: string) => void;
   onSubmit: () => void;
+  onQuickRefine: (prompt: string) => void;
   onCancel: () => void;
   onUse: (tokens: IdentityTokens) => void;
   onDiscard: () => void;
@@ -37,6 +39,7 @@ export function IdentityDockAssistantGrid(props: {
         busy={props.busy}
         onBrief={props.onBrief}
         onSubmit={props.onSubmit}
+        onQuickRefine={props.onQuickRefine}
         onCancel={props.onCancel}
         textareaRef={props.textareaRef}
       />
@@ -47,6 +50,7 @@ export function IdentityDockAssistantGrid(props: {
           view={props.view}
           proposal={props.session.proposal}
           tokens={props.previewTokens}
+          domainBrief={props.domainBrief}
           busy={props.busy}
           onUse={props.onUse}
           onDiscard={props.onDiscard}
