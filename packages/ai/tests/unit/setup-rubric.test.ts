@@ -52,6 +52,8 @@ function presetsWithSetupAi(): string[] {
     .map(([name]) => name);
 }
 
+const MEASURABLE_AXIS_NUMBERS = [2, 4, 5, 6, 7, 8, 9, 10] as const;
+
 describe("setup rubric and score-and-learn", () => {
   it("ships the rubric and the score-and-learn templates in the kit", () => {
     const kit = join(kitDir(), "skills", "setup-ai");
@@ -129,7 +131,17 @@ describe("setup rubric and score-and-learn", () => {
     ]) {
       expect(raw, gate).toContain(gate);
     }
-    expect(raw).toMatch(/every axis >=? 2, mean >=? 2\.5/u);
+    expect(raw).toMatch(/every one of the .*10 axes.*>= 2/s);
+    expect(raw).toMatch(/mean.*>= 2\.5.*8 measurable axes/s);
+    expect(raw).toMatch(/Discovery \(1\).*Domain rules \(3\).*owner-dependent/s);
+    expect(raw).toMatch(/mean over axes 2, 4, 5, 6, 7, 8, 9, and 10 only/s);
+    expect(raw).toMatch(/mean \(8 axes\)/s);
+    expect(raw).toMatch(/simulated owner cap at 2/s);
+    for (const n of MEASURABLE_AXIS_NUMBERS) {
+      expect(raw, `measurable axis ${n}`).toMatch(
+        new RegExp(`\\*\\*${n}\\*\\*`),
+      );
+    }
   });
 
   it("validate stays clean for every preset; adopt twice is a no-op (setup preset)", () => {
