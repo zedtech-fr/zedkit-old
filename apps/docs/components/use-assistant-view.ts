@@ -31,6 +31,7 @@ export function useAssistantView({ proposalId, onBrief }: { proposalId: string |
   const [focus, setFocus] = useState<FocusRequest | null>(null);
   const textarea = useRef<HTMLTextAreaElement>(null);
   const previewButton = useRef<HTMLButtonElement>(null);
+  const seenProposal = useRef<string | undefined>(undefined);
 
   useCreatorHandoff((brief) => {
     if (brief) onBrief(brief);
@@ -45,13 +46,23 @@ export function useAssistantView({ proposalId, onBrief }: { proposalId: string |
   }, [focus]);
 
   useEffect(() => {
-    if (!proposalId) return;
-    setView("preview");
-    // Only when focus is nowhere or already in the assistant: a visitor typing in a field of the editor keeps it.
+    if (!proposalId) {
+      seenProposal.current = undefined;
+      return;
+    }
+    const arrived = proposalId !== seenProposal.current;
+    seenProposal.current = proposalId;
+    if (arrived) {
+      setView("preview");
+      return;
+    }
+    if (view !== "preview") return;
+    // A visitor typing in an editor field keeps it; otherwise the phone follows the proposal.
     const active = document.activeElement;
-    const free = !active || active === document.body || active.closest("[data-slot='identity-assistant']") !== null;
-    if (free && previewButton.current && previewButton.current.offsetParent !== null) previewButton.current.focus({ preventScroll: true });
-  }, [proposalId]);
+    if (active?.closest("[data-slot='identity-editor-preview'], #identity-editor-name")) return;
+    const id = requestAnimationFrame(() => previewButton.current?.focus({ preventScroll: true }));
+    return () => cancelAnimationFrame(id);
+  }, [proposalId, view]);
 
   return {
     open,

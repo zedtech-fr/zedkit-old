@@ -75,6 +75,9 @@ kit packages.
   error states) + `Table` primitives.
 - Layout: `AppShell` (sidebar + topbar + main slots), `PageHeader`,
   `Stack`, `Section`, `SectionScroll`, `Container` (named widths + full-bleed bands).
+- Motion: `Animate`, `AnimateObserver`, `observeAnimate` (`data-animate`
+  appear / scroll / press / longpress / hover / focus). Original work
+  by the same author.
 - Wizard: `WizardSteps` (step indicator), `OptionCards` (multi-select cards, or pick-one with `multiple={false}`).
 - Detail: `DetailPanel` (key-value rows), `LivePulse` (live indicator).
 - Marketing (`@zedtech/zedkit-ui/marketing`, separate entry): `GlassSurface`.

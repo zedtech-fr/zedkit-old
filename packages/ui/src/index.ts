@@ -112,6 +112,18 @@ export {
   type SectionScrollProps,
   type StackProps,
 } from "./layout.js";
+export {
+  Animate,
+  AnimateObserver,
+  observeAnimate,
+  ANIMATE_PRESETS,
+  ANIMATE_TRIGGERS,
+  type AnimateMotion,
+  type AnimateOn,
+  type AnimatePreset,
+  type AnimateProps,
+  type AnimateTrigger,
+} from "./animate.js";
 export { LivePulse, type LivePulseProps } from "./live-pulse.js";
 export { StatusDot, type StatusDotProps, type StatusDotTone } from "./status-dot.js";
 export { ProgressBar, type ProgressBarProps } from "./progress-bar.js";

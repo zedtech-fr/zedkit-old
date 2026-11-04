@@ -15,14 +15,24 @@ function bodyOf(file: string): string {
 }
 
 describe("command shape", () => {
+  const defaultBody = (name: string) =>
+    `Run the \`${name}\` skill on \`$ARGUMENTS\` (the text after the command, or the current context when empty).`;
+
   it("routes every command to its same-named skill with the $ARGUMENTS contract", () => {
     const files = commandFiles();
     expect(files.length).toBeGreaterThan(0);
     for (const file of files) {
       const name = file.replace(/\.md$/, "");
-      expect(bodyOf(file), file).toBe(
-        `Run the \`${name}\` skill on \`$ARGUMENTS\` (the text after the command, or the current context when empty).`,
-      );
+      if (name === "setup-ai") {
+        expect(bodyOf(file), file).toContain("Before anything else, tell the user");
+        expect(bodyOf(file), file).toContain("Tell the user first");
+        expect(bodyOf(file), file).toContain("before any tool call");
+        expect(bodyOf(file), file).toContain(
+          "Then run the `setup-ai` skill on `$ARGUMENTS`",
+        );
+        continue;
+      }
+      expect(bodyOf(file), file).toBe(defaultBody(name));
     }
   });
 });

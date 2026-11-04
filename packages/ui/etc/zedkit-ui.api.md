@@ -65,6 +65,37 @@ export const alertVariants: (props?: ({
     variant?: "default" | "destructive" | null | undefined;
 } & ClassProp) | undefined) => string;
 
+// @public (undocumented)
+export function Animate(input: AnimateProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export const ANIMATE_PRESETS: readonly ["fade-up", "fade-in", "fade-down", "pop-in", "lift", "scale-down", "scale-up", "pulse", "parallax"];
+
+// @public (undocumented)
+export const ANIMATE_TRIGGERS: readonly ["appear", "scroll", "press", "longpress", "hover", "focus"];
+
+// @public
+export type AnimateMotion = AnimatePreset | (string & {});
+
+// @public
+export function AnimateObserver(): null;
+
+// @public (undocumented)
+export type AnimateOn = Partial<Record<AnimateTrigger, AnimateMotion>>;
+
+// @public (undocumented)
+export type AnimatePreset = (typeof ANIMATE_PRESETS)[number];
+
+// @public (undocumented)
+export interface AnimateProps extends React_2.ComponentProps<"div"> {
+    delay?: number;
+    on?: AnimateOn;
+    stagger?: boolean;
+}
+
+// @public (undocumented)
+export type AnimateTrigger = (typeof ANIMATE_TRIGGERS)[number];
+
 // @public
 export function applyCustomIdentity(tokens: IdentityTokens, lookOrKey?: string, persistKey?: string): boolean;
 
@@ -123,7 +154,7 @@ export interface ButtonProps extends React_2.ComponentProps<"button">, VariantPr
 
 // @public (undocumented)
 export const buttonVariants: (props?: ({
-    variant?: "link" | "default" | "destructive" | "secondary" | "outline" | "ghost" | null | undefined;
+    variant?: "default" | "link" | "destructive" | "outline" | "secondary" | "ghost" | null | undefined;
     size?: "default" | "sm" | "lg" | "icon" | null | undefined;
 } & ClassProp) | undefined) => string;
 
@@ -1081,6 +1112,9 @@ export type MultiSelectProps = {
 
 // @public
 export const NAMED_IDENTITY_PREFIX = "n-";
+
+// @public
+export function observeAnimate(root?: ParentNode): () => void;
 
 // @public
 export function OfflineNote(input: OfflineNoteProps): JSX.Element;

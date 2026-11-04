@@ -93,8 +93,8 @@ function IdentityDockSheet({
   detentLabels,
 }: IdentityDockSheetProps) {
   const short = useShortViewport();
-  const [snap, setSnap] = React.useState<number | string | null>(null);
-  const activeSnap = snap ?? (short ? SNAP_FULL : SNAP_HALF);
+  const [snap, setSnap] = React.useState<number | string | null>(SNAP_HALF);
+  const activeSnap = (snap === SNAP_HALF || snap === null) && short ? SNAP_FULL : (snap ?? SNAP_HALF);
   return (
     <DrawerPrimitive.Root
       data-slot="identity-dock-sheet-root"

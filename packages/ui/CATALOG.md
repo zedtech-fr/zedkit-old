@@ -142,7 +142,7 @@ cn("px-4", "px-2"); // "px-2" — last conflicting utility wins
 - Purpose: Token-driven entrance, stagger, hover and marquee utilities that switch off under reduced motion.
 - When to use: For first-paint entrances, staggered lists, card lift and button press feedback.
 - When not to use: For gesture or layout animation (drag, shared-element transitions) — use a motion library instead.
-- See also: `Theme an admin app (dark/light included)`, `Group content in a card section`
+- See also: `Theme an admin app (dark/light included)`, `Group content in a card section`, `Reveal and react with motion on any element`
 - Examples: Entrance with stagger, Hover feedback, Staggered children
 - A11y: Every utility and attribute is switched off under `prefers-reduced-motion: reduce`, with content left visible and in place. Hover lift only applies on devices that hover, so it never sticks after a tap.
 - Troubleshooting: Nothing animates — check the OS reduced-motion setting first. Content stays hidden — `data-reveal="pending"` and `data-stagger="pending"` hide content until your code sets them to `"in"`. Stagger has no delay — `stagger-*` delays an animation class (`animate-fade-up stagger-2`), not a transition.
@@ -166,6 +166,50 @@ import { Card } from "@zedtech/zedkit-ui";
   <Text>One</Text>
   <Text>Two</Text>
 </Stack>
+```
+
+## Reveal and react with motion on any element
+
+- Import: `@zedtech/zedkit-ui` — `Animate`, `AnimateObserver`, `AnimateProps`, `AnimateOn`, `AnimatePreset`, `AnimateTrigger`, `AnimateMotion`, `observeAnimate`, `ANIMATE_PRESETS`, `ANIMATE_TRIGGERS`
+- Attributes: `data-animate`, `data-animate-appear`, `data-animate-scroll`, `data-animate-press`, `data-animate-longpress`, `data-animate-hover`, `data-animate-focus`, `data-animate-delay`, `data-animate-stagger`
+- Wraps: `(none)`
+- Status: alpha
+- Short name: Animate
+- Audience: Developers adding appear, scroll, press, longpress, hover or focus motion to any kit element.
+- Purpose: One typed attribute and wrapper API for identity-token motion, with a tiny SSR-safe runtime.
+- When to use: When a card, section or control should move on appear, scroll progress, press, longpress, hover or focus.
+- When not to use: For pinned scene crossfades use `ScrollScenes`. For section snap/smooth-scroll use `SectionScroll`. For first-paint class utilities see `Animate entrances and hover feedback with CSS utilities`.
+- See also: `Animate entrances and hover feedback with CSS utilities`, `Pin a stage and change scene as the page scrolls`, `Stack content and group titled sections`
+- Examples: Attribute on a card, Wrapper with several triggers, Stagger children
+- A11y: `prefers-reduced-motion: reduce` leaves content visible and in place. Hover is gated to hover-capable pointers. Focus uses `:focus-visible`. Press ignores disabled. Longpress is decorative, never the only action. Appear does not set `aria-hidden`.
+- Troubleshooting: Nothing appears to move — mount `<AnimateObserver />` once near the app root (or call `observeAnimate()`), then check reduced motion. Content stays visible without JS by design. Scroll parallax needs `animation-timeline: view()` or the runtime fallback.
+
+```ts
+import { AnimateObserver, Card } from "@zedtech/zedkit-ui";
+
+<AnimateObserver />
+<Card data-animate="fade-up" data-animate-delay="100" data-animate-press="scale-down">
+  Invoice
+</Card>
+```
+
+```ts
+import { Animate } from "@zedtech/zedkit-ui";
+
+<Animate on={{ appear: "fade-up", press: "scale-down", longpress: "pulse", scroll: "parallax" }}>
+  Band
+</Animate>
+```
+
+```ts
+import { Animate, Stack, Text } from "@zedtech/zedkit-ui";
+
+<Animate on={{ appear: "fade-up" }} stagger>
+  <Stack>
+    <Text>One</Text>
+    <Text>Two</Text>
+  </Stack>
+</Animate>
 ```
 
 ## Trigger actions with buttons

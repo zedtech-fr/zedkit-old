@@ -6,6 +6,7 @@ import { HomeGetStartedAiBlock } from "@/ui/home/home-get-started-ai-block";
 import {
   HOME_METADATA_TEXT_CLASS,
   HOME_SECTION_CONTENT_GAP,
+  HOME_SECTION_REVEAL_PROPS,
 } from "@/ui/home/home-rhythm";
 import { homeCopy } from "@/ui/home/i18n/home-copy";
 
@@ -53,6 +54,7 @@ export function HomeSecondarySection({
       id="entry-points"
       title={homeCopy.secondary.section.title}
       description={homeCopy.secondary.section.description}
+      {...HOME_SECTION_REVEAL_PROPS}
     >
       <Stack gap={HOME_SECTION_CONTENT_GAP}>
         <HomeSecondaryEntryLinks entryPoints={entryPoints} />
