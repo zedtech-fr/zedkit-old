@@ -129,9 +129,9 @@ for (const theme of ["light", "dark"] as const) {
         filter: s.backdropFilter || s.getPropertyValue("-webkit-backdrop-filter"),
       };
     });
-    expect(panelStyle.alpha).toBeGreaterThanOrEqual(0.4);
-    expect(panelStyle.alpha).toBeLessThanOrEqual(0.5);
-    expect(panelStyle.filter).toContain("blur(12px");
+    expect(panelStyle.alpha).toBeGreaterThanOrEqual(0.6);
+    expect(panelStyle.alpha).toBeLessThanOrEqual(0.8);
+    expect(panelStyle.filter).toContain("blur(24px");
     const contrast = await readComputedContrast(page, link);
     expect(contrast).toBeGreaterThanOrEqual(4.5);
     await panel.screenshot({ path: shotPath(`guides-menu-after-1440-${theme}.png`) });

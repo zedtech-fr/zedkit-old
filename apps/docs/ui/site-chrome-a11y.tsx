@@ -2,6 +2,28 @@
 
 import { useEffect } from "react";
 
+/** Fumadocs renders the Guides viewport with no prop seam: tag it with the kit surface instead of styling it here. */
+const GUIDES_PANEL_SELECTOR = ".flex.w-full.justify-center > *";
+
+function tagGuidesPanel(root: ParentNode): void {
+  const panel = root.querySelector(GUIDES_PANEL_SELECTOR);
+  if (panel && panel.getAttribute("data-surface") !== "glass") {
+    panel.setAttribute("data-surface", "glass");
+  }
+}
+
+export function SiteHeaderSurfacePatch() {
+  useEffect(() => {
+    const nav = document.querySelector("#nd-nav");
+    if (!nav) return;
+    tagGuidesPanel(nav);
+    const observer = new MutationObserver(() => tagGuidesPanel(nav));
+    observer.observe(nav, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+  return null;
+}
+
 /** Adds native tooltips where Fumadocs chrome only sets `aria-label` (#396). */
 export function SiteChromeA11yPatch() {
   useEffect(() => {

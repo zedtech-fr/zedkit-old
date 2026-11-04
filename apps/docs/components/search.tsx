@@ -43,7 +43,7 @@ export default function StaticSearchDialog(props: SharedProps) {
   return (
     <SearchDialog {...searchRest} {...(data ? { data } : {})} {...props}>
       <SearchDialogOverlay />
-      <SearchDialogContent>
+      <SearchDialogContent data-surface="glass">
         <SearchDialogHeader>
           <SearchDialogIcon />
           <SearchDialogInput />

@@ -2,6 +2,17 @@ import { expect, test } from "@playwright/test";
 
 const BASE = process.env.DOCS_E2E_BASE_URL ?? "http://127.0.0.1:3100";
 
+test("search dialog uses the kit glass surface", async ({ page }) => {
+  await page.goto(`${BASE}/docs`, { waitUntil: "networkidle" });
+  await page.locator("html[data-identity='glass']").waitFor({ timeout: 15000 });
+  await page.keyboard.press("Control+k");
+  const dialog = page.getByRole("dialog");
+  await dialog.waitFor({ timeout: 10000 });
+  await expect(dialog).toHaveAttribute("data-surface", "glass");
+  const filter = await dialog.evaluate((el) => getComputedStyle(el).backdropFilter);
+  expect(filter).toContain("blur(24px");
+});
+
 test("search finds grouped results and navigates", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (event) => errors.push(String(event)));
