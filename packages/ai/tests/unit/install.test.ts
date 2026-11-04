@@ -272,6 +272,39 @@ describe("installKit", () => {
     expect(lstatSync(join(dest, ".claude/skills/setup-ai")).isSymbolicLink()).toBe(true);
   });
 
+  it("re-setup links a repo-added skill into real cursor and claude skills dirs", () => {
+    const dest = tempDir();
+    put(dest, ".cursor/skills/team-own/SKILL.md", "team\n");
+    put(dest, ".claude/skills/team-own/SKILL.md", "team\n");
+    install(dest, { providers: ["cursor", "claude"], adopt: true });
+    put(dest, ".agents/skills/add-invoice/SKILL.md", SKILL("add-invoice"));
+    const again = install(dest, { providers: ["cursor", "claude"], adopt: true });
+    expect(lstatSync(join(dest, ".cursor/skills/add-invoice")).isSymbolicLink()).toBe(true);
+    expect(readlinkSync(join(dest, ".cursor/skills/add-invoice"))).toContain(".agents/skills/add-invoice");
+    expect(lstatSync(join(dest, ".claude/skills/add-invoice")).isSymbolicLink()).toBe(true);
+    expect(readFileSync(join(dest, ".cursor/skills/team-own/SKILL.md"), "utf8")).toBe("team\n");
+    expect(readFileSync(join(dest, ".claude/skills/team-own/SKILL.md"), "utf8")).toBe("team\n");
+    expect(validateKit(join(dest, ".agents"))).toEqual([]);
+    expect(checkDrift(dest, join(dest, ".agents")).filter((i) => i.message.includes("unreachable"))).toEqual([]);
+    const third = install(dest, { providers: ["cursor", "claude"], adopt: true });
+    expect(third.filter((a) => a.kind === "copy" || a.kind === "link" || a.kind === "write")).toEqual([]);
+    expect(again.some((a) => a.path.includes("add-invoice") && a.kind === "link")).toBe(true);
+  });
+
+  it("whole-dir skill symlink still covers a repo-added skill without per-skill links", () => {
+    const dest = tempDir();
+    install(dest, { providers: ["cursor", "claude"], adopt: true });
+    expect(readlinkSync(join(dest, ".cursor/skills"))).toBe("../.agents/skills");
+    expect(readlinkSync(join(dest, ".claude/skills"))).toBe("../.agents/skills");
+    put(dest, ".agents/skills/add-invoice/SKILL.md", SKILL("add-invoice"));
+    const again = install(dest, { providers: ["cursor", "claude"], adopt: true });
+    expect(lstatSync(join(dest, ".cursor/skills")).isSymbolicLink()).toBe(true);
+    expect(existsSync(join(dest, ".cursor/skills/add-invoice/SKILL.md"))).toBe(true);
+    expect(existsSync(join(dest, ".claude/skills/add-invoice/SKILL.md"))).toBe(true);
+    expect(again.some((a) => a.path.includes("add-invoice"))).toBe(false);
+    expect(validateKit(join(dest, ".agents"))).toEqual([]);
+  });
+
   it("writes nothing on a dry run", () => {
     const dest = tempDir();
     const actions = install(dest, { dryRun: true });

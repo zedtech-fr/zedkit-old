@@ -42,6 +42,8 @@ describe("setup-ai v2 kit", () => {
     expect(raw).toMatch(/Phase C — Build/u);
     expect(raw).toMatch(/Phase D — Catalog/u);
     expect(raw).toContain("templates/README.md");
+    expect(raw).toContain("npx zedkit-ai setup");
+    expect(raw).toMatch(/never .+ by hand/iu);
   });
 
   it("limits the batched interview to at most eight questions", () => {
