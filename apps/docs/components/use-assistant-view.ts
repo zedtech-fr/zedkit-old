@@ -53,7 +53,7 @@ export function useAssistantView({ proposalId, onBrief }: { proposalId: string |
     textarea.current?.focus({ preventScroll: focus.scroll });
   }, [focus]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!proposalId) {
       seenProposal.current = undefined;
       return;
@@ -61,12 +61,7 @@ export function useAssistantView({ proposalId, onBrief }: { proposalId: string |
     const arrived = proposalId !== seenProposal.current;
     seenProposal.current = proposalId;
     if (arrived) setView("preview");
-  }, [proposalId]);
-
-  useLayoutEffect(() => {
-    if (!proposalId) return;
-    const active = document.activeElement;
-    if (active?.closest("[data-slot='identity-editor-preview'], #identity-editor-name")) return;
+    if (!arrived && view !== "preview") return;
     const focusPreview = () => {
       if (!focusMayMoveToProposalPreview(document.activeElement)) return;
       const btn = previewButton.current;
