@@ -2,10 +2,10 @@
 import { existsSync, lstatSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
 import { tryCatch } from "@zedtech/zedkit-core";
-import { kitDir, kitUniverse, readManifest } from "./kit.js";
+import { adoptRel, kitDir, kitUniverse, readManifest } from "./kit.js";
 import { parseFrontmatter } from "./frontmatter.js";
 import { lensClosureIssues } from "./lenses.js";
-import { danglingKitRefs, skillRefFiles, type RefUniverse } from "./skill-refs.js";
+import { danglingKitRefs, skillRefFiles } from "./skill-refs.js";
 import { resolveConditionals, withoutMarkers, type Availability } from "./conditional.js";
 
 export type Issue = { path: string; message: string };
@@ -56,20 +56,26 @@ function checkDescription(value: unknown, path: string, issues: Issue[]): void {
   }
 }
 
+function parseText(rel: string, text: string, issues: Issue[]): { data: Record<string, unknown>; raw: string } | undefined {
+  const parsed = parseFrontmatter(text);
+  if (!parsed.ok) {
+    issues.push({ path: rel, message: parsed.error.message });
+    return undefined;
+  }
+  return parsed.value;
+}
+
 function checkSkill(root: string, name: string, issues: Issue[]): void {
   const file = join(root, "skills", name, "SKILL.md");
   const path = relative(root, file);
   if (!existsSync(file)) {
-    issues.push({ path: relative(root, join(root, "skills", name)), message: "skill folder has no SKILL.md" });
+    issues.push({ path: join("skills", name), message: "skill folder has no SKILL.md" });
     return;
   }
-  const parsed = parseFrontmatter(read(file));
-  if (!parsed.ok) {
-    issues.push({ path, message: parsed.error.message });
-    return;
-  }
-  checkName(parsed.value.data.name, name.replace(/^zk-/, ""), path, issues);
-  checkDescription(parsed.value.data.description, path, issues);
+  const front = parseText(path, read(file), issues);
+  if (!front) return;
+  checkName(front.data.name, name.replace(/^zk-/, ""), path, issues);
+  checkDescription(front.data.description, path, issues);
   // No single-line check here, deliberately: skill descriptions are read
   // through YAML-aware loaders (this kit's `yaml` parse, providers), so a
   // folded block always renders single-line. The raw-text rule exists only
@@ -78,12 +84,9 @@ function checkSkill(root: string, name: string, issues: Issue[]): void {
 
 function checkAgent(root: string, file: string, issues: Issue[]): void {
   const path = join("agents", file);
-  const parsed = parseFrontmatter(read(join(root, path)));
-  if (!parsed.ok) {
-    issues.push({ path, message: parsed.error.message });
-    return;
-  }
-  const { data, raw } = parsed.value;
+  const front = parseText(path, read(join(root, path)), issues);
+  if (!front) return;
+  const { data, raw } = front;
   checkName(data.name, file.replace(/\.md$/, ""), path, issues);
   checkDescription(data.description, path, issues);
   if (!isSingleLineDescription(raw)) {
@@ -109,13 +112,10 @@ function checkCommand(root: string, file: string, skills: Set<string>, issues: I
     issues.push({ path, message: `name must be lowercase-hyphen, at most ${MAX_NAME} characters` });
   }
   const text = read(join(root, path));
-  const parsed = parseFrontmatter(text);
-  if (!parsed.ok) {
-    issues.push({ path, message: parsed.error.message });
-    return;
-  }
-  checkDescription(parsed.value.data.description, path, issues);
-  if (!isSingleLineDescription(parsed.value.raw)) {
+  const front = parseText(path, text, issues);
+  if (!front) return;
+  checkDescription(front.data.description, path, issues);
+  if (!isSingleLineDescription(front.raw)) {
     issues.push({ path, message: "description must be a single line (no `>` or `|` block, no continuation lines)" });
   }
   // A command runs a skill by name: it must name at least one installed one.
@@ -137,7 +137,7 @@ function checkLineEndings(root: string, issues: Issue[]): void {
 
 // Flag relative links that resolve nowhere in kit files (skip web, #anchor, fenced).
 function checkLinks(root: string, kit: string, issues: Issue[]): void {
-  const universe = refUniverse(kit);
+  const universe = kitUniverse(kit);
   const entries = readdirSync(root, { recursive: true, encoding: "utf8" });
   for (const entry of entries) {
     if (!entry.endsWith(".md") || entry.endsWith(".kit.md")) continue;
@@ -203,9 +203,7 @@ function checkManifest(root: string, issues: Issue[]): void {
     return;
   }
   const skills = new Set(dirsIn(join(root, "skills")));
-  const agents = new Set(
-    existsSync(join(root, "agents")) ? mdFiles(join(root, "agents")).map((f) => f.replace(/\.md$/, "")) : [],
-  );
+  const agents = new Set(namesIn(root, "agents"));
   for (const [preset, names] of Object.entries(manifest.value.presets)) {
     for (const name of names === "*" ? [] : names) {
       if (!skills.has(name)) issues.push({ path: "kit.json", message: `preset "${preset}" lists missing skill "${name}"` });
@@ -214,9 +212,7 @@ function checkManifest(root: string, issues: Issue[]): void {
   for (const name of manifest.value.agents) {
     if (!agents.has(name)) issues.push({ path: "kit.json", message: `lists missing agent "${name}"` });
   }
-  const commands = new Set(
-    existsSync(join(root, "commands")) ? mdFiles(join(root, "commands")).map((f) => f.replace(/\.md$/, "")) : [],
-  );
+  const commands = new Set(namesIn(root, "commands"));
   for (const name of manifest.value.commands ?? []) {
     if (!commands.has(name)) issues.push({ path: "kit.json", message: `lists missing command "${name}"` });
   }
@@ -233,16 +229,6 @@ function namesIn(root: string, dir: string): string[] {
 // kind). Backticked tokens and hyphenated whole words count only in
 // kit-origin files, where a kit name is a reference by convention; in
 // user-authored files the same token is an ordinary word.
-function refUniverse(kit: string): RefUniverse {
-  const uni = tryCatch(() => kitUniverse(kit));
-  if (!uni.ok) return { skills: new Set(), agents: new Set(), commands: new Set() };
-  return {
-    skills: new Set(uni.value.skills),
-    agents: new Set(uni.value.agents),
-    commands: new Set(uni.value.commands),
-  };
-}
-
 function installedUnion(sets: ReadonlySet<string>[]): Set<string> {
   const installed = new Set<string>();
   for (const set of sets) {
@@ -257,7 +243,7 @@ function installedUnion(sets: ReadonlySet<string>[]): Set<string> {
 function checkSkillRefs(root: string, skills: Set<string>, kit: string, issues: Issue[]): void {
   const agents = namesIn(root, "agents");
   const commands = namesIn(root, "commands");
-  const universe = refUniverse(kit);
+  const universe = kitUniverse(kit);
   const installed = installedUnion([skills, new Set(agents), new Set(commands)]);
   const shadowed = new Set<string>();
   for (const name of skills) {
@@ -351,10 +337,6 @@ function isRealDir(path: string): boolean {
   return stat.ok && stat.value.isDirectory();
 }
 
-function kitSidecar(file: string): string {
-  return file.replace(/\.md$/, ".kit.md");
-}
-
 function linkState(path: string): "missing" | "dangling" | "link" | "dir" | "file" {
   const stat = tryCatch(() => lstatSync(path));
   if (!stat.ok) return "missing";
@@ -396,24 +378,12 @@ function checkLayerCopies(projectRoot: string, source: string, layer: string, ki
   if (!isRealDir(from) || !isRealDir(to)) return;
   for (const file of readdirSync(from).filter((f) => f.endsWith(".md") && !f.endsWith(".kit.md"))) {
     const want = relative(projectRoot, join(from, file));
-    const sidecar = join(to, kitSidecar(file));
-    const target = join(to, file);
-    if (existsSync(sidecar)) {
-      if (read(sidecar) !== read(join(from, file))) {
-        issues.push({
-          path: relative(projectRoot, sidecar),
-          message: `differs from ${want}; user copy kept`,
-        });
-      }
-      continue;
-    }
+    const sidecar = join(to, adoptRel(file));
+    const target = existsSync(sidecar) ? sidecar : join(to, file);
     if (!existsSync(target)) {
       issues.push({ path: relative(projectRoot, target), message: `copy missing: copy it from ${want} or re-run init` });
     } else if (read(target) !== read(join(from, file))) {
-      issues.push({
-        path: relative(projectRoot, target),
-        message: `differs from ${want}; user copy kept`,
-      });
+      issues.push({ path: relative(projectRoot, target), message: `differs from ${want}; user copy kept` });
     }
   }
 }
@@ -520,7 +490,7 @@ export function checkKitDocs(projectRoot: string, source: string, kit: string = 
       .split("\n")
       .filter((line) => kitLines.has(line.trim()))
       .join("\n");
-    const universe = refUniverse(kit);
+    const universe = kitUniverse(kit);
     const installed = installedUnion([avail.skills, avail.agents, avail.commands]);
     const files = [{ path: "AGENTS.md", text: kitText, kitOrigin: true }];
     return danglingKitRefs(files, installed, universe);
