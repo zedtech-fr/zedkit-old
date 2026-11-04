@@ -6,6 +6,7 @@ import { Stack } from "@zedtech/zedkit-ui";
 import { identityAssistantCopy as copy } from "@/components/i18n/identity-assistant-copy";
 import { AssistantHeading, ViewSwitch, noticeText } from "@/components/identity-assistant-parts";
 import { IdentityDockAssistantGrid } from "@/components/identity-dock-assistant-grid";
+import { DockFeedback } from "@/components/identity-dock-feedback";
 import { IdentityDockPanelToolbar } from "@/components/identity-dock-panel-toolbar";
 import { useAssistantSubmitHandlers } from "@/components/use-assistant-submit";
 import { useAssistantView } from "@/components/use-assistant-view";
@@ -74,7 +75,6 @@ export function IdentityDockAssistantPanel({
           off={off}
           brief={brief}
           busy={busy}
-          feedbackText={assistantFeedbackText(session, busy)}
           previewTokens={previewTokens}
           domainBrief={domainBrief}
           textareaRef={ui.textarea}
@@ -85,6 +85,9 @@ export function IdentityDockAssistantPanel({
           onUse={(next) => acceptProposal(ui.backToConversation, onPreviewTokens, dispatch, setBrief, next)}
           onDiscard={() => ui.backToConversation(() => dispatch({ type: "discard" }))}
         />
+      </Stack>
+      <Stack className="shrink-0 px-3 pb-3">
+        <DockFeedback text={assistantFeedbackText(session, busy)} off={off} busy={busy} />
       </Stack>
     </Stack>
   );

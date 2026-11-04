@@ -91,7 +91,9 @@ test.describe("IdentityDock", () => {
     await page.keyboard.press("Control+I");
     await expect(brief(page)).toHaveValue("Saved brief");
     await expect(page.getByText("Hello")).toBeVisible();
-    await expect(page.getByRole("button", { name: "New conversation" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Start a new identity assistant conversation" }),
+    ).toBeVisible();
     await page.getByTestId("identity-dock-new-conversation").click();
     await expect(brief(page)).toHaveValue("");
     await expect(page.getByText("Hello")).toHaveCount(0);
