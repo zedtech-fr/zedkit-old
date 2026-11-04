@@ -36,7 +36,7 @@ One shared source, then thin provider layers. Phases **A–D** are provider-neut
 - **Evidence only.** Every command, path, version and convention you write comes from a file you opened or a command you ran (see `ground-truth`). Mark the rest `UNVERIFIED` or leave it out.
 - **Owner answers.** Text that comes from the interview or explicit owner reply is tagged **`source: owner`** on the same line or table row (discovery axis in the setup scorecard).
 - **Additive.** Never delete or rewrite the user's existing text without asking. Propose, then apply what they accept.
-- **Setup depth.** When the repo uses preset **`setup`** or the owner asked for product/domain depth, fill the artifact table in phase C and propose catalog skills in phase D even if a workflow appeared only once so far. Outside that, keep **`ponytail`** minimalism (no skill for a one-off).
+- **Setup depth.** When the repo uses preset **`setup`** or the owner asked for product/domain depth, fill the artifact table in phase C and propose catalog skills in phase D even if a workflow appeared only once so far. Outside that, keep <!-- if:skill=ponytail -->**`ponytail`** <!-- /if -->minimalism (no skill for a one-off).
 - **Prefer enforcement to prose.** If a linter, type check, test or CI job can enforce a rule, configure that and mention it in one line. Prose is for what tools cannot check.
 - A public repo gets no private names, customer data or internal URLs in any file you write.
 
@@ -78,23 +78,23 @@ Launch read-only `explorer` subagents in one batch, one question each, with the 
 | Domain and money                                                       | auth, tenancy, bookings/orders, refunds, migrations, generated code, vendored folders                      |
 | How the team works                                                     | `git log` (commit style, PR size, hotfix habits), templates, branch rules, CI jobs and what blocks a merge |
 
-Then **run the gate commands you found**, preferring forms without side effects (note any that write build output). Judge a command by its exit code, not by parsed output. A command that fails is a finding, not something to hide. Invoke **`product-director`** when the repo has a customer-facing product; **`domain-modeling`** when glossary or policy language is unclear.
+Then **run the gate commands you found**, preferring forms without side effects (note any that write build output). Judge a command by its exit code, not by parsed output. A command that fails is a finding, not something to hide.<!-- if:agent=product-director --> Invoke **`product-director`** when the repo has a customer-facing product.<!-- /if --><!-- if:skill=domain-modeling --> Invoke **`domain-modeling`** when glossary or policy language is unclear.<!-- /if -->
 
 ### A3. Find the gaps
 
 In **improve** mode, audit each existing file and report before you edit:
 
-| Check                      | How                                                                                                                                                                                                                     |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Stale                      | paths that no longer exist, commands that fail, tools the repo no longer uses. Check each path and run each command; do not judge by reading.                                                                           |
-| Contradictory              | two files giving different commands or rules                                                                                                                                                                            |
-| Duplicated                 | a paragraph, or three or more lines, repeated across files; keep one home and link to it                                                                                                                                |
-| Copied shared config       | a local copy of what a published `@zedtech/*` package ships (ESLint preset/boundaries, tsconfig base): replace the copy with the install, thin wrapper only, never copy-paste; verify with the package's verify command |
-| Too long for always-loaded | root file over about 100 lines, nested file over about 60, skill over about 150; or details only one folder needs                                                                                                       |
-| Missing trigger            | skills or agents whose `description` does not say when to use them                                                                                                                                                      |
-| Unenforced                 | prose rules a tool could check. Before calling a rule unenforced, open the lint, type and CI configs and search them for it.                                                                                            |
-| Missing ladder             | root `AGENTS.md`, or the `plan` / `implement` / `review` skills, does not state the 7-question ladder. Search for the ladder section or the 7 rungs; an existing `AGENTS.md` without it is a gap like any other.        |
-| Missing product/domain     | no `.agents/product.md`, no `.agents/domain/*.md`, personas still generic, no design voice doc when the repo has UI                                                                                                     |
+| Check                      | How                                                                                                                                                                                                                                                |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Stale                      | paths that no longer exist, commands that fail, tools the repo no longer uses. Check each path and run each command; do not judge by reading.                                                                                                      |
+| Contradictory              | two files giving different commands or rules                                                                                                                                                                                                       |
+| Duplicated                 | a paragraph, or three or more lines, repeated across files; keep one home and link to it                                                                                                                                                           |
+| Copied shared config       | a local copy of what a published `@zedtech/*` package ships (ESLint preset/boundaries, tsconfig base): replace the copy with the install, thin wrapper only, never copy-paste; verify with the package's verify command                            |
+| Too long for always-loaded | root file over about 100 lines, nested file over about 60, skill over about 150; or details only one folder needs                                                                                                                                  |
+| Missing trigger            | skills or agents whose `description` does not say when to use them                                                                                                                                                                                 |
+| Unenforced                 | prose rules a tool could check. Before calling a rule unenforced, open the lint, type and CI configs and search them for it.                                                                                                                       |
+| Missing ladder             | root `AGENTS.md`, or the <!-- if:skill=plan -->`plan` / `implement` / <!-- /if -->`review` skills, does not state the 7-question ladder. Search for the ladder section or the 7 rungs; an existing `AGENTS.md` without it is a gap like any other. |
+| Missing product/domain     | no `.agents/product.md`, no `.agents/domain/*.md`, personas still generic, no design voice doc when the repo has UI                                                                                                                                |
 
 In both modes, list **gaps**: repo facts an agent would otherwise get wrong.
 
@@ -126,7 +126,7 @@ Open **`templates/README.md`** in this skill folder (after install: `.agents/ski
 | Design / identity | `.agents/design.md`                    | `templates/design.template.md`                       |
 | Glossary          | `GLOSSARY.md` or `.agents/glossary.md` | `templates/glossary.template.md`                     |
 
-Each domain file includes **rules, invariants, edge cases**, sources (`file:line` or `source: owner`), and a **Test** column (test path or `no test — flag`). Use **`ui-designer`** and **`copywriter`** for `design.md` when UI exists.
+Each domain file includes **rules, invariants, edge cases**, sources (`file:line` or `source: owner`), and a **Test** column (test path or `no test — flag`).<!-- if:agent=ui-designer --> Use **`ui-designer`** and **`copywriter`** for `design.md` when UI exists.<!-- /if -->
 
 ## Phase D — Catalog skills
 
@@ -164,7 +164,7 @@ Present one table covering phase A gaps, phase C artifacts, phase D skills, and 
 - **Root `AGENTS.md`**: start from the kit template if there is none; when one exists, keep it and add the missing ladder section (the same 7 questions as the template). Replace every `<placeholder>` with a verified fact or delete the line. Non-negotiables name how each is enforced. Link `.agents/product.md` and domain docs from the map section.
 - **Role and style**: fill it from evidence and owner answers, not taste. Tag owner choices `source: owner`.
 - **Nested `AGENTS.md`**: only what differs from the root. Link, do not copy.
-- **Repo skills**: folder `.agents/skills/<name>/SKILL.md`. The `description` says when to use it. Steps use this repo's real paths and commands, end with the command that proves the result, and point at an existing example file as the model. Follow `rules-upkeep` for format.
+- **Repo skills**: folder `.agents/skills/<name>/SKILL.md`. The `description` says when to use it. Steps use this repo's real paths and commands, end with the command that proves the result, and point at an existing example file as the model.<!-- if:skill=rules-upkeep --> Follow `rules-upkeep` for format.<!-- /if -->
 - **Subagents**: `.agents/agents/<name>.md`, one-line description, `model` omitted or `inherit`. Read-only unless the job needs writes.
 - **Improve mode**: edit in place, smallest change, keep the author's wording where it is correct. Log what changed.
 

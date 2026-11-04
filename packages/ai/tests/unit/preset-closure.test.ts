@@ -1,11 +1,12 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { resolveConditionals, withoutMarkers, type Availability } from "#conditional.js";
 import { installKit } from "#install.js";
-import { agentsForPreset, commandsForPreset, readManifest } from "#kit.js";
+import { agentsForPreset, commandsForPreset, kitDir, readManifest } from "#kit.js";
 import { lensClosureIssues, setLensStatus } from "#lenses.js";
 import { validateKit } from "#validate.js";
-import { tempDir } from "./helpers.js";
+import { skillDirs, tempDir } from "./helpers.js";
 
 function install(dest: string, preset: string): void {
   const result = installKit({ dest, preset, providers: [] });
@@ -47,6 +48,9 @@ describe("preset closure", () => {
       "retro",
       "rules-upkeep",
       "writing-for-agents",
+      "parallel-work",
+      "tdd",
+      "adversarial-tests",
     ]);
     expect(agentsForPreset(manifest.value, "setup")).toEqual([
       "explorer",
@@ -80,6 +84,159 @@ describe("preset closure", () => {
       const text = readFileSync(lensesPath, "utf8");
       expect(lensClosureIssues("skills/review/lenses.md", text, installed), preset).toEqual([]);
       expect(setLensStatus(text, installed), `${preset} lenses.md`).toBe(text);
+    }
+  });
+
+  it("every kit conditional marker resolves cleanly and lives in a known file", () => {
+    const manifest = readManifest();
+    if (!manifest.ok) throw manifest.error;
+    const full: Availability = {
+      skills: new Set(skillDirs()),
+      agents: new Set(manifest.value.agents),
+      commands: new Set(manifest.value.commands ?? []),
+    };
+    const kit = kitDir();
+    const candidates = [
+      ...skillDirs().map((name) => join("skills", name, "SKILL.md")),
+      ...manifest.value.agents.map((name) => join("agents", `${name}.md`)),
+      ...(manifest.value.commands ?? []).map((name) => join("commands", `${name}.md`)),
+    ];
+    const marked: string[] = [];
+    for (const rel of candidates) {
+      const raw = readFileSync(join(kit, rel), "utf8");
+      if (!raw.includes("<!-- if:")) continue;
+      marked.push(rel);
+      const resolved = resolveConditionals(raw, full, full);
+      expect(resolved, `${rel} keeps markers`).not.toContain("<!-- if:");
+      expect(resolved, `${rel} keeps closers`).not.toContain("/if -->");
+    }
+    expect(marked.sort()).toEqual(
+      [
+        join("agents", "orchestrator.md"),
+        join("agents", "ui-designer.md"),
+        join("skills", "definition-of-done", "SKILL.md"),
+        join("skills", "review", "SKILL.md"),
+        join("skills", "setup-ai", "SKILL.md"),
+        join("skills", "tdd", "SKILL.md"),
+      ].sort(),
+    );
+  });
+
+  it("full preset installs conditional text with markers stripped and nothing dropped", () => {
+    const dest = tempDir();
+    install(dest, "full");
+    const agents = join(dest, ".agents");
+    const orch = readFileSync(join(agents, "agents", "orchestrator.md"), "utf8");
+    expect(orch).not.toContain("<!-- if:");
+    for (const runner of [
+      "`architect`",
+      "`skeptic`",
+      "`improver`",
+      "`security-reviewer`",
+      "`ui-designer`",
+      "`copywriter`",
+      "`a11y-auditor`",
+      "`seo-auditor`",
+      "`dependency-auditor`",
+      "`researcher`",
+      "`test-writer`",
+      "`docs-writer`",
+      "`plan`",
+      "`challenge`",
+      "`implement`",
+      "`audit`",
+      "`research`",
+    ]) {
+      expect(orch, `full keeps ${runner}`).toContain(runner);
+    }
+    const setupAi = readFileSync(join(agents, "skills", "setup-ai", "SKILL.md"), "utf8");
+    expect(setupAi).not.toContain("<!-- if:");
+    for (const kept of [
+      "Invoke **`product-director`**",
+      "Invoke **`domain-modeling`**",
+      "Use **`ui-designer`** and **`copywriter`**",
+      "Follow `rules-upkeep` for format.",
+    ]) {
+      expect(setupAi, kept).toContain(kept);
+    }
+  });
+
+  it("full preset output preserves every source line minus markers", () => {
+    const dest = tempDir();
+    install(dest, "full");
+    const agents = join(dest, ".agents");
+    const pairs: Array<[string, string]> = [
+      [join(kitDir(), "agents", "orchestrator.md"), join(agents, "agents", "orchestrator.md")],
+      [join(kitDir(), "agents", "ui-designer.md"), join(agents, "agents", "ui-designer.md")],
+      [join(kitDir(), "skills", "setup-ai", "SKILL.md"), join(agents, "skills", "setup-ai", "SKILL.md")],
+      [join(kitDir(), "skills", "review", "SKILL.md"), join(agents, "skills", "review", "SKILL.md")],
+      [join(kitDir(), "skills", "tdd", "SKILL.md"), join(agents, "skills", "tdd", "SKILL.md")],
+      [
+        join(kitDir(), "skills", "definition-of-done", "SKILL.md"),
+        join(agents, "skills", "definition-of-done", "SKILL.md"),
+      ],
+    ];
+    for (const [kitFile, installedFile] of pairs) {
+      const expected = withoutMarkers(readFileSync(kitFile, "utf8"))
+        .split("\n")
+        .filter((line) => line.trim() !== "");
+      const actual = readFileSync(installedFile, "utf8")
+        .split("\n")
+        .filter((line) => line.trim() !== "");
+      expect(actual, kitFile).toEqual(expected);
+    }
+  });
+
+  it("starter install names only installed things in setup-ai, orchestrator, and definition-of-done", () => {
+    const dest = tempDir();
+    install(dest, "starter");
+    const agents = join(dest, ".agents");
+    const orch = readFileSync(join(agents, "agents", "orchestrator.md"), "utf8");
+    expect(orch).not.toContain("<!-- if:");
+    for (const missing of [
+      "architect",
+      "skeptic",
+      "improver",
+      "security-reviewer",
+      "ui-designer",
+      "copywriter",
+      "a11y-auditor",
+      "seo-auditor",
+      "dependency-auditor",
+      "researcher",
+      "test-writer",
+      "docs-writer",
+      "plan",
+      "challenge",
+      "implement",
+      "audit",
+      "research",
+    ]) {
+      expect(orch, `starter drops ${missing}`).not.toContain(`\`${missing}\``);
+    }
+    for (const kept of ["`explorer`", "`verifier`", "`review`", "`parallel-work`"]) {
+      expect(orch, `starter keeps ${kept}`).toContain(kept);
+    }
+    const setupAi = readFileSync(join(agents, "skills", "setup-ai", "SKILL.md"), "utf8");
+    for (const missing of [
+      "product-director",
+      "domain-modeling",
+      "ui-designer",
+      "copywriter",
+      "rules-upkeep",
+      "ponytail",
+      "plan",
+      "implement",
+    ]) {
+      expect(setupAi, `starter drops ${missing}`).not.toContain(`\`${missing}\``);
+    }
+    for (const kept of ["`explorer`", "`ground-truth`", "`parallel-work`", "`review`"]) {
+      expect(setupAi, `starter keeps ${kept}`).toContain(kept);
+    }
+    const done = readFileSync(join(agents, "skills", "definition-of-done", "SKILL.md"), "utf8");
+    expect(done, "starter drops ui-designer").not.toContain("`ui-designer`");
+    for (const kept of ["`tdd`", "`adversarial-tests`", "`parallel-work`", "`verifier`"]) {
+      expect(done, `starter keeps ${kept}`).toContain(kept);
     }
   });
 

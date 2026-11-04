@@ -1,11 +1,11 @@
 // Original work by the same author.
 import { existsSync, lstatSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join, relative, sep } from "node:path";
 import { tryCatch } from "@zedtech/zedkit-core";
-import { readManifest } from "./kit.js";
+import { kitDir, kitUniverse, readManifest } from "./kit.js";
 import { parseFrontmatter } from "./frontmatter.js";
 import { lensClosureIssues } from "./lenses.js";
-import { danglingSkillRefs, skillRefFiles } from "./skill-refs.js";
+import { danglingKitRefs, skillRefFiles, type RefUniverse } from "./skill-refs.js";
 
 export type Issue = { path: string; message: string };
 
@@ -191,15 +191,56 @@ function namesIn(root: string, dir: string): string[] {
   return mdFiles(full).map((file) => file.replace(/\.md$/, ""));
 }
 
-// A skill, agent or command that tells the agent to run a skill must name
-// one that is installed in this tree. Checked on the files present, so a
-// preset that omitted the target fails the same way the full kit would.
-function checkSkillRefs(root: string, skills: Set<string>, issues: Issue[]): void {
-  const files = skillRefFiles(root, [...skills], namesIn(root, "agents"), namesIn(root, "commands"));
-  for (const issue of danglingSkillRefs(files, skills)) issues.push(issue);
+// Reference closure over the kit universe: a skill, agent or command that
+// names a kit skill/agent must name one installed in this tree (in any
+// kind). Checked on the files present, so a preset that omitted the target
+// fails the same way the full kit would. Bare backticked tokens count only
+// in kit-origin files — same name ships in the bundled kit — where a kit
+// name is a reference by convention; in user-authored files the same token
+// is an ordinary word. A user file shadowing a kit name (kit sidecar
+// beside it) is user prose too.
+function checkSkillRefs(root: string, skills: Set<string>, kit: string, issues: Issue[]): void {
+  const agents = namesIn(root, "agents");
+  const commands = namesIn(root, "commands");
+  const uni = tryCatch(() => kitUniverse(kit));
+  const universe: RefUniverse = uni.ok
+    ? {
+        skills: new Set(uni.value.skills),
+        agents: new Set(uni.value.agents),
+        commands: new Set(uni.value.commands),
+      }
+    : { skills: new Set(), agents: new Set(), commands: new Set() };
+  const installed = new Set([...skills, ...agents, ...commands]);
+  for (const name of [...installed]) {
+    if (name.startsWith("zk-")) installed.add(name.slice("zk-".length));
+  }
+  const shadowed = new Set<string>();
+  for (const name of skills) {
+    if (name.startsWith("zk-")) shadowed.add(join("skills", name.slice("zk-".length), "SKILL.md"));
+  }
+  for (const dir of ["agents", "commands"]) {
+    const full = join(root, dir);
+    if (!existsSync(full)) continue;
+    for (const file of readdirSync(full).filter((entry) => entry.endsWith(".kit.md"))) {
+      shadowed.add(join(dir, file.replace(/\.kit\.md$/, ".md")));
+    }
+  }
+  const isKitOrigin = (path: string): boolean => {
+    if (shadowed.has(path)) return false;
+    const [top, name] = path.split(sep);
+    if (top === "skills" && name !== undefined) {
+      const base = name.startsWith("zk-") ? name.slice("zk-".length) : name;
+      return universe.skills.has(base);
+    }
+    if (top === "agents" && name !== undefined) return universe.agents.has(name.replace(/\.md$/, ""));
+    if (top === "commands" && name !== undefined) return universe.commands.has(name.replace(/\.md$/, ""));
+    return false;
+  };
+  const files = skillRefFiles(root, [...skills], agents, commands, isKitOrigin);
+  for (const issue of danglingKitRefs(files, installed, universe)) issues.push(issue);
 }
 
-function collect(root: string): Issue[] {
+function collect(root: string, kit: string): Issue[] {
   const issues: Issue[] = [];
   const skills = new Set(dirsIn(join(root, "skills")));
   for (const name of skills) checkSkill(root, name, issues);
@@ -218,7 +259,7 @@ function collect(root: string): Issue[] {
   checkManifest(root, issues);
   checkLadder(root, issues);
   checkLineEndings(root, issues);
-  checkSkillRefs(root, skills, issues);
+  checkSkillRefs(root, skills, kit, issues);
   checkLenses(root, skills, issues);
   return issues;
 }
@@ -236,13 +277,15 @@ function checkLenses(root: string, skills: Set<string>, issues: Issue[]): void {
  * Check a directory laid out as `skills/<name>/SKILL.md`, `agents/<name>.md`,
  * `commands/<name>.md` and optionally `kit.json`. Returns every problem
  * found; empty means valid. An unreadable entry (dangling symlink,
- * permissions) is reported as a problem instead of throwing.
+ * permissions) is reported as a problem instead of throwing. `kit`
+ * locates the bundled kit for the reference universe (defaults to this
+ * package's kit); an unreadable kit disables only the backticked form.
  */
-export function validateKit(root: string): Issue[] {
+export function validateKit(root: string, kit: string = kitDir()): Issue[] {
   if (!existsSync(root)) {
     return [{ path: root, message: "directory does not exist" }];
   }
-  const result = tryCatch(() => collect(root));
+  const result = tryCatch(() => collect(root, kit));
   return result.ok ? result.value : [{ path: root, message: `cannot read: ${result.error.message}` }];
 }
 

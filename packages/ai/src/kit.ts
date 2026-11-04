@@ -1,5 +1,5 @@
 // Original work by the same author.
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { err, ok, tryCatch, type Result } from "@zedtech/zedkit-core";
 
@@ -81,4 +81,21 @@ export function agentsForPreset(manifest: KitManifest, preset: string): string[]
 /** Commands installed for a preset (full manifest list when not narrowed). */
 export function commandsForPreset(manifest: KitManifest, preset: string): string[] {
   return manifest.presetCommands?.[preset] ?? manifest.commands ?? [];
+}
+
+export type KitUniverse = { skills: string[]; agents: string[]; commands: string[] };
+
+/** Every installable name in a kit dir: skill folders, agent/command stems. Missing dirs read as empty (minimal foreign kits). */
+export function kitUniverse(dir: string = kitDir()): KitUniverse {
+  const skills = tryCatch(() => readdirSync(`${dir}/skills`, { withFileTypes: true }));
+  const stems = (sub: string): string[] => {
+    const files = tryCatch(() => readdirSync(`${dir}/${sub}`));
+    if (!files.ok) return [];
+    return files.value.filter((file) => file.endsWith(".md")).map((file) => file.replace(/\.md$/, ""));
+  };
+  return {
+    skills: skills.ok ? skills.value.filter((entry) => entry.isDirectory()).map((entry) => entry.name) : [],
+    agents: stems("agents"),
+    commands: stems("commands"),
+  };
 }

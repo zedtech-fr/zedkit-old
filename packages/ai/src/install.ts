@@ -15,9 +15,10 @@ import {
 import { dirname, join, sep } from "node:path";
 import { err, ok, tryCatch, type Result } from "@zedtech/zedkit-core";
 import { parseFrontmatter } from "./frontmatter.js";
-import { agentsForPreset, commandsForPreset, kitDir, readManifest, type KitManifest } from "./kit.js";
+import { agentsForPreset, commandsForPreset, kitDir, kitUniverse, readManifest, type KitManifest } from "./kit.js";
 import { setLensStatus } from "./lenses.js";
-import { danglingSkillRefs, skillRefFiles } from "./skill-refs.js";
+import { danglingKitRefs, skillRefFiles } from "./skill-refs.js";
+import { resolveConditionals, type Availability } from "./conditional.js";
 
 /** Providers that get an installer layer or shared-source wiring. */
 export type Provider = "claude" | "cursor" | "codex";
@@ -68,7 +69,15 @@ alwaysApply: true
 Read and follow /AGENTS.md at the repo root, and use the skills in .agents/skills.
 `;
 
-type Ctx = { dest: string; kit: string; dryRun: boolean; adopt: boolean; actions: Action[] };
+type Ctx = {
+  dest: string;
+  kit: string;
+  dryRun: boolean;
+  adopt: boolean;
+  actions: Action[];
+  /** What this preset installs; resolves conditional kit blocks. Set after plan(). */
+  avail: Availability;
+};
 
 function lstatOf(path: string): ReturnType<typeof lstatSync> | undefined {
   const stat = tryCatch(() => lstatSync(path));
@@ -130,14 +139,21 @@ function treeFiles(root: string): string[] | undefined {
   }).sort();
 }
 
-function treesMatch(src: string, dest: string, installed: ReadonlySet<string>): boolean {
+// Conditional markers resolved; plain files pass through untouched.
+function resolveIfNeeded(text: string, avail: Availability): string {
+  return text.includes("<!-- if:") ? resolveConditionals(text, avail) : text;
+}
+
+function treesMatch(src: string, dest: string, installed: ReadonlySet<string>, avail: Availability): boolean {
   const from = treeFiles(src);
   const to = treeFiles(dest);
   if (!from || !to || from.join("\n") !== to.join("\n")) return false;
   return from.every((rel) => {
     const raw = tryCatch(() => readFileSync(join(src, rel), "utf8"));
     const got = tryCatch(() => readFileSync(join(dest, rel), "utf8"));
-    return raw.ok && got.ok && (rel === "lenses.md" ? setLensStatus(raw.value, installed) : raw.value) === got.value;
+    if (!raw.ok || !got.ok) return false;
+    const lensed = rel === "lenses.md" ? setLensStatus(raw.value, installed) : raw.value;
+    return resolveIfNeeded(lensed, avail) === got.value;
   });
 }
 
@@ -181,15 +197,20 @@ function place(
 }
 
 function copyFile(ctx: Ctx, from: string, rel: string): void {
+  const kit = tryCatch(() => readFileSync(from, "utf8"));
+  const text = kit.ok ? resolveIfNeeded(kit.value, ctx.avail) : undefined;
+  if (text === undefined) {
+    place(ctx, "copy", rel, (destRel) => copyFileSync(from, join(ctx.dest, destRel)));
+    return;
+  }
   if (ctx.adopt) {
-    const left = tryCatch(() => readFileSync(from));
-    const right = tryCatch(() => readFileSync(join(ctx.dest, rel)));
-    if (left.ok && right.ok && left.value.equals(right.value)) {
+    const current = tryCatch(() => readFileSync(join(ctx.dest, rel), "utf8"));
+    if (current.ok && current.value === text) {
       ctx.actions.push({ kind: "skip", path: rel, note: "already installed" });
       return;
     }
   }
-  place(ctx, "copy", rel, (destRel) => copyFileSync(from, join(ctx.dest, destRel)));
+  place(ctx, "copy", rel, (destRel) => writeFileSync(join(ctx.dest, destRel), text));
 }
 
 function link(ctx: Ctx, rel: string, target: string): void {
@@ -223,10 +244,32 @@ function plan(kit: string, manifest: KitManifest, preset: string) {
     if (!existsSync(join(kit, "commands", `${name}.md`))) throw new Error(`kit has no command "${name}"`);
   }
   const licences = readdirSync(join(kit, "skills")).filter((f) => f.startsWith("LICENSE-"));
-  const issues = danglingSkillRefs(skillRefFiles(kit, skills, agents, commands), new Set(skills));
+  const avail: Availability = { skills: new Set(skills), agents: new Set(agents), commands: new Set(commands) };
+  const uni = kitUniverse(kit);
+  const universe: Availability = {
+    skills: new Set(uni.skills),
+    agents: new Set(uni.agents),
+    commands: new Set(uni.commands),
+  };
+  const files = skillRefFiles(kit, skills, agents, commands).map((file) => ({
+    ...file,
+    text: resolveConditionals(file.text, avail, universe),
+  }));
+  const installed = new Set([...skills, ...agents, ...commands]);
+  const issues = danglingKitRefs(files, installed, universe);
   if (issues.length > 0) {
     const detail = issues.map((issue) => `${issue.path}: ${issue.message}`).join("; ");
-    throw new Error(`preset "${preset}" has dangling skill references: ${detail}`);
+    throw new Error(`preset "${preset}" has dangling references: ${detail}`);
+  }
+  // Marker-bearing files outside skills/agents/commands resolve at copy
+  // time; validate their markers now so a bad kit fails before writing.
+  for (const name of licences) {
+    resolveConditionals(readFileSync(join(kit, "skills", name), "utf8"), avail, universe);
+  }
+  for (const single of ["THIRD_PARTY_NOTICES.md", "personas.template.md", "AGENTS.template.md"]) {
+    if (existsSync(join(kit, single))) {
+      resolveConditionals(readFileSync(join(kit, single), "utf8"), avail, universe);
+    }
   }
   return { skills, licences, agents, commands };
 }
@@ -275,12 +318,29 @@ function patchLenses(folder: string, installed: ReadonlySet<string>): void {
   writeFileSync(file, setLensStatus(readFileSync(file, "utf8"), installed));
 }
 
+function patchConditionals(folder: string, avail: Availability): void {
+  const files = tryCatch(() => readdirSync(folder, { recursive: true, encoding: "utf8" }));
+  if (!files.ok) return;
+  for (const rel of files.value) {
+    if (!rel.endsWith(".md")) continue;
+    const full = join(folder, rel);
+    const raw = tryCatch(() => readFileSync(full, "utf8"));
+    if (!raw.ok || !raw.value.includes("<!-- if:")) continue;
+    writeFileSync(full, resolveConditionals(raw.value, avail));
+  }
+}
+
 function installContent(ctx: Ctx, content: ReturnType<typeof plan>): Map<string, string> {
   const installed = new Set([...content.skills, ...content.agents]);
+  const avail: Availability = {
+    skills: new Set(content.skills),
+    agents: new Set(content.agents),
+    commands: new Set(content.commands),
+  };
   const skillDest = new Map<string, string>();
   for (const name of content.skills) {
     const rel = join(".agents", "skills", name);
-    if (ctx.adopt && treesMatch(join(ctx.kit, "skills", name), join(ctx.dest, rel), installed)) {
+    if (ctx.adopt && treesMatch(join(ctx.kit, "skills", name), join(ctx.dest, rel), installed, avail)) {
       ctx.actions.push({ kind: "skip", path: rel, note: "already installed" });
       skillDest.set(name, rel);
       continue;
@@ -288,6 +348,7 @@ function installContent(ctx: Ctx, content: ReturnType<typeof plan>): Map<string,
     const destRel = place(ctx, "copy", rel, (target) => {
       cpSync(join(ctx.kit, "skills", name), join(ctx.dest, target), { recursive: true, dereference: true });
       patchLenses(join(ctx.dest, target), installed);
+      patchConditionals(join(ctx.dest, target), avail);
     });
     skillDest.set(name, destRel ?? rel);
   }
@@ -423,9 +484,15 @@ export function installKit(options: InstallOptions): Result<Action[]> {
     dryRun: options.dryRun ?? false,
     adopt: options.adopt ?? false,
     actions: [],
+    avail: { skills: new Set(), agents: new Set(), commands: new Set() },
   };
   const run = tryCatch(() => {
     const content = plan(kit, manifest.value, options.preset ?? "starter");
+    ctx.avail = {
+      skills: new Set(content.skills),
+      agents: new Set(content.agents),
+      commands: new Set(content.commands),
+    };
     const skillDest = installContent(ctx, content);
     const chosen = (options.providers ?? options.targets ?? ALL_PROVIDERS) as WireProvider[];
     for (const provider of chosen) {

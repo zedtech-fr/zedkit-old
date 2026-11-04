@@ -39,12 +39,12 @@ describe("installKit", () => {
     expect(readFileSync(join(dest, ".cursor/rules/project.mdc"), "utf8")).toContain("alwaysApply: true");
   });
 
-  it("starter preset stays small: five skills, three subagents, two commands", () => {
+  it("starter preset stays small: eight skills, three subagents, two commands", () => {
     const manifest = readManifest();
     if (!manifest.ok) throw manifest.error;
     const starter = manifest.value.presets.starter;
     if (!Array.isArray(starter)) throw new Error("starter preset must list skills");
-    expect(starter).toHaveLength(5);
+    expect(starter).toHaveLength(8);
     expect(agentsForPreset(manifest.value, "starter")).toHaveLength(3);
     expect(commandsForPreset(manifest.value, "starter")).toHaveLength(2);
   });

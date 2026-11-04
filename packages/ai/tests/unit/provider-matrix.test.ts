@@ -162,4 +162,9 @@ describe("provider matrix", () => {
     expectRealDirLayer(dest, "claude");
     expect(lstatSync(join(dest, "CLAUDE.md")).isSymbolicLink()).toBe(true);
   });
+
+  it("starter x adopt twice: conditional text resolves once, rerun is a no-op", () => {
+    const dest = tempDir();
+    parityCell(dest, "starter", ["cursor"], true);
+  });
 });

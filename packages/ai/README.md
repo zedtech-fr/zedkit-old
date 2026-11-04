@@ -63,10 +63,10 @@ npx zedkit-ai validate                           # must print: ok
 ```
 
 **Starter (default for `init`):** `setup-ai`, `ground-truth`, `review`, `definition-of-done`,
-and `orchestrate` (so setup can hand off bigger work), plus subagents
-`explorer`, `verifier`, and `orchestrator`, and commands `/setup-ai` and
-`/review`. Enough to onboard a repo, verify facts, run one review workflow,
-and check done-ness without loading the whole kit.
+`orchestrate` (so setup can hand off bigger work), `parallel-work`, `tdd`, and
+`adversarial-tests`, plus subagents `explorer`, `verifier`, and `orchestrator`,
+and commands `/setup-ai` and `/review`. Enough to onboard a repo, verify facts,
+run one review workflow, and check done-ness without loading the whole kit.
 
 **Setup preset (default for `setup`):** everything in starter, plus
 `domain-modeling`, `persona-review`, `code-review`, `ponytail-review`,
@@ -206,7 +206,7 @@ the Matt Pocock engineering skills (`tdd`, `code-review`, `diagnosing-bugs`,
 director briefs — the full table (role + when to call) lives in
 `docs/agents-catalog.md`, the installed set in `kit.json`.
 
-**Presets:** `starter` (default: onboard, review, done — five skills, three
+**Presets:** `starter` (default: onboard, review, done — eight skills, three
 subagents, two commands), `setup` (starter plus domain modeling, the review
 lenses, retro, rules-upkeep, and subagents `product-director`, `ui-designer`,
 `copywriter`), `core` (planning, implement, and the rest;

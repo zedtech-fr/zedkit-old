@@ -5,7 +5,10 @@
       "ground-truth",
       "review",
       "definition-of-done",
-      "orchestrate"
+      "orchestrate",
+      "parallel-work",
+      "tdd",
+      "adversarial-tests"
     ],
     "setup": [
       "setup-ai",
@@ -19,7 +22,10 @@
       "ponytail-review",
       "retro",
       "rules-upkeep",
-      "writing-for-agents"
+      "writing-for-agents",
+      "parallel-work",
+      "tdd",
+      "adversarial-tests"
     ],
     "core": [
       "ponytail",

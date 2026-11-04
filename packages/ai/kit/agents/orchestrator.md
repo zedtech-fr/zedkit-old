@@ -38,34 +38,88 @@ You run playbooks yourself (you spawn workers; workers are leaves, depth 1).
 
 Playbooks (skills you apply by dispatching work shaped like them):
 
-| Playbook        | Skill       |
-| --------------- | ----------- |
-| Review a change | `review`    |
-| Plan / spec     | `plan`      |
-| Pre-mortem      | `challenge` |
-| Implement       | `implement` |
-| Quality audit   | `audit`     |
-| Research        | `research`  |
+| Playbook        | Skill    |
+| --------------- | -------- |
+| Review a change | `review` |
+
+<!-- if:skill=plan -->
+
+| Plan / spec | `plan` |
+<!-- /if -->
+<!-- if:skill=challenge -->
+
+| Pre-mortem | `challenge` |
+<!-- /if -->
+<!-- if:skill=implement -->
+
+| Implement | `implement` |
+<!-- /if -->
+<!-- if:skill=audit -->
+
+| Quality audit | `audit` |
+<!-- /if -->
+<!-- if:skill=research -->
+
+| Research | `research` |
+<!-- /if -->
 
 Specialists (subagents):
 
-| Need              | Agent                   |
-| ----------------- | ----------------------- |
-| Repo lookup       | `explorer`              |
-| File-level plan   | `architect`             |
-| Plan attack       | `skeptic` (angle: plan) |
-| Pre-mortem        | `skeptic`               |
-| Gates before done | `verifier`              |
-| Apply findings    | `improver`              |
-| Security          | `security-reviewer`     |
-| UI                | `ui-designer`           |
-| Copy              | `copywriter`            |
-| a11y              | `a11y-auditor`          |
-| SEO               | `seo-auditor`           |
-| Dependencies      | `dependency-auditor`    |
-| Prior art         | `researcher`            |
-| Tests             | `test-writer`           |
-| Docs              | `docs-writer`           |
+| Need        | Agent      |
+| ----------- | ---------- |
+| Repo lookup | `explorer` |
+
+<!-- if:agent=architect -->
+
+| File-level plan | `architect` |
+<!-- /if -->
+<!-- if:agent=skeptic -->
+
+| Plan attack | `skeptic` (angle: plan) |
+| Pre-mortem | `skeptic` |
+<!-- /if -->
+
+| Gates before done | `verifier` |
+<!-- if:agent=improver -->
+
+| Apply findings | `improver` |
+<!-- /if -->
+<!-- if:agent=security-reviewer -->
+
+| Security | `security-reviewer` |
+<!-- /if -->
+<!-- if:agent=ui-designer -->
+
+| UI | `ui-designer` |
+<!-- /if -->
+<!-- if:agent=copywriter -->
+
+| Copy | `copywriter` |
+<!-- /if -->
+<!-- if:agent=a11y-auditor -->
+
+| a11y | `a11y-auditor` |
+<!-- /if -->
+<!-- if:agent=seo-auditor -->
+
+| SEO | `seo-auditor` |
+<!-- /if -->
+<!-- if:agent=dependency-auditor -->
+
+| Dependencies | `dependency-auditor` |
+<!-- /if -->
+<!-- if:agent=researcher -->
+
+| Prior art | `researcher` |
+<!-- /if -->
+<!-- if:agent=test-writer -->
+
+| Tests | `test-writer` |
+<!-- /if -->
+<!-- if:agent=docs-writer -->
+
+| Docs | `docs-writer` |
+<!-- /if -->
 
 ## 4. Dispatch
 
@@ -81,8 +135,8 @@ resolve conflicts (evidence wins; remaining disagreement goes in the report).
 
 ## 6. Verify
 
-Run `verifier` (and `skeptic` for plans/decisions) before concluding. At most
-one fix round via `improver` or a writer, then re-verify. Say what was not
+Run `verifier`<!-- if:agent=skeptic --> (and `skeptic` for plans/decisions)<!-- /if --> before concluding. At most
+one fix round via <!-- if:agent=improver -->`improver` or <!-- /if -->a writer, then re-verify. Say what was not
 verified.
 
 ## Limits

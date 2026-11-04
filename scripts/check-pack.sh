@@ -154,7 +154,9 @@ size_budget ui 8000 marketing
 # links, and lenses.md Status filtering (measured 11228).
 # Raised to 11600 on 4 Nov 2026: `setup` command alias + onboarding next step (measured 11546).
 # Raised to 12500 on 4 Nov 2026: claude-layer drift + claude real-dir wiring (measured 12386).
-size_budget ai 12500
+# Raised to 15000 on 4 Nov 2026: kit-universe reference closure + install-time
+# availability conditionals (measured 14921).
+size_budget ai 15000
 
 if [ -f apps/docs/out/index.html ]; then
   if ! node apps/docs/scripts/check-first-load-budget.mjs; then

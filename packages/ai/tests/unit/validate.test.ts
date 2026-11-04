@@ -65,16 +65,48 @@ describe("validateKit", () => {
     put(root, "agents/reader.md", `${AGENT("reader")}\nCall the Skill tool with "ghost".\n`);
     put(root, "commands/go.md", `${COMMAND("alpha")}\nThen /missing-skill.\n`);
     const found = messages(root);
-    expect(found).toContain('skills/alpha/SKILL.md: references skill "beta", which is not installed');
-    expect(found).toContain('skills/gamma/SKILL.md: references skill "delta", which is not installed');
-    expect(found).toContain('agents/reader.md: references skill "ghost", which is not installed');
-    expect(found).toContain('commands/go.md: references skill "missing-skill", which is not installed');
+    expect(found).toContain('skills/alpha/SKILL.md: references skill "beta", which this preset does not install');
+    expect(found).toContain('skills/gamma/SKILL.md: references skill "delta", which this preset does not install');
+    expect(found).toContain('agents/reader.md: references skill "ghost", which this preset does not install');
+    expect(found).toContain('commands/go.md: references skill "missing-skill", which this preset does not install');
   });
 
   it("accepts a skill reference when that skill is installed", () => {
     const root = tempDir();
     put(root, "skills/alpha/SKILL.md", `${SKILL("alpha")}\nCall the Skill tool with "beta". Run \`/beta\`.\n`);
     put(root, "skills/beta/SKILL.md", SKILL("beta"));
+    expect(validateKit(root)).toEqual([]);
+  });
+
+  it("flags a kit file naming a kit skill no installed kind provides", () => {
+    const root = tempDir();
+    put(root, "skills/review/SKILL.md", `${SKILL("review")}\nUse \`tdd\`.\n`);
+    expect(messages(root)).toContain('skills/review/SKILL.md: references skill "tdd", which this preset does not install');
+  });
+
+  it("reports the agent kind for agent names", () => {
+    const root = tempDir();
+    put(root, "agents/verifier.md", `${AGENT("verifier")}\nAsk \`architect\`.\n`);
+    expect(messages(root)).toContain('agents/verifier.md: references agent "architect", which this preset does not install');
+  });
+
+  it("accepts a kit name installed under any kind", () => {
+    const root = tempDir();
+    put(root, "skills/review/SKILL.md", `${SKILL("review")}\nUse \`tdd\`.\nladder\n`);
+    put(root, "agents/tdd.md", AGENT("tdd"));
+    expect(validateKit(root)).toEqual([]);
+  });
+
+  it("treats backticked kit names in user-authored files as ordinary words", () => {
+    const root = tempDir();
+    put(root, "skills/my-thing/SKILL.md", `${SKILL("my-thing")}\nRun the \`plan\` phase, then \`review\` output.\n`);
+    expect(validateKit(root)).toEqual([]);
+  });
+
+  it("treats a user file shadowing a kit name as user prose, and satisfies refs from the sidecar", () => {
+    const root = tempDir();
+    put(root, "skills/review/SKILL.md", `${SKILL("review")}\nMy own notes on the \`plan\` phase and ladder.\n`);
+    put(root, "skills/zk-review/SKILL.md", `${SKILL("review")}\nladder\n`);
     expect(validateKit(root)).toEqual([]);
   });
 
