@@ -150,7 +150,7 @@ size_budget() {
 # Raised to 43600 on 3 Nov 2026: measured 43561 with signature type-role and motion exports.
 size_budget ui 43600
 # Marketing entry (separate from the main budget); measured 785 with GlassSurface only;
-# 5318 with L2 domain specimens (brief-routed preview compositions).
+# 5652 with L2 domain specimens (brief-routed preview compositions).
 size_budget ui 5700 marketing
 size_budget ai 9800
 
