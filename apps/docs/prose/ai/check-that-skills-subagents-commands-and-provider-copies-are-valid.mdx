@@ -24,6 +24,12 @@ commands/audit.md: names no installed skill (a command runs a `skill` by name)
 available programmatically via `validateKit` + `checkDrift`, which return
 `Issue[]` (`{ path, message }`) instead of exiting.
 
+Opt-in `zedkit-ai validate --setup` (and `--plan <file>` when the plan is
+not `PLAN.md` or `.agents/setup-log/plan.md`) also checks that the plan
+text covers every git-changed path and that each
+`.agents/setup-log/gates/*.log` starts with `CMD:` and ends with
+`EXIT:<code>`. Plain `validate` does not run those checks.
+
 ## Troubleshooting
 
 - `differs from …; user copy kept` — a provider copy (Cursor keeps real-file

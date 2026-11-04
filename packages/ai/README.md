@@ -55,6 +55,30 @@ Set up zedkit AI on this repo following https://zedkit.app/ai/setup.md
 
 The agent should install the package, run `npx zedkit-ai setup --provider cursor`, execute `/setup-ai`, then run `validate` until stdout is `ok`.
 
+## Upgrading from 0.12
+
+Re-run:
+
+```sh
+npx @zedtech/zedkit-ai setup
+```
+
+That command is `init` with **`--preset setup`** and **`--adopt`**. It does not overwrite your files. On a name collision it keeps your copy and writes the kit version beside it (`review.kit.md` for files, `zk-review` for skill folders). Identical kit copies are skipped. `init` without flags still defaults to **`starter`**.
+
+Then run **`/setup-ai`** if you want the discovery artifacts (`product.md`, `domain/`, `design.md`, glossary). The CLI install alone does not write those.
+
+What changed since 0.12 (all already in the package; this re-run picks them up):
+
+- **`setup` command** — onboarding entry. Defaults to the `setup` preset. `init` still defaults to `starter`.
+- **`setup` preset** — starter plus `domain-modeling`, `persona-review`, `code-review`, `ponytail-review`, `retro`, `rules-upkeep`, `writing-for-agents`, and subagents `product-director`, `ui-designer`, `copywriter`. `starter` stays the small closed preset.
+- **`*.kit.md` sidecars** — adopt keeps a colliding user file and writes the kit copy next to it. Validate ignores `*.kit.md`. If you already had `.agents/personas.md` (v1 Task/Bar columns), a re-run keeps it and may add `personas.kit.md` (v2 schema). Merge or replace when you want the v2 columns (goals, jobs, frustrations, journeys, evidence, routes). The `setup` preset installs v2 on a blank tree; `starter`, `core`, and `full` still install v1.
+- **`.agents/setup-log.md`** — `/setup-ai` phase E appends a retro entry here. The plan file is `PLAN.md` at the repo root or `.agents/setup-log/plan.md`. Gate command logs go in `.agents/setup-log/gates/*.log`.
+- **`validate --setup`** — opt-in; plain `validate` is unchanged. With `--setup`, every path from `git status --porcelain -uall` must appear in the plan text (a parent folder with a trailing slash counts), and each gate log must start with `CMD:` and end with `EXIT:<code>`. Pass `--plan <file>` if the plan is not at those default paths.
+- **Preset closure** — `validate` fails when an installed kit file names a skill, agent, or command the preset does not install.
+- **Providers** — `cursor`, `claude`, `codex`, `muse` share one `.agents` source. Re-run `setup` after adding a repo skill so provider layers pick it up; do not `ln` or `cp` by hand.
+
+Measured `/setup-ai` quality: mean **2.25/3** on the eight measurable rubric axes, every axis at least 2, hard gates pass. Measured with composer-2.5 and a simulated owner, on one private repo and one fictional sample repo.
+
 ## Usage
 
 Advanced / CI paths:
