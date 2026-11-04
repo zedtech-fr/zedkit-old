@@ -633,8 +633,9 @@ test("reasoning effort uses the full output ceiling so the JSON answer is not st
 });
 
 test("muse-spark models omit reasoning_effort even when env sets low", () => {
-  const env = configured({ IDENTITY_AI_MODEL: "muse-spark-1.3", IDENTITY_AI_REASONING_EFFORT: "low" });
+  const env = configured({ IDENTITY_AI_MODEL: "muse-spark-1.3", IDENTITY_AI_REASONING_EFFORT: "low", IDENTITY_AI_MAX_TOKENS: "4000" });
   assert.equal(loadConfig(env).primary.effort, "");
+  assert.equal(loadConfig(env).limits.maxOutputTokens, 8_000);
 });
 
 test("a provider that refuses reasoning_effort is retried once without it", async () => {

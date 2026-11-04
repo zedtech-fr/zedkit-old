@@ -106,7 +106,9 @@ export function loadConfig(env) {
   const usableFallback = fallback && fallback.priceInput !== null && fallback.priceOutput !== null ? fallback : null;
 
   let maxOutputTokens = integer(env.IDENTITY_AI_MAX_TOKENS, { fallback: DEFAULTS.maxOutputTokens, min: 256, max: HARD.maxOutputTokens });
-  if (primary?.effort || usableFallback?.effort) {
+  const envReasoningEffort = reasoningEffort(env.IDENTITY_AI_REASONING_EFFORT);
+  const fallbackEnvReasoningEffort = reasoningEffort(env.IDENTITY_AI_FALLBACK_REASONING_EFFORT);
+  if (envReasoningEffort || fallbackEnvReasoningEffort || primary?.effort || usableFallback?.effort) {
     // Reasoning consumes output budget before the JSON answer; the default 4000 cap starves the reply (#1203 regression).
     maxOutputTokens = Math.max(maxOutputTokens, HARD.maxOutputTokens);
   }
