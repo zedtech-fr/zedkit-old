@@ -79,7 +79,9 @@ export function installNextStepLines(
 ): string[] {
   const lines = [
     "next: run /setup-ai, then npx zedkit-ai validate",
-    "note: setup+validate ok ≠ product.md; phase C adds product.md, domain/*.md, personas.md, design.md, glossary — .agents/skills/setup-ai/templates/README.md",
+    existsSync(join(root, ".agents", "product.md"))
+      ? "next: validate, then phase E score"
+      : "note: setup+validate ok ≠ product.md; phase C adds product.md, domain/*.md, personas.md, design.md, glossary — .agents/skills/setup-ai/templates/README.md",
   ];
   if (!repoUsesPrettier(root)) return lines;
   const missing = kitPathsMissingFromPrettierIgnore(root, providers);

@@ -23,6 +23,14 @@ describe("install next step hints", () => {
     expect(lines.some((line) => line.startsWith("prettier:"))).toBe(false);
   });
 
+  it("points past phase C instead of repeating it when product.md already exists", () => {
+    const root = tempDir();
+    put(root, ".agents/product.md", "# Product\n");
+    const lines = installNextStepLines(root, ["cursor"]);
+    expect(lines).toContain("next: validate, then phase E score");
+    expect(lines.some((line) => line.includes("phase C adds"))).toBe(false);
+  });
+
   it("prints exact .prettierignore lines when Prettier is configured and paths are missing", () => {
     const root = tempDir();
     put(root, "package.json", JSON.stringify({ devDependencies: { prettier: "3.0.0" } }));
