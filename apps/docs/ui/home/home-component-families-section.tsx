@@ -4,6 +4,7 @@ import { CatalogActionLabel } from "@/components/docs-action-label";
 import {
   HOME_PERSUASION_TEXT_CLASS,
   HOME_SECTION_CONTENT_GAP,
+  HOME_SECTION_REVEAL_PROPS,
 } from "@/ui/home/home-rhythm";
 import { homeCopy } from "@/ui/home/i18n/home-copy";
 
@@ -37,6 +38,7 @@ export function HomeComponentFamiliesSection({
       id="components"
       title={homeCopy.componentFamilies.section.title}
       description={homeCopy.componentFamilies.section.description(componentCount)}
+      {...HOME_SECTION_REVEAL_PROPS}
     >
       <Stack gap={HOME_SECTION_CONTENT_GAP} data-home-component-families="">
         <Stack className="min-w-0 divide-y divide-border border-y border-border">

@@ -6,6 +6,7 @@ import {
   HOME_MARKETING_ROOT_PROPS,
   HOME_PERSUASION_TEXT_CLASS,
   HOME_SECTION_CONTENT_GAP,
+  HOME_SECTION_REVEAL_PROPS,
 } from "@/ui/home/home-rhythm";
 
 /** Comparison: a different product in each look, right after the proof and before the visitor decides how to adopt. */
@@ -18,6 +19,7 @@ export function HomeIdentitiesSection() {
       containerWidth="wide"
       id="identities"
       title={homeIdentityLooksCopy.title}
+      {...HOME_SECTION_REVEAL_PROPS}
       {...HOME_MARKETING_ROOT_PROPS}
     >
       <Stack id="use-cases" gap={HOME_SECTION_CONTENT_GAP} className="scroll-mt-24">

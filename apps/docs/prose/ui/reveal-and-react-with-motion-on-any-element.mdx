@@ -1,0 +1,20 @@
+## Triggers and tokens
+
+One element can carry several triggers. Identities retune the same tokens
+(`--zk-reveal-duration`, `--zk-reveal-distance`, `--zk-reveal-ease`,
+`--zk-stagger-step`, `--zk-lift-*`, `--zk-press-scale`, `--zk-longpress-ms`).
+
+| Trigger | Attribute | When |
+| --- | --- | --- |
+| appear | `data-animate` / `data-animate-appear` | Enters the viewport once |
+| scroll | `data-animate-scroll` | Progress through the viewport (`view()` timeline, rAF fallback) |
+| press | `data-animate-press` | `:active` (not disabled) |
+| longpress | `data-animate-longpress` | Pointer held `--zk-longpress-ms` |
+| hover | `data-animate-hover` | `:hover` on hover-capable pointers |
+| focus | `data-animate-focus` | `:focus-visible` |
+
+Mount `<AnimateObserver />` once near the app root so appear, the scroll
+fallback, and longpress run. Press, hover and focus are CSS-only.
+
+Reduced motion leaves everything visible and still. The attribute grammar
+and trigger semantics live in `packages/ui/docs/animate-spec.md`.

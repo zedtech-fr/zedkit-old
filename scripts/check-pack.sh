@@ -147,7 +147,8 @@ size_budget() {
 # Raised from 43500 to 44500 on 4 Nov 2026: measured 44141 with ScrollReset (route scroll reset).
 # Raised to 45500 on 4 Nov 2026 after syncing main: signature type-role and motion exports on top of ScrollReset.
 # IdentityDock chrome + vaul sheet moved to apps/docs (4 Nov 2026); ui gzip measured 44660.
-size_budget ui 45500
+# Raised to 48000 on 4 Nov 2026: Animate runtime + types (measured 46973).
+size_budget ui 48000
 # Marketing entry (separate from the main budget); measured 785 with GlassSurface only, 4437 on 3 Nov 2026 with LogoBand and Testimonials.
 size_budget ui 8000 marketing
 # 4 Nov 2026: validate --setup completion check (setup-check.ts). Measured
