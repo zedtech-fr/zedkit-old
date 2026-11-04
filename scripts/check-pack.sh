@@ -154,7 +154,9 @@ size_budget ui 8000 marketing
 # links, and lenses.md Status filtering (measured 11228).
 # Raised to 12000 on 4 Nov 2026: claude-layer drift (deleted entries,
 # dangling links, real-dir copies) and dangling cursor skill links (measured 11933).
-size_budget ai 12000
+# Raised to 12300 on 4 Nov 2026: claude real-dir wiring (per-skill links,
+# agent/command copies, no dead zk-* layer links) (measured 12207).
+size_budget ai 12300
 
 if [ -f apps/docs/out/index.html ]; then
   if ! node apps/docs/scripts/check-first-load-budget.mjs; then

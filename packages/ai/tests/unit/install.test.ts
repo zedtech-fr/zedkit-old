@@ -263,12 +263,13 @@ describe("installKit", () => {
     expect(readFileSync(join(dest, "AGENTS.md"), "utf8")).toBe("mine\n");
   });
 
-  it("keeps a pre-existing real folder instead of replacing it with a link", () => {
+  it("links kit skills into a pre-existing real .claude/skills directory", () => {
     const dest = tempDir();
     put(dest, ".claude/skills/own/SKILL.md", "own\n");
-    const actions = install(dest);
+    install(dest);
     expect(lstatSync(join(dest, ".claude/skills")).isSymbolicLink()).toBe(false);
-    expect(actions.find((a) => a.path === ".claude/skills")?.kind).toBe("skip");
+    expect(readFileSync(join(dest, ".claude/skills/own/SKILL.md"), "utf8")).toBe("own\n");
+    expect(lstatSync(join(dest, ".claude/skills/setup-ai")).isSymbolicLink()).toBe(true);
   });
 
   it("writes nothing on a dry run", () => {

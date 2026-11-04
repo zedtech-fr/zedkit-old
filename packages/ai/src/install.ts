@@ -94,7 +94,16 @@ function obstacle(ctx: Ctx, rel: string): string | undefined {
   return lstatOf(join(ctx.dest, rel)) ? "already exists, left untouched" : undefined;
 }
 
+// Provider layer dirs are link targets, never sidecarred: a `.claude/zk-skills`
+// link is dead (no provider reads it), so a blocked layer dir is just
+// skipped. Sidecars exist only for files (`*.kit.md`) and skill folders
+// (`zk-<name>`).
+const LAYER_DIRS: ReadonlySet<string> = new Set(
+  ["skills", "agents", "commands"].map((kind) => join(".claude", kind)).concat(join(".cursor", "skills")),
+);
+
 function canAdopt(rel: string): boolean {
+  if (LAYER_DIRS.has(rel)) return false;
   const [root, kind] = rel.split(sep);
   if (root === ".agents" && (kind === "skills" || kind === "agents" || kind === "commands" || kind === "personas.md")) {
     return true;
@@ -334,10 +343,28 @@ function writeCursorRule(ctx: Ctx): void {
   place(ctx, "write", rel, (destRel) => writeFileSync(join(ctx.dest, destRel), CURSOR_RULE));
 }
 
-function wireClaude(ctx: Ctx): void {
-  link(ctx, join(".claude", "skills"), "../.agents/skills");
-  link(ctx, join(".claude", "agents"), "../.agents/agents");
-  link(ctx, join(".claude", "commands"), "../.agents/commands");
+function wireClaude(ctx: Ctx, content: ReturnType<typeof plan>, skillDest: Map<string, string>): void {
+  const skillsRel = join(".claude", "skills");
+  const existing = lstatOf(join(ctx.dest, skillsRel));
+  if (existing?.isDirectory() && !existing.isSymbolicLink()) {
+    for (const name of content.skills) {
+      const source = skillDest.get(name) ?? join(".agents", "skills", name);
+      link(ctx, join(skillsRel, name), join("..", "..", source));
+    }
+  } else {
+    link(ctx, skillsRel, "../.agents/skills");
+  }
+  for (const kind of ["agents", "commands"] as const) {
+    const layerRel = join(".claude", kind);
+    const layer = lstatOf(join(ctx.dest, layerRel));
+    if (layer?.isDirectory() && !layer.isSymbolicLink()) {
+      for (const name of content[kind]) {
+        copyFile(ctx, join(ctx.kit, kind, `${name}.md`), join(layerRel, `${name}.md`));
+      }
+    } else {
+      link(ctx, layerRel, `../.agents/${kind}`);
+    }
+  }
   // Only when AGENTS.md is (or will be) a real file: never a dangling link.
   if (agentsMdReady(ctx)) link(ctx, "CLAUDE.md", "AGENTS.md");
   else ctx.actions.push({ kind: "skip", path: "CLAUDE.md", note: "AGENTS.md is not a file" });
@@ -369,7 +396,7 @@ function wireProvider(
   content: ReturnType<typeof plan>,
   skillDest: Map<string, string>,
 ): void {
-  if (provider === "claude") wireClaude(ctx);
+  if (provider === "claude") wireClaude(ctx, content, skillDest);
   else if (provider === "cursor") wireCursor(ctx, content, skillDest);
   // codex and muse read the shared source directly (AGENTS.md plus
   // .agents/): no per-provider layer to generate.

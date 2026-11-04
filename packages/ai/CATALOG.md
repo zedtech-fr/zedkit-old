@@ -34,7 +34,7 @@ review lenses, retro, rules-upkeep, product/UI/copy subagents, and setup-ai
 
 Providers: `cursor` (rules file, skills link or per-skill links inside a
 real `.cursor/skills` dir, agents and commands as real-file copies),
-`claude` (`CLAUDE.md` and folder links), `codex` and `muse` (no
+`claude` (`CLAUDE.md` and folder links, or per-skill links and copies inside pre-existing real dirs), `codex` and `muse` (no
 layer: read the shared source directly; same for other no-layer ids in `--help`).
 
 ## Check that skills, subagents, commands and provider copies are valid

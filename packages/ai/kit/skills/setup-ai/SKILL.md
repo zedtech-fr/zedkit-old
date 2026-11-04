@@ -147,7 +147,7 @@ Present one table covering phase A gaps, phase C artifacts, phase D skills, and 
 | Provider | Layer on top of `AGENTS.md` + `.agents/`                                                                                                                                   |
 | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `cursor` | `.cursor/rules/project.mdc` (skip it when an always-on rule exists), `.cursor/skills` link, agents and commands as real-file copies (a linked folder shows up empty there) |
-| `claude` | `CLAUDE.md` link, `.claude/{skills,agents,commands}` links                                                                                                                 |
+| `claude` | `CLAUDE.md` link, `.claude/{skills,agents,commands}` links (per-skill links and file copies when those paths are already real directories)                                 |
 | `codex`  | none: reads `AGENTS.md` and `.agents/skills` directly                                                                                                                      |
 | `muse`   | none: reads `.agents/` directly                                                                                                                                            |
 

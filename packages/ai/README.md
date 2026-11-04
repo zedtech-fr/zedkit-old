@@ -82,7 +82,7 @@ One shared source (`.agents/`), then a thin layer per provider:
 | Provider | Layer | Reads |
 |---|---|---|
 | `cursor` | `.cursor/rules/project.mdc`, `.cursor/skills` link (or per-skill links if that path is already a real directory), agents and commands as real-file copies | its `.cursor/` layer |
-| `claude` | `CLAUDE.md` link, `.claude/{skills,agents,commands}` links | its `.claude/` layer |
+| `claude` | `CLAUDE.md` link, `.claude/{skills,agents,commands}` links (per-skill links and file copies when those paths are already real directories) | its `.claude/` layer |
 | `codex` | none | `AGENTS.md` and `.agents/skills` directly |
 | `muse` | none | `.agents/` directly |
 
