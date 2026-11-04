@@ -22,7 +22,7 @@ export function IdentityDockAssistantGrid(props: {
   busy: boolean;
   previewTokens: IdentityTokens;
   domainBrief: string;
-  inputRef: RefObject<HTMLInputElement | null>;
+  inputRef: RefObject<HTMLTextAreaElement | null>;
   onBrief: (brief: string) => void;
   onSubmit: () => void;
   onQuickRefine: (prompt: string) => void;

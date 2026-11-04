@@ -11,7 +11,7 @@ type FocusRequest = { n: number; scroll: boolean };
 function focusMayMoveToProposalPreview(active: Element | null): boolean {
   if (!active || active === document.body) return true;
   if (active.closest("[data-slot='identity-assistant']")) return true;
-  if (active.closest("[data-testid='identity-dock']")) return true;
+  if (active.closest("[data-testid='identity-dock'], [data-slot='drawer-content']")) return true;
   return false;
 }
 
@@ -37,7 +37,7 @@ export function useAssistantView({ proposalId, onBrief }: { proposalId: string |
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<View>("conversation");
   const [focus, setFocus] = useState<FocusRequest | null>(null);
-  const field = useRef<HTMLInputElement>(null);
+  const field = useRef<HTMLTextAreaElement>(null);
   const previewButton = useRef<HTMLButtonElement>(null);
   const seenProposal = useRef<string | undefined>(undefined);
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent, type Ref, type RefObject } from "react";
-import { Button, Input, Stack, Text, type IdentityTokens } from "@zedtech/zedkit-ui";
+import { Button, Stack, Text, Textarea, type IdentityTokens } from "@zedtech/zedkit-ui";
 
 import { identityAssistantCopy as copy } from "@/components/i18n/identity-assistant-copy";
 import { ProposalBeforeAfter } from "@/components/identity-proposal-compare";
@@ -115,24 +115,24 @@ export function BriefForm({
   blocked: boolean;
   onSubmit: () => void;
   onCancel: () => void;
-  inputRef: Ref<HTMLInputElement>;
+  inputRef: Ref<HTMLTextAreaElement>;
 }) {
   const left = LIMITS.prompt - value.length;
   const placeholder = useRotatingPlaceholder(!refining);
   return (
     <Stack gap={2}>
       <form onSubmit={(event) => submitForm(event, onSubmit)}>
-        <Stack direction="horizontal" gap={2} className="items-center">
-          <Input
+        <Stack gap={2}>
+          <Textarea
             id="identity-assistant-brief"
             ref={inputRef}
-            type="text"
+            rows={1}
             autoComplete="off"
             placeholder={refining ? copy.refinePlaceholder : placeholder}
             maxLength={LIMITS.prompt}
             value={value}
             readOnly={busy}
-            className="min-w-0 flex-1"
+            className="field-sizing-content max-h-40 min-h-textarea-min-height min-w-0 resize-none"
             aria-label={refining ? copy.followUpLabel : copy.briefLabel}
             aria-describedby={left < 100 ? "identity-assistant-brief-count" : undefined}
             onChange={(event) => onValue(event.target.value)}

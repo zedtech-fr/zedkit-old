@@ -101,8 +101,6 @@ async function reopenDock(page: Page) {
 
 /** The visible panel: the phone sheet when it is mounted, otherwise the desktop aside. */
 async function dockPanel(page: Page) {
-  const sheet = page.locator("[data-slot='identity-dock-sheet']");
-  if ((await sheet.count()) > 0) return sheet;
   return page.locator("[data-slot='identity-dock-panel'][data-state='open']");
 }
 

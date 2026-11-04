@@ -129,24 +129,26 @@ test.describe("IdentityDock", () => {
     await expect(trigger).toBeFocused();
   });
 
-  test("the widget is a chat: greeting first, one input with send, and no New conversation control", async ({ page }) => {
+  test("the widget is a chat: greeting first, multiline composer with send, and no New conversation control", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(BASE, { waitUntil: "networkidle" });
     await page.keyboard.press("Control+I");
     await expect(page.locator("[data-assistant-greeting]")).toContainText("Describe your product in a few plain sentences");
     const field = brief(page);
     await expect(field).toBeVisible();
-    expect(await field.evaluate((node) => node.tagName)).toBe("INPUT");
+    expect(await field.evaluate((node) => node.tagName)).toBe("TEXTAREA");
     const send = page.getByRole("button", { name: "Generate", exact: true });
     await expect(send).toBeVisible();
     await expect(page.getByRole("button", { name: /new conversation/i })).toHaveCount(0);
     await expect(page.getByTestId("identity-dock-new-conversation")).toHaveCount(0);
-    // Input and send share one row: the input spans the conversation column.
-    const inputBox = (await field.boundingBox())!;
-    const sendBox = (await send.boundingBox())!;
-    expect(Math.abs(inputBox.y + inputBox.height / 2 - (sendBox.y + sendBox.height / 2))).toBeLessThan(8);
-    const paneBox = (await page.locator("[data-assistant-pane='conversation']").boundingBox())!;
-    expect(inputBox.width).toBeGreaterThan(paneBox.width * 0.6);
+    const panel = page.locator("[data-slot='identity-dock-panel']");
+    const panelBox = (await panel.boundingBox())!;
+    expect(panelBox.width).toBeLessThan(page.viewportSize()!.width * 0.75);
+    await field.fill("Line one");
+    await field.press("Shift+Enter");
+    await field.type("Line two");
+    expect(await field.inputValue()).toContain("\n");
+    await expect(page.getByRole("group", { name: "Conversation or preview" })).toBeVisible();
   });
 
   test("the composer placeholder rotates through examples, and Enter sends", async ({ page }) => {
@@ -187,14 +189,14 @@ test.describe("IdentityDock", () => {
     await brief(page).fill("kept");
     await page.evaluate(() => window.dispatchEvent(new CustomEvent("zk-identity-dock-open", { detail: 42 })));
     await expect(brief(page)).toHaveValue("kept");
-    await expect(page.getByTestId("identity-dock")).toBeVisible();
+    await expect(page.locator("[data-slot='identity-dock-panel']")).toBeVisible();
   });
 
   test("390px: sheet height is adjusted with the drag handle, not text detent buttons", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(BASE, { waitUntil: "networkidle" });
     await page.keyboard.press("Control+I");
-    await expect(page.locator("[data-slot='identity-dock-sheet']")).toBeVisible();
+    await expect(page.locator("[data-slot='identity-dock-panel']")).toBeVisible();
     await expect(page.getByRole("button", { name: /peek height|half height|full height/i })).toHaveCount(0);
     await expect(page.locator("[data-slot='drawer-handle']")).toBeVisible();
   });
@@ -218,7 +220,7 @@ test.describe("IdentityDock", () => {
     await expect(message).not.toBeEmpty();
     await expect(message).toBeInViewport();
     const box = await message.boundingBox();
-    const panelBox = (await page.locator("[data-slot='identity-dock-sheet'], [data-slot='identity-dock-panel']").first().boundingBox())!;
+    const panelBox = (await page.locator("[data-slot='identity-dock-panel']").boundingBox())!;
     expect(box).toBeTruthy();
     expect(panelBox).toBeTruthy();
     expect(box!.y).toBeGreaterThanOrEqual(panelBox!.y);

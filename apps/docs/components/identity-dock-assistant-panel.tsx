@@ -56,7 +56,7 @@ function IdentityDockPanelScroll(props: {
   busy: boolean;
   previewTokens: IdentityTokens;
   domainBrief: string;
-  inputRef: RefObject<HTMLInputElement | null>;
+  inputRef: RefObject<HTMLTextAreaElement | null>;
   setBrief: (value: string) => void;
   send: () => void;
   quickRefine: (prompt: string) => void;
@@ -112,7 +112,7 @@ export function IdentityDockAssistantPanel({
   const domainBrief = specimenBriefFromThread(session.thread, brief);
 
   useEffect(() => {
-    const field = panelRef.current?.querySelector<HTMLInputElement>("#identity-assistant-brief:not([disabled])");
+    const field = panelRef.current?.querySelector<HTMLTextAreaElement>("#identity-assistant-brief:not([disabled])");
     if (field && field.offsetParent !== null) field.focus({ preventScroll: true });
   }, []);
 
