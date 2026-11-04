@@ -10,13 +10,12 @@ import { IdentityRefinementChips } from "@/components/identity-refinement-chips"
 import { DetectedLinks } from "@/components/identity-references";
 import type { Unavailable } from "@/lib/identity-assistant";
 import type { Proposal, SessionState } from "@/lib/identity-creator-session";
-import { IDENTITY_EDITOR_HREF } from "@/lib/site-links.mjs";
 
 /** The assistant's first word, where the exchange will continue. Shown until the first exchange replaces it. */
 function AssistantGreeting() {
   return (
     <ol className="m-0 flex list-none flex-col gap-2 p-0" data-assistant-greeting="">
-      <li className="text-sm">
+      <li className="text-zk-type-body">
         <Text as="span" className="font-medium text-foreground">
           {copy.assistant}
         </Text>{" "}
