@@ -1,5 +1,17 @@
 # @zedtech/zedkit-ai
 
+## 0.13.0
+
+### Minor Changes
+
+- 1778b77: `init --adopt` keeps colliding user files and writes the kit version beside them; a second run skips copies that already match the kit. Validate ignores `*.kit.md` sidecars, reports drift without asking to overwrite, ignores host `/ask` and `/improve`, filters `lenses.md` so uninstalled runners are `planned`, and links kit skills into a real `.cursor/skills` directory.
+- 6407f33: Setup-ai v2: discovery interview, deep artifact templates, and catalog repo skills for the setup preset.
+- 7529a41: Add a `setup` preset: starter plus domain modeling, the review lenses, retro, rules-upkeep, and the product/UI/copy subagents. Every shipped preset still validates closed.
+
+### Patch Changes
+
+- 07e2e10: Add `zedkit-ai setup` (init with adopt) and README first-5-minutes path; Cursor docs at /docs/ai/setup with copy-paste prompt and https://zedkit.app/ai/setup.md agent instructions.
+
 ## 0.12.0
 
 ### Minor Changes
