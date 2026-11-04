@@ -14,6 +14,7 @@ import {
   overlayDrawerFooterClass,
   overlayDrawerHeaderClass,
   resolveModalMountAutoFocus,
+  useExitUnmountFallback,
 } from "./overlay-modal.js";
 import { cn } from "./utils.js";
 import { OverlayMountContext, ScopePortal } from "./theme-scope.js";
@@ -88,10 +89,24 @@ function DrawerPortal({
   return <ScopePortal container={container}>{props.children}</ScopePortal>;
 }
 
-function DrawerOverlay({ className, ...props }: React.ComponentProps<typeof DrawerPrimitive.Overlay>) {
+function DrawerOverlay({
+  className,
+  ref,
+  ...props
+}: React.ComponentProps<typeof DrawerPrimitive.Overlay>) {
+  const exitRef = useExitUnmountFallback<HTMLDivElement>();
+  const setRef = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      exitRef(node);
+      if (typeof ref === "function") ref(node);
+      else if (ref) ref.current = node;
+    },
+    [exitRef, ref],
+  );
   return (
     <DrawerPrimitive.Overlay
       data-slot="drawer-overlay"
+      ref={setRef}
       className={cn(
         "fixed inset-0 z-overlay bg-overlay/50 backdrop-blur-sm",
         "motion-safe:data-[state=open]:animate-[zk-fade-in_var(--motion-base)_var(--ease-enter)]",
@@ -125,14 +140,16 @@ function DrawerContent({
 }) {
   const contentRef = React.useRef<HTMLDivElement | null>(null);
   const [mount, setMount] = React.useState<HTMLDivElement | null>(null);
+  const exitRef = useExitUnmountFallback<HTMLDivElement>();
   const setRef = React.useCallback(
     (node: HTMLDivElement | null) => {
       contentRef.current = node;
       setMount(node);
+      exitRef(node);
       if (typeof ref === "function") ref(node);
       else if (ref) ref.current = node;
     },
-    [ref],
+    [exitRef, ref],
   );
   return (
     <DrawerPortal>

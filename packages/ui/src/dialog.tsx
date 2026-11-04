@@ -11,6 +11,7 @@ import {
   overlayDialogFooterClass,
   overlayDialogHeaderClass,
   type OverlayInitialFocus,
+  useExitUnmountFallback,
 } from "./overlay-modal.js";
 import { OverlayMountContext, ScopePortal } from "./theme-scope.js";
 import { useUiMessages } from "./ui-provider.js";
@@ -85,10 +86,24 @@ function DialogPortal({
   return <ScopePortal container={container}>{props.children}</ScopePortal>;
 }
 
-function DialogOverlay({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
+function DialogOverlay({
+  className,
+  ref,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
+  const exitRef = useExitUnmountFallback<HTMLDivElement>();
+  const setRef = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      exitRef(node);
+      if (typeof ref === "function") ref(node);
+      else if (ref) ref.current = node;
+    },
+    [exitRef, ref],
+  );
   return (
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
+      ref={setRef}
       className={cn(
         "fixed inset-0 z-overlay bg-overlay/80",
         "motion-safe:data-[state=open]:animate-[zk-fade-in_var(--motion-base)_var(--ease-enter)]",
@@ -120,15 +135,17 @@ function DialogContent({
   const fitRef = useDialogViewportFit<HTMLDivElement>();
   const contentRef = React.useRef<HTMLDivElement | null>(null);
   const [mount, setMount] = React.useState<HTMLDivElement | null>(null);
+  const exitRef = useExitUnmountFallback<HTMLDivElement>();
   const setRef = React.useCallback(
     (node: HTMLDivElement | null) => {
       contentRef.current = node;
       setMount(node);
       fitRef(node);
+      exitRef(node);
       if (typeof ref === "function") ref(node);
       else if (ref) ref.current = node;
     },
-    [fitRef, ref],
+    [exitRef, fitRef, ref],
   );
   return (
     <DialogPortal>
