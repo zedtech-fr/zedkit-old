@@ -22,7 +22,7 @@ export function IdentityMiniPreview({
 }) {
   const copy = identitySpecimenCompositions[domain];
   return (
-    <Stack gap={2} data-assistant-preview="">
+    <Stack gap={2} data-assistant-preview="" data-slot="brief-specimen" data-specimen-domain={domain}>
       <style>{`${tokensToCss(tokens, SCOPE)}\n${HEADINGS}`}</style>
       <Text as="span" className="text-sm font-medium text-foreground">
         {identityAssistantCopy.proposal.preview}

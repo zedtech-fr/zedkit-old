@@ -74,7 +74,7 @@ export function CatalogView({
         <Stack gap={4}>
           <Stack gap={2}>
             <Heading level={1}>{catalogCopy.header.title}</Heading>
-            <Text variant="muted" className="type-site-lead">
+            <Text variant="muted" typeRole="lead" className="text-muted-foreground">
               {catalogCopy.header.lead}
             </Text>
           </Stack>

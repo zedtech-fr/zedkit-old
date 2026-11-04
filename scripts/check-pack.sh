@@ -146,7 +146,8 @@ size_budget() {
 }
 # Measured 42212 on 2 Nov 2026 (identity tokens, route modal, ThemeScope ref and nested-identity handling);
 # the previous 40800 was already exceeded at 41771 before this change. Keep roughly 2% headroom.
-# Raised from 43500 to 44000 on 4 Nov 2026: measured 43911 with IdentityDock + sheet exports.
+# Raised to 43600 on 3 Nov 2026: measured 43561 with signature type-role and motion exports.
+# Raised to 44000 on 4 Nov 2026: measured 43911 with IdentityDock + sheet exports.
 size_budget ui 44000
 # Marketing entry (separate from the main budget); measured 785 on 3 Nov 2026 with GlassSurface only.
 size_budget ui 1500 marketing

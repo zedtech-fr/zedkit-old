@@ -151,17 +151,16 @@ test.describe("creator state matrix", () => {
 test.describe("widget state matrix", () => {
   async function openDock(page: Page) {
     await page.goto("/", { waitUntil: "networkidle" });
-    // shortcut: skip until the floating dock ships, then these cases are required
-    test.skip((await page.locator("[data-slot='identity-dock']").count()) === 0, "IdentityDock not on this build");
-    const trigger = page.locator("[data-slot='identity-dock-trigger']");
-    if (await trigger.count()) await trigger.click();
+    await expect(page.getByTestId("identity-dock")).toBeVisible();
+    await page.keyboard.press("Control+I");
+    await expect(page.locator("#identity-assistant-brief")).toBeVisible();
     return page.locator("[data-slot='identity-dock-panel']");
   }
 
   test("Control+I opens the panel, Escape closes it", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/", { waitUntil: "networkidle" });
-    test.skip((await page.locator("[data-slot='identity-dock']").count()) === 0, "IdentityDock not on this build");
+    await expect(page.getByTestId("identity-dock")).toBeVisible();
     await page.keyboard.press("Control+i");
     const panel = page.locator("[data-slot='identity-dock-panel'][data-state='open']");
     await expect(panel).toBeVisible();
@@ -189,9 +188,9 @@ test.describe("widget state matrix", () => {
     });
     await page.setViewportSize({ width: 320, height: 568 });
     const panel = await openDock(page);
-    await panel.locator("#identity-assistant-brief").fill("A ceramics shop");
-    await panel.getByRole("button", { name: "Generate" }).click();
-    const working = panel.getByText("Working on it. Your current look is unchanged.");
+    await page.locator("#identity-assistant-brief").fill("A ceramics shop");
+    await page.getByRole("button", { name: "Generate" }).click();
+    const working = page.getByText("Working on it. Your current look is unchanged.");
     await expect(working).toBeVisible();
     const panelBox = (await panel.boundingBox())!;
     const workBox = (await working.boundingBox())!;
@@ -206,9 +205,9 @@ test.describe("widget state matrix", () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     const panel = await openDock(page);
     const before = await siteBackground(page);
-    await panel.locator("#identity-assistant-brief").fill("A ceramics shop");
-    await panel.getByRole("button", { name: "Generate" }).click();
-    await panel.getByRole("button", { name: "Use this look" }).click();
+    await page.locator("#identity-assistant-brief").fill("A ceramics shop");
+    await page.getByRole("button", { name: "Generate" }).click();
+    await page.getByRole("button", { name: "Use this look" }).click();
     expect(await siteBackground(page)).toBe(before);
   });
 
@@ -223,9 +222,9 @@ test.describe("widget state matrix", () => {
     );
     await page.setViewportSize({ width: 390, height: 844 });
     const panel = await openDock(page);
-    await panel.locator("#identity-assistant-brief").fill("A ceramics shop");
-    await panel.getByRole("button", { name: "Generate" }).click();
-    const status = panel.locator("[data-assistant-status]");
+    await page.locator("#identity-assistant-brief").fill("A ceramics shop");
+    await page.getByRole("button", { name: "Generate" }).click();
+    const status = page.locator("[data-assistant-status]");
     await expect(status).toContainText("The assistant limit has been reached.");
     const statusBox = (await status.boundingBox())!;
     const panelBox = (await panel.boundingBox())!;
@@ -233,8 +232,9 @@ test.describe("widget state matrix", () => {
     expect(statusBox.y + statusBox.height).toBeLessThanOrEqual(panelBox.y + panelBox.height + 1);
 
     await page.reload({ waitUntil: "networkidle" });
-    if ((await page.locator("[data-slot='identity-dock-panel'][data-state='open']").count()) === 0) {
-      await page.locator("[data-slot='identity-dock-trigger']").click();
+    await expect(page.getByTestId("identity-dock")).toBeVisible();
+    if ((await page.locator("#identity-assistant-brief").count()) === 0) {
+      await page.keyboard.press("Control+I");
     }
     await expect(page.locator("#identity-assistant-brief")).toHaveValue("A ceramics shop");
   });
@@ -246,8 +246,6 @@ test.describe("domain compositions", () => {
       await service(page, (posted, route) => route.fulfill(ok(posted)));
       await page.setViewportSize({ width: 1440, height: 900 });
       await page.goto(EDITOR, { waitUntil: "networkidle" });
-      // shortcut: skip until brief-routed specimens ship, then these cases are required
-      test.skip((await page.locator("[data-slot='brief-specimen']").count()) === 0, "domain specimens not on this build");
       await typeBrief(page, row.brief);
       await page.getByRole("button", { name: "Generate" }).click();
       await expect(page.locator(`[data-specimen-domain='${row.domain}']`)).toBeVisible();
