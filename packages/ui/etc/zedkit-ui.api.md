@@ -100,7 +100,7 @@ export interface BadgeProps extends React_2.ComponentProps<"div">, VariantProps<
 
 // @public (undocumented)
 export const badgeVariants: (props?: ({
-    variant?: "default" | "destructive" | "secondary" | "success" | "warning" | "outline" | null | undefined;
+    variant?: "default" | "secondary" | "destructive" | "success" | "warning" | "outline" | "meta" | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -1145,6 +1145,7 @@ export function PageHeader(input: PageHeaderProps): React_2.JSX.Element;
 export interface PageHeaderProps {
     // (undocumented)
     actions?: React_2.ReactNode;
+    back?: React_2.ReactNode;
     // (undocumented)
     className?: string;
     // (undocumented)
