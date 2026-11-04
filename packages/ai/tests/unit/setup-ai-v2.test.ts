@@ -200,7 +200,7 @@ describe("setup-ai v2 kit", () => {
       join(kitDir(), "skills", "setup-ai", "templates", "setup-rubric.md"),
       "utf8",
     );
-    expect(rubric).toMatch(/git diff --name-only.*against plan/iu);
+    expect(rubric).toMatch(/git diff --name-only.*against the plan/iu);
     expect(rubric).toMatch(/after `\/setup-ai` loads/iu);
   });
 
@@ -297,6 +297,24 @@ describe("setup-ai v2 kit", () => {
       "utf8",
     );
     expect(issue).toMatch(/UNVERIFIED.*why/iu);
+  });
+
+  it("documents run-4 scorer add-ons T3a and validate-setup-ready comments", () => {
+    const raw = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
+    expect(raw).toMatch(/State-bearing capabilities/iu);
+    expect(raw).toMatch(/ingestion\/sync/iu);
+    expect(raw).toMatch(/AGENTS ladder/s);
+    expect(raw).toMatch(/PLAN\.md/);
+    expect(raw).toMatch(/setup-log\/plan\.md/);
+    expect(raw).toMatch(/pnpm check.*unless/s);
+    expect(raw).toMatch(/setup-ai:validate-setup.*validate --setup/s);
+    expect(raw).toMatch(/git status --porcelain -uall/s);
+    const rubric = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "setup-rubric.md"),
+      "utf8",
+    );
+    expect(rubric).toMatch(/AGENTS\.md.*ladder append/s);
+    expect(rubric).toMatch(/setup-ai:validate-setup/s);
   });
 
   it("installs templates beside setup-ai for every preset that ships setup-ai; validate stays clean", () => {

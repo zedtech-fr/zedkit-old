@@ -170,7 +170,11 @@ Each domain file includes **rules, invariants, edge cases**, sources (`file:line
 
 Compare **product docs, README, ADRs**, and other policy sources against each `.agents/domain/*.md` file. For every rule or constraint documented outside domain files but **absent** from them (for example business hours or slot length in README only), add a **`current`** row with doc source (`file:line` or `source: owner`) or list it under **Plan gaps** / product open questions — do not leave silent drift.
 
-**Personas (score 3 path):** add a **Journey tests** column — test path per persona or **`no test — flag`** (see `templates/personas-v2.template.md`). When the journey column names a **route**, the test must exercise that route (e2e or integration); otherwise use **`no test — flag`**.
+### State-bearing capabilities (domain coverage)
+
+From **VISION**, **ADRs**, README, and code, **enumerate state-bearing capabilities** — for example **ingestion/sync**, **payments**, **booking**, **auth**, **queues**, and any area where docs describe lifecycle or policy (raw-before-parse, quarantine, trace linkage, refunds, etc.). For **each** capability that has rules in docs, ship **one** `.agents/domain/<area>.md` (or one file with clear sections per capability). If a documented capability has **no** domain file, record **why** in setup-log or product open questions — not silent omission.
+
+**Personas (score 3 path):** add a **Journey tests** column — test path per persona or **`no test — flag`** (see `templates/personas-v2.template.md`). When the journey column names a **route**, the test must exercise that route (e2e or integration); otherwise use **`no test — flag`**. When the cell names a **script or test file**, **open** it and confirm the repo's **main gate** actually runs it (`package.json` scripts, CI workflow) — do not claim a path is part of **`pnpm check`** unless that chain invokes it.
 
 **AGENTS non-negotiables:** for each claim **enforced by** a command (for example `pnpm test`, `pnpm lint`), **open** what that script runs (package.json script, CI job, turbo task). If the command cannot detect the rule (module boundary, policy prose, etc.), move it to the **Unenforced rules** inventory — do not label it enforced.
 
@@ -228,12 +232,15 @@ Present one table covering phase A gaps, phase C artifacts, phase D skills, hygi
 
 | must | dependency manifest | `package.json` | `git diff` after install adds `@zedtech/zedkit-ai` | edit (dependency added by setup) | Manifest matches kit scripts | safe |
 | must | lockfile | `pnpm-lock.yaml` | lockfile drift with `package.json` | edit (dependency added by setup) | Lock matches manifest | safe |
+| must | AGENTS ladder | `AGENTS.md` | missing or incomplete 7-question ladder (gap audit) | edit or append | Map + ladder for agents | safe |
 
 **Required rows when they apply (do not omit):**
 
 - **`package.json`** (and the lockfile that changes with it: `pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`, or `bun.lock`) when adding `@zedtech/zedkit-ai` or changing scripts — action **`edit (dependency added by setup)`** when install or adopt changed deps (never **leave** / **unchanged** if `git status` or `git diff` shows them).
-- **Root `AGENTS.md`** when appending the ladder, replacing placeholders, or linking product/domain docs — action `edit` or `append`, not silent.
+- **Root `AGENTS.md`** when appending the **ladder**, replacing placeholders, or linking product/domain docs — **dedicated row**, action **`edit`** or **`append`**, not silent; ladder-only edits still need this row.
 - Any **`.prettierignore`**, **provider folder**, or **user-owned** path the install or your writes will touch (including adopt sidecars).
+
+After the owner approves the table, **persist** it as **`PLAN.md`** at the repo root **or** **`.agents/setup-log/plan.md`** (one path; record which in setup-log).
 
 **Appendix (always include):** paste the full **Providers** value table and **Wired:** line from the Providers section.
 
@@ -266,7 +273,9 @@ git status --porcelain
 git diff --name-only
 ```
 
-Compare to plan rows. **Every changed path needs a matching row.** Any gap goes into the closing report, setup-log **Plan gaps** section, and (if kit-caused) a kit-issue draft — do not treat silent edits as success.
+Compare to plan rows in **`PLAN.md`** or **`.agents/setup-log/plan.md`**. **Every changed path needs a matching row.** Any gap goes into the closing report, setup-log **Plan gaps** section, and (if kit-caused) a kit-issue draft — do not treat silent edits as success.
+
+<!-- setup-ai:validate-setup (enable after L1 merges — use if:command=validate-setup): Run `npx zedkit-ai validate --setup` (optional `--plan PLAN.md` or `--plan .agents/setup-log/plan.md`) and fix every issue before the closing report. Every path from `git status --porcelain -uall` must appear in the plan text; directory prefixes with a trailing `/` count; gate logs under `.agents/setup-log/gates/*.log` must start with `CMD:` and end with `EXIT:<n>`. -->
 
 ## Verify
 
@@ -289,7 +298,10 @@ Then:
 
 1. **Self-score** — open `templates/setup-rubric.md` and score 0–3 on each of the 10 axes. Cite evidence per axis (file path, `file:line`, or transcript quote); no evidence means no score above 1. The rubric sets the pass targets and hard gates.
 2. **Setup log** — append a retro entry to `.agents/setup-log.md` from `templates/setup-log.template.md`: date, what worked, what hurt, **Providers table + Wired**, scores, decisions (`source: owner` where the owner chose), **Sidecar cleanup**, gate outcomes (see template), open kit frictions.
-3. **Kit friction** — for **each** friction you observed (stale sidecar, validate gap, tool detour, bad gate log format, **missing plan row**, plan/git mismatch, intro not first, broken repo-skill links, …), draft **one** public-safe issue from `templates/kit-issue.template.md` with **Kit root cause** filled; map friction → kit file → fix. **Kit file** must be a path that **exists** in the kit tree (`grep` / `test -e` under `packages/ai/kit/` in the kit repo, or the installed `@zedtech/zedkit-ai` kit path) — otherwise write **`UNVERIFIED: <why>`**. **Completion defects count** (log missing `CMD:`/`EXIT:`, prettier appended after `EXIT:`). If there were zero frictions, say so in the log — do not skip the checklist.
+3. **Kit friction** — for **each** friction you observed (stale sidecar, validate gap, tool detour, bad gate log format, **missing plan row**, plan/git mismatch, intro not first, broken repo-skill links, …), draft **one** public-safe issue from `templates/kit-issue.template.md` with **Kit root cause** filled; map friction → kit file → fix. **Kit file** must be a path that **exists** in the kit tree — run **`test -e`** on `packages/ai/kit/…` in the kit monorepo or on the installed `@zedtech/zedkit-ai/kit/…` path; use **`grep`** / **`rg`** on the kit tree when unsure. Write **`UNVERIFIED: <why>`** only when the path truly cannot be confirmed. **Completion defects count** (log missing `CMD:`/`EXIT:`, prettier appended after `EXIT:`). If there were zero frictions, say so in the log — do not skip the checklist.
+
+<!-- setup-ai:validate-setup (enable after L1 merges — use if:command=validate-setup): Before the closing report, run `npx zedkit-ai validate --setup` and fix every issue. -->
+
 4. **Re-audit cadence** — set the next check: after the next release, or when product, domain rules, or providers change; record the trigger in the log entry.
 
 **Phase E checklist (before you finish):**
