@@ -5,6 +5,7 @@ import type * as React from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 
 import { useOverlayMount, usePortalContainer } from "./theme-scope.js";
+import { surfaceVariants } from "./surface.js";
 import { cn } from "./utils.js";
 
 export type PopoverProps = React.ComponentProps<typeof PopoverPrimitive.Root>;
@@ -36,7 +37,8 @@ function PopoverContent({
         align={align}
         sideOffset={sideOffset}
         className={cn(
-          "z-dropdown min-w-select-content-min origin-[--radix-popover-content-transform-origin] rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-none",
+          "z-dropdown min-w-select-content-min origin-[--radix-popover-content-transform-origin] outline-none",
+          surfaceVariants({ variant: "popover", elevation: 2, radius: "md", padding: "md" }),
           className,
         )}
         {...props}

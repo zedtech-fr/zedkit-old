@@ -106,6 +106,9 @@ export function applyIdentity(id: string, storageKey?: string): void;
 // @public (undocumented)
 export function applyIdentityTokenSheet(tokens: IdentityTokens, selector: string, doc?: Document): HTMLStyleElement;
 
+// @public
+export function applySurfaceGlassPanel(element: HTMLElement, options?: Pick<VariantProps<typeof surfaceVariants>, "elevation" | "radius" | "padding">): void;
+
 // @public (undocumented)
 export function AppShell(input: AppShellProps): React_2.JSX.Element;
 
@@ -155,7 +158,7 @@ export interface ButtonProps extends React_2.ComponentProps<"button">, VariantPr
 
 // @public (undocumented)
 export const buttonVariants: (props?: ({
-    variant?: "default" | "link" | "destructive" | "outline" | "secondary" | "ghost" | null | undefined;
+    variant?: "link" | "default" | "destructive" | "secondary" | "outline" | "ghost" | null | undefined;
     size?: "default" | "sm" | "lg" | "icon" | null | undefined;
 } & ClassProp) | undefined) => string;
 
@@ -281,7 +284,7 @@ export type ContainerProps = React_2.ComponentProps<"div"> & VariantProps<typeof
 
 // @public (undocumented)
 export const containerVariants: (props?: ({
-    width?: "default" | "narrow" | "reading" | "wide" | "full" | null | undefined;
+    width?: "narrow" | "reading" | "default" | "wide" | "full" | null | undefined;
     gutter?: boolean | null | undefined;
 } & ClassProp) | undefined) => string;
 
@@ -527,6 +530,7 @@ export function DrawerCloseButton(input: React_2.ComponentProps<typeof DrawerClo
 // @public (undocumented)
 export function DrawerContent(input: React_2.ComponentProps<typeof Drawer_2.Content> & {
     modal?: boolean;
+    size?: DrawerSize;
     initialFocus?: OverlayInitialFocus;
 }): React_2.JSX.Element;
 
@@ -550,6 +554,9 @@ export function DrawerPortal(input: React_2.ComponentProps<typeof Drawer_2.Porta
 
 // @public (undocumented)
 export type DrawerProps = DrawerRootProps;
+
+// @public (undocumented)
+export type DrawerSize = "sm" | "md" | "lg";
 
 // @public (undocumented)
 export function DrawerTitle(input: React_2.ComponentProps<typeof Drawer_2.Title>): React_2.JSX.Element;
@@ -696,7 +703,7 @@ export type HeadingProps = React_2.ComponentProps<"h1"> & VariantProps<typeof he
 
 // @public (undocumented)
 export const headingVariants: (props?: ({
-    typeRole?: "display" | "title" | "heading" | "section" | "band" | "cardTitle" | "lead" | "body" | "prose" | "small" | "caption" | "label" | "nav" | null | undefined;
+    typeRole?: "caption" | "display" | "small" | "body" | "label" | "nav" | "section" | "title" | "heading" | "band" | "cardTitle" | "lead" | "prose" | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -1454,8 +1461,8 @@ export type StackProps = React_2.ComponentProps<"div"> & VariantProps<typeof sta
 
 // @public (undocumented)
 export const stackVariants: (props?: ({
-    direction?: "vertical" | "horizontal" | null | undefined;
-    gap?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | null | undefined;
+    direction?: "horizontal" | "vertical" | null | undefined;
+    gap?: 1 | 6 | 2 | 3 | 8 | 4 | 5 | 7 | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -1491,6 +1498,25 @@ export type StatusLabelTone = "loading" | "updating" | "syncing" | "saved" | "re
 
 // @public
 export function suggestIdentityTokens(prompt: string): IdentityTokens;
+
+// @public (undocumented)
+export function Surface(input: SurfaceProps): React_2.JSX.Element;
+
+// @public
+export function surfaceGlassPanelClass(options?: Pick<VariantProps<typeof surfaceVariants>, "elevation" | "radius" | "padding">): string;
+
+// @public (undocumented)
+export type SurfaceProps = React_2.ComponentProps<"div"> & VariantProps<typeof surfaceVariants> & {
+    as?: "div" | "section" | "article" | undefined;
+};
+
+// @public (undocumented)
+export const surfaceVariants: (props?: ({
+    variant?: "solid" | "popover" | "glass" | null | undefined;
+    elevation?: 0 | 2 | 1 | 3 | null | undefined;
+    radius?: "none" | "sm" | "md" | "lg" | "xl" | "2xl" | "full" | null | undefined;
+    padding?: "none" | "sm" | "md" | "card" | "dialog" | null | undefined;
+} & ClassProp) | undefined) => string;
 
 // @public (undocumented)
 export function Switch(input: React_2.ComponentProps<typeof SwitchPrimitives.Root>): React_2.JSX.Element;
@@ -1555,7 +1581,7 @@ export type TextProps = React_2.ComponentProps<"p"> & VariantProps<typeof textVa
 // @public (undocumented)
 export const textVariants: (props?: ({
     variant?: "body" | "muted" | null | undefined;
-    typeRole?: "lead" | "body" | "prose" | "small" | "caption" | "label" | null | undefined;
+    typeRole?: "caption" | "small" | "body" | "label" | "lead" | "prose" | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -1662,6 +1688,12 @@ export function useUiMessages(): ZedkitUiMessages;
 //
 // @public
 export function useValidatedForm<TSchema extends SchemaForResolver>(schema: TSchema, options?: Omit<UseFormProps<InputOf<TSchema>, any, OutputOf<TSchema>>, "resolver">): UseFormReturn<InputOf<TSchema>, any, OutputOf<TSchema>>;
+
+// @public
+export function WidgetButton(input: WidgetButtonProps): JSX.Element;
+
+// @public (undocumented)
+export type WidgetButtonProps = ButtonProps;
 
 // @public
 export function withIdentityDarkPair(tokens: IdentityTokens, previous?: IdentityTokens): IdentityTokens;

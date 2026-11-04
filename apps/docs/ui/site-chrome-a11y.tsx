@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect } from "react";
+import { applySurfaceGlassPanel } from "@zedtech/zedkit-ui";
 
-/** Fumadocs renders the Guides viewport with no prop seam: tag it with the kit surface instead of styling it here. */
+/** Fumadocs renders the Guides viewport with no prop seam: apply kit glass Surface chrome. */
 const GUIDES_PANEL_SELECTOR = ".flex.w-full.justify-center > *";
 
 function tagGuidesPanel(root: ParentNode): void {
   const panel = root.querySelector(GUIDES_PANEL_SELECTOR);
-  if (panel && panel.getAttribute("data-surface") !== "glass") {
-    panel.setAttribute("data-surface", "glass");
+  if (panel instanceof HTMLElement && panel.getAttribute("data-surface") !== "glass") {
+    applySurfaceGlassPanel(panel, { elevation: 3, radius: "xl" });
   }
 }
 

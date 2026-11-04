@@ -17,9 +17,24 @@ import {
   useExitUnmountFallback,
 } from "./overlay-modal.js";
 import { cn } from "./utils.js";
+import { surfaceVariants } from "./surface.js";
 import { OverlayMountContext, ScopePortal } from "./theme-scope.js";
 import { useNarrowViewport } from "./use-narrow-viewport.js";
 import { useUiMessages } from "./ui-provider.js";
+
+type DrawerSize = "sm" | "md" | "lg";
+
+const drawerSideRightMaxWidth: Record<DrawerSize, string> = {
+  sm: "data-[vaul-drawer-direction=right]:sm:max-w-drawer-side-sm",
+  md: "data-[vaul-drawer-direction=right]:sm:max-w-drawer-side",
+  lg: "data-[vaul-drawer-direction=right]:sm:max-w-drawer-side-lg",
+};
+
+const drawerSideLeftMaxWidth: Record<DrawerSize, string> = {
+  sm: "data-[vaul-drawer-direction=left]:sm:max-w-drawer-side-sm",
+  md: "data-[vaul-drawer-direction=left]:sm:max-w-drawer-side",
+  lg: "data-[vaul-drawer-direction=left]:sm:max-w-drawer-side-lg",
+};
 
 type DrawerRootProps = React.ComponentProps<typeof DrawerPrimitive.Root> & {
   /**
@@ -122,6 +137,7 @@ function DrawerContent({
   className,
   children,
   modal = true,
+  size = "md",
   initialFocus,
   ref,
   ...props
@@ -131,6 +147,8 @@ function DrawerContent({
    * overlay so the background stays interactive. Defaults to `true`.
    */
   modal?: boolean;
+  /** Side-panel width on desktop (`sm` 24rem, `md` 28rem default, `lg` min(600px, 92vw)). */
+  size?: DrawerSize;
   /**
    * Opt-in field to focus on open (a ref, or a selector resolved inside the
    * panel). Without it focus lands on the panel itself, never inside a
@@ -164,15 +182,18 @@ function DrawerContent({
             focusOverlayInitial(contentRef.current, initialFocus);
           }}
           className={cn(
-            "fixed z-drawer flex flex-col border bg-card text-card-foreground outline-none",
+            "fixed z-drawer flex flex-col outline-none",
+            surfaceVariants({ variant: "solid", elevation: 3, radius: "none", padding: "none" }),
           // Safety net for content composed without DrawerHeader/Body/Footer (a bare form, text, a list): it still
           // gets the shared side gutters and a bottom inset that clears the home indicator. Buttons and the
           // kit slots keep their own spacing.
           "[&>:not([data-slot^=drawer-],[data-vaul-handle],button)]:px-4 [&>:not([data-slot^=drawer-],[data-vaul-handle],button):last-child]:pb-drawer-footer-safe",
           "data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:max-h-drawer-sheet-max-height data-[vaul-drawer-direction=bottom]:rounded-t-xl",
           "data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:max-h-drawer-sheet-max-height data-[vaul-drawer-direction=top]:rounded-b-xl data-[vaul-drawer-direction=top]:pt-drawer-safe-top",
-          "data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:w-drawer-side-mobile-width data-[vaul-drawer-direction=right]:pt-drawer-safe-top data-[vaul-drawer-direction=right]:pr-drawer-safe-right data-[vaul-drawer-direction=right]:max-sm:rounded-l-xl data-[vaul-drawer-direction=right]:sm:w-full data-[vaul-drawer-direction=right]:sm:max-w-drawer-side",
-          "data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:w-drawer-side-mobile-width data-[vaul-drawer-direction=left]:pt-drawer-safe-top data-[vaul-drawer-direction=left]:pl-drawer-safe-left data-[vaul-drawer-direction=left]:max-sm:rounded-r-xl data-[vaul-drawer-direction=left]:sm:w-full data-[vaul-drawer-direction=left]:sm:max-w-drawer-side",
+          "data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:w-drawer-side-mobile-width data-[vaul-drawer-direction=right]:pt-drawer-safe-top data-[vaul-drawer-direction=right]:pr-drawer-safe-right data-[vaul-drawer-direction=right]:max-sm:rounded-l-xl data-[vaul-drawer-direction=right]:sm:w-full",
+          drawerSideRightMaxWidth[size],
+          "data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:w-drawer-side-mobile-width data-[vaul-drawer-direction=left]:pt-drawer-safe-top data-[vaul-drawer-direction=left]:pl-drawer-safe-left data-[vaul-drawer-direction=left]:max-sm:rounded-r-xl data-[vaul-drawer-direction=left]:sm:w-full",
+          drawerSideLeftMaxWidth[size],
           className,
         )}
         {...props}
@@ -278,6 +299,7 @@ function DrawerDescription({
 
 type DrawerProps = DrawerRootProps;
 
+export type { DrawerSize };
 export {
   Drawer,
   type DrawerProps,

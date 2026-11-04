@@ -318,6 +318,13 @@
         "With footer": "CardFooterDemo"
       }
     },
+    "Shared panel surface (border, shadow, glass)": {
+      "package": "@zedtech/zedkit-ui",
+      "component": "Surface",
+      "props": "SurfaceProps",
+      "source": "surface.tsx",
+      "demo": "SurfaceDemo"
+    },
     "Stack content and group titled sections": {
       "package": "@zedtech/zedkit-ui",
       "component": "Stack",

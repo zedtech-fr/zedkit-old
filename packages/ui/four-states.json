@@ -64,6 +64,7 @@
     "DrawerHeader",
     "DrawerOverlay",
     "DrawerPortal",
+    "DrawerSize",
     "DrawerTitle",
     "DrawerTrigger",
     "DropdownMenu",
@@ -138,6 +139,7 @@
     "SelectTrigger",
     "SelectValue",
     "Separator",
+    "Surface",
     "SignatureMotion",
     "Skeleton",
     "Stack",
@@ -170,6 +172,7 @@
     "WizardStep",
     "WizardStepState",
     "WizardSteps",
+    "WidgetButton",
     "ZedkitUiProvider"
   ],
   "withStates": {

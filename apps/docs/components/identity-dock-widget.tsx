@@ -103,6 +103,7 @@ function IdentityDockWidget() {
       </IdentityDock>
       <Drawer open={expanded} onOpenChange={setExpanded} direction="right" mobile="sheet" modal={false}>
         <DrawerContent
+          size="lg"
           modal={false}
           aria-label={identityDockCopy.panelTitle}
           data-slot="identity-dock-panel"

@@ -2,9 +2,9 @@
 
 import type * as React from "react";
 import {
-  Button,
   cn,
   signatureMotionClass,
+  WidgetButton,
   type ButtonProps,
 } from "@zedtech/zedkit-ui";
 
@@ -29,12 +29,10 @@ type IdentityDockTriggerProps = ButtonProps;
 
 function IdentityDockTrigger({ className, ...props }: IdentityDockTriggerProps) {
   return (
-    <Button
-      type="button"
+    <WidgetButton
       data-slot="identity-dock-trigger"
-      variant="outline"
       className={cn(
-        "pointer-events-auto w-auto max-w-full justify-between gap-2 rounded-full px-4 shadow-md",
+        "pointer-events-auto motion-safe:transition-transform motion-reduce:transition-none",
         signatureMotionClass.feedback,
         className,
       )}

@@ -3853,12 +3853,12 @@
         },
         {
           "need": "Slide in a drawer panel",
-          "import": "`@zedtech/zedkit-ui` — `Drawer`, `DrawerProps`, `DrawerTrigger`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerBody`, `DrawerFooter`, `DrawerHandle`, `DrawerClose`, `DrawerCloseButton`, `DrawerOverlay`, `DrawerPortal`",
+          "import": "`@zedtech/zedkit-ui` — `Drawer`, `DrawerProps`, `DrawerSize`, `DrawerTrigger`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerBody`, `DrawerFooter`, `DrawerHandle`, `DrawerClose`, `DrawerCloseButton`, `DrawerOverlay`, `DrawerPortal`",
           "wraps": "`vaul`",
           "status": "beta",
           "shortName": "Drawer",
           "audience": "Developers showing detail views beside a list without navigation.",
-          "purpose": "Slide-in panels from any edge (right-side detail on desktop, bottom sheet on mobile, left, right, or top on demand).",
+          "purpose": "Slide-in panels from any edge (right-side detail on desktop, bottom sheet on mobile, left, right, or top on demand). Panel chrome (border, fill, edge shadow) comes from `Surface` elevation 3 (`shadow-overlay`). Pass `size=\"sm\" | \"md\" | \"lg\"` on `DrawerContent` for desktop side width (`md` is the default 28rem; `lg` is about min(600px, 92vw)).",
           "whenToUse": "For list-detail previews and short side forms.",
           "whenNotToUse": "For multi-step flows — use a full page or wizard instead.",
           "derivedFrom": "shadcn/ui (drawer)",
@@ -3885,6 +3885,7 @@
                 "exports": [
                   "Drawer",
                   "DrawerProps",
+                  "DrawerSize",
                   "DrawerTrigger",
                   "DrawerContent",
                   "DrawerHeader",
@@ -4607,6 +4608,48 @@
           ]
         },
         {
+          "need": "Shared panel surface (border, shadow, glass)",
+          "import": "`@zedtech/zedkit-ui` — `Surface`, `surfaceVariants`, `SurfaceProps`, `surfaceGlassPanelClass`, `applySurfaceGlassPanel`, `WidgetButton`, `WidgetButtonProps`",
+          "wraps": "none (`surface.css` frosts `variant=\"glass\"` under the glass identity)",
+          "status": "alpha",
+          "shortName": "Surface",
+          "audience": "Developers building floating panels or composing kit overlays.",
+          "purpose": "One place for panel background (solid card, popover, or glass), elevation (`0`–`3`, token shadows including `shadow-overlay`), border, radius, and optional padding.",
+          "whenToUse": "Custom panels that should match Dialog, Drawer, Card, and Popover chrome; floating assistant triggers via `WidgetButton`.",
+          "whenNotToUse": "Marketing page sections — use `@zedtech/zedkit-ui/marketing` `GlassSurface` instead.",
+          "derivedFrom": null,
+          "example": "import { Surface, WidgetButton } from \"@zedtech/zedkit-ui\";\n<Surface variant=\"solid\" elevation={2} radius=\"xl\" padding=\"md\">Summary</Surface>\n<WidgetButton aria-label=\"Open assistant\">Ask</WidgetButton>",
+          "examples": [
+            {
+              "title": "Solid card panel",
+              "code": "import { Surface, WidgetButton } from \"@zedtech/zedkit-ui\";\n<Surface variant=\"solid\" elevation={2} radius=\"xl\" padding=\"md\">Summary</Surface>\n<WidgetButton aria-label=\"Open assistant\">Ask</WidgetButton>"
+            }
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Surface",
+                  "surfaceVariants",
+                  "SurfaceProps",
+                  "surfaceGlassPanelClass",
+                  "applySurfaceGlassPanel",
+                  "WidgetButton",
+                  "WidgetButtonProps"
+                ]
+              }
+            ]
+          },
+          "a11y": "Presentational wrapper — name regions with headings or `aria-label`. `WidgetButton` is a normal button (outline variant) with pill radius and card elevation.",
+          "seeAlso": [
+            "Group content in a card section",
+            "Slide in a drawer panel",
+            "Open modal dialogs"
+          ]
+        },
+        {
           "need": "Group content in a card section",
           "import": "`@zedtech/zedkit-ui` — `Card`, `CardProps`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`",
           "wraps": "none (presentational, theme tokens only)",
@@ -4646,7 +4689,7 @@
             ]
           },
           "registry": "card",
-          "a11y": "Slots are plain containers — put headings and labels inside. Spacing comes from `--spacing-card-*` theme tokens; elevation is `shadow-md` (`--zk-shadow-md` per identity). `CardSkeleton` mirrors the same tokens so async content lands without shifting.",
+          "a11y": "Slots are plain containers — put headings and labels inside. Spacing comes from `--spacing-card-*` theme tokens; elevation is Surface level 2 (`shadow-md`, `--zk-shadow-md` per identity). `CardSkeleton` mirrors the same tokens so async content lands without shifting.",
           "troubleshooting": "Cramped content — inner padding comes from the `--spacing-card-padding` theme token (`pt-0` on content/footer avoids doubling it). Title not announced as a heading — slots are plain `div`s; put a real heading element inside `CardTitle` when the card needs one.",
           "seeAlso": [
             "Stack content and group titled sections"
