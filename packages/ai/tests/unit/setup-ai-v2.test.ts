@@ -247,6 +247,8 @@ describe("setup-ai v2 kit", () => {
     expect(gateBlock).toContain("sed 's/^EXIT://'");
     expect(gateBlock).toContain('} > "$LOG" 2>&1');
     expect(gateBlock).toMatch(/tail -n 20 "\$LOG"/u);
+    expect(gateBlock).toMatch(/trap .*CAUSE: killed by signal.*EXIT:143.*TERM INT/u);
+    expect(gateBlock).toContain("trap - TERM INT");
     const log = readFileSync(
       join(
         kitDir(),

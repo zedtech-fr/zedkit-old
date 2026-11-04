@@ -139,6 +139,14 @@ case "$(tail -1 "$LOG")" in EXIT:[0-9]*) ;; *) echo "bad gate log"; false;; esac
 
 If a log file you referenced is **empty**, or the last line is not **`EXIT:<n>`**, re-run and replace the file before scoring. Table rows in setup-log are a summary only.
 
+**Killed gates:** when the wrapper shell itself may be signaled (a timeout or OOM kill aimed at the process group), trap `TERM`/`INT` so the log still ends with a cause and **`EXIT:<code>`** — `validate --setup` accepts extra lines like `CAUSE:` between `END:` and `EXIT:`. Put the trap after `START:`, before the command, and disarm it with `trap - TERM INT` once the command returns:
+
+```sh
+trap 'echo "END: $(date -Iseconds)"; echo "CAUSE: killed by signal"; echo "EXIT:143"; exit 143' TERM INT
+```
+
+A `SIGKILL`ed wrapper cannot trap — re-run smaller (see below) and replace the file.
+
 **OOM-safe fallback:** When the repo's main gate is `pnpm check` (or similar) and it **cannot take flags** and dies from memory pressure, run the **underlying turbo chain explicitly** with `--concurrency=2` and a capped heap (for example `NODE_OPTIONS=--max-old-space-size=4096`, lower if the host requires). Record that exact command in setup-log and in **domain rules / generated repo skills** — never leave a generic `pnpm check` if that is not what you verified.
 
 ### A3. Find the gaps
