@@ -1,5 +1,11 @@
 # @zedtech/zedkit-ui
 
+## 1.6.2
+
+### Patch Changes
+
+- 3b34404: Refresh the committed API report: `badgeVariants` variant union is listed in the order the type is emitted. Types are unchanged.
+
 ## 1.6.1
 
 ### Patch Changes
