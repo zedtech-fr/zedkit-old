@@ -297,6 +297,25 @@ function scan(html) {
   return { title, metas, hrefs, sheets, style: style.join(";\n").slice(0, MAX_STYLE_CHARS), text: text.join("") };
 }
 
+const GENERIC_FONT = /^(inherit|initial|unset|serif|sans-serif|monospace|cursive|fantasy|math|emoji|system-ui|-apple-system|blinkmacsystemfont|ui-[a-z-]+|segoe ui(?: [a-z]+)?|apple color emoji|noto color emoji|helvetica neue|arial|var\(.*)$/i;
+
+/**
+ * A family name as a designer would write it. Build tools rename self-hosted fonts (`__Rubik_b539cb`, its
+ * `__Rubik_Fallback_b539cb` metric twin): the hash and the fallback are dropped, and generic or system names are
+ * not a choice the page made, so they are not reported.
+ */
+export function cleanFontName(raw) {
+  const name = raw
+    .replace(/["']/g, "")
+    .trim()
+    .replace(/^__+/, "")
+    .replace(/_[0-9a-f]{5,8}$/i, "")
+    .replace(/_/g, " ")
+    .trim();
+  if (!name || /\bfallback\b/i.test(name) || GENERIC_FONT.test(name)) return "";
+  return name;
+}
+
 /** Font family names a page asks for: from Google Fonts links and `font-family`, never fetched. */
 function fontNames(hrefs, css) {
   const found = new Set();
@@ -307,7 +326,8 @@ function fontNames(hrefs, css) {
   }
   for (const rule of css.matchAll(/font-family\s*:\s*([^;}]{1,200})/gi)) {
     const first = rule[1].split(",")[0]?.replace(/["']/g, "").trim();
-    if (first && !/^(inherit|initial|unset|serif|sans-serif|monospace|system-ui|-apple-system|var\(.*)$/i.test(first)) found.add(first);
+    const name = cleanFontName(first ?? "");
+    if (name) found.add(name);
   }
   return [...found].map((name) => name.replace(/[^\w .-]/g, "").slice(0, FIELD_MAX.fontChars)).filter(Boolean).slice(0, FIELD_MAX.fonts);
 }
@@ -329,10 +349,12 @@ export const FIELD_MAX = Object.freeze({
   shadowChars: 80,
   spacing: 6,
   spacingChars: 10,
+  darkColors: 4,
+  scheme: 5,
 });
 
 /** Stylesheets read per page, and the CSS scanned per reference (inline and linked together). */
-export const MAX_STYLESHEETS = 4;
+export const MAX_STYLESHEETS = 8;
 const MAX_CSS_CHARS = 1_000_000;
 
 // A CSS value reaches the prompt only if it is plain: no url(), no quotes, no braces, nothing but the characters
@@ -351,8 +373,28 @@ function ranked(values, limit) {
   return [...counts.entries()].sort((x, y) => y[1] - x[1]).slice(0, limit).map(([value]) => value);
 }
 
+const hex2 = (n) => Math.max(0, Math.min(255, Math.round(Number(n)))).toString(16).padStart(2, "0");
+
+/**
+ * One colour as a short, comparable string, or "" when it shows nothing. Utility CSS writes its colours with a
+ * variable alpha (`rgb(38 80 119/var(--tw-bg-opacity))`): that is an opaque colour, read as hex. A colour with an
+ * alpha of 0 is a gradient or transition stop, and Tailwind's default focus ring is the framework's, not the page's.
+ */
 function normalizeColor(raw) {
   const value = raw.toLowerCase();
+  const fn = /^(rgba?|hsla?)\(\s*([\d.]+)(deg)?[\s,]+([\d.]+%?)[\s,]+([\d.]+%?)\s*(?:[,/]\s*(var\([^()]*\)|[\d.]+%?))?\s*\)$/.exec(value);
+  if (fn) {
+    const alpha = fn[6];
+    if (alpha !== undefined && !alpha.startsWith("var(") && Number.parseFloat(alpha) === 0) return "";
+    const opaque = alpha === undefined || alpha.startsWith("var(") || Number.parseFloat(alpha) === (alpha.endsWith("%") ? 100 : 1);
+    if (fn[1].startsWith("rgb")) {
+      if (fn[2] === "59" && fn[4] === "130" && fn[5] === "246") return "";
+      if (opaque && !fn[4].endsWith("%")) return `#${hex2(fn[2])}${hex2(fn[4])}${hex2(fn[5])}`;
+    } else if (opaque) {
+      return `hsl(${fn[2]} ${fn[4]} ${fn[5]})`;
+    }
+    if (value.includes("var(")) return "";
+  }
   if (value.startsWith("#")) {
     const hex = value.slice(1);
     if (hex.length === 3 || hex.length === 4) return `#${[...hex.slice(0, 3)].map((c) => c + c).join("")}`;
@@ -360,6 +402,9 @@ function normalizeColor(raw) {
   }
   return value.replace(/\s+/g, " ");
 }
+
+// Hex, or a colour function with at most one nested call inside (a `var()` alpha). Bounded, no nested quantifiers.
+const COLOUR = /#[0-9a-fA-F]{8}\b|#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3,4}\b|(?:rgba?|hsla?|oklch)\((?:[^()]{1,40}|[^()]{0,30}\([^()]{0,40}\)[^()]{0,10})\)/g;
 
 const DESIGN_PROPERTY = /color|colour|bg|background|surface|brand|accent|primary|secondary|foreground|text|border|radius|font|shadow|space|spacing|gap/i;
 
@@ -388,9 +433,22 @@ export function designSignals(rawCss, hrefs = []) {
   kinds.colour = kinds.colour.map((entry, index) => [role(entry), index, entry]).sort((x, y) => x[0] - y[0] || x[1] - y[1]).slice(0, 6).map(([, , entry]) => entry);
   const properties = [...kinds.colour, ...kinds.shape, ...kinds.type, ...kinds.space].slice(0, FIELD_MAX.properties);
   const colors = ranked(
-    [...css.matchAll(/#[0-9a-fA-F]{8}\b|#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3,4}\b|(?:rgba?|hsla?|oklch)\([^()]{1,40}\)/g)].map((m) => plain(normalizeColor(m[0]), FIELD_MAX.colorChars)),
+    [...css.matchAll(COLOUR)].map((m) => plain(normalizeColor(m[0]), FIELD_MAX.colorChars)),
     FIELD_MAX.colors,
   );
+  // Colours set under a dark selector (`.dark .x`, Tailwind's `.dark\:bg-x`): the page's own dark palette.
+  const darkValues = [];
+  // Rules are cut at each "}" and "{" once (linear), never matched by a pattern that could rescan.
+  if (/\.dark|data-theme/i.test(css)) {
+    for (const piece of css.split("}")) {
+      const open = piece.lastIndexOf("{");
+      if (open === -1) continue;
+      const selector = piece.slice(Math.max(0, open - 400), open);
+      if (!/(?:^|[\s,>~+(])\.dark(?:\\:|[\s.:[,)>]|$)|\[data-theme=["']?dark/i.test(selector)) continue;
+      for (const m of piece.slice(open + 1, open + 2001).matchAll(COLOUR)) darkValues.push(plain(normalizeColor(m[0]), FIELD_MAX.colorChars));
+    }
+  }
+  const darkColors = ranked(darkValues, FIELD_MAX.darkColors);
   const radii = ranked(
     [...css.matchAll(/border-radius\s*:\s*([^;{}]{1,60})/gi)].map((m) => plain(m[1], FIELD_MAX.radiusChars)).filter((v) => v && !/^(0|0px|inherit|initial|unset)$/i.test(v)),
     FIELD_MAX.radii,
@@ -405,7 +463,21 @@ export function designSignals(rawCss, hrefs = []) {
   }
   const px = (v) => Number.parseFloat(v) * (v.endsWith("rem") ? 16 : 1);
   const spacing = ranked(lengths, FIELD_MAX.spacing).sort((x, y) => px(x) - px(y)).map((v) => v.slice(0, FIELD_MAX.spacingChars));
-  return { properties, colors, fonts: fontNames(hrefs, css), radii, shadows, spacing };
+  return { properties, colors, darkColors, fonts: fontNames(hrefs, css), radii, shadows, spacing };
+}
+
+/**
+ * The scheme a page opens in: a `light`/`dark` class or `data-theme` on <html>, else `<meta name="color-scheme">`.
+ * "" when the page does not say.
+ */
+function schemeOf(page, html) {
+  const root = /<html\b[^>]{0,2000}>/i.exec(html.slice(0, 20_000))?.[0] ?? "";
+  const attrs = root ? attributes(root.slice(1, -1)) : {};
+  const marks = `${attrs.class ?? ""} ${attrs["data-theme"] ?? ""}`.toLowerCase().split(/\s+/);
+  if (marks.includes("dark")) return "dark";
+  if (marks.includes("light")) return "light";
+  const meta = (page.metas["color-scheme"] ?? "").toLowerCase().trim();
+  return meta === "dark" ? "dark" : meta.startsWith("light") ? "light" : "";
 }
 
 /** The text of a page and a few hints, bounded. Scripts and markup never reach the model; CSS only as signals. */
@@ -416,6 +488,7 @@ export function extractReference(html, maxChars, sheets = []) {
     return "";
   };
   const signals = designSignals([page.style, ...sheets].join("\n"), page.hrefs);
+  signals.scheme = schemeOf(page, html);
   return {
     title: clip(squash(page.title), FIELD_MAX.title),
     description: clip(pick("description", "og:description"), FIELD_MAX.description),
