@@ -318,6 +318,44 @@ describe("setup-ai v2 kit", () => {
     expect(rubric).not.toMatch(/setup-ai:validate-setup/iu);
   });
 
+  it("documents validate --setup completion check in skill, rubric, and phase E checklist", () => {
+    const cmd = "npx zedkit-ai validate --setup";
+    const skill = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
+    expect(skill).toContain(cmd);
+    expect(skill).toMatch(/Plan reconciliation \(after Write, before Verify\)/u);
+    expect(skill).toMatch(/git status --porcelain -uall/u);
+    expect(skill).toMatch(/Phase E checklist \(before you finish\):/u);
+    expect(skill).toMatch(
+      /\[ \].*npx zedkit-ai validate --setup.*clean before the closing report/s,
+    );
+    const rubric = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "setup-rubric.md"),
+      "utf8",
+    );
+    expect(rubric).toContain(cmd);
+    expect(rubric).toMatch(/Zero lost user files.*validate --setup/s);
+    expect(rubric).toMatch(/Gates ran.*validate --setup/s);
+    const log = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "setup-log.template.md"),
+      "utf8",
+    );
+    expect(log).toContain(cmd);
+    const readme = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "README.md"),
+      "utf8",
+    );
+    expect(readme).toContain(cmd);
+    for (const rel of [
+      "skills/setup-ai/SKILL.md",
+      "skills/setup-ai/templates/setup-rubric.md",
+      "skills/setup-ai/templates/setup-log.template.md",
+      "skills/setup-ai/templates/README.md",
+    ]) {
+      const raw = readFileSync(join(kitDir(), rel), "utf8");
+      expect(raw, rel).not.toMatch(/<!--[\s\S]*validate-setup[\s\S]*-->/iu);
+    }
+  });
+
   it("documents 8-axis mean and owner-dependent axes in rubric and phase E", () => {
     const rubric = readFileSync(
       join(kitDir(), "skills", "setup-ai", "templates", "setup-rubric.md"),
