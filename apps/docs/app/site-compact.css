@@ -24,7 +24,7 @@
   }
 }
 
-/* One glass layer: the header carries the kit bar tokens (globals.css); fumadocs'
+/* One glass layer: the header frost is on #nd-nav::before (globals.css); fumadocs'
    inner bar must not tint or blur again, or the header turns opaque. */
 :root[data-identity] #nd-nav > div {
   background-color: transparent;
@@ -33,13 +33,18 @@
   backdrop-filter: none;
 }
 
-/* Header: fixed compact height, nav aligned to the content width. */
+/* Header: fixed compact height, nav aligned to the content width.
+   Overflow stays visible so the Guides viewport can paint below the bar. */
 #nd-nav,
 #nd-nav > div,
 #nd-nav nav,
 #nd-mobile-nav {
   height: var(--zk-site-header-height);
   min-height: 0;
+}
+#nd-nav,
+#nd-nav > div {
+  overflow: visible;
 }
 #nd-nav nav a:not([data-slot="badge"]),
 #nd-nav nav button:not([class*="max-w"]) {
@@ -56,16 +61,12 @@
 }
 
 /* Marketing type: a step down from the identity's display sizes. */
-:root {
-  --zk-type-home-h1-size: clamp(1.875rem, 1.2rem + 1.6vw, 2.5rem);
-  --zk-type-home-h2-size: clamp(1.25rem, 1rem + 0.6vw, 1.5rem);
-}
 #nd-home-layout h1:not([data-identity-scope] *, #demo *) {
-  font-size: var(--zk-type-home-h1-size);
+  font-size: clamp(1.875rem, 1.2rem + 1.6vw, 2.5rem);
   line-height: 1.1;
 }
 #nd-home-layout h2:not([data-identity-scope] *, #demo *) {
-  font-size: var(--zk-type-home-h2-size);
+  font-size: clamp(1.25rem, 1rem + 0.6vw, 1.5rem);
 }
 /* Scroll targets clear the compact header. */
 #nd-home-layout section[id] {
@@ -156,6 +157,11 @@
   border-color: hsl(var(--zk-glass-edge) / var(--zk-glass-edge-alpha));
   box-shadow: var(--zk-shadow-sm);
 }
+
+#nd-home-layout .type-site-h1 {
+  font-size: clamp(1.875rem, 1.2rem + 1.6vw, 2.5rem);
+}
+
 /* The hero example in Glass: the same calmer unit as the site, so its pages share one frame height. */
 #demo [data-home-hero-visuals][data-identity="glass"] {
   --spacing: 0.26rem;

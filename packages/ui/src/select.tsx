@@ -31,7 +31,7 @@ function SelectTrigger({
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
       className={cn(
-        "flex h-control-height w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-control whitespace-nowrap shadow-sm focus-ring-control group-data-[invalid=true]/field:border-destructive disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-destructive data-[placeholder]:text-muted-foreground [&>span]:line-clamp-1",
+        "flex h-control-height w-full cursor-pointer items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-control whitespace-nowrap shadow-sm focus-ring-control group-data-[invalid=true]/field:border-destructive disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-destructive data-[placeholder]:text-muted-foreground [&>span]:line-clamp-1",
         className,
       )}
       {...props}
@@ -131,7 +131,7 @@ function SelectItem({ className, children, ...props }: React.ComponentProps<type
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "relative flex w-full cursor-default items-center rounded-sm py-1.5 pr-select-item-indicator-gap pl-2 text-sm outline-none select-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "relative flex w-full cursor-pointer items-center rounded-sm py-1.5 pr-select-item-indicator-gap pl-2 text-sm outline-none select-none focus:bg-accent focus:text-accent-foreground data-[disabled]:cursor-not-allowed data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className,
       )}
       {...props}

@@ -30,12 +30,23 @@ test.describe("glass identity", () => {
       const header = document.querySelector("#nd-nav")!;
       const inner = header.firstElementChild!;
       const h = getComputedStyle(header);
+      const frost = getComputedStyle(header, "::before");
       const i = getComputedStyle(inner);
       const alpha = Number(/rgba\([^)]*,\s*([\d.]+)\)/.exec(h.backgroundColor)?.[1] ?? 1);
-      return { alpha, filter: h.backdropFilter, innerFilter: i.backdropFilter, innerBg: i.backgroundColor, shadow: h.boxShadow };
+      const filter = frost.backdropFilter || frost.getPropertyValue("-webkit-backdrop-filter") || h.backdropFilter;
+      return {
+        alpha,
+        filter,
+        headerFilter: h.backdropFilter,
+        innerFilter: i.backdropFilter,
+        innerBg: i.backgroundColor,
+        shadow: h.boxShadow,
+      };
     });
     expect(bar.alpha).toBeGreaterThanOrEqual(0.55);
     expect(bar.alpha).toBeLessThanOrEqual(0.7);
+    // Frost is on ::before so the Guides viewport (a sibling) can blur the page.
+    expect(bar.headerFilter === "none" || bar.headerFilter === "").toBe(true);
     expect(bar.filter).toContain("blur(");
     expect(bar.filter).toContain("saturate(");
     // A blurred child of a blurred header blurs nothing and stacks a second tint.
