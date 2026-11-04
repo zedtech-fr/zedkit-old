@@ -614,7 +614,6 @@ a[class*="px-badge-inline"] {
   :where(a[data-slot="button"][data-size="sm"]:not([data-variant="link"])) {
     min-height: var(--spacing-control-height-sm);
     padding-inline: calc(var(--spacing) * 3);
-    padding-block: var(--spacing);
   }
 
   :where(a[data-slot="button"][data-size="default"]:not([data-variant="link"])) {
