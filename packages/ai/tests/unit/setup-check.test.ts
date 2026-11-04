@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { main } from "#cli.js";
-import { checkSetup } from "#setup-check.js";
+import { checkSetup, suggestPlanRow } from "#setup-check.js";
 import { put, SKILL, tempDir } from "./helpers.js";
 
 function gitEnv(): NodeJS.ProcessEnv {
@@ -40,7 +40,9 @@ describe("checkSetup", () => {
     put(root, "PLAN.md", "PLAN.md\nAGENTS.md\n");
     put(root, "AGENTS.md", "x\n");
     put(root, "lost.txt", "x\n");
-    expect(checkSetup(root).issues).toEqual([{ path: "lost.txt", message: "plan misses lost.txt" }]);
+    expect(checkSetup(root).issues).toEqual([
+      { path: "lost.txt", message: "plan misses lost.txt; add plan row: | lost.txt | edit | <reason> |" },
+    ]);
   });
 
   it("treats a parent dir with a trailing slash as coverage", () => {
@@ -90,7 +92,90 @@ describe("checkSetup", () => {
     gitInit(fallback);
     put(fallback, ".agents/setup-log/plan.md", ".agents/\n");
     put(fallback, "secret.txt", "x\n");
-    expect(checkSetup(fallback).issues).toEqual([{ path: "secret.txt", message: "plan misses secret.txt" }]);
+    expect(checkSetup(fallback).issues).toEqual([
+      { path: "secret.txt", message: "plan misses secret.txt; add plan row: | secret.txt | edit | <reason> |" },
+    ]);
+  });
+
+  it("suggests the exact plan row for an uncovered setup output", () => {
+    const root = tempDir();
+    gitInit(root);
+    put(root, "PLAN.md", "PLAN.md\n");
+    put(root, "package.json", "{}\n");
+    expect(checkSetup(root).issues).toEqual([
+      {
+        path: "package.json",
+        message: "plan misses package.json; add plan row: | package.json | edit | dependency added by setup |",
+      },
+    ]);
+  });
+
+  it("suggests a generic row for an uncovered unknown path", () => {
+    const root = tempDir();
+    gitInit(root);
+    put(root, "PLAN.md", "PLAN.md\n");
+    put(root, "notes.md", "x\n");
+    expect(checkSetup(root).issues).toEqual([
+      { path: "notes.md", message: "plan misses notes.md; add plan row: | notes.md | edit | <reason> |" },
+    ]);
+  });
+});
+
+describe("suggestPlanRow", () => {
+  it("suggests the dependency row for package.json", () => {
+    expect(suggestPlanRow("package.json")).toBe("| package.json | edit | dependency added by setup |");
+  });
+
+  it("suggests the lockfile row for pnpm-lock.yaml", () => {
+    expect(suggestPlanRow("pnpm-lock.yaml")).toBe("| pnpm-lock.yaml | edit | lockfile follows package.json |");
+  });
+
+  it("suggests the lockfile row for package-lock.json", () => {
+    expect(suggestPlanRow("package-lock.json")).toBe("| package-lock.json | edit | lockfile follows package.json |");
+  });
+
+  it("suggests the lockfile row for yarn.lock", () => {
+    expect(suggestPlanRow("yarn.lock")).toBe("| yarn.lock | edit | lockfile follows package.json |");
+  });
+
+  it("suggests the lockfile row for bun.lock", () => {
+    expect(suggestPlanRow("bun.lock")).toBe("| bun.lock | edit | lockfile follows package.json |");
+  });
+
+  it("suggests the ladder row for root AGENTS.md", () => {
+    expect(suggestPlanRow("AGENTS.md")).toBe("| AGENTS.md | edit | ladder appended by setup |");
+  });
+
+  it("suggests the entry row for CLAUDE.md", () => {
+    expect(suggestPlanRow("CLAUDE.md")).toBe("| CLAUDE.md | edit | Claude entry linked by setup |");
+  });
+
+  it("suggests the exclusions row for .prettierignore", () => {
+    expect(suggestPlanRow(".prettierignore")).toBe("| .prettierignore | edit | exclusions for generated files |");
+  });
+
+  it("suggests the provider dir row for a path under .cursor", () => {
+    expect(suggestPlanRow(".cursor/commands/setup-ai.md")).toBe("| .cursor/ | edit | Cursor wiring by setup |");
+  });
+
+  it("suggests the provider dir row for a path under .claude", () => {
+    expect(suggestPlanRow(".claude/settings.json")).toBe("| .claude/ | edit | Claude wiring by setup |");
+  });
+
+  it("suggests a generic row with a reason placeholder for an unknown path", () => {
+    expect(suggestPlanRow("lost.txt")).toBe("| lost.txt | edit | <reason> |");
+  });
+
+  it("suggests a generic row for a nested unknown path", () => {
+    expect(suggestPlanRow("docs/notes.md")).toBe("| docs/notes.md | edit | <reason> |");
+  });
+
+  it("suggests a generic row for a nested package.json", () => {
+    expect(suggestPlanRow("apps/demo/package.json")).toBe("| apps/demo/package.json | edit | <reason> |");
+  });
+
+  it("matches known outputs case-sensitively", () => {
+    expect(suggestPlanRow("Package.json")).toBe("| Package.json | edit | <reason> |");
   });
 });
 

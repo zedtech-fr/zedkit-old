@@ -156,7 +156,10 @@ size_budget ui 10200 marketing
 # 4 Nov 2026: validate --setup completion check (setup-check.ts). Measured
 # 18465; 17400 cannot fit a new module (gzip delta vs 17268 baseline is
 # ~1.2KB). Budget = measured + 2% = 18835.
-size_budget ai 18835
+# Raised to 19250 on 4 Nov 2026: measured 18869 with plan-row suggestions
+# (suggestPlanRow tailored copy for 7 known setup outputs; ~320B of user-facing
+# strings cannot fit the 291B headroom). Budget = measured + 2%.
+size_budget ai 19250
 
 if [ -f apps/docs/out/index.html ]; then
   if ! node apps/docs/scripts/check-first-load-budget.mjs; then
