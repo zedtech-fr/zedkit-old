@@ -17,11 +17,11 @@ test("the home tree lists the setup preset, every name backed by a kit file", ()
   for (const name of kit.agents) assert.ok(existsSync(join(KIT, "agents", `${name}.md`)), name);
 });
 
-test("counts in the copy are the counts of the rows", () => {
-  const kit = readAiSetupKit();
-  const rows = kit.installed.map((row) => row.text);
-  assert.equal(rows.filter((text) => /^│ {2}│ {2}[├└]─ [\w-]+\/$/.test(text)).length, kit.counts.skills);
-  assert.equal(rows.filter((text) => /^│ {2}│ {2}[├└]─ [\w-]+\.md$/.test(text)).length, kit.counts.agents + kit.counts.commands);
+test("the tree carries no skill or subagent counters", () => {
+  const { installed } = readAiSetupKit();
+  assert.ok(installed.every((row) => !("note" in row) || !/\d/.test(row.note)));
+  const rows = installed.map((row) => row.text);
+  assert.equal(rows.filter((text) => /^│ {2}│ {2}[├└]─ [\w-]+\/$/.test(text)).length, readAiSetupKit().skills.length);
 });
 
 test("the tree draws connectors and marks the Cursor link", () => {

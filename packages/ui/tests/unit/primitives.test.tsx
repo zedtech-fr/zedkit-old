@@ -103,6 +103,7 @@ describe("primitives", () => {
     );
     const link = screen.getByRole("link", { name: "More in the kit" });
     expect(link.className).toContain("px-3");
+    expect(link.className).toContain("py-control-block");
     expect(link.getAttribute("data-variant")).toBe("ghost");
     expect(link.getAttribute("data-size")).toBe("sm");
   });

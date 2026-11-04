@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type RefObject } from "react";
+import { AI_SETUP_MINI_PROMPT } from "@/lib/ai-setup-onboarding.generated";
 import { DEFAULT_IDENTITY, HERO_TOUR_LOOK } from "@/lib/default-identity";
 
 /**
@@ -16,6 +17,9 @@ const LAP = [
   { page: "team", use: "[data-hero-person='Luca Moretti']", dwell: 1400, look: "maison" },
   { page: "settings", use: "[data-hero-switch]", dwell: 1400, look: DEFAULT_IDENTITY },
 ] as const;
+
+/** What the tour needs from the agent panel: load it ahead, empty it, put text in its composer. */
+export type HeroTourAgent = { preload: () => void; reset: (close?: boolean) => void; paste: (text: string) => void };
 
 /** The cursor starts moving as soon as the window is on screen, while the first page is still assembling. */
 const START_MS = 400;
@@ -69,19 +73,23 @@ export function useHeroTour({
   playing,
   onTakeover,
   onLook,
+  agent,
 }: {
   rootRef: RefObject<HTMLElement | null>;
   enabled: boolean;
   playing: boolean;
   onTakeover: () => void;
   onLook: (id: string) => void;
+  agent: HeroTourAgent;
 }) {
   const lookRef = useRef(onLook);
+  const agentRef = useRef(agent);
   const takeoverRef = useRef(onTakeover);
   /** True once a lap has begun: a replay then starts at the first page instead of resuming the load animation. */
   const started = useRef(false);
   useEffect(() => {
     lookRef.current = onLook;
+    agentRef.current = agent;
     takeoverRef.current = onTakeover;
   });
   useEffect(() => {
@@ -162,7 +170,38 @@ export function useHeroTour({
       cursor.style.transition = "";
     };
 
+    /** Polls for an element (the panel's chunk may still be loading), holding like every other beat. */
+    const waitFor = async (find: () => Element | null, limitMs: number) => {
+      for (let waited = 0; waited < limitMs && !stopped && !find(); waited += 100) await beat(100);
+      return find();
+    };
+
+    /**
+     * Opens the agent panel, pastes the one prompt, presses send and waits for the scripted run to finish, then
+     * closes it. Every press is on the real control; the run itself is the panel's own timers (no network).
+     */
+    const agentStep = async () => {
+      const open = root.querySelector("[data-hero-agent-open]");
+      if (!open) return;
+      await press(open);
+      const field = await waitFor(() => root.querySelector("[data-hero-agent-panel] textarea"), 4000);
+      if (!field || stopped) return;
+      await press(field, () => agentRef.current.paste(AI_SETUP_MINI_PROMPT));
+      await beat(900);
+      const send = root.querySelector("[data-hero-agent-panel] [data-slot='prompt-input'] button[type='submit']");
+      if (!send || stopped) return;
+      await press(send);
+      await waitFor(() => root.querySelector("[data-hero-agent-panel][data-status='done']"), 12000);
+      await beat(2200);
+      const close = root.querySelector("[data-hero-agent-close]");
+      if (close && !stopped) await press(close);
+      await beat(SETTLE_MS);
+    };
+
     const run = async () => {
+      // A replay (or a tour paused with the panel open) starts from a closed, empty panel.
+      agentRef.current.reset(true);
+      agentRef.current.preload();
       await beat(START_MS);
       if (stopped) return;
       park();
@@ -190,6 +229,8 @@ export function useHeroTour({
           if (stopped) return;
           if (step.look) await changeLook(step.look);
         }
+        if (stopped) return;
+        await agentStep();
       }
     };
     void run();

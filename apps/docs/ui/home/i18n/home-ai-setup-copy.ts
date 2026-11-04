@@ -20,24 +20,27 @@ export const homeAiSetupCopy = {
   },
   whatYouGet: {
     title: "What you get",
-    summary: (skills: number, agents: number, commands: number) =>
-      `${skills} skills, ${agents} subagents and ${commands} commands, then a setup written for your repo.`,
+    summary: "A setup written for your repo, not a generic prompt pack.",
     items: {
-      review: {
-        title: "Reviews with the right lenses",
-        body: "/review pins the diff, runs the lenses it triggers in parallel subagents and returns one verdict.",
-      },
-      done: {
-        title: "A definition of done",
-        body: "Gates run on the final state, every changed file has a test, and a cold second review passes before work is called done.",
+      orchestration: {
+        title: "Thin orchestration",
+        body: "One coordinator frames the task, briefs specialists in parallel and reports once. It never edits files itself.",
       },
       roles: {
-        title: "Subagents with one job each",
-        body: "An orchestrator splits the work, an explorer reads the code, a verifier checks the result.",
+        title: "Clear roles",
+        body: "Planning, reading, building and checking stay separate: an explorer reads the code, specialists do the work, a verifier checks the result.",
       },
-      repo: {
-        title: "Rules that fit your repo",
-        body: "/setup-ai fills AGENTS.md with commands it ran and facts it checked, then adds product, domain and design notes.",
+      rules: {
+        title: "Business rules from your code",
+        body: "/setup-ai reads your code, docs and CI, then writes down the rules your product runs on, so agents stop guessing.",
+      },
+      skills: {
+        title: "Skills tailored to your repo",
+        body: "AGENTS.md holds the commands it ran and the facts it checked. Workflows your repo repeats become repo skills.",
+      },
+      checks: {
+        title: "Checks before it says done",
+        body: "/review runs the right lenses in parallel. A definition of done asks for gates run, tests for changed files and a cold second review.",
       },
     },
     providers: "Cursor, Claude Code, Codex and Muse read the same .agents folder. npx zedkit-ai validate checks it.",

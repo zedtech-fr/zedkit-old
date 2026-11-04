@@ -82,6 +82,7 @@ export function installNextStepLines(
     existsSync(join(root, ".agents", "product.md"))
       ? "next: validate, then phase E score"
       : "note: setup+validate ok ≠ product.md; phase C adds product.md, domain/*.md, personas.md, design.md, glossary — .agents/skills/setup-ai/templates/README.md",
+    "note: /setup-ai reads the code first with read-only subagents (npx zedkit-ai scan sizes them), asks only what the code cannot answer, and writes domain rules, nested AGENTS.md and .agents/model-routing.md",
   ];
   if (!repoUsesPrettier(root)) return lines;
   const missing = kitPathsMissingFromPrettierIgnore(root, providers);

@@ -108,6 +108,10 @@ every Pass/Rough/Fail. Customize names and bars per project.
 - Upgrade from 0.12: re-run `npx @zedtech/zedkit-ai setup` (adopt on, preset
   `setup`). Colliding files stay yours; the kit copy lands as `*.kit.md` or
   `zk-<name>`. Then `/setup-ai` for discovery artifacts. Opt-in
+  `/setup-ai` reads the code before it asks: read-only subagents (1–5 on a
+  small repo, up to 20 on a big one; `zedkit-ai scan` sizes them) report the
+  rules already in place, and the interview covers only the gaps. It writes
+  domain rules, nested `AGENTS.md` files and `.agents/model-routing.md`.
   `zedkit-ai validate --setup` checks that the plan covers every git-changed
   path and that `.agents/setup-log/gates/*.log` start with `CMD:` and end
   with `EXIT:<code>`. Details: the package README `Upgrading from 0.12`

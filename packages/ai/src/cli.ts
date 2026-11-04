@@ -6,6 +6,8 @@ import { err, ok, tryCatch, type Result } from "@zedtech/zedkit-core";
 import { ALL_PROVIDERS, installKit, type Provider } from "./install.js";
 import { installNextStepLines } from "./install-next-step.js";
 import { kitDir, readManifest } from "./kit.js";
+import { scanRepo } from "./scan.js";
+import { checkDepth } from "./setup-depth.js";
 import { checkSetup } from "./setup-check.js";
 import { checkDrift, checkKitDocs, checkPlaceholders, validateKit } from "./validate.js";
 
@@ -112,7 +114,7 @@ function runValidate(args: string[], sinks: Sinks): number {
   if (parsed.value.values.setup === true) {
     const plan = parsed.value.values.plan;
     const extra = checkSetup(projectRoot, typeof plan === "string" ? { plan } : {});
-    issues.push(...extra.issues);
+    issues.push(...extra.issues, ...checkDepth(projectRoot));
     for (const note of extra.notes) sinks.out(note);
   }
   for (const issue of issues) sinks.out(`${issue.path}: ${issue.message}`);
@@ -122,6 +124,18 @@ function runValidate(args: string[], sinks: Sinks): number {
       : `${issues.length} ${issues.length === 1 ? "problem" : "problems"}`;
   sinks.out(summary);
   return issues.length === 0 ? 0 : 1;
+}
+
+function runScan(args: string[], sinks: Sinks): number {
+  const parsed = parse(args, {}, 1);
+  if (!parsed.ok) return fail(parsed.error.message, sinks);
+  const dir = resolve(parsed.value.positionals[0] ?? ".");
+  if (!existsSync(dir)) return fail(`no such directory: ${dir}`, sinks);
+  const scan = scanRepo(dir);
+  sinks.out(`size: ${scan.size} (${scan.files} files)`);
+  sinks.out(`readers: ${scan.readers}`);
+  scan.slices.forEach((slice, i) => sinks.out(`slice ${i + 1}: ${slice.files} files: ${slice.paths.join(" + ")}`));
+  return 0;
 }
 
 function runList(args: string[], sinks: Sinks): number {
@@ -143,6 +157,7 @@ export function main(argv: string[], sinks: Sinks): number {
   if (command === "setup") return runInstall(rest, sinks, "setup");
   if (command === "init") return runInstall(rest, sinks, "init");
   if (command === "validate") return runValidate(rest, sinks);
+  if (command === "scan") return runScan(rest, sinks);
   if (command === "list") return runList(rest, sinks);
   const help = command === undefined || command === "--help" || command === "-h";
   (help ? sinks.out : sinks.err)(usage());

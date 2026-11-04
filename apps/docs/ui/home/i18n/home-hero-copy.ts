@@ -2,6 +2,8 @@ export const homeHeroCopy = {
   hero: {
     title: "UI/AI kit · A top-notch AI setup, one prompt away. Only the UI you need.",
     /** The first words are an invitation to use the example beside the text; the rest says what it is made of. */
+    /** Kept on one line at phone width so the hyphen never ends a line. */
+    titleNoBreak: "top-notch",
     play: "Play with it yourself",
     sub: "Everything in this app is a zedkit component. Click through the pages, add an app, change the look.",
     facts: "What you see installs from npm or copies as source · MIT · React 19 · Tailwind 4",
@@ -74,6 +76,30 @@ export const homeHeroCopy = {
       digestHelp: "One mail each morning with what changed.",
       save: "Save changes",
       saved: "Saved",
+    },
+    /** The agent panel: a scripted run of the one-prompt AI setup. Nothing is fetched; the note says so. */
+    agent: {
+      open: "Agent",
+      close: "Close agent",
+      title: "Agent",
+      composerLabel: "Message to the agent",
+      placeholder: "Ask the agent",
+      sendLabel: "Send to the agent",
+      note: "A scripted run: nothing leaves this page.",
+      progressLabel: "Progress",
+      phases: {
+        read: { title: "Reading the code", detail: "3 subagents read routes, tasks and scripts in parallel" },
+        rules: { title: "Business rules found", detail: "Collecting what the code enforces" },
+        plan: { title: "Plan", detail: "AGENTS.md, a tasks domain note, repo skills" },
+        validate: { title: "Validate", detail: "npx zedkit-ai validate" },
+      },
+      rules: [
+        "A task moves from open to in review to done.",
+        "Due dates are read as UTC midnight, so they never shift with the time zone.",
+        "The daily digest is one mail each morning.",
+      ],
+      validateOk: "ok",
+      finished: "Setup written to AGENTS.md and .agents/",
     },
     /** Floating cards around the window. Decorative, so they restate what the window already shows. */
     satellites: {

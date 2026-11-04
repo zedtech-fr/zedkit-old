@@ -165,7 +165,10 @@ size_budget ui 10200 marketing
 # Raised to 19750 on 4 Nov 2026: main had consumed the headroom
 # (19081/19250); this PR adds ~300B net (placeholder-link check, shared link
 # scan, measured 19381). Budget 19750 is measured + ~2%.
-size_budget ai 19750
+# Raised to 23600 on 4 Nov 2026: setup-ai v3 adds `scan` (repo sizing and
+# slicing) and the D1-D4 depth checks for validate --setup (scan.ts,
+# setup-depth.ts); baseline 19381, measured 23102. Budget = measured + ~2%.
+size_budget ai 23600
 
 if [ -f apps/docs/out/index.html ]; then
   if ! node apps/docs/scripts/check-first-load-budget.mjs; then

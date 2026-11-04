@@ -18,6 +18,9 @@ Append one entry per `/setup-ai` run, newest first. Each entry records what the 
 | `muse`   | Reads the shared source directly; nothing extra to install |
 
 - **Wired:** cursor, claude (example)
+- **Reading:** medium repo, 8 readers on the scout tier from `npx zedkit-ai scan`; 61 rules merged, 4 dropped after spot-checks; log at `.agents/setup-log/reading.md`; interview cut to 5 questions because the code answered the rest.
+- **Routing:** provider cursor; scout = {cheap fast model}, worker = {mid}, lead = inherit; readers passed the scout model on every spawn; file at `.agents/model-routing.md`.
+- **Nested:** extended `apps/web/AGENTS.md` and `packages/billing/AGENTS.md` in place, linked to `.agents/domain/` (log it as `nested-agents: extended — <files>`, `none — <reason>` or `kept — <reason>`)
 - **Plan gaps:** paths changed after the plan table but missing rows (or: none — reconciled with `git diff --name-only` and **`npx zedkit-ai validate --setup`** clean; use **`--plan <file>`** when the plan is not **`PLAN.md`** at the repo root or **`.agents/setup-log/plan.md`**)
 - **Unenforced rules:** (architecture score 3 — or: none)
 
@@ -66,7 +69,7 @@ END: 2026-11-04T10:08:00+00:00
 EXIT:0
 ```
 
-- **Scores:** mean (8 axes) 2.6 — pass; owner-dependent: discovery 2, domain rules 2 (simulated owner cap). Measurable: personas 3, design 2, architecture 2, gates 2, skills 2, providers 2, UX 2, self-improvement 2. Evidence: `.agents/product.md`, `.agents/domain/booking.md`, transcript §3.
+- **Scores:** mean (8 axes) 2.6 — pass; owner-dependent: discovery 2, domain rules 2 (simulated owner cap). Measurable: personas 3, design 2, architecture 2, gates 2, skills 2, providers 2, UX 2, self-improvement 2. Depth axes: D1 reading 3, D2 domain and identity rules 2, D3 nested rules 2, D4 model routing 2. Evidence: `.agents/product.md`, `.agents/domain/booking.md`, `.agents/setup-log/reading.md`, transcript §3.
 - **Decisions:** wire cursor + claude now, codex later (`source: owner`); keep the team's `.cursor/skills` folder, link kit skills inside it.
 - **Kit frictions:** one draft per friction below (or: none this run)
 - **Re-audit:** after the next release, or when product, domain rules, or providers change.

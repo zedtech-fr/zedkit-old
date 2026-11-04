@@ -22,7 +22,7 @@ const buttonVariants = cva(
       },
       size: {
         default: "h-control-height px-4 py-2",
-        sm: "h-control-height-sm rounded-md px-3 text-xs",
+        sm: "h-control-height-sm rounded-md px-3 py-control-block text-xs",
         lg: "h-control-height-lg rounded-md px-8",
         icon: "size-control-height",
       },
