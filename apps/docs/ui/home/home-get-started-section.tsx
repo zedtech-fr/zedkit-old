@@ -51,6 +51,7 @@ export function HomeGetStartedSection({ npmPackage }: { npmPackage: string }) {
   const plan = featuredAdoptionPlan(npmPackage);
   return (
     <Section
+      bleed
       spacing="md"
       containerWidth="wide"
       id="get-started"
