@@ -65,6 +65,37 @@ export const alertVariants: (props?: ({
     variant?: "default" | "destructive" | null | undefined;
 } & ClassProp) | undefined) => string;
 
+// @public (undocumented)
+export function Animate(input: AnimateProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export const ANIMATE_PRESETS: readonly ["fade-up", "fade-in", "fade-down", "pop-in", "lift", "scale-down", "scale-up", "pulse", "parallax"];
+
+// @public (undocumented)
+export const ANIMATE_TRIGGERS: readonly ["appear", "scroll", "press", "longpress", "hover", "focus"];
+
+// @public
+export type AnimateMotion = AnimatePreset | (string & {});
+
+// @public
+export function AnimateObserver(): null;
+
+// @public (undocumented)
+export type AnimateOn = Partial<Record<AnimateTrigger, AnimateMotion>>;
+
+// @public (undocumented)
+export type AnimatePreset = (typeof ANIMATE_PRESETS)[number];
+
+// @public (undocumented)
+export interface AnimateProps extends React_2.ComponentProps<"div"> {
+    delay?: number;
+    on?: AnimateOn;
+    stagger?: boolean;
+}
+
+// @public (undocumented)
+export type AnimateTrigger = (typeof ANIMATE_TRIGGERS)[number];
+
 // @public
 export function applyCustomIdentity(tokens: IdentityTokens, lookOrKey?: string, persistKey?: string): boolean;
 
@@ -100,7 +131,7 @@ export interface BadgeProps extends React_2.ComponentProps<"div">, VariantProps<
 
 // @public (undocumented)
 export const badgeVariants: (props?: ({
-    variant?: "default" | "secondary" | "destructive" | "success" | "warning" | "outline" | "meta" | null | undefined;
+    variant?: "default" | "destructive" | "meta" | "secondary" | "success" | "warning" | "outline" | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -249,7 +280,7 @@ export type ContainerProps = React_2.ComponentProps<"div"> & VariantProps<typeof
 
 // @public (undocumented)
 export const containerVariants: (props?: ({
-    width?: "default" | "narrow" | "reading" | "wide" | "full" | null | undefined;
+    width?: "narrow" | "reading" | "default" | "wide" | "full" | null | undefined;
     gutter?: boolean | null | undefined;
 } & ClassProp) | undefined) => string;
 
@@ -662,7 +693,7 @@ export type HeadingProps = React_2.ComponentProps<"h1"> & VariantProps<typeof he
 
 // @public (undocumented)
 export const headingVariants: (props?: ({
-    typeRole?: "display" | "section" | "band" | "cardTitle" | "lead" | "body" | "prose" | "small" | "label" | "nav" | null | undefined;
+    typeRole?: "display" | "small" | "body" | "label" | "nav" | "section" | "band" | "cardTitle" | "lead" | "prose" | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -1083,6 +1114,9 @@ export type MultiSelectProps = {
 export const NAMED_IDENTITY_PREFIX = "n-";
 
 // @public
+export function observeAnimate(root?: ParentNode): () => void;
+
+// @public
 export function OfflineNote(input: OfflineNoteProps): JSX.Element;
 
 // @public (undocumented)
@@ -1401,8 +1435,8 @@ export type StackProps = React_2.ComponentProps<"div"> & VariantProps<typeof sta
 
 // @public (undocumented)
 export const stackVariants: (props?: ({
-    direction?: "vertical" | "horizontal" | null | undefined;
-    gap?: 4 | 1 | 2 | 3 | 5 | 6 | 7 | 8 | null | undefined;
+    direction?: "horizontal" | "vertical" | null | undefined;
+    gap?: 1 | 6 | 2 | 3 | 8 | 4 | 5 | 7 | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -1502,7 +1536,7 @@ export type TextProps = React_2.ComponentProps<"p"> & VariantProps<typeof textVa
 // @public (undocumented)
 export const textVariants: (props?: ({
     variant?: "body" | "muted" | null | undefined;
-    typeRole?: "lead" | "body" | "prose" | "small" | "label" | null | undefined;
+    typeRole?: "small" | "body" | "label" | "lead" | "prose" | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public

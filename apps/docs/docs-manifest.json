@@ -13,6 +13,18 @@
         "Staggered children": "MotionStaggerDemo"
       }
     },
+    "Reveal and react with motion on any element": {
+      "package": "@zedtech/zedkit-ui",
+      "component": "Animate",
+      "props": "AnimateProps",
+      "source": "animate.tsx",
+      "demo": "AnimateDemo",
+      "examples": {
+        "Wrapper with several triggers": "AnimateTriggersDemo",
+        "Stagger children": "AnimateStaggerDemo"
+      },
+      "propsPriority": ["on", "delay", "stagger"]
+    },
     "Trigger actions with buttons": {
       "package": "@zedtech/zedkit-ui",
       "component": "Button",

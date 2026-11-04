@@ -12,7 +12,7 @@ import {
   HOME_CARD_CONTENT_GAP,
   HOME_MARKETING_ROOT_PROPS,
   HOME_PERSUASION_TEXT_CLASS,
-  HOME_SECTION_REVEAL_CLASS,
+  HOME_SECTION_REVEAL_PROPS,
 } from "@/ui/home/home-rhythm";
 import { homeCopy } from "@/ui/home/i18n/home-copy";
 
@@ -57,7 +57,7 @@ export function HomeGetStartedSection({ npmPackage }: { npmPackage: string }) {
       id="get-started"
       title={homeCopy.getStarted.section.title}
       description={homeCopy.getStarted.section.description}
-      className={HOME_SECTION_REVEAL_CLASS}
+      {...HOME_SECTION_REVEAL_PROPS}
       {...HOME_MARKETING_ROOT_PROPS}
     >
       <Stack gap={4} className="min-w-0">
@@ -68,7 +68,7 @@ export function HomeGetStartedSection({ npmPackage }: { npmPackage: string }) {
           <AdoptionPanelView plan={plan} summaryClassName={HOME_PERSUASION_TEXT_CLASS} />
           <HomeQuickStartExample />
         </div>
-        <Button asChild variant="link" size="sm" className="h-auto w-fit px-0">
+        <Button asChild variant="ghost" size="sm" className="w-fit" data-home-full-steps="">
           <Link href={homeCopy.getStarted.quickStart.fullStepsHref}>
             <DocsActionLabel>{homeCopy.getStarted.quickStart.fullSteps}</DocsActionLabel>
           </Link>
