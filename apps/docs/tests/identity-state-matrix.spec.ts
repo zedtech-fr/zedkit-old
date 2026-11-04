@@ -305,7 +305,7 @@ test.describe("domain compositions", () => {
       await page.goto(EDITOR, { waitUntil: "networkidle" });
       await typeBrief(page, row.brief);
       await page.getByRole("button", { name: "Generate" }).click();
-      await expect(page.locator(`[data-specimen-domain='${row.domain}']`)).toBeVisible();
+      await expect(page.locator(`[data-specimen-domain='${row.domain}']`)).toHaveCount(2);
     });
   }
 });

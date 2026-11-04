@@ -128,6 +128,7 @@ test.describe("the assistant lives in IdentityDock on the demo editor", () => {
     const posts = await service(page, (posted, route) => route.fulfill(ok(posted, WARM, { references: [used] })));
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(OPEN, { waitUntil: "networkidle" });
+    await expect(page.locator("#identity-assistant-brief")).toBeVisible();
     const views = page.getByRole("group", { name: "Conversation or preview" });
     const conversation = views.getByRole("button", { name: "Conversation" });
     const preview = views.getByRole("button", { name: "Preview" });
