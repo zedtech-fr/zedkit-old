@@ -305,7 +305,10 @@ test.describe("domain compositions", () => {
       await page.goto(EDITOR, { waitUntil: "networkidle" });
       await typeBrief(page, row.brief);
       await page.getByRole("button", { name: "Generate" }).click();
-      await expect(page.locator(`[data-specimen-domain='${row.domain}']`).first()).toBeVisible();
+      // The compare view renders the specimen twice (before, then the proposal): both carry the domain.
+      const specimens = page.locator(`[data-assistant-proposal-compare] [data-specimen-domain='${row.domain}']`);
+      await expect(specimens).toHaveCount(2);
+      await expect(specimens.last()).toBeVisible();
     });
   }
 });
