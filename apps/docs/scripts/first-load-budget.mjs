@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 
-/** Gzip bytes (sum per file) for home `/`. Raise in the PR that grows first load. Raised to 420000: budget raise approved by Romain 19:25. */
+/** Gzip bytes (sum per file) for home `/`. Raise in the PR that grows first load. Raised to 420000 by maintainer decision. */
 export const HOME_FIRST_LOAD_GZIP_BUDGET = 420_000;
 
 const CHUNK_SRC = /\/_next\/static\/chunks\/[^"]+\.js/;
