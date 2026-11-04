@@ -1,5 +1,17 @@
 # @zedtech/zedkit-ai
 
+## 0.20.0
+
+### Minor Changes
+
+- 554cb58: Since 0.12: `zedkit-ai setup` (adopt on, preset `setup` by default), colliding user files kept with `*.kit.md` / `zk-<name>` sidecars, a closed `setup` preset, setup-ai discovery phases, personas v2 on that preset, `validate --setup` for plan coverage and gate-log shape, and cursor/claude/codex/muse on one `.agents` source. Catalog needs move from beta to stable. Package stays on the 0.x line (minor, not 1.0): this package versions features as minors; a 1.0 freeze is a later bump. Measured `/setup-ai` quality: mean 2.25/3 on the eight measurable rubric axes, every axis at least 2, hard gates pass. Measured with composer-2.5 and a simulated owner, on one private repo and one fictional sample repo.
+
+### Patch Changes
+
+- f5e32ce: Setup-ai diligence r6: journey-test whole-path rule, enforced-by wording, installed-kit Kit file paths, domain Status consistency pass.
+- 46dff33: /setup-ai command file requires the Tell-the-user-first intro before running the skill; setup-ai SKILL adds a three-line First message paste template.
+- 78abc80: `validate --setup` suggests the exact plan row to add when a git path is not covered by the plan, with tailored reasons for known setup outputs (package.json, lockfiles, AGENTS.md, CLAUDE.md, .prettierignore, provider dirs).
+
 ## 0.19.0
 
 ### Minor Changes

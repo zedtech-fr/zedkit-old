@@ -12,7 +12,7 @@ import {
   overlayDialogHeaderClass,
   type OverlayInitialFocus,
 } from "./overlay-modal.js";
-import { OverlayMountContext, ScopeMirror } from "./theme-scope.js";
+import { OverlayMountContext, ScopePortal } from "./theme-scope.js";
 import { surfaceVariants } from "./surface.js";
 import { useUiMessages } from "./ui-provider.js";
 
@@ -78,7 +78,12 @@ function DialogPortal({
   // Default mount is document.body: a scoped mount inherits whatever stacking context traps the trigger
   // (a transform, filter, or isolation) and the site header then paints above the overlay. An explicit
   // `container` still wins for consumers that need a subtree mount.
-  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} container={container} />;
+  // Plain `createPortal`, not the Radix portal: Radix wraps each portal child in a Presence that unmounts
+  // instantly when the child has no exit animation, and the child here is the ScopeMirror (a plain
+  // look-carrying div), which would swallow the overlay/panel exit. The overlay and panel keep their own
+  // inner Presences, which own the exit lifecycle (closed state, animationend/cancel, instant when reduced
+  // motion removes the animations).
+  return <ScopePortal container={container}>{props.children}</ScopePortal>;
 }
 
 function DialogOverlay({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
@@ -128,32 +133,30 @@ function DialogContent({
   );
   return (
     <DialogPortal>
-      <ScopeMirror>
-        <DialogOverlay />
-        <DialogPrimitive.Content
-          data-slot="dialog-content"
-          ref={setRef}
-          tabIndex={-1}
-          onOpenAutoFocus={(event) => {
-            event.preventDefault();
-            focusOverlayInitial(contentRef.current, initialFocus);
-          }}
-          className={cn(
-            "fixed dialog-center z-dialog grid max-h-dialog-max-height w-full max-w-dialog-mobile gap-4 overflow-y-auto overscroll-y-contain outline-none focus:outline-none sm:max-w-lg",
-            surfaceVariants({ variant: "solid", elevation: 3, radius: "lg", padding: "dialog" }),
-            "motion-safe:data-[state=open]:animate-[zk-zoom-in_var(--motion-base)_var(--ease-enter)]",
-            "motion-safe:data-[state=closed]:animate-[zk-zoom-out_var(--motion-base)_var(--ease-exit)]",
-            className,
-          )}
-          {...props}
-        >
-          <OverlayMountContext.Provider value={mount}>{children}</OverlayMountContext.Provider>
-          <DialogPrimitive.Close className={overlayDialogCloseClass}>
-            <X className="size-4" />
-            <span className="sr-only">{closeLabel ?? messages.close}</span>
-          </DialogPrimitive.Close>
-        </DialogPrimitive.Content>
-      </ScopeMirror>
+      <DialogOverlay />
+      <DialogPrimitive.Content
+        data-slot="dialog-content"
+        ref={setRef}
+        tabIndex={-1}
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+          focusOverlayInitial(contentRef.current, initialFocus);
+        }}
+        className={cn(
+          "fixed dialog-center z-dialog grid max-h-dialog-max-height w-full max-w-dialog-mobile gap-4 overflow-y-auto overscroll-y-contain outline-none focus:outline-none sm:max-w-lg",
+          surfaceVariants({ variant: "solid", elevation: 3, radius: "lg", padding: "dialog" }),
+          "motion-safe:data-[state=open]:animate-[zk-zoom-in_var(--motion-base)_var(--ease-enter)]",
+          "motion-safe:data-[state=closed]:animate-[zk-zoom-out_var(--motion-base)_var(--ease-exit)]",
+          className,
+        )}
+        {...props}
+      >
+        <OverlayMountContext.Provider value={mount}>{children}</OverlayMountContext.Provider>
+        <DialogPrimitive.Close className={overlayDialogCloseClass}>
+          <X className="size-4" />
+          <span className="sr-only">{closeLabel ?? messages.close}</span>
+        </DialogPrimitive.Close>
+      </DialogPrimitive.Content>
     </DialogPortal>
   );
 }

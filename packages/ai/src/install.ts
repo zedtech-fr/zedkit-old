@@ -189,6 +189,16 @@ function place(
   return target;
 }
 
+const PERSONAS_V2_COLUMNS = "| Persona | Goals |";
+
+// Phase C rewrites .agents/personas.md in the v2 schema. Sidecarring the kit
+// template next to a v2 file as personas.kit.md is noise, so it is kept with
+// no sidecar. Anything without v2 headers (v1, hand-written) still gets the
+// kit sidecar so the v2 schema stays visible.
+function personasCustomized(current: string): boolean {
+  return current.replace(/\s+/g, " ").includes(PERSONAS_V2_COLUMNS);
+}
+
 function copyFile(ctx: Ctx, from: string, rel: string): void {
   const kit = tryCatch(() => readFileSync(from, "utf8"));
   const text = kit.ok ? resolveIfNeeded(kit.value, ctx.avail) : undefined;
@@ -200,6 +210,10 @@ function copyFile(ctx: Ctx, from: string, rel: string): void {
     const current = tryCatch(() => readFileSync(join(ctx.dest, rel), "utf8"));
     if (current.ok && current.value === text) {
       ctx.actions.push({ kind: "skip", path: rel, note: "already installed" });
+      return;
+    }
+    if (current.ok && rel === join(".agents", "personas.md") && personasCustomized(current.value)) {
+      ctx.actions.push({ kind: "skip", path: rel, note: "kept (already customized)" });
       return;
     }
   }

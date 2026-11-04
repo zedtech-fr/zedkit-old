@@ -719,12 +719,12 @@ a[class*="px-badge-inline"] {
  * high-specificity state selectors — deliberately, in one place.
  */
 html [data-vaul-drawer] {
-  animation-duration: var(--motion-slow);
-  transition-duration: var(--motion-slow);
+  animation-duration: var(--motion-slow) !important;
+  transition-duration: var(--motion-slow) !important;
 }
 
 html [data-vaul-overlay] {
-  animation-duration: var(--motion-base);
+  animation-duration: var(--motion-base) !important;
 }
 
 @media (prefers-reduced-transparency: reduce) {
