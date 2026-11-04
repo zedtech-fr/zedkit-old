@@ -1,4 +1,3 @@
-import { parseIdentityTokens } from "@zedtech/zedkit-ui";
 import type { IdentityTokens } from "@zedtech/zedkit-ui";
 
 import { LIMITS } from "./identity-assistant-limits.ts";
@@ -64,11 +63,7 @@ export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>
 
 const UNAVAILABLE = new Set<string>(["disabled", "not-configured", "unavailable", "killed"]);
 
-/** A request id the service accepts: 8 to 64 characters of letters, digits, dash and underscore. */
-export function newRequestId(): string {
-  const random = globalThis.crypto?.randomUUID?.();
-  return random ?? `r${Date.now().toString(36)}${Math.random().toString(36).slice(2, 12)}`;
-}
+export { newRequestId } from "./identity-request-id.ts";
 
 /** The limits the service enforces, checked here too so a visitor is told before anything is sent. */
 export function checkInput(input: Pick<AssistantInput, "prompt" | "references">): "ok" | "empty" | "too-long" | "too-many-references" {
@@ -163,9 +158,10 @@ export function requestIdentity(input: AssistantInput, { fetchImpl = globalThis.
     }),
   })
     .then((res) =>
-      readJson(res).then((body): AssistantResult => {
+      readJson(res).then(async (body): Promise<AssistantResult> => {
         if (res.status !== 200) return failure(res, body);
         const references = referencesOf(body.references);
+        const { parseIdentityTokens } = await import("./identity-tokens-parse.ts");
         const parsed = parseIdentityTokens(body.tokens);
         if (!parsed.success) return { kind: "invalid-output", references };
         return {

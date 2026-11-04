@@ -70,7 +70,7 @@ Constants: `signatureMotionClass` in `@zedtech/zedkit-ui`.
 
 ## Category cue (home)
 
-The home display line leads with a short category label (`React UI kit · …`) so the proposition reads as a product class before the promise.
+The home display line leads with a short category label (`UI/AI kit · …`) so the proposition reads as a product class before the promise.
 
 ## Adoption
 

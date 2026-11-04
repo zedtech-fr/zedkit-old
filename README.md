@@ -9,8 +9,8 @@
 
 ### Why rebuild everything, or settle for what exists, when you can start from a top-notch setup?
 
-A polished React UI kit with real identities, an AI setup your agents actually follow,<br>
-and the server, SEO and quality packages behind them. Open source, MIT.
+A UI/AI kit: a polished React UI kit with real identities, and a top-notch AI setup<br>
+one prompt away, with the server, SEO and quality packages behind them. Open source, MIT.
 
 [![ci](https://github.com/zedtech-fr/zedkit/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/zedtech-fr/zedkit/actions/workflows/ci.yml?query=branch%3Amain)
 [![npm](https://img.shields.io/npm/v/@zedtech/zedkit-ui?label=zedkit-ui&color=5b4bdb)](https://www.npmjs.com/package/@zedtech/zedkit-ui)
@@ -29,8 +29,11 @@ tokens. Pick an *identity* (type, shape, density, colour together) and the same
 components read as a newsroom, an invoicing tool, a boutique or a SaaS app.
 Install from npm or copy the source through the shadcn registry.
 
-**🤖 An AI setup in one prompt** — `zedkit-ai` gives Cursor, Claude Code, Codex
-and friends one shared set of rules, skills and checks, validated in CI.
+**🤖 A top-notch AI setup in one prompt** — paste one message in Cursor and the
+agent installs `zedkit-ai`, interviews you about the repo, and writes rules that
+match it. Cursor, Claude Code, Codex and friends share one set of skills,
+subagents, review and definition-of-done checks, validated in CI.
+([Prompt and file tree](https://zedkit.app/#ai-setup).)
 
 **🧱 The boring parts, done right** — SEO metadata, server helpers, storage,
 flags, i18n, observability: small, typed, dependency-light packages.
@@ -94,7 +97,7 @@ Maturity criteria: [docs/catalog/README.md](docs/catalog/README.md).
 
 | Package | Version | Maturity |
 |---|---|---|
-| [`@zedtech/zedkit-ai`](packages/ai/README.md) ([npm](https://www.npmjs.com/package/@zedtech/zedkit-ai)) | 0.20.1 | stable |
+| [`@zedtech/zedkit-ai`](packages/ai/README.md) ([npm](https://www.npmjs.com/package/@zedtech/zedkit-ai)) | 0.20.2 | stable |
 | [`@zedtech/zedkit-brand`](packages/brand/README.md) ([npm](https://www.npmjs.com/package/@zedtech/zedkit-brand)) | 0.1.0 | alpha |
 | [`@zedtech/zedkit-core`](packages/core/README.md) ([npm](https://www.npmjs.com/package/@zedtech/zedkit-core)) | 1.0.0 | stable |
 | [`@zedtech/zedkit-devtools`](packages/devtools/README.md) ([npm](https://www.npmjs.com/package/@zedtech/zedkit-devtools)) | 0.3.11 | beta |

@@ -92,3 +92,19 @@ test("a proposal carries the id this page sent, never one the service echoed", (
   const s = run({ type: "submit", requestId: "mine", prompt: "calm" }, { type: "result", requestId: "mine", result: ok("echoed-by-the-service") });
   assert.equal(s.proposal.requestId, "mine");
 });
+
+test("the visible conversation keeps every request and every reply or failure, in order", () => {
+  const s = run(
+    { type: "submit", requestId: "a", prompt: " calm " },
+    { type: "result", requestId: "a", result: { kind: "upstream", references: [] } },
+    { type: "submit", requestId: "b", prompt: "warm" },
+    { type: "result", requestId: "b", result: ok("b", "Warmer.") },
+  );
+  assert.deepEqual(s.messages, [
+    { role: "user", text: "calm" },
+    { role: "notice", notice: { kind: "upstream", references: [] } },
+    { role: "user", text: "warm" },
+    { role: "assistant", text: "Warmer." },
+  ]);
+  assert.deepEqual(s.thread, [], "the service history still holds accepted exchanges only");
+});

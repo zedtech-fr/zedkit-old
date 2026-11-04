@@ -9,12 +9,15 @@ export function useAssistantSubmitHandlers(
   submit: (prompt: string, references: readonly string[]) => void,
   busy: boolean,
   off: boolean,
+  clearBrief?: () => void,
 ) {
   const send = useCallback(() => {
     const references = linksInText(brief).urls;
     if (checkInput({ prompt: brief, references }) !== "ok") return;
     submit(brief, references);
-  }, [brief, submit]);
+    // The request now reads as a message in the conversation, so the composer empties like any chat.
+    clearBrief?.();
+  }, [brief, submit, clearBrief]);
 
   const quickRefine = useCallback(
     (prompt: string) => {

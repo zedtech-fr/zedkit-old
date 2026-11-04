@@ -100,7 +100,7 @@ export function IdentityDockAssistantPanel({
   const ui = useAssistantView({ proposalId: session.proposal?.requestId, onBrief: setBrief });
   const busy = session.pending !== null;
   const off = status !== null && !status.available ? status.reason : null;
-  const { send, quickRefine } = useAssistantSubmitHandlers(brief, submit, busy, off !== null);
+  const { send, quickRefine } = useAssistantSubmitHandlers(brief, submit, busy, off !== null, () => setBrief(""));
   const domainBrief = specimenBriefFromThread(session.thread, brief);
 
   useEffect(() => {

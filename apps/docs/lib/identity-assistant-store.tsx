@@ -14,9 +14,15 @@ import {
 } from "react";
 import type { IdentityTokens } from "@zedtech/zedkit-ui";
 
-import { fetchAssistantStatus, type AssistantStatus } from "@/lib/identity-assistant";
+import type { AssistantStatus } from "@/lib/identity-assistant";
 import { initialSession, sessionReducer, type SessionAction, type SessionState } from "@/lib/identity-creator-session";
-import { readIdentityDockPersist, writeIdentityDockPersist, clearIdentityDockPersist } from "@/lib/identity-dock-persist";
+import {
+  clearIdentityDockPersist,
+  parsePersistedPreviewTokens,
+  readIdentityDockPersist,
+  writeIdentityDockPersist,
+  type IdentityDockPersistRead,
+} from "@/lib/identity-dock-persist";
 import { useAssistantNetwork } from "@/lib/use-assistant-network";
 
 type IdentityAssistantStore = {
@@ -37,21 +43,28 @@ type IdentityAssistantStore = {
 
 const IdentityAssistantStoreContext = createContext<IdentityAssistantStore | null>(null);
 
-function IdentityAssistantStoreProvider({ children }: { children: ReactNode }) {
-  const boot = useMemo(() => readIdentityDockPersist(), []);
-  const [session, dispatch] = useReducer(sessionReducer, boot.session ?? initialSession);
-  const [brief, setBrief] = useState(boot.brief ?? "");
-  const [previewTokens, setPreviewTokens] = useState<IdentityTokens | null>(boot.previewTokens ?? null);
-  const [expanded, setExpanded] = useState(false);
-  const [status, setStatus] = useState<AssistantStatus | null>(null);
-  const live = useRef({ thread: session.thread });
-  const { submit, cancel } = useAssistantNetwork(dispatch, setStatus, live);
-
+/** Persisted preview tokens are validated async (zod loads on demand); `tokensReady` holds writes until that settles. */
+function usePersistedPreviewTokens(boot: IdentityDockPersistRead) {
+  const [previewTokens, setPreviewTokens] = useState<IdentityTokens | null>(null);
+  const [tokensReady, setTokensReady] = useState(boot.previewTokensRaw === undefined);
   useEffect(() => {
-    live.current.thread = session.thread;
-  }, [session.thread]);
+    if (tokensReady) return;
+    let alive = true;
+    void parsePersistedPreviewTokens(boot.previewTokensRaw).then((tokens) => {
+      if (!alive) return;
+      if (tokens) setPreviewTokens((current) => current ?? tokens);
+      setTokensReady(true);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [boot, tokensReady]);
+  return { previewTokens, setPreviewTokens, tokensReady };
+}
 
+function usePersistDock(session: SessionState, brief: string, previewTokens: IdentityTokens | null, tokensReady: boolean) {
   useEffect(() => {
+    if (!tokensReady) return;
     const empty =
       brief === "" &&
       session.thread.length === 0 &&
@@ -65,11 +78,30 @@ function IdentityAssistantStoreProvider({ children }: { children: ReactNode }) {
       return;
     }
     writeIdentityDockPersist({ session, brief, ...(previewTokens ? { previewTokens } : {}) });
-  }, [session, brief, previewTokens]);
+  }, [session, brief, previewTokens, tokensReady]);
+}
+
+function IdentityAssistantStoreProvider({ children }: { children: ReactNode }) {
+  const boot = useMemo(() => readIdentityDockPersist(), []);
+  const [session, dispatch] = useReducer(sessionReducer, boot.session ?? initialSession);
+  const [brief, setBrief] = useState(boot.brief ?? "");
+  const { previewTokens, setPreviewTokens, tokensReady } = usePersistedPreviewTokens(boot);
+  const [expanded, setExpanded] = useState(false);
+  const [status, setStatus] = useState<AssistantStatus | null>(null);
+  const live = useRef({ thread: session.thread });
+  const { submit, cancel } = useAssistantNetwork(dispatch, setStatus, live);
+
+  useEffect(() => {
+    live.current.thread = session.thread;
+  }, [session.thread]);
+
+  usePersistDock(session, brief, previewTokens, tokensReady);
 
   const ensureAssistantStatus = useCallback(() => {
     const stop = new AbortController();
-    void fetchAssistantStatus({ signal: stop.signal }).then(setStatus);
+    void import("@/lib/identity-assistant")
+      .then(({ fetchAssistantStatus }) => fetchAssistantStatus({ signal: stop.signal }))
+      .then(setStatus);
     return () => stop.abort();
   }, []);
 

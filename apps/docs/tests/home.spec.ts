@@ -11,7 +11,7 @@ test("home explains the product and four entry areas", async ({ page }) => {
   await page.goto(BASE, { waitUntil: "networkidle" });
   await expect(
     page.getByRole("heading", {
-      name: "React UI kit · Build the parts you need. Keep the rest of your app.",
+      name: "UI/AI kit · A top-notch AI setup, one prompt away. Only the UI you need.",
       level: 1,
     }),
   ).toBeVisible();
@@ -229,7 +229,7 @@ test("home docs CTAs keep a decorative icon on phone (get started band)", async 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(BASE, { waitUntil: "networkidle" });
   await expect(page.locator("#get-started [data-docs-ctas] svg[aria-hidden='true']")).toHaveCount(0);
-  await expect(page.locator("#entry-points [data-docs-ctas] svg[aria-hidden='true']")).toHaveCount(2);
+  await expect(page.locator("#ai-setup [data-docs-ctas] svg[aria-hidden='true']")).toHaveCount(1);
   await expect(page.locator("#proofs")).toHaveCount(0);
   const overflow = await page.evaluate(
     () => (document.querySelector("#home-page")?.scrollWidth ?? 0) <= document.documentElement.clientWidth + 1,
@@ -262,9 +262,9 @@ test.describe("home docs CTAs light/dark (#748)", () => {
       await entry.scrollIntoViewIfNeeded();
       await expect(entry.getByRole("link", { name: "Start with buttons" })).toBeVisible();
       await entry.screenshot({ path: `test-results/home-cta-entry-${mode}.png` });
-      const ai = page.locator("#entry-points [data-docs-ctas]");
+      const ai = page.locator("#ai-setup [data-docs-ctas]");
       await ai.scrollIntoViewIfNeeded();
-      await expect(ai.getByRole("link", { name: "AI setup docs" })).toBeVisible();
+      await expect(ai.getByRole("link", { name: "Read the AI setup guide" })).toBeVisible();
       await ai.screenshot({ path: `test-results/home-cta-scenarios-${mode}.png` });
     });
   }
@@ -280,9 +280,9 @@ test.describe("home section docs CTAs light/dark (#769)", () => {
         localStorage.setItem("theme", theme);
       }, mode);
       await page.goto(BASE, { waitUntil: "networkidle" });
-      const install = page.locator("#entry-points [data-docs-ctas]");
+      const install = page.locator("#ai-setup [data-docs-ctas]");
       await install.scrollIntoViewIfNeeded();
-      await expect(install.getByRole("link", { name: "AI setup docs" })).toBeVisible();
+      await expect(install.getByRole("link", { name: "Read the AI setup guide" })).toBeVisible();
       await install.screenshot({ path: `test-results/home-section-cta-install-${mode}.png` });
       await install.screenshot({ path: `test-results/home-section-cta-ai-${mode}.png` });
     });

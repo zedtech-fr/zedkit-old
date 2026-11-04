@@ -1,6 +1,4 @@
 import Link from "next/link";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 
 import { Button, Section, Stack, StickyAside, Text } from "@zedtech/zedkit-ui";
 import { GlassSurface } from "@zedtech/zedkit-ui/marketing";
@@ -15,16 +13,6 @@ import {
   HOME_SECTION_REVEAL_PROPS,
 } from "@/ui/home/home-rhythm";
 import { homeCopy } from "@/ui/home/i18n/home-copy";
-
-const SNIPPETS_DIR = join(process.cwd(), "home-quickstart", "snippets");
-
-export function loadHomeInitCommand() {
-  const initCommand = readFileSync(join(SNIPPETS_DIR, "ai-init.sh"), "utf8").trim();
-  if (initCommand !== "npx @zedtech/zedkit-ai init") {
-    throw new Error("home-quickstart/snippets/ai-init.sh must be exactly: npx @zedtech/zedkit-ai init");
-  }
-  return initCommand;
-}
 
 /** Composed quick-start: adoption steps in a reading column, live example beside (V7-D02). */
 export function HomeGetStartedSection({ npmPackage }: { npmPackage: string }) {

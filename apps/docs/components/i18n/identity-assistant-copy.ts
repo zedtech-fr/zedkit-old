@@ -1,4 +1,5 @@
 import type { Unavailable } from "@/lib/identity-assistant";
+import { identityBriefCopy } from "@/components/i18n/identity-brief-copy";
 
 /** English copy for the identity assistant, its references and its proposal. Keys only; no markup. */
 
@@ -36,7 +37,7 @@ export function retryText(seconds: number | undefined, now: Date = new Date()): 
 export const identityAssistantCopy = {
   title: "Create an identity",
   intro: "Describe your product in a few plain sentences. The assistant proposes a look; you review it before anything changes.",
-  briefLabel: "Your product and brand",
+  briefLabel: identityBriefCopy.briefLabel,
   followUpLabel: "What should change?",
   generate: "Generate",
   refine: "Refine",
@@ -97,7 +98,7 @@ export const identityAssistantCopy = {
     hint: "Or describe the change in your own words below.",
   },
   refinePlaceholder: "Calmer, more contrast, a serif for the headings\u2026",
-  placeholder: "A small online shop selling hand-thrown ceramics. Calm and warm, a little editorial.\nIn the spirit of https://example.com/studio",
+  placeholder: identityBriefCopy.placeholder,
   /** Example prompts the chat composer rotates through, until reduced motion or a follow-up asks for stillness. */
   composerPlaceholders: [
     "A small online shop selling hand-thrown ceramics…",
@@ -105,13 +106,7 @@ export const identityAssistantCopy = {
     "A SaaS dashboard for a team of ten…",
     "A booking page for a bike repair shop…",
   ],
-  links: {
-    found: "Links the assistant will read",
-    note: "It reads each page's styles (colours, fonts, radius, shadows, spacing) and its text, not the pictures.",
-    remove: (host: string) => `Stop reading ${host}`,
-    tooMany: "Only the first 3 links are read.",
-    list: "Links found in your text",
-  },
+  links: identityBriefCopy.links,
   references: {
     textOnly: "Read as text only. Pictures and layout are not analysed.",
     styles: (signals: string) => (signals ? `Styles and text read: ${signals}.` : "Styles and text read. No distinct colours or fonts found."),

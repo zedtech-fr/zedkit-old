@@ -5,9 +5,10 @@ import { Stack, Text, cn, type IdentityTokens } from "@zedtech/zedkit-ui";
 
 import { identityAssistantCopy as copy } from "@/components/i18n/identity-assistant-copy";
 import { AssistantNoticeBubble, BriefForm, ProposalCard, Thread, UnavailableBanner, type View } from "@/components/identity-assistant-parts";
+import { ChatLog } from "@/components/identity-chat-log";
 import { IdentityMiniPreview } from "@/components/identity-mini-preview";
 import { IdentityRefinementChips } from "@/components/identity-refinement-chips";
-import { DetectedLinks } from "@/components/identity-references";
+import { DetectedLinks } from "@/components/identity-detected-links";
 import type { Unavailable } from "@/lib/identity-assistant";
 import type { Proposal, SessionState } from "@/lib/identity-creator-session";
 
@@ -42,6 +43,7 @@ export function ConversationMessages(props: {
   const chipsVisible = refining && props.session.proposal === null && props.session.pending === null;
   const hidden = props.compact ? props.view !== "conversation" : props.view === "preview";
   const notice = props.session.notice;
+  const messages = props.session.messages ?? [];
   return (
     <Stack
       gap={4}
@@ -49,8 +51,14 @@ export function ConversationMessages(props: {
       data-assistant-pane="conversation"
     >
       {props.off ? <UnavailableBanner reason={props.off} live={false} /> : null}
-      {refining ? <Thread turns={props.session.thread} /> : <AssistantGreeting />}
-      {notice && notice.kind !== "unavailable" ? <AssistantNoticeBubble notice={notice} /> : null}
+      {messages.length > 0 ? (
+        <ChatLog messages={messages} pending={props.session.pending !== null} />
+      ) : (
+        <>
+          {refining ? <Thread turns={props.session.thread} /> : <AssistantGreeting />}
+          {notice && notice.kind !== "unavailable" ? <AssistantNoticeBubble notice={notice} /> : null}
+        </>
+      )}
       <IdentityRefinementChips
         visible={chipsVisible}
         disabled={props.busy || props.off !== null}
