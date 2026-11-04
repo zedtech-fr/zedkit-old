@@ -6,6 +6,7 @@ import { kitDir, kitUniverse, readManifest } from "./kit.js";
 import { parseFrontmatter } from "./frontmatter.js";
 import { lensClosureIssues } from "./lenses.js";
 import { danglingKitRefs, skillRefFiles, type RefUniverse } from "./skill-refs.js";
+import { resolveConditionals, withoutMarkers, type Availability } from "./conditional.js";
 
 export type Issue = { path: string; message: string };
 
@@ -199,21 +200,32 @@ function namesIn(root: string, dir: string): string[] {
 // name is a reference by convention; in user-authored files the same token
 // is an ordinary word. A user file shadowing a kit name (kit sidecar
 // beside it) is user prose too.
-function checkSkillRefs(root: string, skills: Set<string>, kit: string, issues: Issue[]): void {
-  const agents = namesIn(root, "agents");
-  const commands = namesIn(root, "commands");
+function refUniverse(kit: string): RefUniverse {
   const uni = tryCatch(() => kitUniverse(kit));
-  const universe: RefUniverse = uni.ok
-    ? {
-        skills: new Set(uni.value.skills),
-        agents: new Set(uni.value.agents),
-        commands: new Set(uni.value.commands),
-      }
-    : { skills: new Set(), agents: new Set(), commands: new Set() };
-  const installed = new Set([...skills, ...agents, ...commands]);
+  if (!uni.ok) return { skills: new Set(), agents: new Set(), commands: new Set() };
+  return {
+    skills: new Set(uni.value.skills),
+    agents: new Set(uni.value.agents),
+    commands: new Set(uni.value.commands),
+  };
+}
+
+function installedUnion(sets: ReadonlySet<string>[]): Set<string> {
+  const installed = new Set<string>();
+  for (const set of sets) {
+    for (const name of set) installed.add(name);
+  }
   for (const name of [...installed]) {
     if (name.startsWith("zk-")) installed.add(name.slice("zk-".length));
   }
+  return installed;
+}
+
+function checkSkillRefs(root: string, skills: Set<string>, kit: string, issues: Issue[]): void {
+  const agents = namesIn(root, "agents");
+  const commands = namesIn(root, "commands");
+  const universe = refUniverse(kit);
+  const installed = installedUnion([skills, new Set(agents), new Set(commands)]);
   const shadowed = new Set<string>();
   for (const name of skills) {
     if (name.startsWith("zk-")) shadowed.add(join("skills", name.slice("zk-".length), "SKILL.md"));
@@ -238,6 +250,16 @@ function checkSkillRefs(root: string, skills: Set<string>, kit: string, issues: 
   };
   const files = skillRefFiles(root, [...skills], agents, commands, isKitOrigin);
   for (const issue of danglingKitRefs(files, installed, universe)) issues.push(issue);
+  // Top-level kit docs: personas.md ships from a kit template, so its
+  // references close like any kit file. THIRD_PARTY_NOTICES.md names every
+  // vendored skill by design (attribution, not invocation) and is exempt;
+  // any other top-level file is the user's own and unscanned.
+  const personas = join(root, "personas.md");
+  if (existsSync(personas) && existsSync(join(kit, "personas.template.md"))) {
+    const text = readFileSync(personas, "utf8");
+    const docs = [{ path: "personas.md", text, kitOrigin: true }];
+    for (const issue of danglingKitRefs(docs, installed, universe)) issues.push(issue);
+  }
 }
 
 function collect(root: string, kit: string): Issue[] {
@@ -422,4 +444,51 @@ export function checkDrift(projectRoot: string, source: string): Issue[] {
     return issues;
   });
   return run.ok ? run.value : [{ path: projectRoot, message: `cannot check drift: ${run.error.message}` }];
+}
+
+/**
+ * Reference closure for the kit-written root docs: the AGENTS.md the
+ * installer writes from the kit template, resolved against the installed
+ * sets read from `source` (the project's `.agents/` dir). Verbatim
+ * marker-stripped-or-resolved template lines count as kit-written — old
+ * installs and the appended ladder match by line too — while user edits
+ * and additions are skipped. CLAUDE.md is never scanned: a link carries
+ * the same bytes as AGENTS.md, a real file is the user's own. Paths are
+ * relative to `projectRoot`.
+ */
+export function checkKitDocs(projectRoot: string, source: string, kit: string = kitDir()): Issue[] {
+  const run = tryCatch(() => {
+    const agentsMd = join(projectRoot, "AGENTS.md");
+    const stat = tryCatch(() => statSync(agentsMd));
+    if (!stat.ok || !stat.value.isFile()) return [];
+    const template = tryCatch(() => readFileSync(join(kit, "AGENTS.template.md"), "utf8"));
+    if (!template.ok) return [];
+    const skills = new Set(dirsIn(join(source, "skills")));
+    const avail: Availability = {
+      skills,
+      agents: new Set(namesIn(source, "agents")),
+      commands: new Set(namesIn(source, "commands")),
+    };
+    const resolved = tryCatch(() => resolveConditionals(template.value, avail));
+    if (!resolved.ok) return [];
+    // Verbatim lines of either the marker-stripped or the resolved template
+    // count as kit-written: old installs match the stripped text (so stale
+    // references still fail), fresh installs match the resolved text.
+    const kitLines = new Set(
+      `${withoutMarkers(template.value)}\n${resolved.value}`
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => line !== ""),
+    );
+    const text = readFileSync(agentsMd, "utf8");
+    const kitText = text
+      .split("\n")
+      .filter((line) => kitLines.has(line.trim()))
+      .join("\n");
+    const universe = refUniverse(kit);
+    const installed = installedUnion([avail.skills, avail.agents, avail.commands]);
+    const files = [{ path: "AGENTS.md", text: kitText, kitOrigin: true }];
+    return danglingKitRefs(files, installed, universe);
+  });
+  return run.ok ? run.value : [];
 }

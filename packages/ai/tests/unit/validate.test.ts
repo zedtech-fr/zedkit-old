@@ -2,7 +2,7 @@ import { mkdirSync, readFileSync, symlinkSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { installKit } from "#install.js";
-import { checkDrift, validateKit } from "#validate.js";
+import { checkDrift, checkKitDocs, validateKit } from "#validate.js";
 import { kitDir } from "#kit.js";
 import { AGENT, COMMAND, put, SKILL, tempDir } from "./helpers.js";
 
@@ -108,6 +108,45 @@ describe("validateKit", () => {
     put(root, "skills/review/SKILL.md", `${SKILL("review")}\nMy own notes on the \`plan\` phase and ladder.\n`);
     put(root, "skills/zk-review/SKILL.md", `${SKILL("review")}\nladder\n`);
     expect(validateKit(root)).toEqual([]);
+  });
+
+  it("flags a personas.md naming a kit skill the tree does not install", () => {
+    const root = tempDir();
+    put(root, "skills/review/SKILL.md", `${SKILL("review")}\nladder\n`);
+    put(root, "personas.md", "# Project personas\n\nNamed audiences for `persona-review`.\n");
+    expect(messages(root)).toContain(
+      'personas.md: references skill "persona-review", which this preset does not install',
+    );
+  });
+
+  it("exempts the attribution notice, which names every vendored skill by design", () => {
+    const root = tempDir();
+    put(root, "skills/review/SKILL.md", `${SKILL("review")}\nladder\n`);
+    put(root, "THIRD_PARTY_NOTICES.md", "# Notices\n\nVendored skills: `tdd`, `ponytail`, `plan`.\n");
+    expect(validateKit(root)).toEqual([]);
+  });
+
+  it("flags old AGENTS.md template lines naming an uninstalled skill, and skips user lines", () => {
+    const root = tempDir();
+    put(root, ".agents/skills/review/SKILL.md", `${SKILL("review")}\nladder\n`);
+    put(root, "AGENTS.md", "# Mine\n\nRun the `plan` phase on Fridays.\n");
+    expect(checkKitDocs(root, join(root, ".agents"))).toEqual([]);
+    put(root, "AGENTS.md", "at the first rung that holds (skill `ponytail-review` has the full text):\n");
+    const found = checkKitDocs(root, join(root, ".agents")).map((i) => `${i.path}: ${i.message}`);
+    expect(found).toContain('AGENTS.md: references skill "ponytail-review", which this preset does not install');
+  });
+
+  it("never scans CLAUDE.md: a link duplicates AGENTS.md, a real file is the user's own", () => {
+    const root = tempDir();
+    put(root, ".agents/skills/review/SKILL.md", `${SKILL("review")}\nladder\n`);
+    put(root, "AGENTS.md", "# Mine\n");
+    symlinkSync(join(root, "AGENTS.md"), join(root, "CLAUDE.md"));
+    expect(checkKitDocs(root, join(root, ".agents"))).toEqual([]);
+    const owned = tempDir();
+    put(owned, ".agents/skills/review/SKILL.md", `${SKILL("review")}\nladder\n`);
+    put(owned, "AGENTS.md", "# Mine\n");
+    put(owned, "CLAUDE.md", "See `ponytail-review` and `plan`.\n");
+    expect(checkKitDocs(owned, join(owned, ".agents"))).toEqual([]);
   });
 
   it("flags a command that names no installed skill", () => {

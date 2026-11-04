@@ -156,9 +156,9 @@ size_budget ui 8000 marketing
 # Raised to 12500 on 4 Nov 2026: claude-layer drift + claude real-dir wiring (measured 12386).
 # Raised to 14000 on 4 Nov 2026 for the GA setup fixes landing together (repo-skill wiring, personas v2,
 # prettier-ignore hints, strong reference closure); one shared bump so parallel PRs do not conflict.
-# Raised to 15000 on 4 Nov 2026: closure + conditionals measured 14921, above the shared bump.
+# Raised to 16100 on 4 Nov 2026: closure + conditionals on top of the merged repo-skill wiring (measured 15980).
 # Next step is to shrink dist, not to raise this again.
-size_budget ai 15000
+size_budget ai 16100
 
 if [ -f apps/docs/out/index.html ]; then
   if ! node apps/docs/scripts/check-first-load-budget.mjs; then

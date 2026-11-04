@@ -112,4 +112,18 @@ describe("conditional install failures", () => {
     expect(result.error.message).toContain('unknown conditional target: skill "ghost"');
     expect(existsSync(join(dest, ".agents"))).toBe(false);
   });
+
+  it("fails before writing when a template names an uninstalled kit skill", () => {
+    const dest = tempDir();
+    const kit = tempDir();
+    put(kit, "kit.json", JSON.stringify({ presets: { starter: ["alpha"] }, agents: [], commands: [] }));
+    put(kit, "skills/alpha/SKILL.md", `---\nname: alpha\ndescription: "Does alpha. Use when needed."\n---\n`);
+    put(kit, "skills/beta/SKILL.md", `---\nname: beta\ndescription: "Does beta. Use when needed."\n---\n`);
+    put(kit, "AGENTS.template.md", "# T\n\nSee the `beta` skill.\n");
+    const result = installKit({ dest, kit, preset: "starter", providers: [] });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error.message).toContain('AGENTS.md: references skill "beta"');
+    expect(existsSync(join(dest, ".agents"))).toBe(false);
+  });
 });

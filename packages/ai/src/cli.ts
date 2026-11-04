@@ -5,7 +5,7 @@ import { parseArgs } from "node:util";
 import { err, ok, tryCatch, type Result } from "@zedtech/zedkit-core";
 import { ALL_PROVIDERS, installKit, type Provider } from "./install.js";
 import { readManifest } from "./kit.js";
-import { checkDrift, validateKit } from "./validate.js";
+import { checkDrift, checkKitDocs, validateKit } from "./validate.js";
 
 const USAGE = `zedkit-ai <command>
 
@@ -113,7 +113,7 @@ function runValidate(args: string[], sinks: Sinks): number {
   const nested = join(dir, ".agents");
   const agentsDir = existsSync(nested) ? nested : dir;
   const projectRoot = agentsDir === dir ? dirname(dir) : dir;
-  const issues = [...validateKit(agentsDir), ...checkDrift(projectRoot, agentsDir)];
+  const issues = [...validateKit(agentsDir), ...checkDrift(projectRoot, agentsDir), ...checkKitDocs(projectRoot, agentsDir)];
   for (const issue of issues) sinks.out(`${issue.path}: ${issue.message}`);
   const summary =
     issues.length === 0

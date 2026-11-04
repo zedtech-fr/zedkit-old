@@ -100,6 +100,8 @@ describe("preset closure", () => {
       ...skillDirs().map((name) => join("skills", name, "SKILL.md")),
       ...manifest.value.agents.map((name) => join("agents", `${name}.md`)),
       ...(manifest.value.commands ?? []).map((name) => join("commands", `${name}.md`)),
+      "AGENTS.template.md",
+      "personas.template.md",
     ];
     const marked: string[] = [];
     for (const rel of candidates) {
@@ -112,6 +114,8 @@ describe("preset closure", () => {
     }
     expect(marked.sort()).toEqual(
       [
+        "AGENTS.template.md",
+        "personas.template.md",
         join("agents", "orchestrator.md"),
         join("agents", "ui-designer.md"),
         join("skills", "definition-of-done", "SKILL.md"),

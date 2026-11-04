@@ -29,7 +29,7 @@ comment and the examples below that do not apply. -->
 ## Before writing any code
 
 Climb the ladder for every new piece of code, file, or dependency — stop
-at the first rung that holds (skill `ponytail-review` has the full text):
+at the first rung that holds<!-- if:skill=ponytail-review --> (skill `ponytail-review` has the full text)<!-- /if -->:
 
 1. Does this need to exist at all? If not, say so in one line.
 2. Already in this codebase? Reuse the helper or pattern.
@@ -45,7 +45,7 @@ at the first rung that holds (skill `ponytail-review` has the full text):
   flag, path, version or model name. Cite `file:line`. Say what you could not
   check. (skill `ground-truth`)
 - **Smallest complete change.** Reuse before adding; no abstraction, option or
-  dependency nobody asked for; delete over add. (skill `ponytail`)
+  dependency nobody asked for; delete over add.<!-- if:skill=ponytail --> (skill `ponytail`)<!-- /if -->
 - **Parallelize independent work.** Fan out read-only exploration and review
   lenses to subagents with self-contained briefs; implement in parallel only
   after the shared contract is fixed. (skill `parallel-work`)
@@ -58,7 +58,7 @@ at the first rung that holds (skill `ponytail-review` has the full text):
 - **Done means proven.** Gates run on the final state, no weakened tests, a
   cold second review. (skill `definition-of-done`, agent `verifier`)
 - **Keep this setup true.** When a decision or correction comes up, update the
-  rule in the same turn. (skill `rules-upkeep`)
+  rule in the same turn.<!-- if:skill=rules-upkeep --> (skill `rules-upkeep`)<!-- /if -->
 
 ## Commands
 
@@ -77,8 +77,8 @@ at the first rung that holds (skill `ponytail-review` has the full text):
 
 ## Reviews
 
-Check every change from the angles of the people it serves (skill
-`persona-review`): <who uses this? e.g. new user, integrating developer or
+Check every change from the angles of the people it serves<!-- if:skill=persona-review --> (skill
+`persona-review`)<!-- /if -->: <who uses this? e.g. new user, integrating developer or
 agent, operator, security reviewer>. Cite tests and observable behavior as
 evidence.
 

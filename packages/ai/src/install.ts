@@ -257,6 +257,20 @@ function plan(kit: string, manifest: KitManifest, preset: string) {
   }));
   const installed = new Set([...skills, ...agents, ...commands]);
   const issues = danglingKitRefs(files, installed, universe);
+  // Root docs resolve at copy time; check their resolved text now so a
+  // preset whose template names an uninstalled skill fails before writing.
+  // (The attribution notice names every vendored skill by design and is
+  // exempt from closure, markers still validated.)
+  const rootDocs: Array<[string, string]> = [
+    ["personas.template.md", "personas.md"],
+    ["AGENTS.template.md", "AGENTS.md"],
+  ];
+  for (const [template, installedPath] of rootDocs) {
+    const full = join(kit, template);
+    if (!existsSync(full)) continue;
+    const text = resolveConditionals(readFileSync(full, "utf8"), avail, universe);
+    issues.push(...danglingKitRefs([{ path: installedPath, text, kitOrigin: true }], installed, universe));
+  }
   if (issues.length > 0) {
     const detail = issues.map((issue) => `${issue.path}: ${issue.message}`).join("; ");
     throw new Error(`preset "${preset}" has dangling references: ${detail}`);
@@ -266,7 +280,7 @@ function plan(kit: string, manifest: KitManifest, preset: string) {
   for (const name of licences) {
     resolveConditionals(readFileSync(join(kit, "skills", name), "utf8"), avail, universe);
   }
-  for (const single of ["THIRD_PARTY_NOTICES.md", "personas.template.md", "AGENTS.template.md"]) {
+  for (const single of ["THIRD_PARTY_NOTICES.md"]) {
     if (existsSync(join(kit, single))) {
       resolveConditionals(readFileSync(join(kit, single), "utf8"), avail, universe);
     }
@@ -277,14 +291,15 @@ function plan(kit: string, manifest: KitManifest, preset: string) {
 // The ladder section every AGENTS.md must carry, lifted from the bundled
 // template so the wording has a single home. Undefined when the kit has
 // no template or no ladder section (foreign kits keep working).
-function ladderSection(kit: string): string | undefined {
+function ladderSection(kit: string, avail: Availability): string | undefined {
   const template = tryCatch(() => readFileSync(join(kit, "AGENTS.template.md"), "utf8"));
   if (!template.ok) return undefined;
   const start = template.value.indexOf("## Before writing any code");
   if (start < 0) return undefined;
   const rest = template.value.slice(start);
   const next = rest.indexOf("\n## ", 1);
-  return `${(next < 0 ? rest : rest.slice(0, next)).trimEnd()}\n`;
+  const section = `${(next < 0 ? rest : rest.slice(0, next)).trimEnd()}\n`;
+  return resolveIfNeeded(section, avail);
 }
 
 // Fresh projects get the whole template; an existing AGENTS.md is never
@@ -301,7 +316,7 @@ function installAgentsMd(ctx: Ctx): void {
     ctx.actions.push({ kind: "skip", path: "AGENTS.md", note: blocked });
     return;
   }
-  const section = ladderSection(ctx.kit);
+  const section = ladderSection(ctx.kit, ctx.avail);
   if (section === undefined) {
     ctx.actions.push({ kind: "skip", path: "AGENTS.md", note: blocked });
     return;
