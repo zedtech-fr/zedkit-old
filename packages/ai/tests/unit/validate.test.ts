@@ -2,7 +2,7 @@ import { mkdirSync, readFileSync, symlinkSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { installKit } from "#install.js";
-import { checkDrift, checkKitDocs, validateKit } from "#validate.js";
+import { checkDrift, checkKitDocs, checkPlaceholders, validateKit } from "#validate.js";
 import { kitDir } from "#kit.js";
 import { AGENT, COMMAND, put, SKILL, tempDir } from "./helpers.js";
 
@@ -602,5 +602,55 @@ describe("validateKit", () => {
     const issues = validateKit(root);
     expect(issues).toHaveLength(1);
     expect(issues[0]?.message).toContain("cannot read");
+  });
+
+  describe("checkPlaceholders", () => {
+    const OLD_MAP_ROW = "| `<path>` | [AGENTS.md](<path>/AGENTS.md) | [README](<path>/README.md) |";
+    const found = (root: string): string[] =>
+      checkPlaceholders(root, join(root, ".agents")).map((i) => `${i.path}: ${i.message}`);
+
+    it("flags a leftover placeholder link in installed AGENTS.md", () => {
+      const root = tempDir();
+      put(root, ".agents/skills/review/SKILL.md", `${SKILL("review")}\nladder\n`);
+      put(root, "AGENTS.md", `# Mine\n\n${OLD_MAP_ROW}\n`);
+      expect(found(root)).toEqual([
+        'AGENTS.md: placeholder link to "<path>/AGENTS.md" (replace <...> with a real path)',
+        'AGENTS.md: placeholder link to "<path>/README.md" (replace <...> with a real path)',
+      ]);
+    });
+
+    it("flags placeholder links in CLAUDE.md and .agents files, once per target", () => {
+      const root = tempDir();
+      put(root, "CLAUDE.md", "See [x](<todo>) and again [x](<todo>).\n");
+      put(root, ".agents/skills/mine/SKILL.md", `${SKILL("mine")}\nSee [y](<todo>).\n`);
+      const messages = found(root);
+      expect(messages).toHaveLength(2);
+      expect(messages[0]).toBe('CLAUDE.md: placeholder link to "<todo>" (replace <...> with a real path)');
+      expect(messages[1]).toContain("SKILL.md: placeholder link to");
+    });
+
+    it("reports a linked CLAUDE.md once, under AGENTS.md", () => {
+      const root = tempDir();
+      put(root, "AGENTS.md", `# Mine\n\n${OLD_MAP_ROW}\n`);
+      symlinkSync(join(root, "AGENTS.md"), join(root, "CLAUDE.md"));
+      expect(found(root).filter((m) => m.startsWith("CLAUDE.md:"))).toEqual([]);
+      expect(found(root)).toHaveLength(2);
+    });
+
+    it("skips fenced blocks, normal links and missing files", () => {
+      const root = tempDir();
+      put(root, "AGENTS.md", "# Mine\n\n```md\n[x](<todo>)\n```\n\n[docs](./docs.md) and [web](https://example.com).\n");
+      put(root, "docs.md", "# Docs\n");
+      expect(found(root)).toEqual([]);
+      expect(checkPlaceholders(join(root, "nowhere"), join(root, "nowhere", ".agents"))).toEqual([]);
+    });
+
+    it("exempts kit template files, and the shipped template shows no link-form placeholder", () => {
+      const root = tempDir();
+      put(root, ".agents/skills/review/SKILL.md", `${SKILL("review")}\nladder\n`);
+      put(root, ".agents/example.template.md", `${OLD_MAP_ROW}\n`);
+      expect(found(root)).toEqual([]);
+      expect(readFileSync(join(kitDir(), "AGENTS.template.md"), "utf8")).not.toContain("](<");
+    });
   });
 });

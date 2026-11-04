@@ -18,7 +18,7 @@ Install `@zedtech/zedkit-ai`, wire Cursor with adopt mode, run `/setup-ai` to ta
 
    Use `npm install -D @zedtech/zedkit-ai` when the repo has no pnpm lockfile.
 
-2. **Install the kit with adopt** (keeps existing agent files on name collision; **`setup` uses the `setup` preset by default** — override with `--preset` when needed):
+2. **Install the kit with adopt** (keeps existing agent files on name collision — kit copies land beside yours as `*.kit.md` / `zk-<name>`; **`setup` uses the `setup` preset by default** — override with `--preset` when needed):
 
    ```sh
    npx zedkit-ai setup --provider cursor
@@ -28,7 +28,7 @@ Install `@zedtech/zedkit-ai`, wire Cursor with adopt mode, run `/setup-ai` to ta
 
 3. **Run setup-ai** (repo audit, discovery interview, plan, and tailored instructions):
 
-   - In Cursor: run **`/setup-ai`** (or ask the agent to run the `setup-ai` skill).
+   - In Cursor: run **`/setup-ai`** (or ask the agent to run the `setup-ai` skill). Read the skill, then post its intro first as your next message — before any repo reads, inventory, or writes.
    - Follow the skill through **verify**: run the gate commands it lists, apply the approved plan, finish the report.
    - In phase **B**, **answer or delegate the batched discovery interview** (at most 8 questions in one batch); do not skip the interview or substitute guesses for owner answers.
 
