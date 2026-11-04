@@ -216,9 +216,12 @@ Present one table covering phase A gaps, phase C artifacts, phase D skills, hygi
 | ---- | ---------------- | ---- | -------------- | ------------------------------ | ---------------- | --------------- |
 | must | …                | …    | …              | create / edit / dedupe / leave | …                | safe / needs OK |
 
+| must | dependency manifest | `package.json` | `git diff` after install adds `@zedtech/zedkit-ai` | edit (dependency added by setup) | Manifest matches kit scripts | safe |
+| must | lockfile | `pnpm-lock.yaml` | lockfile drift with `package.json` | edit (dependency added by setup) | Lock matches manifest | safe |
+
 **Required rows when they apply (do not omit):**
 
-- **`package.json`** (and the lockfile that changes with it: `pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`, or `bun.lock`) when adding `@zedtech/zedkit-ai` or changing scripts — action `edit`, tier `must` or `safe`.
+- **`package.json`** (and the lockfile that changes with it: `pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`, or `bun.lock`) when adding `@zedtech/zedkit-ai` or changing scripts — action **`edit (dependency added by setup)`** when install or adopt changed deps (never **leave** / **unchanged** if `git status` or `git diff` shows them).
 - **Root `AGENTS.md`** when appending the ladder, replacing placeholders, or linking product/domain docs — action `edit` or `append`, not silent.
 - Any **`.prettierignore`**, **provider folder**, or **user-owned** path the install or your writes will touch (including adopt sidecars).
 
@@ -288,7 +291,7 @@ Then:
 - [ ] Sidecar cleanup recorded if any `*.kit.md` removed
 - [ ] Self-score mean and hard gates noted
 
-For a bigger follow-up task, point the user at `/orchestrate` with the goal in one line.
+For a bigger follow-up task, <!-- if:skill=orchestrate -->use the **`orchestrate` skill** with the goal in one line.<!-- /if -->When that skill is not installed, describe the goal to your agent in one line. **Slash commands:** on the **`setup`** preset only **`setup-ai`** and **`review`** are installed commands (`presetCommands`); do not tell users to run other command ids as slash invocations — use skill names in conditional blocks (same pattern as the optional phase A invokes).
 
 ## Workspace mode
 
