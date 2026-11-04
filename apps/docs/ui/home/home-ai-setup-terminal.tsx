@@ -1,4 +1,4 @@
-import { Stack, Surface, Text } from "@zedtech/zedkit-ui";
+import { Stack, Surface, Text, type SurfaceProps } from "@zedtech/zedkit-ui";
 import { AI_SETUP_KIT, type AiSetupTreeRow } from "@/lib/ai-setup-onboarding.generated";
 import { homeAiSetupCopy } from "@/ui/home/i18n/home-ai-setup-copy";
 
@@ -26,14 +26,15 @@ function TreeRow({ row }: { row: AiSetupTreeRow }) {
 }
 
 /** The files `zedkit-ai setup` copies and `/setup-ai` adds, as a terminal transcript. Rows come from the kit manifest. */
-export function HomeAiSetupTerminal() {
+export function HomeAiSetupTerminal({ className, ...props }: Omit<SurfaceProps, "children">) {
   return (
     <Surface
       variant="solid"
       elevation={1}
       radius="xl"
-      className="min-w-0 overflow-hidden lg:sticky lg:top-28"
+      className={`min-w-0 overflow-hidden ${className ?? ""}`}
       data-home-ai-terminal=""
+      {...props}
     >
       <Stack direction="horizontal" gap={2} className="items-center border-b border-border px-4 py-2">
         <Text as="span" typeRole="label" className="text-muted-foreground">

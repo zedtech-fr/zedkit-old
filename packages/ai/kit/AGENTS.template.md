@@ -71,9 +71,9 @@ at the first rung that holds<!-- if:skill=ponytail-review --> (skill `ponytail-r
 
 ## Map
 
-| Area     | Rules                         | README                     |
-| -------- | ----------------------------- | -------------------------- |
-| `<path>` | [AGENTS.md](<path>/AGENTS.md) | [README](<path>/README.md) |
+| Area     | Rules              | README             |
+| -------- | ------------------ | ------------------ |
+| `<path>` | `<path>/AGENTS.md` | `<path>/README.md` |
 
 ## Reviews
 

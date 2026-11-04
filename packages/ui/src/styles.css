@@ -7,10 +7,12 @@
 @import "./identities/glass.css";
 @import "./surface.css";
 @import "./motion.css";
+@import "./motion-tokens.css";
 @import "./signature-motion.css";
 @import "./type-roles.css";
 @import "./section-scroll.css";
 @import "./scroll-scenes.css";
+@import "./sticky-aside.css";
 @import "./identities/volt.css";
 @import "./shared-type-scale.css";
 @import "./identities/tide.css";
@@ -718,15 +720,6 @@ a[class*="px-badge-inline"] {
  * when motion is reduced. `!important` beats vaul's injected
  * high-specificity state selectors — deliberately, in one place.
  */
-html [data-vaul-drawer] {
-  animation-duration: var(--motion-slow) !important;
-  transition-duration: var(--motion-slow) !important;
-}
-
-html [data-vaul-overlay] {
-  animation-duration: var(--motion-base) !important;
-}
-
 @media (prefers-reduced-transparency: reduce) {
   [data-slot="drawer-overlay"] {
     background-color: hsl(var(--overlay) / 0.8);
@@ -753,6 +746,16 @@ html [data-vaul-drawer-direction="right"] [data-vaul-handle] {
   display: none;
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-motion="reduce"]) [data-vaul-drawer] {
+    animation-duration: var(--motion-slow) !important;
+    transition-duration: var(--motion-slow) !important;
+  }
+  :root:not([data-motion="reduce"]) [data-vaul-overlay] {
+    animation-duration: var(--motion-base) !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html [data-vaul-drawer],
   html [data-vaul-overlay] {
@@ -762,4 +765,13 @@ html [data-vaul-drawer-direction="right"] [data-vaul-handle] {
   html [data-slot="identity-dock-sheet"][data-vaul-drawer] {
     transform: none !important;
   }
+}
+
+:root[data-motion="reduce"] [data-vaul-drawer],
+:root[data-motion="reduce"] [data-vaul-overlay] {
+  animation: none !important;
+  transition: none !important;
+}
+:root[data-motion="reduce"] [data-slot="identity-dock-sheet"][data-vaul-drawer] {
+  transform: none !important;
 }

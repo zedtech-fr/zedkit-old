@@ -11,10 +11,10 @@ import {
   Text,
   Textarea,
   identityContrastWarnings,
-  tokensToCss,
   type IdentityTokens,
 } from "@zedtech/zedkit-ui";
 import { identityEditorCopy } from "@/components/i18n/identity-editor-copy";
+import { identityExportCss } from "@/lib/identity-export-css";
 import { parseRecipe, serializeRecipe } from "@/lib/identity-recipe";
 
 function copyText(value: string, onDone: () => void) {
@@ -111,7 +111,7 @@ function IdentityEditorExport({
   tokens: IdentityTokens;
   onLoad: (tokens: IdentityTokens, darkKept: readonly string[]) => void;
 }) {
-  const css = tokensToCss(tokens, ":root");
+  const css = identityExportCss(tokens);
   const json = serializeRecipe(tokens);
   const [copied, setCopied] = useState<"css" | "json" | null>(null);
   const blocked = identityContrastWarnings(tokens).length > 0;

@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { Button, Field, FieldLabel, Heading, Stack, Text, Textarea } from "@zedtech/zedkit-ui";
 
 import { identityAssistantCopy } from "@/components/i18n/identity-assistant-copy";
 import { DetectedLinks } from "@/components/identity-references";
 import { LIMITS } from "@/lib/identity-assistant-limits";
-import { requestIdentityDockOpen } from "@/lib/identity-dock-open";
+import { useIdentityAssistantStore } from "@/lib/identity-assistant-store";
 import { HOME_PERSUASION_TEXT_CLASS, HOME_SMALL_TEXT_CLASS } from "@/ui/home/home-rhythm";
 import { homeYoursCopy as copy } from "@/ui/home/i18n/home-yours-copy";
 
@@ -16,10 +15,10 @@ import { homeYoursCopy as copy } from "@/ui/home/i18n/home-yours-copy";
  * from here, and the page stays where it is.
  */
 export function HomeYoursScene() {
-  const [brief, setBrief] = useState("");
+  const { brief, setBrief, setExpanded } = useIdentityAssistantStore();
 
   function start() {
-    requestIdentityDockOpen(brief);
+    setExpanded(true);
   }
 
   return (

@@ -145,7 +145,7 @@ cn("px-4", "px-2"); // "px-2" — last conflicting utility wins
 - See also: `Theme an admin app (dark/light included)`, `Group content in a card section`, `Reveal and react with motion on any element`
 - Examples: Entrance with stagger, Hover feedback, Staggered children
 - A11y: Every utility and attribute is switched off under `prefers-reduced-motion: reduce`, with content left visible and in place. Hover lift only applies on devices that hover, so it never sticks after a tap.
-- Troubleshooting: Nothing animates — check the OS reduced-motion setting first. Content stays hidden — `data-reveal="pending"` and `data-stagger="pending"` hide content until your code sets them to `"in"`. Stagger has no delay — `stagger-*` delays an animation class (`animate-fade-up stagger-2`), not a transition.
+- Troubleshooting: Nothing animates — check the OS reduced-motion setting first. Content stays hidden — `data-reveal="pending"` and `data-stagger="pending"` hide content until your code sets them to `"in"`. Stagger has no delay — `stagger-*` delays an animation class (`animate-fade-up stagger-2`), not a transition. Parallax travel follows `--zk-motion-intensity` (default 1, `0` = no shift) times `--zk-motion-mobile` (`0.5` under 40rem); override on a subtree (`.hero { --zk-motion-intensity: 0.3 }`), not as an identity token. Derived amplitude is `min(calc(var(--zk-reveal-distance) * 8), var(--zk-parallax-max-shift, 120px))` (x-axis cap `12vw`). Sticky offset is `--zk-pin-top` (`calc(var(--zk-header-height) + 1rem)`).
 
 ```ts
 import { Card } from "@zedtech/zedkit-ui";
@@ -170,7 +170,7 @@ import { Card } from "@zedtech/zedkit-ui";
 
 ## Reveal and react with motion on any element
 
-- Import: `@zedtech/zedkit-ui` — `Animate`, `AnimateObserver`, `AnimateProps`, `AnimateOn`, `AnimatePreset`, `AnimateTrigger`, `AnimateMotion`, `observeAnimate`, `ANIMATE_PRESETS`, `ANIMATE_TRIGGERS`
+- Import: `@zedtech/zedkit-ui` — `Animate`, `AnimateObserver`, `AnimateProps`, `AnimateOn`, `AnimatePreset`, `AnimateTrigger`, `AnimateMotion`, `observeAnimate`, `ANIMATE_PRESETS`, `ANIMATE_TRIGGERS`, `MotionScript`, `MotionScriptProps`, `useMotionPreference`, `applyMotionPreference`, `isMotionReduced`, `MotionPreference`, `MOTION_STORAGE_KEY`, `MOTION_CHANGE_EVENT`
 - Attributes: `data-animate`, `data-animate-appear`, `data-animate-scroll`, `data-animate-press`, `data-animate-longpress`, `data-animate-hover`, `data-animate-focus`, `data-animate-delay`, `data-animate-stagger`
 - Wraps: `(none)`
 - Status: alpha
@@ -182,7 +182,7 @@ import { Card } from "@zedtech/zedkit-ui";
 - See also: `Animate entrances and hover feedback with CSS utilities`, `Pin a stage and change scene as the page scrolls`, `Stack content and group titled sections`
 - Examples: Attribute on a card, Wrapper with several triggers, Stagger children
 - A11y: `prefers-reduced-motion: reduce` leaves content visible and in place. Hover is gated to hover-capable pointers. Focus uses `:focus-visible`. Press ignores disabled. Longpress is decorative, never the only action. Appear does not set `aria-hidden`.
-- Troubleshooting: Nothing appears to move — mount `<AnimateObserver />` once near the app root (or call `observeAnimate()`), then check reduced motion. Content stays visible without JS by design. Scroll parallax needs `animation-timeline: view()` or the runtime fallback.
+- Troubleshooting: Nothing appears to move — mount `<AnimateObserver />` once near the app root (or call `observeAnimate()`), then check reduced motion and `data-motion` on `<html>`. Content stays visible without JS by design. Scroll parallax needs `animation-timeline: view()` or the runtime fallback. In-app reduce flashes on load — render `<MotionScript />` in `<head>` (same pattern as `IdentityScript`) so `data-motion="reduce"` is set before paint; `useMotionPreference()` is `"reduce"` on the server.
 
 ```ts
 import { AnimateObserver, Card } from "@zedtech/zedkit-ui";
@@ -1799,6 +1799,61 @@ import { ScrollGallery } from "@zedtech/zedkit-ui";
     </a>
   </div>
 </ScrollGallery>
+```
+
+## Keep a side panel in view
+
+- Import: `@zedtech/zedkit-ui` — `StickyAside`, `StickyAsideMain`, `StickyAsideAside`, `StickyAsideProps`, `StickyAsideMainProps`, `StickyAsideAsideProps`, `StickyAsideSide`, `StickyAsideFrom`, `StickyAsideGap`, `StickyAsideMobile`, `StickyAsideRatioPreset`
+- Wraps: none (CSS `position: sticky`)
+- Status: alpha
+- Short name: StickyAside
+- Attributes: `data-sticky-aside`, `data-sticky-aside-main`, `data-sticky-aside-aside`, `data-side`, `data-from`, `data-gap`, `data-mobile`, `data-ratio`, `data-scrollable`
+- Audience: Developers building docs, onboarding, or pricing pages where steps scroll on one side and a summary or preview should stay visible until the section ends.
+- Purpose: Main column scrolls; aside sticks under the header until the section ends. Pure CSS, server components, no scroll hijacking.
+- When to use: Long step lists beside a short preview, install instructions beside a rendered example, or any section where reading order is main then aside.
+- When not to use: Pinning a single stage that crossfades through scenes — use `ScrollScenes`. A sticky bar that spans the whole viewport outside a section — use your shell header. Tall aside content without `scrollable` when you need the full block visible at once on small viewports — stack on mobile or shorten the aside.
+- See also: `Stack content and group titled sections`, `Pin a stage and change scene as the page scrolls`
+- Examples: Get started steps with live preview, Doc page with summary card, Pricing tiers with recap
+- A11y: DOM order is always main then aside; use `mobile="before"` only when the aside should appear first visually on phones. Put headings and steps in the main column; label specimen previews (for example with `role="group"` and `aria-label`). In-section links in the main column get `scroll-margin-top` from `--zk-pin-top`. With `scrollable`, the aside scrolls internally — keep focusable controls reachable.
+- Troubleshooting: Aside never sticks — check that `data-from` matches your breakpoint, the section is tall enough to scroll, and no ancestor between this root and the viewport uses `overflow: hidden|auto|scroll` or a transform. Aside hides under the site header — set `--zk-sticky-top` (or `--zk-pin-top` globally) to the header offset. Columns too narrow — pass `ratio="1/2"` or `--zk-sticky-cols`. Aside taller than the window — pass `scrollable` so it keeps sticky with an internal scroll area. Snap fights a long section — parent sections that contain `StickyAside` disable scroll-snap when `SectionScroll` is active.
+
+```ts
+import { StickyAside, Stack, Text } from "@zedtech/zedkit-ui";
+import { GlassSurface } from "@zedtech/zedkit-ui/marketing";
+
+<StickyAside side="right" ratio="1/3" className="[--zk-sticky-top:7rem]">
+  <StickyAside.Main>
+    <Stack gap={4}>{/* numbered steps */}</Stack>
+  </StickyAside.Main>
+  <StickyAside.Aside asChild>
+    <GlassSurface padding="md">
+      <Text>Rendered example</Text>
+    </GlassSurface>
+  </StickyAside.Aside>
+</StickyAside>
+```
+
+```ts
+import { Card, CardContent, StickyAside, Text } from "@zedtech/zedkit-ui";
+
+// Aside on the left from the md breakpoint; stack main first on phones.
+<StickyAside side="left" from="md" mobile="stack-after">
+  <StickyAside.Main>
+    <Text>Form fields…</Text>
+  </StickyAside.Main>
+  <StickyAside.Aside scrollable>
+    <Card>
+      <CardContent>Order summary</CardContent>
+    </Card>
+  </StickyAside.Aside>
+</StickyAside>
+```
+
+```html
+<div data-sticky-aside data-side="right" data-from="lg" data-gap="md" data-mobile="after">
+  <div data-sticky-aside-main>…</div>
+  <aside data-sticky-aside-aside>…</aside>
+</div>
 ```
 
 ## Pin a stage and change scene as the page scrolls

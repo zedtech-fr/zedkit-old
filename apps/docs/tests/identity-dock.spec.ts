@@ -104,6 +104,57 @@ test.describe("IdentityDock", () => {
     expect(posts[1]!.current.radius).toBe("0.875rem");
   });
 
+  test("after accepting a look, export rows copy install, CSS, and AI prompt", async ({ page, context }) => {
+    const proposed = {
+      spacing: "0.25rem",
+      borderWidth: "1px",
+      radius: "0.875rem",
+      bodyLeading: "1.55",
+      headingLeading: "1.1",
+      headingTracking: "-0.02em",
+      labelTracking: "0.025em",
+      fontSans: '"Inter Variable", Inter, "Inter Variable Fallback", ui-sans-serif, system-ui, sans-serif',
+      fontDisplay: '"Inter Variable", Inter, "Inter Variable Fallback", ui-sans-serif, system-ui, sans-serif',
+      light: { background: "0 0% 100%", foreground: "240 10% 3.9%", primary: "240 5.9% 10%", primaryForeground: "0 0% 98%", accent: "240 4.8% 59.9%", border: "240 5.9% 60%", mutedForeground: "240 5% 32%" },
+      dark: { background: "240 10% 3.9%", foreground: "0 0% 98%", primary: "0 0% 98%", primaryForeground: "240 5.9% 10%", accent: "240 3.7% 37.9%", border: "240 3.7% 37.9%", mutedForeground: "240 5% 64.9%" },
+      shadowSm: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+      shadowMd: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+    };
+    await page.route(SERVICE, async (route) => {
+      if (route.request().method() !== "POST") {
+        await route.fallback();
+        return;
+      }
+      const posted = route.request().postDataJSON() as { requestId: string; prompt: string };
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        json: { requestId: posted.requestId, summary: "Rounder.", changed: ["radius"], references: [], tokens: proposed },
+      });
+    });
+    await page.route(`${SERVICE}/status`, (route) =>
+      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ available: true }) }),
+    );
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.keyboard.press("Control+I");
+    await brief(page).fill("Export block check");
+    await page.getByRole("button", { name: "Generate", exact: true }).click();
+    await expect(page.locator("[data-assistant-proposal]")).toBeVisible();
+    await page.getByRole("button", { name: "Use this look" }).click();
+    const exportBlock = page.locator("[data-slot='identity-dock-export']");
+    await expect(exportBlock).toBeVisible();
+    await exportBlock.getByRole("button", { name: "Copy Install command" }).click();
+    await expect.poll(async () => page.evaluate(() => navigator.clipboard.readText())).toBe("pnpm add @zedtech/zedkit-ui");
+    await expect(exportBlock.getByRole("status").first()).toContainText("Install command copied");
+    await exportBlock.getByRole("button", { name: "Copy CSS tokens" }).click();
+    const css = await page.evaluate(() => navigator.clipboard.readText());
+    expect(css).toContain(":root {");
+    expect(css).toContain("0.875rem");
+    await exportBlock.getByRole("button", { name: "Copy AI setup prompt" }).click();
+    await expect.poll(async () => page.evaluate(() => navigator.clipboard.readText())).toContain("Set up zedkit AI");
+  });
+
   test("brief persists when moving to another route", async ({ page }) => {
     await page.goto(BASE, { waitUntil: "networkidle" });
     await dock(page).locator("[data-slot='identity-dock-trigger']").click();

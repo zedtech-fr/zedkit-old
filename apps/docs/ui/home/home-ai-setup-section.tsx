@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button, Heading, SecretField, Section, Stack, Text } from "@zedtech/zedkit-ui";
+import { Button, Heading, SecretField, Section, Stack, StickyAside, Text } from "@zedtech/zedkit-ui";
 import { DocsActionLabel } from "@/components/docs-action-label";
 import { AI_SETUP_DOCS_PATH, AI_SETUP_KIT, AI_SETUP_MINI_PROMPT } from "@/lib/ai-setup-onboarding.generated";
 import { HomeAiSetupTerminal } from "@/ui/home/home-ai-setup-terminal";
@@ -84,34 +84,35 @@ export function HomeAiSetupSection() {
       {...HOME_SECTION_REVEAL_PROPS}
       {...HOME_MARKETING_ROOT_PROPS}
     >
-      <div
-        className="grid min-w-0 gap-8 pt-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:items-start lg:gap-12"
-        data-home-ai-setup=""
-      >
-        <Stack gap={HOME_SECTION_CONTENT_GAP} className="min-w-0">
-          <Stack gap={3}>
-            <SecretField
-              multiline
-              value={AI_SETUP_MINI_PROMPT}
-              aria-label={prompt.ariaLabel}
-              copyLabel={prompt.copyLabel}
-            />
-            <Text variant="muted" typeRole="caption" className={HOME_METADATA_TEXT_CLASS}>
-              {prompt.hintBefore} <HomeAiSetupMono>{prompt.hintCommand}</HomeAiSetupMono>
-              {prompt.hintMiddle} <HomeAiSetupMono>{prompt.hintSlash}</HomeAiSetupMono> {prompt.hintAfter}
-            </Text>
-            <Stack direction="horizontal" className="flex-wrap" data-docs-ctas="">
-              <Button asChild variant="outline" className="w-fit">
-                <Link href={AI_SETUP_DOCS_PATH}>
-                  <DocsActionLabel>{homeAiSetupCopy.cta.guide}</DocsActionLabel>
-                </Link>
-              </Button>
+      <StickyAside side="right" ratio="2/5" gap="lg" className="pt-4" data-home-ai-setup="">
+        <StickyAside.Main>
+          <Stack gap={HOME_SECTION_CONTENT_GAP}>
+            <Stack gap={3}>
+              <SecretField
+                multiline
+                value={AI_SETUP_MINI_PROMPT}
+                aria-label={prompt.ariaLabel}
+                copyLabel={prompt.copyLabel}
+              />
+              <Text variant="muted" typeRole="caption" className={HOME_METADATA_TEXT_CLASS}>
+                {prompt.hintBefore} <HomeAiSetupMono>{prompt.hintCommand}</HomeAiSetupMono>
+                {prompt.hintMiddle} <HomeAiSetupMono>{prompt.hintSlash}</HomeAiSetupMono> {prompt.hintAfter}
+              </Text>
+              <Stack direction="horizontal" className="flex-wrap" data-docs-ctas="">
+                <Button asChild variant="outline" className="w-fit">
+                  <Link href={AI_SETUP_DOCS_PATH}>
+                    <DocsActionLabel>{homeAiSetupCopy.cta.guide}</DocsActionLabel>
+                  </Link>
+                </Button>
+              </Stack>
             </Stack>
+            <HomeAiSetupWhatYouGet />
           </Stack>
-          <HomeAiSetupWhatYouGet />
-        </Stack>
-        <HomeAiSetupTerminal />
-      </div>
+        </StickyAside.Main>
+        <StickyAside.Aside asChild>
+          <HomeAiSetupTerminal />
+        </StickyAside.Aside>
+      </StickyAside>
     </Section>
   );
 }

@@ -1,0 +1,96 @@
+import type * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+
+import { cn } from "@/lib/utils";
+
+const surfaceVariants = cva("", {
+  variants: {
+    variant: {
+      solid: "border bg-card text-card-foreground",
+      popover: "border bg-popover text-popover-foreground",
+      /** Frosted panel under the glass identity; solid popover panel otherwise (`surface.css`). */
+      glass: "border text-popover-foreground",
+    },
+    elevation: {
+      0: "shadow-none",
+      1: "shadow-sm",
+      2: "shadow-md",
+      3: "shadow-overlay",
+    },
+    radius: {
+      none: "rounded-none",
+      sm: "rounded-sm",
+      md: "rounded-md",
+      lg: "rounded-lg",
+      xl: "rounded-xl",
+      "2xl": "rounded-2xl",
+      full: "rounded-full",
+    },
+    padding: {
+      none: "",
+      sm: "p-2",
+      md: "p-4",
+      card: "p-card-padding",
+      dialog: "p-dialog-padding",
+    },
+  },
+  defaultVariants: {
+    variant: "solid",
+    elevation: 2,
+    radius: "xl",
+    padding: "none",
+  },
+});
+
+export type SurfaceProps = React.ComponentProps<"div"> &
+  VariantProps<typeof surfaceVariants> & {
+    as?: "div" | "section" | "article" | undefined;
+  };
+
+function Surface({
+  as = "div",
+  variant,
+  elevation,
+  radius,
+  padding,
+  className,
+  ...props
+}: SurfaceProps) {
+  const Tag = as;
+  return (
+    <Tag
+      data-slot="surface"
+      data-surface={variant === "glass" ? "glass" : undefined}
+      className={cn(surfaceVariants({ variant, elevation, radius, padding }), className)}
+      {...props}
+    />
+  );
+}
+
+export { Surface, surfaceVariants };
+
+/** Class names for a frosted panel (`data-surface="glass"` + elevation/radius tokens). */
+function surfaceGlassPanelClass(
+  options?: Pick<VariantProps<typeof surfaceVariants>, "elevation" | "radius" | "padding">,
+) {
+  return cn(
+    surfaceVariants({
+      variant: "glass",
+      elevation: 3,
+      radius: "xl",
+      padding: "none",
+      ...options,
+    }),
+  );
+}
+
+/** Apply kit glass panel chrome to a host fumadocs (or other) renders without a React seam. */
+function applySurfaceGlassPanel(
+  element: HTMLElement,
+  options?: Pick<VariantProps<typeof surfaceVariants>, "elevation" | "radius" | "padding">,
+) {
+  element.setAttribute("data-surface", "glass");
+  element.className = cn(element.className, surfaceGlassPanelClass(options));
+}
+
+export { applySurfaceGlassPanel, surfaceGlassPanelClass };

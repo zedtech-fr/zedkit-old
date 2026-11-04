@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { Button, Section, Stack, Text } from "@zedtech/zedkit-ui";
+import { Button, Section, Stack, StickyAside, Text } from "@zedtech/zedkit-ui";
 import { GlassSurface } from "@zedtech/zedkit-ui/marketing";
 
 import { AdoptionPanelView, featuredAdoptionPlan } from "@/components/adoption-panel-view";
@@ -13,26 +13,6 @@ import {
   HOME_SECTION_REVEAL_PROPS,
 } from "@/ui/home/home-rhythm";
 import { homeCopy } from "@/ui/home/i18n/home-copy";
-
-function HomeQuickStartExample() {
-  return (
-    <GlassSurface padding="md" className="min-w-0 lg:sticky lg:top-28">
-      <Stack gap={HOME_CARD_CONTENT_GAP} role="group" aria-label={adoptionCopy.result.label} data-adoption-result="">
-        <Text typeRole="label" className="text-muted-foreground">
-          {adoptionCopy.result.label}
-        </Text>
-        <Stack direction="horizontal" className="rounded-lg border border-border bg-background/80 p-4">
-          <Text as="span" inert>
-            <Button>Save</Button>
-          </Text>
-        </Stack>
-        <Text variant="muted" typeRole="label">
-          {adoptionCopy.result.caption}
-        </Text>
-      </Stack>
-    </GlassSurface>
-  );
-}
 
 /** Composed quick-start: adoption steps in a reading column, live example beside (V7-D02). */
 export function HomeGetStartedSection({ npmPackage }: { npmPackage: string }) {
@@ -50,13 +30,32 @@ export function HomeGetStartedSection({ npmPackage }: { npmPackage: string }) {
       {...HOME_MARKETING_ROOT_PROPS}
     >
       <Stack gap={4} className="min-w-0">
-        <div
+        <StickyAside
           id="install-or-copy"
-          className="grid min-w-0 scroll-mt-24 gap-8 lg:grid-cols-[minmax(0,1fr)_min(18rem,34%)] lg:items-start"
+          className="scroll-mt-24 [--zk-sticky-gap:2rem] [--zk-sticky-top:7rem]"
+          side="right"
         >
-          <AdoptionPanelView plan={plan} summaryClassName={HOME_PERSUASION_TEXT_CLASS} />
-          <HomeQuickStartExample />
-        </div>
+          <StickyAside.Main>
+            <AdoptionPanelView plan={plan} summaryClassName={HOME_PERSUASION_TEXT_CLASS} />
+          </StickyAside.Main>
+          <StickyAside.Aside asChild>
+            <GlassSurface padding="md" className="min-w-0">
+              <Stack gap={HOME_CARD_CONTENT_GAP} role="group" aria-label={adoptionCopy.result.label} data-adoption-result="">
+                <Text typeRole="label" className="text-muted-foreground">
+                  {adoptionCopy.result.label}
+                </Text>
+                <Stack direction="horizontal" className="rounded-lg border border-border bg-background/80 p-4">
+                  <Text as="span" inert>
+                    <Button>Save</Button>
+                  </Text>
+                </Stack>
+                <Text variant="muted" typeRole="label">
+                  {adoptionCopy.result.caption}
+                </Text>
+              </Stack>
+            </GlassSurface>
+          </StickyAside.Aside>
+        </StickyAside>
         <Button asChild variant="ghost" size="sm" className="w-fit" data-home-full-steps="">
           <Link href={homeCopy.getStarted.quickStart.fullStepsHref}>
             <DocsActionLabel>{homeCopy.getStarted.quickStart.fullSteps}</DocsActionLabel>

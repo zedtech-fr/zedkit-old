@@ -1,0 +1,46 @@
+/*
+ * Motion knobs used as `var(--zk-…, fallback)` at the point of use.
+ * Not identity tokens: no stock :root value (except the mobile
+ * multiplier), no scoped-mist reset.
+ *
+ *   --zk-motion-intensity     unique app/section knob; default 1; 0 = no shift
+ *   --zk-parallax-amplitude   var(--zk-parallax-amplitude, min(calc(var(--zk-reveal-distance, 0.75rem) * 8), var(--zk-parallax-max-shift, 120px)))
+ *   --zk-parallax-amplitude-x var(--zk-parallax-amplitude-x, min(calc(var(--zk-reveal-distance, 0.75rem) * 8), var(--zk-parallax-max-shift, 12vw)))
+ *   --zk-parallax-max-shift   default 120px (12vw on the x axis)
+ *   --zk-motion-mobile        0.5 under 40rem, else 1
+ *   --zk-pin-top              var(--zk-pin-top, calc(var(--zk-header-height, 3.5rem) + 1rem))
+ *
+ * Existing `data-animate-scroll="parallax"` keeps --zk-reveal-distance as
+ * its travel (not the derived amplitude) and only multiplies by intensity
+ * and the mobile factor.
+ */
+
+@keyframes zk-parallax {
+  from {
+    translate: 0 calc(
+      var(--zk-reveal-distance, 0.75rem) * var(--zk-motion-intensity, 1) * var(--zk-motion-mobile, 1)
+    );
+  }
+  to {
+    translate: 0 calc(
+      var(--zk-reveal-distance, 0.75rem) * var(--zk-motion-intensity, 1) * var(--zk-motion-mobile, 1) * -1
+    );
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports not (animation-timeline: view()) {
+    [data-animate-scroll="parallax"] {
+      translate: 0 calc(
+        var(--zk-reveal-distance, 0.75rem) * var(--zk-motion-intensity, 1) * var(--zk-motion-mobile, 1) *
+          (1 - 2 * var(--zk-animate-progress, 0.5))
+      );
+    }
+  }
+}
+
+@media (max-width: 40rem) {
+  :root {
+    --zk-motion-mobile: 0.5;
+  }
+}
