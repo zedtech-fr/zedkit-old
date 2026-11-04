@@ -29,7 +29,7 @@ describe("checkSetup", () => {
   it("covers a changed path named in the plan", () => {
     const root = tempDir();
     gitInit(root);
-    put(root, "PLAN.md", "PLAN.md\nAGENTS.md\n");
+    put(root, "PLAN.md", "PLAN.md\nAGENTS.md\nintro-first: printed before any tool call (fresh)\n");
     put(root, "AGENTS.md", "x\n");
     expect(checkSetup(root)).toEqual({ issues: [], notes: [] });
   });
@@ -37,7 +37,7 @@ describe("checkSetup", () => {
   it("issues plan misses for an uncovered path", () => {
     const root = tempDir();
     gitInit(root);
-    put(root, "PLAN.md", "PLAN.md\nAGENTS.md\n");
+    put(root, "PLAN.md", "PLAN.md\nAGENTS.md\nintro-first: printed before any tool call (fresh)\n");
     put(root, "AGENTS.md", "x\n");
     put(root, "lost.txt", "x\n");
     expect(checkSetup(root).issues).toEqual([
@@ -48,14 +48,14 @@ describe("checkSetup", () => {
   it("treats a parent dir with a trailing slash as coverage", () => {
     const root = tempDir();
     gitInit(root);
-    put(root, "PLAN.md", "PLAN.md\n.agents/\n");
+    put(root, "PLAN.md", "PLAN.md\n.agents/\nintro-first: printed before any tool call (fresh)\n");
     put(root, ".agents/skills/x/SKILL.md", SKILL("x"));
     expect(checkSetup(root).issues).toEqual([]);
   });
 
   it("notes a non-git dir without failing", () => {
     const root = tempDir();
-    put(root, "PLAN.md", "PLAN.md\n");
+    put(root, "PLAN.md", "PLAN.md\nintro-first: printed before any tool call (fresh)\n");
     const result = checkSetup(root);
     expect(result.issues).toEqual([]);
     expect(result.notes).toEqual(["not a git repository; skipped change coverage"]);
@@ -63,7 +63,7 @@ describe("checkSetup", () => {
 
   it("issues when a gate log tail is not EXIT:<code>", () => {
     const root = tempDir();
-    put(root, "PLAN.md", "PLAN.md\n");
+    put(root, "PLAN.md", "PLAN.md\nintro-first: printed before any tool call (fresh)\n");
     put(root, ".agents/setup-log/gates/run.log", "CMD: pnpm test\nSTART\nEND\noops\n");
     const messages = checkSetup(root).issues.map((i) => i.message);
     expect(messages).toContain("last line must match EXIT:<code>");
@@ -72,7 +72,7 @@ describe("checkSetup", () => {
   it("accepts a well-formed gate log", () => {
     const root = tempDir();
     gitInit(root);
-    put(root, "PLAN.md", "PLAN.md\n.agents/\n");
+    put(root, "PLAN.md", "PLAN.md\n.agents/\nintro-first: printed before any tool call (fresh)\n");
     put(root, ".agents/setup-log/gates/run.log", GOOD_LOG);
     expect(checkSetup(root)).toEqual({ issues: [], notes: [] });
   });
@@ -85,12 +85,12 @@ describe("checkSetup", () => {
   it("reads --plan and the setup-log plan fallback", () => {
     const root = tempDir();
     gitInit(root);
-    put(root, "custom.md", "custom.md\nlost.txt\n");
+    put(root, "custom.md", "custom.md\nlost.txt\nintro-first: printed before any tool call (fresh)\n");
     put(root, "lost.txt", "x\n");
     expect(checkSetup(root, { plan: join(root, "custom.md") }).issues).toEqual([]);
     const fallback = tempDir();
     gitInit(fallback);
-    put(fallback, ".agents/setup-log/plan.md", ".agents/\n");
+    put(fallback, ".agents/setup-log/plan.md", ".agents/\nintro-first: printed before any tool call (fresh)\n");
     put(fallback, "secret.txt", "x\n");
     expect(checkSetup(fallback).issues).toEqual([
       { path: "secret.txt", message: "plan misses secret.txt; add plan row: | secret.txt | edit | <reason> |" },
@@ -100,7 +100,7 @@ describe("checkSetup", () => {
   it("suggests the exact plan row for an uncovered setup output", () => {
     const root = tempDir();
     gitInit(root);
-    put(root, "PLAN.md", "PLAN.md\n");
+    put(root, "PLAN.md", "PLAN.md\nintro-first: printed before any tool call (fresh)\n");
     put(root, "package.json", "{}\n");
     expect(checkSetup(root).issues).toEqual([
       {
@@ -113,7 +113,7 @@ describe("checkSetup", () => {
   it("suggests a generic row for an uncovered unknown path", () => {
     const root = tempDir();
     gitInit(root);
-    put(root, "PLAN.md", "PLAN.md\n");
+    put(root, "PLAN.md", "PLAN.md\nintro-first: printed before any tool call (fresh)\n");
     put(root, "notes.md", "x\n");
     expect(checkSetup(root).issues).toEqual([
       { path: "notes.md", message: "plan misses notes.md; add plan row: | notes.md | edit | <reason> |" },
@@ -124,11 +124,22 @@ describe("checkSetup", () => {
     const root = tempDir();
     gitInit(root);
     put(root, "package.json", JSON.stringify({ devDependencies: { prettier: "3.9.0" } }));
-    put(root, "PLAN.md", "PLAN.md\npackage.json\n");
+    put(root, "PLAN.md", "PLAN.md\npackage.json\nintro-first: printed before any tool call (fresh)\n");
     expect(checkSetup(root).issues).toEqual([
       { path: ".prettierignore", message: "plan misses .prettierignore; add plan row: | .prettierignore | edit | exclusions for generated files |" },
     ]);
-    put(root, "PLAN.md", "PLAN.md\npackage.json\n.prettierignore\n");
+    put(root, "PLAN.md", "PLAN.md\npackage.json\n.prettierignore\nintro-first: printed before any tool call (fresh)\n");
+    expect(checkSetup(root).issues).toEqual([]);
+  });
+
+  it("issues when the plan lacks the intro-first line", () => {
+    const root = tempDir();
+    gitInit(root);
+    put(root, "PLAN.md", "PLAN.md\n");
+    expect(checkSetup(root).issues).toEqual([
+      { path: join(root, "PLAN.md"), message: "plan misses the intro-first line; append `intro-first: printed before any tool call` to the appendix" },
+    ]);
+    put(root, "PLAN.md", "PLAN.md\nintro-first: resumed at phase B\n");
     expect(checkSetup(root).issues).toEqual([]);
   });
 });
@@ -196,7 +207,7 @@ describe("validate --setup", () => {
     const root = tempDir();
     gitInit(root);
     put(root, ".agents/skills/alpha/SKILL.md", SKILL("alpha"));
-    put(root, "PLAN.md", "PLAN.md\n.agents/\n");
+    put(root, "PLAN.md", "PLAN.md\n.agents/\nintro-first: printed before any tool call (fresh)\n");
     put(root, "lost.txt", "x\n");
     expect(run("validate", root)).toEqual({ code: 0, text: "ok", errors: "" });
     const setup = run("validate", root, "--setup");

@@ -101,6 +101,12 @@ export function checkSetup(root: string, options: { plan?: string } = {}): Setup
       issues.push({ path: ".prettierignore", message: `plan misses .prettierignore; add plan row: ${suggestPlanRow(".prettierignore")}` });
     }
   }
+  if (plan) {
+    const text = tryCatch(() => readFileSync(plan, "utf8"));
+    if (text.ok && !/^\s*intro-first:\s*\S/im.test(text.value)) {
+      issues.push({ path: plan, message: "plan misses the intro-first line; append `intro-first: printed before any tool call` to the appendix" });
+    }
+  }
   issues.push(...gates(root));
   return { issues, notes };
 }

@@ -21,6 +21,8 @@ Make the AI setup of **this** repo true and specific. Generic advice is already 
 
 **Output order:** This block is the **first output after `/setup-ai` starts** (the opening text of your first reply once the skill is loaded) — before phase A inventory, subagent spawns, or file writes — including **headless**, **CI**, and **non-interactive** runs. Paste it as plain text; never skip it because nobody is chatting live. **Do not** open with "Running phase A…", inventory lists, or tool calls — the intro **is** phase A's start from the user's perspective. Once it is printed, **immediately continue with phase A in the same turn** — do not stop or wait for the user after the intro. **Exclude** mechanical install output that ran **before** the skill loaded (for example `npx zedkit-ai setup` or package manager lines); those stay above this block in the transcript.
 
+**Resume:** when a plan or setup-log from an earlier run already exists, the intro is resume-aware: its first line says `resumed at phase <X>` (the actual resume point), not the fresh-start "straight into phase A" wording.
+
 When `/setup-ai` starts (or the user asks to set up AI), say this in plain language before phase A — no interview yet, and no pause after it:
 
 - **Modes:** **fresh** (little or no agent setup yet) or **improve** (you already have `AGENTS.md`, rules, or provider folders — audit and extend, do not replace blindly).
@@ -139,6 +141,14 @@ case "$(tail -1 "$LOG")" in EXIT:[0-9]*) ;; *) echo "bad gate log"; false;; esac
 
 If a log file you referenced is **empty**, or the last line is not **`EXIT:<n>`**, re-run and replace the file before scoring. Table rows in setup-log are a summary only.
 
+**Killed gates:** when the wrapper shell itself may be signaled (a timeout or OOM kill aimed at the process group), trap `TERM`/`INT` so the log still ends with a cause and **`EXIT:<code>`** — `validate --setup` accepts extra lines like `CAUSE:` between `END:` and `EXIT:`. Put the trap after `START:`, before the command, and disarm it with `trap - TERM INT` once the command returns:
+
+```sh
+trap 'echo "END: $(date -Iseconds)"; echo "CAUSE: killed by signal"; echo "EXIT:143"; exit 143' TERM INT
+```
+
+A `SIGKILL`ed wrapper cannot trap — re-run smaller (see below) and replace the file.
+
 **OOM-safe fallback:** When the repo's main gate is `pnpm check` (or similar) and it **cannot take flags** and dies from memory pressure, run the **underlying turbo chain explicitly** with `--concurrency=2` and a capped heap (for example `NODE_OPTIONS=--max-old-space-size=4096`, lower if the host requires). Record that exact command in setup-log and in **domain rules / generated repo skills** — never leave a generic `pnpm check` if that is not what you verified.
 
 ### A3. Find the gaps
@@ -178,11 +188,11 @@ The owner should not be asked what the code already says. Before any interview q
 | medium (~300–2000 files) | 6–10           |
 | large (over ~2000 files) | 11–20 (cap 20) |
 
-2. **Respect the repo's own budgets.** A run budget found in A1 (for example "stop after 5 files read with no write", one broad pass, 30 minutes) caps every reader: cut slices smaller (up to 20 readers) and read entry points first rather than exceed it; if it still cannot fit, that is an interview gap, not a license to overrun.
+2. **Respect the repo's own budgets.** A run budget found in A1 (for example "stop after 5 files read with no write", one broad pass, 30 minutes) caps every reader: cut slices smaller (up to 20 readers) and read entry points first rather than exceed it; if it still cannot fit, that is an interview gap, not a license to overrun: the only exception is owner-approved, recorded in reading.md (reader, files read vs budget, approving interview question).
 3. **Spawn one reader per slice, in one batch** (waves of the tool's parallel limit if it has one), on the **scout** tier, each with the brief from `templates/reader-brief.template.md` filled in. Readers are read-only: no writes, no installs. Each returns rules with `path:line` evidence across six lanes: **domain**, **business**, **identity**, **architecture**, **convention**, **enforcement**; plus conflicts, owner-only gaps and folder notes. If you cannot spawn subagents, read the slices yourself one after the other with the same brief and the same log.
 4. **Synthesize on the lead tier.** Merge and dedupe; open at least three cited lines per reader and drop any rule the line does not support (and re-read a reader whose spot-checks fail); mark each rule `current`, `target` or `UNVERIFIED`; list code vs docs conflicts; collect the folder notes that need a nested `AGENTS.md`.
 5. **Map what already exists.** Fill the **Rule map** (every provider-scoped rule file from A1, by full path: kept as owner, mirrored by a nested `AGENTS.md` pointer, or not a rule) and the **Policy docs** table (each playbook, ADR, vision or runbook that states rules lands in a domain, design or nested file, or is `not a rule: <reason>`). Do not copy a rule from its owner into `.agents/`: one law, one owner; point at it.
-6. **Persist** the result as `.agents/setup-log/reading.md` from `templates/reading-log.template.md`: one numbered row per reader, the rule map, the policy docs, the merged rules, the interview gaps, and the "found in code, confirm" list. `npx zedkit-ai validate --setup` checks that the log exists, that the reader count fits the repo size, and that it cites `file:line`, and that its rule map names every provider rule file.
+6. **Persist** the result as `.agents/setup-log/reading.md` from `templates/reading-log.template.md`: one numbered row per reader, the rule map, the policy docs, the merged rules, the interview gaps, and the "found in code, confirm" list. `npx zedkit-ai validate --setup` checks that the log exists, that the reader count fits the repo size, that it cites `file:line`, that it states the run budget, and that its rule map names every provider rule file.
 
 ### B2. Mine the docs
 
@@ -306,7 +316,7 @@ Present one table covering phase A gaps, phase C artifacts, phase D skills, hygi
 
 After the owner approves the table, **persist** it as **`PLAN.md`** at the repo root **or** **`.agents/setup-log/plan.md`** (one path; record which in setup-log).
 
-**Appendix (always include):** paste the full **Providers** value table and **Wired:** line from the Providers section, the **Routing** line (provider, tier to model mapping), and the **Reading** line (repo size, reader count, slices from `npx zedkit-ai scan`).
+**Appendix (always include):** paste the full **Providers** value table and **Wired:** line from the Providers section, the **Routing** line (provider, tier to model mapping), the **Reading** line (repo size, reader count, slices from `npx zedkit-ai scan`), and an **Intro-first** line (`intro-first: printed before any tool call (<fresh|improve>)`, or `intro-first: resumed at phase <X>` on a resume) — `npx zedkit-ai validate --setup` checks it is there.
 
 **Wait for the user's go before writing.** If nobody can answer (non-interactive run), output the table and stop.
 
