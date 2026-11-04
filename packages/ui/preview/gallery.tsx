@@ -85,15 +85,17 @@ import {
 } from "#index.js";
 import {
   CtaBand,
+  Faq,
   FeatureGrid,
   GlassSurface,
   Hero,
   HowItWorks,
   LocaleSwitch,
-  MarketingFooter,
   LogoBand,
+  MarketingFooter,
   MarketingHeader,
   MediaSection,
+  Pricing,
   Testimonials,
 } from "#marketing/index.js";
 import { X } from "lucide-react";
@@ -486,6 +488,21 @@ export function Gallery() {
             description="Visitors ask in plain words and get answers from your products."
             points={["Reads your products and stock", "Never changes an order"]}
             media={<p className="text-sm text-muted-foreground">Demo or screenshot goes here.</p>}
+          />
+          <Pricing
+            title="Simple pricing"
+            description="Start on a staging key. Pay when you go live."
+            plans={[
+              { name: "Starter", price: "€0", period: "per month", features: ["1 staging key", "Community support"], action: <Button variant="outline">Start free</Button> },
+              { name: "Growth", price: "€29", period: "per month", features: ["5 keys", "Email support"], action: <Button>Choose Growth</Button>, highlighted: true, badge: "Most popular" },
+            ]}
+          />
+          <Faq
+            title="Questions"
+            items={[
+              { question: "Do I need to change my shop?", answer: "No. It runs next to the shop you already have." },
+              { question: "How long does a key take?", answer: "About a minute on staging." },
+            ]}
           />
           <CtaBand
             title="Try it on a staging key"

@@ -530,7 +530,9 @@
         "Language switch": "LocaleSwitchDemo",
         "Use case": "MediaSectionDemo",
         "Logo band": "LogoBandDemo",
-        "Testimonials": "TestimonialsDemo"
+        "Testimonials": "TestimonialsDemo",
+        "Pricing": "PricingDemo",
+        "Questions": "FaqDemo"
       }
     },
     "Switch the visual identity with one attribute": {

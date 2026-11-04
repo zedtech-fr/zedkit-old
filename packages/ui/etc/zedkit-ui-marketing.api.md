@@ -19,6 +19,25 @@ export type CtaBandProps = Omit<React_2.ComponentProps<"section">, "title"> & {
 };
 
 // @public
+export function Faq(input: FaqProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export interface FaqItem {
+    // (undocumented)
+    answer: React_2.ReactNode;
+    id?: string | undefined;
+    // (undocumented)
+    question: React_2.ReactNode;
+}
+
+// @public (undocumented)
+export type FaqProps = Omit<React_2.ComponentProps<"section">, "title"> & {
+    title: React_2.ReactNode;
+    description?: React_2.ReactNode;
+    items: FaqItem[];
+};
+
+// @public
 export function FeatureGrid(input: FeatureGridProps): React_2.JSX.Element;
 
 // @public (undocumented)
@@ -162,6 +181,30 @@ export type MediaSectionProps = Omit<React_2.ComponentProps<"section">, "title">
     actions?: React_2.ReactNode;
     media: React_2.ReactNode;
     reverse?: boolean | undefined;
+};
+
+// @public
+export function Pricing(input: PricingProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export interface PricingPlan {
+    action?: React_2.ReactNode;
+    badge?: React_2.ReactNode;
+    // (undocumented)
+    description?: React_2.ReactNode;
+    features: React_2.ReactNode[];
+    highlighted?: boolean | undefined;
+    id?: string | undefined;
+    name: React_2.ReactNode;
+    period?: React_2.ReactNode;
+    price: React_2.ReactNode;
+}
+
+// @public (undocumented)
+export type PricingProps = Omit<React_2.ComponentProps<"section">, "title"> & {
+    title: React_2.ReactNode;
+    description?: React_2.ReactNode;
+    plans: PricingPlan[];
 };
 
 // @public (undocumented)

@@ -1,6 +1,7 @@
 import { Button, Heading, Stack, Text } from "@zedtech/zedkit-ui";
 import {
   CtaBand,
+  Faq,
   FeatureGrid,
   GlassSurface,
   Hero,
@@ -10,6 +11,7 @@ import {
   LogoBand,
   MarketingHeader,
   MediaSection,
+  Pricing,
   Testimonials,
 } from "@zedtech/zedkit-ui/marketing";
 import { marketingCopy } from "@/components/demos/i18n/marketing-copy";
@@ -162,4 +164,28 @@ export function LogoBandDemo() {
 export function TestimonialsDemo() {
   const { testimonials } = marketingCopy;
   return <Testimonials title={testimonials.title} items={[...testimonials.items]} />;
+}
+
+export function PricingDemo() {
+  const { pricing } = marketingCopy;
+  return (
+    <Pricing
+      title={pricing.title}
+      description={pricing.description}
+      plans={pricing.plans.map((plan, index) => ({
+        name: plan.name,
+        price: plan.price,
+        period: pricing.period,
+        features: [...plan.features],
+        action: <Button variant={index === 1 ? "default" : "outline"}>{plan.action}</Button>,
+        highlighted: index === 1,
+        badge: index === 1 ? pricing.badge : undefined,
+      }))}
+    />
+  );
+}
+
+export function FaqDemo() {
+  const { faq } = marketingCopy;
+  return <Faq title={faq.title} items={[...faq.items]} />;
 }

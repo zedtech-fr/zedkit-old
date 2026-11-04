@@ -87,6 +87,7 @@ import { TypographyDemo } from "./typography-demo";
 import { UpdatedAgoDemo } from "./updated-ago-demo";
 import {
   CtaBandDemo,
+  FaqDemo,
   FeatureGridDemo,
   GlassSurfaceDemo,
   HeroDemo,
@@ -95,6 +96,7 @@ import {
   LogoBandDemo,
   MarketingChromeDemo,
   MediaSectionDemo,
+  PricingDemo,
   TestimonialsDemo,
 } from "./marketing-demo";
 import { WizardComposedDemo } from "./wizard-composed-demo";
@@ -250,6 +252,8 @@ export const demoRegistry = {
   HeroDemo: { Demo: HeroDemo, file: "marketing-demo.tsx" },
   HowItWorksDemo: { Demo: HowItWorksDemo, file: "marketing-demo.tsx" },
   LocaleSwitchDemo: { Demo: LocaleSwitchDemo, file: "marketing-demo.tsx", center: true },
+  FaqDemo: { Demo: FaqDemo, file: "marketing-demo.tsx" },
+  PricingDemo: { Demo: PricingDemo, file: "marketing-demo.tsx" },
   LogoBandDemo: { Demo: LogoBandDemo, file: "marketing-demo.tsx" },
   TestimonialsDemo: { Demo: TestimonialsDemo, file: "marketing-demo.tsx" },
   MediaSectionDemo: { Demo: MediaSectionDemo, file: "marketing-demo.tsx" },

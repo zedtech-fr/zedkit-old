@@ -7,6 +7,7 @@ import { userEvent } from "@testing-library/user-event";
 import { ZedkitUiProvider, zedkitUiMessagesFr } from "#index.js";
 import {
   CtaBand,
+  Faq,
   FeatureGrid,
   GlassSurface,
   Hero,
@@ -16,6 +17,7 @@ import {
   MarketingFooter,
   MarketingHeader,
   MediaSection,
+  Pricing,
   Testimonials,
 } from "#marketing/index.js";
 import { assertNoValueArbitraries } from "./no-arbitraries.js";
@@ -440,6 +442,94 @@ describe("Testimonials", () => {
       <main>
         <LogoBand title="Works with" logos={[{ name: "Harbor Studio", logo: <svg viewBox="0 0 1 1" /> }]} />
         <Testimonials title="What customers say" items={items} />
+      </main>,
+    );
+    for (const node of container.querySelectorAll("[class]")) {
+      assertNoValueArbitraries(node.getAttribute("class") ?? "");
+    }
+    expect((await axe(container)).violations).toEqual([]);
+  });
+});
+
+describe("Pricing", () => {
+  const plans = [
+    { name: "Starter", price: "€0", period: "per month", features: ["1 staging key", "Community support"], action: <a href="/signup">Start free</a> },
+    {
+      id: "growth",
+      name: "Growth",
+      price: "€29",
+      description: "For a shop with real traffic.",
+      features: ["5 keys", "Email support"],
+      action: <a href="/signup?plan=growth">Choose Growth</a>,
+      highlighted: true,
+      badge: "Most popular",
+    },
+    { name: "Scale", price: "Let's talk", features: ["Unlimited keys"] },
+  ];
+
+  it("renders a labelled region with one list item per plan, a level-3 name and a feature list each", () => {
+    render(<Pricing title="Simple pricing" description="Pay when you grow." plans={plans} />);
+    expect(screen.getByRole("region", { name: "Simple pricing" }).getAttribute("data-slot")).toBe("pricing");
+    expect(screen.getByRole("heading", { level: 2, name: "Simple pricing" })).toBeTruthy();
+    expect(screen.getAllByRole("heading", { level: 3 }).map((node) => node.textContent)).toEqual([
+      "Starter",
+      "Growth",
+      "Scale",
+    ]);
+    expect(screen.getByText("1 staging key")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Choose Growth" })).toBeTruthy();
+    expect(screen.getByText("per month")).toBeTruthy();
+  });
+
+  it("marks the highlighted plan with a visible badge, not by colour alone", () => {
+    const { container } = render(<Pricing title="T" plans={plans} />);
+    const marked = container.querySelectorAll("[data-highlighted='true']");
+    expect(marked).toHaveLength(1);
+    expect(marked[0]?.querySelector("[data-slot='pricing-badge']")?.textContent).toBe("Most popular");
+    expect(marked[0]?.className).toContain("ring-primary");
+  });
+
+  it("skips the action row when a plan has none, and picks columns from the plan count", () => {
+    const { container, rerender } = render(<Pricing title="T" plans={plans} />);
+    expect(container.querySelectorAll("[data-slot='pricing-action']")).toHaveLength(2);
+    expect(container.querySelector("ul")?.className).toContain("lg:grid-cols-3");
+    rerender(<Pricing title="T" plans={plans.slice(0, 2)} />);
+    expect(container.querySelector("ul")?.className).toContain("sm:grid-cols-2");
+    expect(container.querySelector("ul")?.className).not.toContain("lg:grid-cols-3");
+    rerender(<Pricing title="T" plans={plans.slice(0, 1)} />);
+    expect(container.querySelector("ul")?.className).not.toContain("grid-cols");
+    rerender(<Pricing title="T" plans={[]} />);
+    expect(container.querySelectorAll("li")).toHaveLength(0);
+  });
+});
+
+describe("Faq", () => {
+  const items = [
+    { question: "Do I need to change my shop?", answer: "No. It runs next to it." },
+    { id: "keys", question: "How long does a key take?", answer: "About a minute." },
+  ];
+
+  it("renders each question as a native disclosure that opens in place", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<Faq title="Questions" items={items} />);
+    expect(screen.getByRole("region", { name: "Questions" }).getAttribute("data-slot")).toBe("faq");
+    const details = [...container.querySelectorAll("details")];
+    expect(details).toHaveLength(2);
+    expect(details.every((node) => !node.open)).toBe(true);
+    await user.click(screen.getByText("Do I need to change my shop?"));
+    expect(details[0]?.open).toBe(true);
+    expect(details[1]?.open).toBe(false);
+    expect(screen.getByText("No. It runs next to it.")).toBeTruthy();
+  });
+
+  it("renders an empty list and has no axe violations with pricing", async () => {
+    const empty = render(<Faq title="Questions" items={[]} />);
+    expect(empty.container.querySelectorAll("details")).toHaveLength(0);
+    empty.unmount();
+    const { container } = render(
+      <main>
+        <Pricing title="Pricing" plans={[{ name: "Starter", price: "€0", features: ["One key"], action: <a href="/signup">Start</a> }]} />
+        <Faq title="Questions" items={items} />
       </main>,
     );
     for (const node of container.querySelectorAll("[class]")) {
