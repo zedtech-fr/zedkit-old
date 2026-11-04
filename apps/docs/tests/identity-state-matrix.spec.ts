@@ -304,7 +304,10 @@ test.describe("domain compositions", () => {
       await page.setViewportSize({ width: 1440, height: 900 });
       await page.goto(EDITOR, { waitUntil: "networkidle" });
       await typeBrief(page, row.brief);
-      await page.getByRole("button", { name: "Generate" }).click();
+      await Promise.all([
+        page.waitForResponse((response) => response.url().includes("/api/identity/suggest") && response.ok()),
+        page.getByRole("button", { name: "Generate" }).click(),
+      ]);
       // The compare view renders the specimen twice (before, then the proposal): both carry the domain.
       const specimens = page.locator(`[data-assistant-proposal-compare] [data-specimen-domain='${row.domain}']`);
       await expect(specimens).toHaveCount(2);
