@@ -11,9 +11,9 @@ export const docsSite: SiteMetadata = {
 };
 
 export const homePage = {
-  title: "zedkit",
+  title: "zedkit — AI-ready UI kit, SEO and agent setup",
   description:
-    "Build the parts you need. Install npm packages or copy UI source via the shadcn registry — plus core, SEO, and agent setup.",
+    "Build the parts you need: an AI-ready React UI kit as npm packages or shadcn registry source, plus core, SEO, and agent setup.",
 };
 
 export function pageUrl(pathname: string): string {

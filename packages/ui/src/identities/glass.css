@@ -96,6 +96,17 @@
   --zk-glass-filter: blur(var(--zk-glass-blur)) saturate(var(--zk-glass-saturate));
   --zk-glass-highlight: inset 0 1px 0 hsl(0 0% 100% / 0.65);
 
+  /* Glass bars (sticky headers): thinner tint so scrolling content shows
+     through the blur, inset highlights for the relief and a luminous bottom
+     edge. No drop shadow: nav chrome keeps an edge only (D5), shadows are for overlays. */
+  --zk-glass-bar-alpha: 0.62;
+  --zk-glass-bar-filter: blur(var(--zk-glass-blur)) saturate(var(--zk-glass-saturate));
+  --zk-glass-bar-edge: 0 0% 100%;
+  --zk-glass-bar-edge-alpha: 0.75;
+  --zk-glass-bar-shadow:
+    inset 0 1px 0 hsl(0 0% 100% / 0.7),
+    inset 0 -1px 0 hsl(var(--zk-glass-bar-edge) / var(--zk-glass-bar-edge-alpha));
+
   /* Glass overlays: panel alpha and blur, tint, and a light scrim. */
   --zk-glass-overlay-alpha: 0.72;
   --zk-glass-overlay-blur: 24px;
@@ -186,6 +197,12 @@
   --zk-glass-edge: 220 60% 90%;
   --zk-glass-edge-alpha: 0.16;
   --zk-glass-highlight: inset 0 1px 0 hsl(0 0% 100% / 0.08);
+  --zk-glass-bar-alpha: 0.6;
+  --zk-glass-bar-edge: 220 60% 90%;
+  --zk-glass-bar-edge-alpha: 0.22;
+  --zk-glass-bar-shadow:
+    inset 0 1px 0 hsl(0 0% 100% / 0.08),
+    inset 0 -1px 0 hsl(var(--zk-glass-bar-edge) / var(--zk-glass-bar-edge-alpha));
   --zk-shadow-color: 232 60% 2%;
   --zk-shadow-xs: 0 8px 24px -12px rgb(0 0 0 / 0.55), var(--zk-glass-highlight);
   --zk-shadow-sm: 0 2px 8px -2px rgb(0 0 0 / 0.5), var(--zk-glass-highlight);
@@ -209,6 +226,8 @@
   --zk-glass-blur: 0px;
   --zk-glass-saturate: 1;
   --zk-glass-filter: none;
+  --zk-glass-bar-alpha: 1;
+  --zk-glass-bar-filter: none;
   --zk-glass-overlay-alpha: 1;
   --zk-glass-overlay-blur: 0px;
   --zk-glass-overlay-filter: none;
@@ -228,6 +247,20 @@
   border-color: hsl(var(--zk-glass-edge) / var(--zk-glass-edge-alpha));
   -webkit-backdrop-filter: var(--zk-glass-filter);
   backdrop-filter: var(--zk-glass-filter);
+}
+
+/*
+ * Glass bar: the sticky marketing header. One element carries the blur; its
+ * children stay clear, because a blurred ancestor is the backdrop root of a
+ * blurred child and the child would only stack more tint over nothing.
+ */
+:root[data-identity="glass"] :where([data-slot="marketing-header"]):where(:not([data-identity-scope] *)),
+[data-identity-scope][data-identity="glass"] :where([data-slot="marketing-header"]) {
+  background-color: hsl(var(--background) / var(--zk-glass-bar-alpha));
+  border-bottom-color: hsl(var(--zk-glass-bar-edge) / var(--zk-glass-bar-edge-alpha));
+  box-shadow: var(--zk-glass-bar-shadow);
+  -webkit-backdrop-filter: var(--zk-glass-bar-filter);
+  backdrop-filter: var(--zk-glass-bar-filter);
 }
 
 /*
@@ -283,6 +316,7 @@
   [data-identity-scope][data-identity="glass"],
   [data-identity-scope][data-identity="glass"].dark {
     --zk-glass-alpha: 0.97;
+    --zk-glass-bar-alpha: 0.96;
     --zk-glass-blur: 0px;
     --zk-glass-saturate: 1;
     --zk-glass-overlay-alpha: 0.98;
@@ -298,6 +332,7 @@
   [data-identity-scope][data-identity="glass"],
   [data-identity-scope][data-identity="glass"].dark {
     --zk-glass-alpha: 0.97;
+    --zk-glass-bar-alpha: 0.96;
     --zk-glass-overlay-alpha: 0.98;
     --zk-glass-overlay-tint: none;
     --zk-glass-scrim-alpha: 0.6;
@@ -306,8 +341,8 @@
 
 /* Forced colors: system colours, opaque panels, no blur. */
 @media (forced-colors: active) {
-  :root[data-identity="glass"] :where(.bg-card, .bg-popover, [data-slot="drawer-content"], [data-slot="dialog-content"]),
-  [data-identity-scope][data-identity="glass"] :where(.bg-card, .bg-popover, [data-slot="drawer-content"], [data-slot="dialog-content"]) {
+  :root[data-identity="glass"] :where(.bg-card, .bg-popover, [data-slot="marketing-header"], [data-slot="drawer-content"], [data-slot="dialog-content"]),
+  [data-identity-scope][data-identity="glass"] :where(.bg-card, .bg-popover, [data-slot="marketing-header"], [data-slot="drawer-content"], [data-slot="dialog-content"]) {
     background-image: none;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;

@@ -1,5 +1,17 @@
 # @zedtech/zedkit-ai
 
+## 0.18.0
+
+### Minor Changes
+
+- 0a8eec4: Dist size review (no behavior change): CLI help text lives in shipped `kit/usage.txt` instead of inline, and duplicated logic is merged behind shared seams (drift sidecar/user-copy compare, frontmatter parse, provider skills-dir and layer-copy wiring, kit universe as sets, adopt sidecar path). Gzip(dist) 17540 → 17148; budget lowered to 17400. Minor (not patch) because this PR also carries the overdue `validateKit(kit?)` API report refresh, whose signature-change hunk the report gate reads as renamed; no public API change.
+- 87bdd5b: Type-aware reference closure: `/name` references now demand an installed command when the kit defines one (a skill with the same name no longer satisfies them), `Skill tool` and `skill `x`` references demand the skill, and `agent `x`` references demand the agent. Bare backticked names and hyphenated whole words keep matching any installed kind in kit-origin files, and a file's own `/self` mention stays satisfied. Minor (not patch) because this PR also carries the overdue `validateKit(kit?)` API report refresh, whose signature-change hunk the report gate reads as renamed; no public API change.
+
+### Patch Changes
+
+- bd8690e: Sync the public API report: `validateKit(root, kit?)` accepts an optional kit path.
+- 0fc0a03: Run-4 setup-ai scorer: git-derived plan rows, gate log CMD/EXIT format, depth templates, presetCommands slash rules.
+
 ## 0.17.0
 
 ### Minor Changes

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 import { rootLayoutCopy } from "@/app/i18n/root-layout-copy";
 import { docsPageMetadata } from "@/lib/docs-metadata";
-import { homePage } from "@/lib/site";
+import { docsSite, homePage } from "@/lib/site";
 import { DEFAULT_IDENTITY } from "@/lib/default-identity";
 import {
   DOCS_SITE_IDENTITY_OPT_IN_KEY,
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   ...baseMetadata,
   title: {
     default: homePage.title,
-    template: rootLayoutCopy.titleTemplate(homePage.title),
+    template: rootLayoutCopy.titleTemplate(docsSite.name),
   },
 };
 
