@@ -52,9 +52,13 @@ function useEditorDockAutoOpen(onEditor: boolean, setBrief: (value: string) => v
     setExpanded(true);
   });
   useEffect(() => {
-    // Drained on every evaluation: a #create arrival followed by an editor revisit must not reopen from a stale flag.
     const arrived = consumeCreateArrival();
-    if (onEditor && (window.location.hash === "#create" || arrived)) setExpanded(true);
+    if (!onEditor) return;
+    if (window.location.hash === "#create" || arrived) {
+      setExpanded(true);
+    } else {
+      setExpanded(false);
+    }
   }, [onEditor, setExpanded]);
 }
 
@@ -82,6 +86,14 @@ function IdentityDockWidget() {
   useEditorDockAutoOpen(onEditor, setBrief, setExpanded);
   useIdentityDockOpenRequest(setBrief, setExpanded);
 
+  useEffect(() => {
+    if (!expanded) {
+      document.body.style.pointerEvents = "";
+      return;
+    }
+    document.body.style.pointerEvents = "auto";
+  }, [expanded, pathname]);
+
   return (
     <>
       <IdentityDock data-testid="identity-dock">
@@ -101,7 +113,7 @@ function IdentityDockWidget() {
           </Text>
         </IdentityDockTrigger>
       </IdentityDock>
-      <Drawer open={expanded} onOpenChange={setExpanded} direction="right" mobile="sheet" modal={false} handleOnly>
+      <Drawer open={expanded} onOpenChange={setExpanded} direction="right" mobile="sheet" modal={false} handleOnly noBodyStyles>
         <DrawerContent
           size="lg"
           modal={false}

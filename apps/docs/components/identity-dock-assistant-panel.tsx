@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type RefObject } from "react";
+import { useEffect, useLayoutEffect, useRef, type RefObject } from "react";
 import { Stack } from "@zedtech/zedkit-ui";
 
 import { ViewSwitch, type View } from "@/components/identity-assistant-parts";
@@ -39,6 +39,7 @@ function acceptProposal(
 }
 
 function IdentityDockPanelScroll(props: {
+  scrollRef: RefObject<HTMLDivElement | null>;
   view: View;
   setView: (view: View) => void;
   previewRef: RefObject<HTMLButtonElement | null>;
@@ -58,7 +59,7 @@ function IdentityDockPanelScroll(props: {
   onPreviewTokens: (tokens: IdentityTokens) => void;
 }) {
   return (
-    <Stack gap={3} className="min-h-0 flex-1 overflow-y-auto px-3 pt-3">
+    <Stack ref={props.scrollRef} gap={3} className="min-h-0 flex-1 overflow-y-auto px-3 pt-3">
       <ViewSwitch
         view={props.view}
         onView={props.setView}
@@ -95,9 +96,10 @@ export function IdentityDockAssistantPanel({
   onPreviewTokens: (tokens: IdentityTokens) => void;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const { brief, setBrief, setExpanded, previewTokens: acceptedTokens } = useIdentityAssistantStore();
   const { session, status, dispatch, submit, cancel } = useIdentityAssistant(previewTokens, true);
-  const ui = useAssistantView({ proposalId: session.proposal?.requestId, onBrief: setBrief });
+  const ui = useAssistantView({ proposalId: session.proposal?.requestId, onBrief: setBrief, scrollAssistantOnProposal: false });
   const busy = session.pending !== null;
   const off = status !== null && !status.available ? status.reason : null;
   const { send, quickRefine } = useAssistantSubmitHandlers(brief, submit, busy, off !== null, () => setBrief(""));
@@ -108,10 +110,19 @@ export function IdentityDockAssistantPanel({
     if (field && field.offsetParent !== null) field.focus({ preventScroll: true });
   }, []);
 
+  useLayoutEffect(() => {
+    const id = session.proposal?.requestId;
+    if (!id) return;
+    const root = scrollRef.current;
+    const proposal = root?.querySelector("[data-assistant-proposal]");
+    proposal?.scrollIntoView({ block: "nearest", behavior: "instant" });
+  }, [session.proposal?.requestId, ui.view]);
+
   return (
     <Stack ref={panelRef} className="min-h-0 flex-1 gap-0 overflow-hidden" data-slot="identity-dock-body">
       <IdentityDockPanelToolbar onClose={() => setExpanded(false)} />
       <IdentityDockPanelScroll
+        scrollRef={scrollRef}
         view={ui.view}
         setView={ui.setView}
         previewRef={ui.previewButton}

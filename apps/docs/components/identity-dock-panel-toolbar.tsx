@@ -7,11 +7,13 @@ import { IconButton, Stack, Text } from "@zedtech/zedkit-ui";
 import { identityAssistantCopy as copy } from "@/components/i18n/identity-assistant-copy";
 import { identityDockCopy } from "@/components/i18n/identity-dock-copy";
 import { IDENTITY_EDITOR_HREF } from "@/lib/site-links.mjs";
+import { useIdentityAssistantStore } from "@/lib/identity-assistant-store";
 
 import { ExternalLink, X } from "lucide-react";
 
 export function IdentityDockPanelToolbar({ onClose }: { onClose: () => void }) {
   const pathname = usePathname();
+  const { setExpanded } = useIdentityAssistantStore();
   return (
     <Stack direction="horizontal" gap={2} className="items-center border-b border-border px-3 py-2">
       <Text typeRole="label" className="min-w-0 flex-1">
@@ -24,6 +26,7 @@ export function IdentityDockPanelToolbar({ onClose }: { onClose: () => void }) {
           data-assistant-editor-link=""
           aria-label={copy.detailedEditorLink}
           title={copy.detailedEditorLink}
+          onClick={() => setExpanded(false)}
         >
           <ExternalLink aria-hidden="true" className="size-4" />
         </Link>
