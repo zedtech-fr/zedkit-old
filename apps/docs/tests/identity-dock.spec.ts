@@ -184,4 +184,18 @@ test.describe("IdentityDock", () => {
     expect(posts).toHaveLength(2);
     expect(posts[1].prompt).toMatch(/calmer/i);
   });
+
+  test("copy leave bundle matches preview CSS and home install command", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.keyboard.press("Control+I");
+    await page.getByRole("button", { name: "Copy install, CSS, and AI setup" }).click();
+    const text = await page.evaluate(() => navigator.clipboard.readText());
+    expect(text).toContain("pnpm add @zedtech/zedkit-ui");
+    expect(text).toContain("npx @zedtech/zedkit-ai init");
+    expect(text).toContain("/setup-ai");
+    expect(text).toMatch(/:root \{/);
+    expect(text).toMatch(/:root\.dark \{/);
+  });
 });

@@ -16,4 +16,9 @@ export const identityDockCopy = {
     half: "Half height",
     full: "Full height",
   },
+  export: {
+    lead: "Leave with install steps, the CSS from your preview, and the AI setup commands.",
+    copyAll: "Copy install, CSS, and AI setup",
+    copied: "Copied install, CSS, and AI setup.",
+  },
 } as const;

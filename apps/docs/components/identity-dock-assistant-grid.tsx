@@ -4,6 +4,7 @@ import type { RefObject } from "react";
 import { Stack } from "@zedtech/zedkit-ui";
 
 import { ConversationPane, PreviewPane } from "@/components/identity-assistant-panes";
+import { IdentityDockExport } from "@/components/identity-dock-export";
 import { ReferenceReportList } from "@/components/identity-references";
 import type { Unavailable } from "@/lib/identity-assistant";
 import type { SessionState } from "@/lib/identity-creator-session";
@@ -51,6 +52,7 @@ export function IdentityDockAssistantGrid(props: {
           onUse={props.onUse}
           onDiscard={props.onDiscard}
         />
+        <IdentityDockExport tokens={props.previewTokens} />
       </Stack>
     </Stack>
   );
