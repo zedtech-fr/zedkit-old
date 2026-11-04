@@ -157,7 +157,10 @@ size_budget ui 8000 marketing
 # Raised to 19250 on 4 Nov 2026: measured 18869 with plan-row suggestions
 # (suggestPlanRow tailored copy for 7 known setup outputs; ~320B of user-facing
 # strings cannot fit the 291B headroom). Budget = measured + 2%.
-size_budget ai 19250
+# Raised to 19750 on 4 Nov 2026: main had consumed the headroom
+# (19081/19250); this PR adds ~300B net (placeholder-link check, shared link
+# scan, measured 19381). Budget 19750 is measured + ~2%.
+size_budget ai 19750
 
 if [ -f apps/docs/out/index.html ]; then
   if ! node apps/docs/scripts/check-first-load-budget.mjs; then
