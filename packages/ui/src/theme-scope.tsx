@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 
 import { cn } from "./utils.js";
 
@@ -57,6 +58,27 @@ function ScopeMirror({ children }: { children: React.ReactNode }) {
       {children}
     </div>
   );
+}
+
+/**
+ * Dialog/drawer portal: `ScopeMirror` into `container ?? document.body`, with no Presence of its own, so
+ * the overlay and panel inner Presences own the exit lifecycle (closed state, exit animation,
+ * animationend/cancel unmount). Mount-gated for SSR (no `document` on the server, no hydration mismatch).
+ */
+function ScopePortal({
+  container,
+  children,
+}: {
+  container?: Element | DocumentFragment | null | undefined;
+  children: React.ReactNode;
+}) {
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+  if (!mounted || typeof document === "undefined") return null;
+  return createPortal(<ScopeMirror>{children}</ScopeMirror>, container ?? document.body);
 }
 
 type ThemeScopeProps = React.ComponentProps<"div"> & {
@@ -132,6 +154,7 @@ function ThemeScope({ identity, mode, className, children, ref, ...props }: Them
 export {
   OverlayMountContext,
   ScopeMirror,
+  ScopePortal,
   ThemeScope,
   useOverlayMount,
   usePortalContainer,
