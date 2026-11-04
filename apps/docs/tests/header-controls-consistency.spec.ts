@@ -5,7 +5,7 @@ import { DEFAULT_IDENTITY } from "../lib/default-identity";
 import { homeCopy } from "../ui/home/i18n/home-copy";
 import { persistDocsSiteLook, waitForAppliedLook } from "./identity-helpers";
 
-const BASE = "http://127.0.0.1:3100";
+const BASE = process.env.DOCS_E2E_BASE_URL ?? "http://127.0.0.1:3100";
 const SHOTS = process.env.HOME_LINK_SHOTS;
 const shotPath = (name: string) => (SHOTS ? `${SHOTS}/${name}` : `test-results/${name}`);
 
@@ -23,8 +23,12 @@ for (const theme of ["light", "dark"] as const) {
       if (width >= 768) {
         const header = page.locator("#nd-nav");
         await header.screenshot({ path: shotPath(`consistency-after-${name}-${theme}.png`), animations: "disabled" });
-        const toggle = header.locator("[data-theme-toggle]");
-        const search = header.locator('[data-search], [aria-label="Search documentation"]').first();
+        // fumadocs renders the slots twice (desktop bar + collapsed menu); assert the visible ones.
+        const toggle = header.locator("[data-theme-toggle]").filter({ visible: true }).first();
+        const search = header
+          .locator('[data-search], [aria-label="Search documentation"]')
+          .filter({ visible: true })
+          .first();
         const github = header.locator('a[aria-label*="GitHub"]').first();
         await expect(toggle).toBeVisible();
         await expect(search).toBeVisible();

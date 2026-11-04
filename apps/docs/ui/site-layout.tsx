@@ -4,7 +4,7 @@ import { SiteBrand } from "@/ui/site-brand";
 import { siteHeaderLinks } from "@/lib/site-header-links";
 import { KitVersionLabel } from "@/ui/kit-version-label";
 import { SitePageShell } from "@/ui/site-page-shell";
-import { siteChromeSlots } from "@/ui/site-chrome";
+import { siteChromeSlots } from "@/ui/site-chrome-slots";
 import { MarketingSiteHeader } from "@/ui/site-headers";
 
 /** Shared marketing shell: nav, search, theme toggle, GitHub link. */

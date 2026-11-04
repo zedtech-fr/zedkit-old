@@ -149,7 +149,7 @@ size_budget() {
 # IdentityDock chrome + vaul sheet moved to apps/docs (4 Nov 2026); ui gzip measured 44660.
 # Raised to 48000 on 4 Nov 2026: Animate runtime + types (measured 46973).
 # Raised to 56000 on 4 Nov 2026 (measured 54172 in CI): approved by the maintainers
-# raising size budgets now and optimising later; trim tracked in a follow-up issue
+# raising size budgets now and optimising later; trim tracked in issue 1398
 # (identity-tokens, splitting the Animate runtime).
 size_budget ui 56000
 # Marketing entry (separate from the main budget); measured 785 with GlassSurface only;
