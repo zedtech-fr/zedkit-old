@@ -123,6 +123,7 @@ test("Drawer manual copy lists every companion file, dependency and token", () =
       "src/components/ui/create-messages-context.tsx",
       "src/components/ui/messages.ts",
       "src/components/ui/button.tsx",
+      "src/components/ui/surface.tsx",
     ],
   );
   assert.equal(files[0].role, "main");

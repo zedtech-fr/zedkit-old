@@ -1,5 +1,5 @@
 import type { Unavailable } from "@/lib/identity-assistant";
-import { identityBriefCopy } from "@/components/i18n/identity-brief-copy";
+import { identityBriefCopy } from "./identity-brief-copy.ts";
 
 /** English copy for the identity assistant, its references and its proposal. Keys only; no markup. */
 
