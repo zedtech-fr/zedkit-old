@@ -24,11 +24,11 @@ Install `@zedtech/zedkit-ai`, wire Cursor with adopt mode, run `/setup-ai` to ta
 
    Use another provider name if the user specified one (`claude`, `codex`, `muse`, or comma-separated).
 
-3. **Run setup-ai** (repo audit, plan, and tailored instructions):
+3. **Run setup-ai** (repo audit, discovery interview, plan, and tailored instructions):
 
    - In Cursor: run **`/setup-ai`** (or ask the agent to run the `setup-ai` skill).
    - Follow the skill through **verify**: run the gate commands it lists, apply the approved plan, finish the report.
-   - If the skill asks one question (providers or role/language), answer briefly and continue.
+   - In phase **B**, **answer or delegate the batched discovery interview** (at most 8 questions in one batch); do not skip the interview or substitute guesses for owner answers.
 
 4. **Validate**:
 

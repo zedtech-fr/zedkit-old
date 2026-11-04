@@ -55,6 +55,9 @@ export function runCursorSetupTutorial(dir) {
   for (const rel of [".agents/skills/setup-ai/SKILL.md", ".cursor/commands/setup-ai.md", ".cursor/rules/project.mdc"]) {
     if (!existsSync(join(dir, rel))) throw new Error(`setup missing ${rel}`);
   }
+  for (const rel of [".agents/skills/domain-modeling/SKILL.md", ".agents/agents/product-director.md"]) {
+    if (!existsSync(join(dir, rel))) throw new Error(`setup should install setup preset (missing ${rel})`);
+  }
   const validate = capture(["validate", "."], dir);
   if (validate.code !== 0 || validate.out.trim() !== "ok") {
     throw new Error(`validate after setup failed: ${validate.out} ${validate.err}`);
