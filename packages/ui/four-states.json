@@ -116,6 +116,7 @@
     "PopoverAnchor",
     "PopoverTrigger",
     "ProgressBar",
+    "PromptInput",
     "RouteModal",
     "RouteModalDirection",
     "RouteModalSize",

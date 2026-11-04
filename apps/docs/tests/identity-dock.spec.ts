@@ -216,7 +216,7 @@ test.describe("IdentityDock", () => {
     await expect(brief(page)).toBeVisible();
     await brief(page).fill("A ceramics shop");
     await page.getByRole("button", { name: "Generate" }).click();
-    const message = page.locator("[data-assistant-status]");
+    const message = page.locator("[data-assistant-notice]");
     await expect(message).not.toBeEmpty();
     await expect(message).toBeInViewport();
     const box = await message.boundingBox();

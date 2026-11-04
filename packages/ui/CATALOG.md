@@ -464,6 +464,44 @@ import { StatusDot } from "@zedtech/zedkit-ui";
 <StatusDot tone="active" pulse={false} /> // static dot, no ping
 ```
 
+## Compose a chat prompt
+
+- Import: `@zedtech/zedkit-ui` — `PromptInput`, `PromptInputProps`
+- Wraps: native `<form>` + `<textarea>` + `IconButton`
+- Status: stable
+- Short name: PromptInput
+- Audience: Developers building assistant or messaging UIs.
+- Purpose: One rounded surface with an auto-growing field and an in-field send control; Enter sends, Shift+Enter adds a line.
+- When to use: Chat-style briefs where the send affordance sits inside the composer.
+- When not to use: Plain forms with a separate submit row — use `Field` + `Textarea` + `Button`.
+- See also: `Collect multi-line text`, `Icon-only control with accessible name`
+- Examples: Simple, Complete
+- A11y: Pass `sendLabel` (and `cancelLabel` when using cancel); the field keeps a visible label via `aria-label` or associated `FieldLabel`.
+- Registry: (none)
+- Troubleshooting: Send stays disabled — value is trimmed; whitespace-only counts as empty. Field does not grow — use `field-sizing-content` (Tailwind v4) on the consumer stylesheet.
+
+```ts
+import { PromptInput } from "@zedtech/zedkit-ui";
+<PromptInput sendLabel="Send" value={text} onValue={setText} onSubmit={send} placeholder="Ask anything" aria-label="Message" />
+```
+
+```tsx
+import { PromptInput } from "@zedtech/zedkit-ui";
+<PromptInput
+  id="chat"
+  sendLabel="Send"
+  value={text}
+  onChange={(e) => setText(e.target.value)}
+  onSubmit={send}
+  busy={pending}
+  onCancel={stop}
+  cancelLabel="Stop"
+  rows={1}
+  maxLength={2000}
+  aria-label="Message"
+/>
+```
+
 ## Show determinate progress
 
 - Import: `@zedtech/zedkit-ui` — `ProgressBar`, `ProgressBarProps`

@@ -2,19 +2,17 @@
 
 import { ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Stack, Text, cn, signatureMotionClass, type IdentityTokens } from "@zedtech/zedkit-ui";
+import { Stack, cn, signatureMotionClass, type IdentityTokens } from "@zedtech/zedkit-ui";
 
 import { identityAssistantCopy as copy } from "@/components/i18n/identity-assistant-copy";
 import { ConversationPane, PreviewPane } from "@/components/identity-assistant-panes";
 import { ReferenceReportList } from "@/components/identity-references";
-import { AssistantHeading, UnavailableBanner, ViewSwitch, noticeText } from "@/components/identity-assistant-parts";
+import { AssistantHeading, ViewSwitch } from "@/components/identity-assistant-parts";
 import { useAssistantView } from "@/components/use-assistant-view";
 import { useAssistantSubmitHandlers } from "@/components/use-assistant-submit";
 import { useIdentityAssistant } from "@/components/use-identity-assistant";
 import { writeCreatorSessionBrief } from "@/lib/creator-session-brief";
-import { type Unavailable } from "@/lib/identity-assistant";
 import { useIdentityAssistantStore } from "@/lib/identity-assistant-store";
-import type { SessionState } from "@/lib/identity-creator-session";
 import { specimenBriefFromThread } from "@/lib/brief-specimen-domain";
 
 /**
@@ -68,11 +66,6 @@ export function IdentityAssistant({ tokens, onUse }: { tokens: IdentityTokens; o
           <ViewSwitch view={ui.view} onView={ui.setView} waiting={session.proposal !== null} previewRef={ui.previewButton} />
           <ReferenceReportList report={session.references} />
           <ConversationPane view={ui.view} session={session} off={off} brief={brief} busy={busy} onBrief={setBrief} onSubmit={send} onQuickRefine={quickRefine} onCancel={cancel} inputRef={ui.field} />
-          <AssistantFeedback
-            text={busy ? copy.working : session.notice && session.notice.kind !== "unavailable" ? noticeText(session.notice) : session.proposal ? copy.views.proposalReady : null}
-            off={off}
-            notice={session.notice}
-          />
           <PreviewPane
             view={ui.view}
             proposal={session.proposal}
@@ -90,29 +83,6 @@ export function IdentityAssistant({ tokens, onUse }: { tokens: IdentityTokens; o
           />
         </Stack>
       </details>
-    </Stack>
-  );
-}
-
-/**
- * What happened to the last brief, placed right after the form that sent it. On a phone the draft preview is
- * pinned above the editor, so a message above the form ends up behind it; here it lands under the Generate button
- * the visitor just pressed, and an outcome (failure, cancel, proposal) is scrolled into view if it is off screen.
- */
-function AssistantFeedback({ text, off, notice }: { text: string | null; off: Unavailable | null; notice: SessionState["notice"] }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!notice || !ref.current) return;
-    const reduce = globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    ref.current.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
-  }, [notice]);
-  return (
-    <Stack gap={2} ref={ref} className="-mb-4 has-[:not(:empty)]:mb-0" data-assistant-feedback="">
-      {off ? <UnavailableBanner reason={off} /> : null}
-      {/* Always mounted, so a screen reader hears what is put in it; when it holds nothing it takes no room. */}
-      <Text role="status" variant="muted" typeRole="label" className="empty:-mt-2" data-assistant-status="">
-        {text}
-      </Text>
     </Stack>
   );
 }
