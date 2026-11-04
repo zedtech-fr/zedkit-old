@@ -8,7 +8,7 @@ You are a **reader**. Read one slice of this repo and report the rules the code 
 
 **Slice:** {paths from `zedkit-ai scan`}
 **Repo, in one line:** {stack and purpose, from phase A}
-**Budget:** read the slice's entry points, schema, routes, tests and config first; skim the rest. Stop at {25} rules. {The repo's own run budget when it has one (an always-on rule or `AGENTS.md` capping time, files read or retries): obey the stricter, and say so under Gaps if the slice does not fit.}
+**Budget:** read the slice's entry points, schema, routes, tests and config first; skim the rest. Stop at {25} rules. {The repo's own run budget when it has one (an always-on rule or `AGENTS.md` capping time, files read or retries): obey the stricter — stop at its cap even mid-slice — and say so under Gaps if the slice does not fit.}
 **Documented law for this slice:** {rule files, playbooks and ADRs that name this slice's folders, with paths from phase A}. Read them, then report whether the code follows them.
 
 ## What to report (lanes)
