@@ -65,15 +65,19 @@ describe("personas template per preset", () => {
     expect(validateKit(join(dest, ".agents"))).toEqual([]);
   });
 
-  it("adopt keeps a user's personas.md and writes a kit sidecar", () => {
+  it("adopt keeps a customized personas.md with no sidecar", () => {
     const dest = tempDir();
     mkdirSync(join(dest, ".agents"), { recursive: true });
     writeFileSync(join(dest, ".agents/personas.md"), "custom personas\n");
     const actions = install(dest, { preset: "setup", adopt: true });
     expect(personas(dest)).toBe("custom personas\n");
-    expect(readFileSync(join(dest, ".agents/personas.kit.md"), "utf8")).toContain("# Project personas (v2)");
+    expect(existsSync(join(dest, ".agents/personas.kit.md"))).toBe(false);
     expect(actions).toContainEqual(
-      expect.objectContaining({ kind: "copy", path: join(".agents", "personas.kit.md") }),
+      expect.objectContaining({
+        kind: "skip",
+        path: join(".agents", "personas.md"),
+        note: "kept (already customized)",
+      }),
     );
     expect(validateKit(join(dest, ".agents"))).toEqual([]);
   });

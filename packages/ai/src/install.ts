@@ -189,6 +189,19 @@ function place(
   return target;
 }
 
+const PERSONAS_V2_COLUMNS = "| Persona | Goals |";
+
+// Phase C rewrites .agents/personas.md from the template: v2 schema headers,
+// or prose/a reshaped table that no longer matches the template header row.
+// Sidecarring the kit template next to it as personas.kit.md is noise, so a
+// customized file is kept with no sidecar.
+function personasCustomized(current: string, template: string): boolean {
+  if (current.replace(/\s+/g, " ").includes(PERSONAS_V2_COLUMNS)) return true;
+  const header = (text: string): string | undefined =>
+    text.split("\n").map((line) => line.trim()).find((line) => line.startsWith("|"));
+  return header(current) !== header(template);
+}
+
 function copyFile(ctx: Ctx, from: string, rel: string): void {
   const kit = tryCatch(() => readFileSync(from, "utf8"));
   const text = kit.ok ? resolveIfNeeded(kit.value, ctx.avail) : undefined;
@@ -200,6 +213,10 @@ function copyFile(ctx: Ctx, from: string, rel: string): void {
     const current = tryCatch(() => readFileSync(join(ctx.dest, rel), "utf8"));
     if (current.ok && current.value === text) {
       ctx.actions.push({ kind: "skip", path: rel, note: "already installed" });
+      return;
+    }
+    if (current.ok && rel === join(".agents", "personas.md") && personasCustomized(current.value, text)) {
+      ctx.actions.push({ kind: "skip", path: rel, note: "kept (already customized)" });
       return;
     }
   }
