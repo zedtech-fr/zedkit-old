@@ -79,3 +79,18 @@ describe("ScrollReset", () => {
     expect(scrollTo).not.toHaveBeenCalled();
   });
 });
+
+describe("ScrollReset hash decoding", () => {
+  it("finds a percent-encoded anchor id", () => {
+    window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
+    const anchor = document.createElement("h2");
+    anchor.id = "déjà";
+    anchor.scrollIntoView = vi.fn();
+    document.body.append(anchor);
+    const { rerender } = render(<ScrollReset routeKey="/a" />);
+    window.history.pushState(null, "", "/b#d%C3%A9j%C3%A0");
+    rerender(<ScrollReset routeKey="/b" />);
+    expect(anchor.scrollIntoView).toHaveBeenCalled();
+    anchor.remove();
+  });
+});

@@ -12,7 +12,8 @@ export interface ScrollResetOptions {
   behavior?: "auto" | "smooth";
 }
 
-const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+const useIsomorphicLayoutEffect =
+  typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 let popPending = false;
 let popListeners = 0;
@@ -21,28 +22,33 @@ const onPop = () => {
 };
 
 function prefersReducedMotion(): boolean {
-  return typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  return (
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
 }
 
-/** Percent-decode without throwing on malformed sequences. */
+// Percent-decode without throwing on malformed input.
 function decodeHash(raw: string): string {
-  const bytes: number[] = [];
-  for (let i = 0; i < raw.length; i++) {
-    const hex = raw.slice(i + 1, i + 3);
-    if (raw[i] === "%" && /^[0-9a-f]{2}$/i.test(hex)) {
-      bytes.push(Number.parseInt(hex, 16));
-      i += 2;
-    } else {
-      for (const byte of new TextEncoder().encode(raw[i])) bytes.push(byte);
-    }
-  }
-  return new TextDecoder().decode(new Uint8Array(bytes));
+  const bytes = raw.match(/%[0-9a-f]{2}|[^]/giu) ?? [];
+  const encoder = new TextEncoder();
+  return new TextDecoder().decode(
+    new Uint8Array(
+      bytes.flatMap((part) =>
+        part.length === 3 && part[0] === "%"
+          ? [Number.parseInt(part.slice(1), 16)]
+          : [...encoder.encode(part)],
+      ),
+    ),
+  );
 }
 
 function hashTarget(): HTMLElement | null {
   const raw = window.location.hash.slice(1);
   if (!raw) return null;
-  return document.getElementById(raw) ?? document.getElementById(decodeHash(raw));
+  return (
+    document.getElementById(raw) ?? document.getElementById(decodeHash(raw))
+  );
 }
 
 /**
@@ -52,7 +58,10 @@ function hashTarget(): HTMLElement | null {
  * - Back/forward (popstate) is left to the browser's own restoration.
  * - Under `prefers-reduced-motion: reduce` the jump is always instant.
  */
-export function useScrollReset(routeKey: string, options: ScrollResetOptions = {}): void {
+export function useScrollReset(
+  routeKey: string,
+  options: ScrollResetOptions = {},
+): void {
   const previous = useRef(routeKey);
   const { target, behavior = "auto" } = options;
 
@@ -70,7 +79,8 @@ export function useScrollReset(routeKey: string, options: ScrollResetOptions = {
       popPending = false;
       return;
     }
-    const mode: ScrollBehavior = prefersReducedMotion() || behavior === "auto" ? "instant" : "smooth";
+    const mode: ScrollBehavior =
+      prefersReducedMotion() || behavior === "auto" ? "instant" : "smooth";
     const anchor = hashTarget();
     if (anchor) {
       anchor.scrollIntoView({ behavior: mode, block: "start" });
