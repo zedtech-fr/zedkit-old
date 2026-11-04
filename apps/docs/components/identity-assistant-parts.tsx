@@ -174,14 +174,23 @@ export function ViewSwitch({
   onView,
   waiting,
   previewRef,
+  always = false,
 }: {
   view: View;
   onView: (view: View) => void;
   waiting: boolean;
   previewRef: RefObject<HTMLButtonElement | null>;
+  always?: boolean;
 }) {
   return (
-    <Stack direction="horizontal" gap={2} role="group" aria-label={copy.views.label} data-assistant-views="" className="lg:hidden">
+    <Stack
+      direction="horizontal"
+      gap={2}
+      role="group"
+      aria-label={copy.views.label}
+      data-assistant-views=""
+      className={always ? undefined : "lg:hidden"}
+    >
       <Button type="button" variant="outline" aria-pressed={view === "conversation"} className="flex-1" onClick={() => onView("conversation")}>
         {copy.views.conversation}
       </Button>

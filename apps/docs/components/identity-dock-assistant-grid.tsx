@@ -3,7 +3,11 @@
 import type { RefObject } from "react";
 import { Stack } from "@zedtech/zedkit-ui";
 
-import { ConversationPane, PreviewPane } from "@/components/identity-assistant-panes";
+import {
+  ConversationComposer,
+  ConversationMessages,
+  PreviewPane,
+} from "@/components/identity-assistant-panes";
 import { ReferenceReportList } from "@/components/identity-references";
 import type { Unavailable } from "@/lib/identity-assistant";
 import type { SessionState } from "@/lib/identity-creator-session";
@@ -25,20 +29,21 @@ export function IdentityDockAssistantGrid(props: {
   onCancel: () => void;
   onUse: (tokens: IdentityTokens) => void;
   onDiscard: () => void;
+  /** When set, the composer renders in the footer instead of inside this grid. */
+  composerRef?: RefObject<HTMLDivElement | null>;
+  hideComposer?: boolean;
 }) {
   return (
     <Stack gap={4} className="min-w-0">
-      <ConversationPane
+      <ConversationMessages
         view={props.view}
         session={props.session}
-        off={props.off}
         brief={props.brief}
         busy={props.busy}
+        compact
         onBrief={props.onBrief}
-        onSubmit={props.onSubmit}
         onQuickRefine={props.onQuickRefine}
-        onCancel={props.onCancel}
-        inputRef={props.inputRef}
+        off={props.off}
       />
       <Stack gap={4} className="min-w-0">
         <ReferenceReportList report={props.session.references} />
@@ -48,10 +53,25 @@ export function IdentityDockAssistantGrid(props: {
           tokens={props.previewTokens}
           domainBrief={props.domainBrief}
           busy={props.busy}
+          compact
           onUse={props.onUse}
           onDiscard={props.onDiscard}
         />
       </Stack>
+      {props.hideComposer ? null : (
+        <div ref={props.composerRef}>
+          <ConversationComposer
+            session={props.session}
+            brief={props.brief}
+            busy={props.busy}
+            off={props.off}
+            onBrief={props.onBrief}
+            onSubmit={props.onSubmit}
+            onCancel={props.onCancel}
+            inputRef={props.inputRef}
+          />
+        </div>
+      )}
     </Stack>
   );
 }

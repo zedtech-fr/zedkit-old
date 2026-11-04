@@ -118,6 +118,17 @@
   --zk-tap-min: 0px;
   /* Width of the table scroll hint fade on each cut edge. */
   --zk-table-fade: 1.5rem;
+  /*
+   * Layer scale: every positioned overlay layer reads one of these, so a sticky header (40) can never
+   * outrank a portaled overlay (50+) no matter which stacking context traps the trigger. Dropdown panels
+   * opened inside a dialog/drawer mount into that panel's node, which is why they sit below the dim layer.
+   */
+  --z-header: 40;
+  --z-dropdown: 45;
+  --z-overlay: 50;
+  --z-drawer: 60;
+  --z-dialog: 60;
+  --z-toast: 70;
 }
 
 :root {
@@ -322,7 +333,12 @@
   --spacing-app-shell-sidebar: 16rem;
   --spacing-app-shell-padding: 1rem;
   --spacing-app-shell-padding-md: 1.5rem;
-  --z-index-overlay: 50;
+  --z-index-header: var(--z-header);
+  --z-index-dropdown: var(--z-dropdown);
+  --z-index-overlay: var(--z-overlay);
+  --z-index-drawer: var(--z-drawer);
+  --z-index-dialog: var(--z-dialog);
+  --z-index-toast: var(--z-toast);
   --spacing-table-cell: 0.5rem;
   --spacing-table-head-height: 2.5rem;
   --spacing-table-checkbox-nudge: 0.125rem;
@@ -443,6 +459,15 @@
 }
 
 /*
+ * Toast viewport: top of the layer scale. Element-qualified so it beats
+ * sonner's own injected `[data-sonner-toaster]` rule (z-index 999999999)
+ * whatever order the two stylesheets land in.
+ */
+ol[data-sonner-toaster] {
+  z-index: var(--z-toast);
+}
+
+/*
  * Overlay centering (dialog content): replaces the top-[50%] /
  * translate-[-50%] arbitraries. Uses the `translate` property (not
  * `transform`) so the zk-zoom enter/exit keyframes compose with it.
@@ -541,7 +566,9 @@ a[class*="px-badge-inline"] {
 
   [data-slot="scroll-gallery"] [data-scroll-gallery-track] {
     gap: var(--zk-gap-md);
-    padding-inline: var(--zk-gap-md);
+    padding-inline-end: var(--zk-gap-md);
+    /* Keep the first snap peer clear of the decorative start fade (::before). */
+    padding-inline-start: calc(var(--zk-table-fade) + var(--zk-gap-sm));
   }
 
   [data-slot="scroll-gallery"] [data-scroll-gallery-track] > * {
@@ -557,6 +584,8 @@ a[class*="px-badge-inline"] {
 
   [data-slot="scroll-gallery"] [data-slot="tabs-trigger"]:has([data-tab-label]) {
     box-sizing: border-box;
+    flex-direction: column;
+    align-items: flex-start;
     gap: var(--zk-gap-sm);
     width: max-content;
     max-width: none;

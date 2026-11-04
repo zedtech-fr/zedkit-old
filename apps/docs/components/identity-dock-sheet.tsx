@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useState, type ReactNode } from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
 import {
@@ -70,6 +71,18 @@ function IdentityDockSheetDetents({
   );
 }
 
+function useShortViewport(): boolean {
+  return React.useSyncExternalStore(
+    (onStoreChange) => {
+      const mql = window.matchMedia("(max-height: 600px)");
+      mql.addEventListener("change", onStoreChange);
+      return () => mql.removeEventListener("change", onStoreChange);
+    },
+    () => window.matchMedia("(max-height: 600px)").matches,
+    () => false,
+  );
+}
+
 /** Non-modal bottom sheet with peek / half / full detents (docs IdentityDock only). */
 function IdentityDockSheet({
   open,
@@ -80,10 +93,10 @@ function IdentityDockSheet({
   detentGroupLabel,
   detentLabels,
 }: IdentityDockSheetProps) {
+  const short = useShortViewport();
   const [snap, setSnap] = useState<number | string | null>(null);
-  // Full by default: fractional snaps translate the sheet down, hiding bottom-anchored content (the composer and
-  // the status line) at peek and half. The visitor can still drop to a lower detent with the buttons above.
-  const activeSnap = snap ?? SNAP_FULL;
+  const base = snap ?? SNAP_FULL;
+  const activeSnap = short && (base === SNAP_HALF || base === SNAP_FULL) ? SNAP_FULL : base;
   return (
     <DrawerPrimitive.Root
       data-slot="identity-dock-sheet-root"

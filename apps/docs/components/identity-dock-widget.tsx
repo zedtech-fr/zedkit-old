@@ -73,7 +73,7 @@ function useEditorDockAutoOpen(onEditor: boolean, setBrief: (value: string) => v
   useEffect(() => {
     // Drained on every evaluation: a #create arrival followed by an editor revisit must not reopen from a stale flag.
     const arrived = consumeCreateArrival();
-    if (window.location.hash === "#create" || arrived) setExpanded(true);
+    if (onEditor && (window.location.hash === "#create" || arrived)) setExpanded(true);
   }, [onEditor, setExpanded]);
 }
 

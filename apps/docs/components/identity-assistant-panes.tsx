@@ -30,24 +30,26 @@ function AssistantGreeting() {
   );
 }
 
-/** The chat: the exchange so far, quick refinements, the links found, the composer, and a way to the full editor. */
-export function ConversationPane(props: {
+/** Messages, chips, and link detection — the scrollable part of the chat. */
+export function ConversationMessages(props: {
   view: View;
   session: SessionState;
-  off: Unavailable | null;
   brief: string;
   busy: boolean;
+  compact?: boolean;
   onBrief: (brief: string) => void;
-  onSubmit: () => void;
   onQuickRefine: (prompt: string) => void;
-  onCancel: () => void;
-  inputRef: RefObject<HTMLInputElement | null>;
+  off: Unavailable | null;
 }) {
   const refining = props.session.thread.length > 0;
   const chipsVisible = refining && props.session.proposal === null && props.session.pending === null;
-  const pathname = usePathname();
+  const hidden = props.compact ? props.view !== "conversation" : props.view === "preview";
   return (
-    <Stack gap={4} className={cn("min-w-0", props.view === "preview" && "max-lg:hidden")} data-assistant-pane="conversation">
+    <Stack
+      gap={4}
+      className={cn("min-w-0", hidden && (props.compact ? "hidden" : "max-lg:hidden"))}
+      data-assistant-pane="conversation"
+    >
       {refining ? <Thread turns={props.session.thread} /> : <AssistantGreeting />}
       <IdentityRefinementChips
         visible={chipsVisible}
@@ -55,6 +57,25 @@ export function ConversationPane(props: {
         onSelect={props.onQuickRefine}
       />
       <DetectedLinks text={props.brief} onText={props.onBrief} fieldId="identity-assistant-brief" disabled={props.busy} />
+    </Stack>
+  );
+}
+
+/** The chat composer and a discreet link to the full editor page. */
+export function ConversationComposer(props: {
+  session: SessionState;
+  brief: string;
+  busy: boolean;
+  off: Unavailable | null;
+  onBrief: (brief: string) => void;
+  onSubmit: () => void;
+  onCancel: () => void;
+  inputRef: RefObject<HTMLInputElement | null>;
+}) {
+  const refining = props.session.thread.length > 0;
+  const pathname = usePathname();
+  return (
+    <Stack gap={2} className="min-w-0 shrink-0" data-assistant-composer="">
       <BriefForm
         value={props.brief}
         onValue={props.onBrief}
@@ -74,6 +95,46 @@ export function ConversationPane(props: {
   );
 }
 
+/** The chat: the exchange so far, quick refinements, the links found, the composer, and a way to the full editor. */
+export function ConversationPane(props: {
+  view: View;
+  session: SessionState;
+  off: Unavailable | null;
+  brief: string;
+  busy: boolean;
+  compact?: boolean;
+  onBrief: (brief: string) => void;
+  onSubmit: () => void;
+  onQuickRefine: (prompt: string) => void;
+  onCancel: () => void;
+  inputRef: RefObject<HTMLInputElement | null>;
+}) {
+  return (
+    <Stack gap={4} className="min-w-0">
+      <ConversationMessages
+        view={props.view}
+        session={props.session}
+        brief={props.brief}
+        busy={props.busy}
+        {...(props.compact ? { compact: true } : {})}
+        onBrief={props.onBrief}
+        onQuickRefine={props.onQuickRefine}
+        off={props.off}
+      />
+      <ConversationComposer
+        session={props.session}
+        brief={props.brief}
+        busy={props.busy}
+        off={props.off}
+        onBrief={props.onBrief}
+        onSubmit={props.onSubmit}
+        onCancel={props.onCancel}
+        inputRef={props.inputRef}
+      />
+    </Stack>
+  );
+}
+
 /** The proposal to look at, or (on a phone, before there is one) the draft as it is. Wide screens show the draft elsewhere. */
 export function PreviewPane(props: {
   view: View;
@@ -81,10 +142,17 @@ export function PreviewPane(props: {
   tokens: IdentityTokens;
   domainBrief: string;
   busy: boolean;
+  compact?: boolean;
   onUse: (tokens: IdentityTokens) => void;
   onDiscard: () => void;
 }) {
-  const className = cn("min-w-0", props.view === "conversation" && "max-lg:hidden", !props.proposal && "lg:hidden");
+  const compact = props.compact ?? false;
+  const hidden = compact ? props.view !== "preview" : props.view === "conversation";
+  const className = cn(
+    "min-w-0",
+    hidden && (compact ? "hidden" : "max-lg:hidden"),
+    !compact && !props.proposal && "lg:hidden",
+  );
   return (
     <Stack gap={4} className={className} data-assistant-pane="preview">
       {props.proposal ? (

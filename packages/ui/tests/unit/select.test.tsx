@@ -22,13 +22,14 @@ describe("select", () => {
     expect(screen.getByRole("combobox", { name: "Region" }).textContent).toContain("Europe");
   });
 
-  it("stacks the open content on the overlay z-index token", async () => {
+  it("stacks the open content on the dropdown z-index token", async () => {
     const user = userEvent.setup();
     render(<RegionSelect />);
 
     await user.click(screen.getByRole("combobox", { name: "Region" }));
     const listbox = await screen.findByRole("listbox");
-    expect(listbox.className).toContain("z-overlay");
+    expect(listbox.className).toContain("z-dropdown");
+    expect(listbox.className).not.toContain("z-overlay");
     expect(listbox.className).not.toContain("z-50");
   });
 
