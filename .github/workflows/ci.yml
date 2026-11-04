@@ -346,7 +346,7 @@ jobs:
             [ "$code" = "200" ] && break
             sleep 5
           done
-          curl -sf http://127.0.0.1:3100/ | grep -q "Build the parts you need"
+          curl -sf http://127.0.0.1:3100/ | grep -q "one prompt away"
           curl -sf -o /dev/null http://127.0.0.1:3100/docs
           curl -sf -o /dev/null http://127.0.0.1:3100/api/search
           curl -sf -o /dev/null http://127.0.0.1:3100/robots.txt
