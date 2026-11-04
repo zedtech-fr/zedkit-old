@@ -92,6 +92,19 @@ describe("primitives", () => {
     const link = screen.getByRole("link", { name: "Save" });
     expect(link.className).toContain("border-input");
     expect(link.getAttribute("href")).toBe("/save");
+    expect(link.getAttribute("data-size")).toBe("default");
+  });
+
+  it("keeps sm ghost padding on asChild anchor roots", () => {
+    render(
+      <Button asChild variant="ghost" size="sm">
+        <a href="/docs">More in the kit</a>
+      </Button>,
+    );
+    const link = screen.getByRole("link", { name: "More in the kit" });
+    expect(link.className).toContain("px-3");
+    expect(link.getAttribute("data-variant")).toBe("ghost");
+    expect(link.getAttribute("data-size")).toBe("sm");
   });
 
   it("renders a badge with its text", () => {
@@ -196,8 +209,8 @@ describe("primitives", () => {
         </Heading>
       </>,
     );
-    expect(screen.getByRole("heading", { name: "Title", level: 1 }).className).toContain("text-4xl");
-    expect(screen.getByRole("heading", { name: "Section", level: 3 }).className).toContain("text-2xl");
+    expect(screen.getByRole("heading", { name: "Title", level: 1 }).className).toContain("text-zk-type-display");
+    expect(screen.getByRole("heading", { name: "Section", level: 3 }).className).toContain("text-zk-type-band");
     expect(screen.getByText("Plain").tagName).toBe("DIV");
   });
 
@@ -218,7 +231,7 @@ describe("primitives", () => {
       </Heading>,
     );
     const link = screen.getByRole("link", { name: "Section" });
-    expect(link.className).toContain("text-3xl");
+    expect(link.className).toContain("text-zk-type-section");
     expect(link.className).toContain("scroll-m-heading-scroll");
     expect(link.getAttribute("href")).toBe("#section");
   });

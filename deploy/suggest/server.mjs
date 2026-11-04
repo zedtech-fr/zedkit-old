@@ -170,11 +170,11 @@ function changedPaths(before, after) {
 }
 
 /** One provider call within the deadline, abortable by the client's disconnect. */
-function attempt(provider, args, { client, deadline, now, fetchImpl, limits }) {
+function attempt(provider, args, { client, deadline, now, fetchImpl, limits, effort = provider.effort }) {
   const remaining = deadline - now();
   if (remaining < 1_000) return Promise.resolve({ ok: false, kind: "timeout", billable: false });
   const signal = AbortSignal.any([AbortSignal.timeout(remaining), client.signal]);
-  return callProvider(provider, { ...args, maxTokens: limits.maxOutputTokens, signal, fetchImpl, effort: provider.effort });
+  return callProvider(provider, { ...args, maxTokens: limits.maxOutputTokens, signal, fetchImpl, effort });
 }
 
 /** What the call cost. A reply is charged at its (believable) reported usage; a failure at the worst case only if it may have run. */
@@ -206,8 +206,19 @@ async function generate(ctx, request, references) {
   let last = null;
   for (const provider of providers) {
     const worst = worstCaseMicro(provider, tokens, config.limits.maxOutputTokens);
-    const result = await attempt(provider, { messages }, { client, deadline, now, fetchImpl, limits: config.limits });
+    let result = await attempt(provider, { messages }, { client, deadline, now, fetchImpl, limits: config.limits });
     called += 1;
+    if (
+      !result.ok &&
+      result.kind === "http" &&
+      result.status >= 400 &&
+      result.status < 500 &&
+      result.status !== 429 &&
+      provider.effort
+    ) {
+      result = await attempt(provider, { messages }, { client, deadline, now, fetchImpl, limits: config.limits, effort: "" });
+      called += 1;
+    }
     spent += costOf(provider, result, worst, sizes);
     last = { result, provider };
     if (result.ok || !mayFallBack(result)) break;
@@ -412,8 +423,9 @@ export function listenSuggest(options = {}) {
     });
     // A request is at most a few kilobytes: whoever has not sent it within seconds is holding a socket, not asking.
     // (Node's defaults are 60 s for headers and 300 s for the whole request, with no cap on connections.)
-    server.headersTimeout = 5_000;
-    server.requestTimeout = 10_000;
+    const requestWindowMs = config.limits.timeoutMs + config.limits.referenceTimeoutMs + 5_000;
+    server.headersTimeout = requestWindowMs;
+    server.requestTimeout = requestWindowMs;
     server.keepAliveTimeout = 5_000;
     server.maxConnections = 256;
     return new Promise((done, fail) => {

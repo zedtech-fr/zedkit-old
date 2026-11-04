@@ -1,0 +1,27 @@
+/*
+ * Identity creator + assistant wrapper: signature type tokens only (criterion 1).
+ * Component files owned by #1259 stay untouched; this sheet styles their surfaces.
+ */
+[data-slot="identity-assistant"] > details > summary {
+  font-size: var(--zk-type-label-size);
+  font-weight: var(--zk-type-label-weight);
+  line-height: var(--zk-type-label-leading);
+}
+
+[data-slot="identity-assistant"] [data-assistant-status] {
+  font-size: var(--zk-type-label-size);
+  font-weight: var(--zk-type-label-weight);
+  line-height: var(--zk-type-label-leading);
+}
+
+[data-slot="identity-editor"] legend {
+  font-size: var(--zk-type-label-size);
+  font-weight: var(--zk-type-label-weight);
+  line-height: var(--zk-type-label-leading);
+}
+
+[data-slot="identity-editor-preview"] dl {
+  font-size: var(--zk-type-body-size);
+  font-weight: var(--zk-type-body-weight);
+  line-height: var(--zk-type-body-leading);
+}

@@ -9,6 +9,11 @@ test("links in a brief: full http(s) links and bare names are recognised, at mos
   assert.deepEqual(found.skipped, [{ url: "vercel.com", why: "too-many" }]);
 });
 
+test("a bare name on a newer extension is a link too, so 'like name.digital' is read", () => {
+  assert.deepEqual(linksInText("une identité comme sur mon portfolio: studio-name.digital").urls, ["https://studio-name.digital/"]);
+  assert.deepEqual(linksInText("like acme.agency and acme.works").urls, ["https://acme.agency/", "https://acme.works/"]);
+});
+
 test("words that only look like names are not links", () => {
   for (const text of ["e.g. calm", "see identity.ts and Node.js", "mail me at someone@example.com", "version 1.2.3", "the a.b.c"]) {
     assert.deepEqual(linksInText(text).urls, [], text);

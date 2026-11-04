@@ -24,14 +24,14 @@ export function DetectedLinks({ text, onText, fieldId, disabled = false }: { tex
     <Stack gap={2} data-assistant-links="">
       {urls.length > 0 ? (
         <>
-          <Text as="span" className="text-sm font-medium text-foreground">
+          <Text as="span" typeRole="body" className="font-medium text-foreground">
             {copy.links.found}
           </Text>
           <ul aria-label={copy.links.list} className="m-0 flex list-none flex-wrap gap-2 p-0">
             {urls.map((url) => (
               <li key={url} data-assistant-link-chip="" className="flex max-w-full min-w-0 items-center gap-1 rounded-full border border-border bg-muted/40 py-0.5 pr-0.5 pl-3">
                 <Text as="span" aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-primary" />
-                <Text as="span" data-assistant-link-label="" className="min-w-0 truncate text-sm" title={url}>
+                <Text as="span" data-assistant-link-label="" typeRole="body" className="min-w-0 truncate" title={url}>
                   {urlLabel(url)}
                 </Text>
                 <Button type="button" variant="ghost" size="sm" className="min-w-11 rounded-full" disabled={disabled} aria-label={copy.links.remove(urlLabel(url))} onClick={() => {
@@ -43,12 +43,12 @@ export function DetectedLinks({ text, onText, fieldId, disabled = false }: { tex
               </li>
             ))}
           </ul>
-          <Text variant="muted" className="text-sm">
+          <Text variant="muted" typeRole="body">
             {copy.links.note}
           </Text>
         </>
       ) : null}
-      {tooMany ? <Text className="text-sm text-muted-foreground">{copy.links.tooMany}</Text> : null}
+      {tooMany ? <Text variant="muted" typeRole="body">{copy.links.tooMany}</Text> : null}
     </Stack>
   );
 }
@@ -70,22 +70,35 @@ export function ReferenceReportList({ report }: { report: readonly ReferenceRepo
   if (report.length === 0) return null;
   return (
     <Stack gap={1} role="status" data-assistant-reference-report="">
-      <Text as="span" className="text-sm font-medium text-foreground">
+      <Text as="span" typeRole="body" className="font-medium text-foreground">
         {copy.references.report}
       </Text>
-      <ul className="m-0 flex list-none flex-col gap-1 p-0">
-        {report.map((item) => (
-          <li key={item.url} className="text-sm text-muted-foreground">
-            <Text as="span" className="font-medium text-foreground">
-              {item.title || hostOf(item.url)}
-            </Text>{" "}
-            {item.status === "used"
-              ? item.analysis === "styles-and-text"
-                ? copy.references.styles(signalsLine(item))
-                : copy.references.textOnly
-              : copy.references.failed(item.reason ?? "")}
-          </li>
-        ))}
+      <ul className="m-0 flex list-none flex-col gap-2 p-0">
+        {report.map((item) => {
+          const used = item.status === "used";
+          return (
+            <li key={item.url} data-assistant-reference-status={used ? "used" : "failed"} className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1 text-zk-type-body text-muted-foreground">
+              <Text
+                as="span"
+                data-assistant-reference-chip=""
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-0.5 text-zk-type-label font-medium ${used ? "border-primary/40 bg-primary/10 text-foreground" : "border-destructive/50 bg-destructive/10 text-foreground"}`}
+              >
+                <Text as="span" aria-hidden="true" className={`size-1.5 rounded-full ${used ? "bg-primary" : "bg-destructive"}`} />
+                {used ? copy.references.used : copy.references.notUsed}
+              </Text>{" "}
+              <Text as="span" className="min-w-0 truncate font-medium text-foreground" title={item.url}>
+                {item.title || hostOf(item.url)}
+              </Text>{" "}
+              <Text as="span" className="basis-full">
+                {used
+                  ? item.analysis === "styles-and-text"
+                    ? copy.references.styles(signalsLine(item))
+                    : copy.references.textOnly
+                  : copy.references.failed(item.reason ?? "")}
+              </Text>
+            </li>
+          );
+        })}
       </ul>
     </Stack>
   );

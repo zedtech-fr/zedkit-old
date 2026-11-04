@@ -17,7 +17,9 @@
 #nd-docs-layout [data-docs-table] table {
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--text-sm);
+  font-size: var(--zk-type-small-size);
+  font-weight: var(--zk-type-small-weight);
+  line-height: var(--zk-type-small-leading);
 }
 
 #nd-docs-layout [data-docs-table] :is(th, td) {
@@ -110,7 +112,9 @@
 
   #nd-docs-layout [data-docs-table] tbody td:first-child {
     font-family: var(--zk-font-mono, ui-monospace, monospace);
-    font-size: 0.8125rem;
+    font-size: var(--zk-type-small-size);
+  font-weight: var(--zk-type-small-weight);
+  line-height: var(--zk-type-small-leading);
     font-weight: 500;
     white-space: normal;
     overflow-wrap: break-word;
@@ -137,7 +141,9 @@
 
   #nd-docs-layout [data-docs-table] tbody td:nth-child(2):not(:last-child) {
     font-family: var(--zk-font-mono, ui-monospace, monospace);
-    font-size: 0.8125rem;
+    font-size: var(--zk-type-small-size);
+  font-weight: var(--zk-type-small-weight);
+  line-height: var(--zk-type-small-leading);
     color: hsl(var(--muted-foreground));
     white-space: normal;
     overflow-wrap: break-word;
@@ -147,7 +153,9 @@
   #nd-docs-layout [data-docs-table] tbody td:nth-child(2):last-child,
   #nd-docs-layout [data-docs-table] tbody td:nth-child(n + 3) {
     font-family: inherit;
-    font-size: 0.8125rem;
+    font-size: var(--zk-type-small-size);
+  font-weight: var(--zk-type-small-weight);
+  line-height: var(--zk-type-small-leading);
     line-height: 1.45;
     color: hsl(var(--foreground));
     white-space: normal;

@@ -26,6 +26,7 @@ import type { LucideIcon } from 'lucide-react';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import * as React_2 from 'react';
 import type { ReactNode } from 'react';
+import type { RefObject } from 'react';
 import { RowData } from '@tanstack/react-table';
 import { RowModel } from '@tanstack/react-table';
 import * as SelectPrimitive from '@radix-ui/react-select';
@@ -65,6 +66,37 @@ export const alertVariants: (props?: ({
     variant?: "default" | "destructive" | null | undefined;
 } & ClassProp) | undefined) => string;
 
+// @public (undocumented)
+export function Animate(input: AnimateProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export const ANIMATE_PRESETS: readonly ["fade-up", "fade-in", "fade-down", "pop-in", "lift", "scale-down", "scale-up", "pulse", "parallax"];
+
+// @public (undocumented)
+export const ANIMATE_TRIGGERS: readonly ["appear", "scroll", "press", "longpress", "hover", "focus"];
+
+// @public
+export type AnimateMotion = AnimatePreset | (string & {});
+
+// @public
+export function AnimateObserver(): null;
+
+// @public (undocumented)
+export type AnimateOn = Partial<Record<AnimateTrigger, AnimateMotion>>;
+
+// @public (undocumented)
+export type AnimatePreset = (typeof ANIMATE_PRESETS)[number];
+
+// @public (undocumented)
+export interface AnimateProps extends React_2.ComponentProps<"div"> {
+    delay?: number;
+    on?: AnimateOn;
+    stagger?: boolean;
+}
+
+// @public (undocumented)
+export type AnimateTrigger = (typeof ANIMATE_TRIGGERS)[number];
+
 // @public
 export function applyCustomIdentity(tokens: IdentityTokens, lookOrKey?: string, persistKey?: string): boolean;
 
@@ -73,6 +105,9 @@ export function applyIdentity(id: string, storageKey?: string): void;
 
 // @public (undocumented)
 export function applyIdentityTokenSheet(tokens: IdentityTokens, selector: string, doc?: Document): HTMLStyleElement;
+
+// @public
+export function applySurfaceGlassPanel(element: HTMLElement, options?: Pick<VariantProps<typeof surfaceVariants>, "elevation" | "radius" | "padding">): void;
 
 // @public (undocumented)
 export function AppShell(input: AppShellProps): React_2.JSX.Element;
@@ -448,6 +483,7 @@ export function DialogClose(input: React_2.ComponentProps<typeof DialogPrimitive
 // @public (undocumented)
 export function DialogContent(input: React_2.ComponentProps<typeof DialogPrimitive.Content> & {
     closeLabel?: string;
+    initialFocus?: OverlayInitialFocus;
 }): React_2.JSX.Element;
 
 // @public (undocumented)
@@ -494,6 +530,8 @@ export function DrawerCloseButton(input: React_2.ComponentProps<typeof DrawerClo
 // @public (undocumented)
 export function DrawerContent(input: React_2.ComponentProps<typeof Drawer_2.Content> & {
     modal?: boolean;
+    size?: DrawerSize;
+    initialFocus?: OverlayInitialFocus;
 }): React_2.JSX.Element;
 
 // @public (undocumented)
@@ -516,6 +554,9 @@ export function DrawerPortal(input: React_2.ComponentProps<typeof Drawer_2.Porta
 
 // @public (undocumented)
 export type DrawerProps = DrawerRootProps;
+
+// @public (undocumented)
+export type DrawerSize = "sm" | "md" | "lg";
 
 // @public (undocumented)
 export function DrawerTitle(input: React_2.ComponentProps<typeof Drawer_2.Title>): React_2.JSX.Element;
@@ -649,16 +690,20 @@ export type FormSubmitProps = Omit<ButtonProps, "type"> & {
 // @public (undocumented)
 export function Heading(input: HeadingProps): React_2.JSX.Element;
 
+// @public
+export const headingLevelDefaultRole: Record<1 | 2 | 3 | 4, TypeRole>;
+
 // @public (undocumented)
 export type HeadingProps = React_2.ComponentProps<"h1"> & VariantProps<typeof headingVariants> & {
     level?: 1 | 2 | 3 | 4;
+    typeRole?: TypeRole;
     as?: "h1" | "h2" | "h3" | "h4" | "div";
     asChild?: boolean;
 };
 
 // @public (undocumented)
 export const headingVariants: (props?: ({
-    level?: 1 | 2 | 3 | 4 | null | undefined;
+    typeRole?: "caption" | "display" | "small" | "body" | "label" | "nav" | "section" | "title" | "heading" | "band" | "cardTitle" | "lead" | "prose" | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -1079,6 +1124,9 @@ export type MultiSelectProps = {
 export const NAMED_IDENTITY_PREFIX = "n-";
 
 // @public
+export function observeAnimate(root?: ParentNode): () => void;
+
+// @public
 export function OfflineNote(input: OfflineNoteProps): JSX.Element;
 
 // @public (undocumented)
@@ -1137,6 +1185,9 @@ export interface OptionCardsProps {
     // (undocumented)
     selected: string[];
 }
+
+// @public
+export type OverlayInitialFocus = RefObject<HTMLElement | null> | string;
 
 // @public (undocumented)
 export function PageHeader(input: PageHeaderProps): React_2.JSX.Element;
@@ -1265,6 +1316,12 @@ export type RouteModalVariant = "drawer" | "dialog";
 export const SCROLL_SCENES_MAX = 8;
 
 // @public
+export function ScrollGallery(input: ScrollGalleryProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type ScrollGalleryProps = React_2.ComponentProps<"div">;
+
+// @public
 export function ScrollReset(input: ScrollResetProps): null;
 
 // @public (undocumented)
@@ -1317,7 +1374,14 @@ export type SectionProps = React_2.ComponentProps<"section"> & {
     tone?: "plain" | "muted" | undefined;
     spacing?: "sm" | "md" | "lg" | "xl" | undefined;
     containerWidth?: ContainerProps["width"];
+    snap?: "start" | "none" | undefined;
 };
+
+// @public
+export function SectionScroll(input: SectionScrollProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type SectionScrollProps = React_2.ComponentProps<"div">;
 
 // @public (undocumented)
 export function Select(input: SelectProps): React_2.JSX.Element;
@@ -1359,6 +1423,18 @@ export function Separator(input: SeparatorProps): React_2.JSX.Element;
 export type SeparatorProps = React_2.ComponentProps<typeof SeparatorPrimitive.Root>;
 
 // @public (undocumented)
+export type SignatureMotion = keyof typeof signatureMotionClass;
+
+// @public
+export const signatureMotionClass: {
+    readonly reveal: "motion-reveal";
+    readonly settle: "motion-settle";
+    readonly emphasis: "motion-emphasis";
+    readonly glide: "motion-glide";
+    readonly feedback: "motion-feedback";
+};
+
+// @public (undocumented)
 export function Skeleton(input: SkeletonProps): React_2.JSX.Element;
 
 // @public (undocumented)
@@ -1386,7 +1462,7 @@ export type StackProps = React_2.ComponentProps<"div"> & VariantProps<typeof sta
 // @public (undocumented)
 export const stackVariants: (props?: ({
     direction?: "horizontal" | "vertical" | null | undefined;
-    gap?: 1 | 8 | 2 | 3 | 4 | 5 | 6 | 7 | null | undefined;
+    gap?: 1 | 6 | 2 | 3 | 8 | 4 | 5 | 7 | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -1422,6 +1498,25 @@ export type StatusLabelTone = "loading" | "updating" | "syncing" | "saved" | "re
 
 // @public
 export function suggestIdentityTokens(prompt: string): IdentityTokens;
+
+// @public (undocumented)
+export function Surface(input: SurfaceProps): React_2.JSX.Element;
+
+// @public
+export function surfaceGlassPanelClass(options?: Pick<VariantProps<typeof surfaceVariants>, "elevation" | "radius" | "padding">): string;
+
+// @public (undocumented)
+export type SurfaceProps = React_2.ComponentProps<"div"> & VariantProps<typeof surfaceVariants> & {
+    as?: "div" | "section" | "article" | undefined;
+};
+
+// @public (undocumented)
+export const surfaceVariants: (props?: ({
+    variant?: "solid" | "popover" | "glass" | null | undefined;
+    elevation?: 0 | 2 | 1 | 3 | null | undefined;
+    radius?: "none" | "sm" | "md" | "lg" | "xl" | "2xl" | "full" | null | undefined;
+    padding?: "none" | "sm" | "md" | "card" | "dialog" | null | undefined;
+} & ClassProp) | undefined) => string;
 
 // @public (undocumented)
 export function Switch(input: React_2.ComponentProps<typeof SwitchPrimitives.Root>): React_2.JSX.Element;
@@ -1486,6 +1581,7 @@ export type TextProps = React_2.ComponentProps<"p"> & VariantProps<typeof textVa
 // @public (undocumented)
 export const textVariants: (props?: ({
     variant?: "body" | "muted" | null | undefined;
+    typeRole?: "caption" | "small" | "body" | "label" | "lead" | "prose" | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -1524,6 +1620,26 @@ export function TooltipProvider(input: React_2.ComponentProps<typeof TooltipPrim
 
 // @public (undocumented)
 export function TooltipTrigger(input: React_2.ComponentProps<typeof TooltipPrimitive.Trigger>): React_2.JSX.Element;
+
+// @public (undocumented)
+export type TypeRole = keyof typeof typeRoleClass;
+
+// @public
+export const typeRoleClass: {
+    readonly display: "text-zk-type-display";
+    readonly title: "text-zk-type-section";
+    readonly heading: "text-zk-type-band";
+    readonly section: "text-zk-type-section";
+    readonly band: "text-zk-type-band";
+    readonly cardTitle: "text-zk-type-card-title";
+    readonly lead: "text-zk-type-lead";
+    readonly body: "text-zk-type-body";
+    readonly prose: "text-zk-type-prose";
+    readonly small: "text-zk-type-small";
+    readonly caption: "text-zk-type-label";
+    readonly label: "text-zk-type-label";
+    readonly nav: "text-zk-type-nav";
+};
 
 // @public
 export function UpdatedAgo(input: UpdatedAgoProps): JSX.Element;
@@ -1572,6 +1688,12 @@ export function useUiMessages(): ZedkitUiMessages;
 //
 // @public
 export function useValidatedForm<TSchema extends SchemaForResolver>(schema: TSchema, options?: Omit<UseFormProps<InputOf<TSchema>, any, OutputOf<TSchema>>, "resolver">): UseFormReturn<InputOf<TSchema>, any, OutputOf<TSchema>>;
+
+// @public
+export function WidgetButton(input: WidgetButtonProps): JSX.Element;
+
+// @public (undocumented)
+export type WidgetButtonProps = ButtonProps;
 
 // @public
 export function withIdentityDarkPair(tokens: IdentityTokens, previous?: IdentityTokens): IdentityTokens;

@@ -7,5 +7,5 @@ export const homeYoursCopy = {
   briefLabel: identityAssistantCopy.briefLabel,
   briefHint: "A few sentences. Paste a link to a site you like if you want to: the assistant reads its styles and words, not its pictures.",
   start: "Start creating",
-  startHint: "This opens the identity editor with your text in place. Nothing is sent until you press Generate there.",
+  startHint: "This opens the identity assistant with your text in place. Nothing is sent until you press Generate there.",
 } as const;

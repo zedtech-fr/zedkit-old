@@ -134,6 +134,7 @@
       "name": "dialog",
       "type": "registry:ui",
       "dependencies": [
+        "@zedtech/zedkit-core",
         "@radix-ui/react-dialog",
         "lucide-react"
       ],
@@ -225,6 +226,7 @@
       "name": "drawer",
       "type": "registry:ui",
       "dependencies": [
+        "@zedtech/zedkit-core",
         "vaul",
         "lucide-react"
       ],
@@ -516,6 +518,10 @@
       ],
       "files": [
         {
+          "path": "registry/ui/type-roles.ts",
+          "type": "registry:ui"
+        },
+        {
           "path": "registry/ui/typography.tsx",
           "type": "registry:ui"
         }
@@ -593,7 +599,7 @@
       ],
       "cssVars": {
         "theme": {
-          "spacing-card-stack": "0.375rem",
+          "spacing-card-stack": "0.5rem",
           "spacing-card-padding": "1.5rem"
         }
       }
@@ -711,7 +717,7 @@
       "cssVars": {
         "theme": {
           "spacing-card-padding": "1.5rem",
-          "spacing-card-stack": "0.375rem",
+          "spacing-card-stack": "0.5rem",
           "spacing-card-section": "1rem",
           "spacing-card-lines": "0.5rem"
         }

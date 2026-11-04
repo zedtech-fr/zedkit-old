@@ -1,4 +1,7 @@
 import type { ComponentType } from "react";
+import { AnimateDemo } from "./animate-demo";
+import { AnimateStaggerDemo } from "./animate-stagger-demo";
+import { AnimateTriggersDemo } from "./animate-triggers-demo";
 import { AlertDemo } from "./alert-demo";
 import { BadgeVariantsDemo } from "./badge-variants-demo";
 import { BadgeTableRowDemo } from "./badge-table-row-demo";
@@ -25,6 +28,7 @@ import { BrandLogoDemo, BrandLogoHeaderDemo } from "./brand-logo-demo";
 import { ButtonDemo } from "./button-demo";
 import { ButtonSizesDemo } from "./button-sizes-demo";
 import { IdentityPickerDemo, IdentityScopeDemo, IdentitySwitcherDemo } from "./identity-demo";
+import { ScrollGalleryChipsDemo, ScrollGalleryIdentityDemo } from "./scroll-gallery-demo";
 import {
   ScrollScenesBeforeAfterDemo,
   ScrollScenesDemo,
@@ -114,6 +118,7 @@ import { ErrorStateRetryDemo } from "./error-state-retry-demo";
 import { OfflineNoteDemo, OfflineNoteWiredDemo, OfflineNoteWordingDemo } from "./offline-note-demo";
 import { SpinnerDemo } from "./spinner-demo";
 import { SpinnerNamedDemo } from "./spinner-named-demo";
+import { SurfaceDemo } from "./surface-demo";
 import { ThemeDemo, ThemeTokensDemo, ThemeToggleDemo } from "./theme-demo";
 import { IconButtonDemo, IconButtonRowsDemo } from "./icon-button-demo";
 import { IconLabelAreasDemo } from "./icon-label-areas-demo";
@@ -166,6 +171,9 @@ export const demoRegistry = {
   AppShellNoTopbarDemo: { Demo: AppShellNoTopbarDemo, file: "app-shell-no-topbar-demo.tsx" },
   GuideSaveRowDemo: { Demo: GuideSaveRowDemo, file: "guide-save-row-demo.tsx" },
   AdminDashboardGuideDemo: { Demo: AdminDashboardGuideDemo, file: "admin-dashboard-guide-demo.tsx" },
+  AnimateDemo: { Demo: AnimateDemo, file: "animate-demo.tsx" },
+  AnimateStaggerDemo: { Demo: AnimateStaggerDemo, file: "animate-stagger-demo.tsx" },
+  AnimateTriggersDemo: { Demo: AnimateTriggersDemo, file: "animate-triggers-demo.tsx" },
   RevealOnScrollDemo: { Demo: RevealOnScrollDemo, file: "reveal-on-scroll-demo.tsx" },
   ConfirmDialogLabelsDemo: { Demo: ConfirmDialogLabelsDemo, file: "confirm-dialog-labels-demo.tsx", center: true },
   ConfirmDialogDemo: { Demo: ConfirmDialogDemo, file: "confirm-dialog-demo.tsx", center: true },
@@ -180,6 +188,7 @@ export const demoRegistry = {
   ErrorStateDemo: { Demo: ErrorStateDemo, file: "error-state-demo.tsx" },
   ErrorStateRetryDemo: { Demo: ErrorStateRetryDemo, file: "error-state-retry-demo.tsx" },
   SpinnerDemo: { Demo: SpinnerDemo, file: "spinner-demo.tsx", center: true },
+  SurfaceDemo: { Demo: SurfaceDemo, file: "surface-demo.tsx" },
   SpinnerNamedDemo: { Demo: SpinnerNamedDemo, file: "spinner-named-demo.tsx", center: true },
   OfflineNoteDemo: { Demo: OfflineNoteDemo, file: "offline-note-demo.tsx" },
   OfflineNoteWiredDemo: { Demo: OfflineNoteWiredDemo, file: "offline-note-demo.tsx" },
@@ -237,6 +246,8 @@ export const demoRegistry = {
   IdentityPickerDemo: { Demo: IdentityPickerDemo, file: "identity-demo.tsx" },
   IdentityScopeDemo: { Demo: IdentityScopeDemo, file: "identity-demo.tsx" },
   IdentitySwitcherDemo: { Demo: IdentitySwitcherDemo, file: "identity-demo.tsx" },
+  ScrollGalleryChipsDemo: { Demo: ScrollGalleryChipsDemo, file: "scroll-gallery-demo.tsx" },
+  ScrollGalleryIdentityDemo: { Demo: ScrollGalleryIdentityDemo, file: "scroll-gallery-demo.tsx" },
   ScrollScenesBeforeAfterDemo: { Demo: ScrollScenesBeforeAfterDemo, file: "scroll-scenes-demo.tsx", pinned: true },
   ScrollScenesDemo: { Demo: ScrollScenesDemo, file: "scroll-scenes-demo.tsx", pinned: true },
   ScrollScenesLooksDemo: { Demo: ScrollScenesLooksDemo, file: "scroll-scenes-demo.tsx", pinned: true },

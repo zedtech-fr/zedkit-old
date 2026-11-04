@@ -12,6 +12,7 @@ import {
   SearchDialogOverlay,
   type SharedProps,
 } from "fumadocs-ui/components/dialog/search";
+import { cn, surfaceGlassPanelClass } from "@zedtech/zedkit-ui";
 import { useDocsStaticSearch } from "@/lib/use-docs-static-search";
 
 /**
@@ -43,7 +44,7 @@ export default function StaticSearchDialog(props: SharedProps) {
   return (
     <SearchDialog {...searchRest} {...(data ? { data } : {})} {...props}>
       <SearchDialogOverlay />
-      <SearchDialogContent>
+      <SearchDialogContent data-surface="glass" className={cn(surfaceGlassPanelClass({ elevation: 3, radius: "lg" }))}>
         <SearchDialogHeader>
           <SearchDialogIcon />
           <SearchDialogInput />

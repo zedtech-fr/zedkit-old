@@ -8,9 +8,15 @@ import * as React from "react";
 import { X } from "lucide-react";
 import { Drawer as DrawerPrimitive } from "vaul";
 import { buttonVariants } from "@/components/ui/button";
-import { resolveModalMountAutoFocus, overlayDrawerFooterClass, overlayDrawerHeaderClass } from "@/components/ui/overlay-modal";
+import {
+  focusOverlayInitial,
+  type OverlayInitialFocus,
+  overlayDrawerFooterClass,
+  overlayDrawerHeaderClass,
+  resolveModalMountAutoFocus,
+} from "@/components/ui/overlay-modal";
 import { cn } from "@/lib/utils";
-import { usePortalContainer } from "@/components/ui/theme-scope";
+import { OverlayMountContext, ScopePortal } from "@/components/ui/theme-scope";
 import { useNarrowViewport } from "@/components/ui/use-narrow-viewport";
 import { useUiMessages } from "@/components/ui/ui-provider";
 
@@ -71,10 +77,15 @@ function DrawerPortal({
   container,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Portal>) {
-  const scoped = usePortalContainer();
-  return (
-    <DrawerPrimitive.Portal data-slot="drawer-portal" {...props} container={container ?? scoped} />
-  );
+  // Default mount is document.body: a scoped mount inherits whatever stacking context traps the trigger
+  // (a transform, filter, or isolation) and the site header then paints above the overlay. An explicit
+  // `container` still wins for consumers that need a subtree mount.
+  // Plain `createPortal`, not the vaul/Radix portal: Radix wraps each portal child in a Presence that
+  // unmounts instantly when the child has no exit animation, and the child here is the ScopeMirror (a
+  // plain look-carrying div), which would swallow the overlay/panel exit. The overlay and panel keep their
+  // own inner Presences, which own the exit lifecycle (closed state, animationend/cancel, instant when
+  // reduced motion removes the animations).
+  return <ScopePortal container={container}>{props.children}</ScopePortal>;
 }
 
 function DrawerOverlay({ className, ...props }: React.ComponentProps<typeof DrawerPrimitive.Overlay>) {
@@ -96,6 +107,8 @@ function DrawerContent({
   className,
   children,
   modal = true,
+  initialFocus,
+  ref,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Content> & {
   /**
@@ -103,14 +116,38 @@ function DrawerContent({
    * overlay so the background stays interactive. Defaults to `true`.
    */
   modal?: boolean;
+  /**
+   * Opt-in field to focus on open (a ref, or a selector resolved inside the
+   * panel). Without it focus lands on the panel itself, never inside a
+   * field; a focused field gets the caret at the end, never a selection.
+   */
+  initialFocus?: OverlayInitialFocus;
 }) {
+  const contentRef = React.useRef<HTMLDivElement | null>(null);
+  const [mount, setMount] = React.useState<HTMLDivElement | null>(null);
+  const setRef = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      contentRef.current = node;
+      setMount(node);
+      if (typeof ref === "function") ref(node);
+      else if (ref) ref.current = node;
+    },
+    [ref],
+  );
   return (
     <DrawerPortal>
       {modal ? <DrawerOverlay /> : null}
       <DrawerPrimitive.Content
-        data-slot="drawer-content"
-        className={cn(
-          "fixed z-overlay flex flex-col border bg-card text-card-foreground outline-none",
+          data-slot="drawer-content"
+          ref={setRef}
+          tabIndex={-1}
+          onOpenAutoFocus={(event) => {
+            if (!modal) return;
+            event.preventDefault();
+            focusOverlayInitial(contentRef.current, initialFocus);
+          }}
+          className={cn(
+            "fixed z-drawer flex flex-col border bg-card text-card-foreground outline-none",
           // Safety net for content composed without DrawerHeader/Body/Footer (a bare form, text, a list): it still
           // gets the shared side gutters and a bottom inset that clears the home indicator. Buttons and the
           // kit slots keep their own spacing.
@@ -123,7 +160,7 @@ function DrawerContent({
         )}
         {...props}
       >
-        {children}
+        <OverlayMountContext.Provider value={mount}>{children}</OverlayMountContext.Provider>
       </DrawerPrimitive.Content>
     </DrawerPortal>
   );

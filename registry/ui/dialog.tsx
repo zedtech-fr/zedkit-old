@@ -6,11 +6,13 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
+  focusOverlayInitial,
   overlayDialogCloseClass,
   overlayDialogFooterClass,
   overlayDialogHeaderClass,
+  type OverlayInitialFocus,
 } from "@/components/ui/overlay-modal";
-import { usePortalContainer } from "@/components/ui/theme-scope";
+import { OverlayMountContext, ScopePortal } from "@/components/ui/theme-scope";
 import { useUiMessages } from "@/components/ui/ui-provider";
 
 /** Air between the panel and the visual viewport edge (same 16px as the docs search sheet). */
@@ -72,10 +74,15 @@ function DialogPortal({
   container,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Portal>) {
-  const scoped = usePortalContainer();
-  return (
-    <DialogPrimitive.Portal data-slot="dialog-portal" {...props} container={container ?? scoped} />
-  );
+  // Default mount is document.body: a scoped mount inherits whatever stacking context traps the trigger
+  // (a transform, filter, or isolation) and the site header then paints above the overlay. An explicit
+  // `container` still wins for consumers that need a subtree mount.
+  // Plain `createPortal`, not the Radix portal: Radix wraps each portal child in a Presence that unmounts
+  // instantly when the child has no exit animation, and the child here is the ScopeMirror (a plain
+  // look-carrying div), which would swallow the overlay/panel exit. The overlay and panel keep their own
+  // inner Presences, which own the exit lifecycle (closed state, animationend/cancel, instant when reduced
+  // motion removes the animations).
+  return <ScopePortal container={container}>{props.children}</ScopePortal>;
 }
 
 function DialogOverlay({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
@@ -97,18 +104,32 @@ function DialogContent({
   className,
   children,
   closeLabel,
+  initialFocus,
   ref,
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Content> & { closeLabel?: string }) {
+}: React.ComponentProps<typeof DialogPrimitive.Content> & {
+  closeLabel?: string;
+  /**
+   * Opt-in field to focus on open (a ref, or a selector resolved inside the
+   * panel). Without it focus lands on the panel itself, never inside a
+   * field; a focused field gets the caret at the end, never a selection.
+   */
+  initialFocus?: OverlayInitialFocus;
+}) {
   const messages = useUiMessages();
   const fitRef = useDialogViewportFit<HTMLDivElement>();
   const contentRef = React.useRef<HTMLDivElement | null>(null);
-  const setRef = (node: HTMLDivElement | null) => {
-    contentRef.current = node;
-    fitRef(node);
-    if (typeof ref === "function") ref(node);
-    else if (ref) ref.current = node;
-  };
+  const [mount, setMount] = React.useState<HTMLDivElement | null>(null);
+  const setRef = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      contentRef.current = node;
+      setMount(node);
+      fitRef(node);
+      if (typeof ref === "function") ref(node);
+      else if (ref) ref.current = node;
+    },
+    [fitRef, ref],
+  );
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -118,17 +139,17 @@ function DialogContent({
         tabIndex={-1}
         onOpenAutoFocus={(event) => {
           event.preventDefault();
-          contentRef.current?.focus({ preventScroll: true });
+          focusOverlayInitial(contentRef.current, initialFocus);
         }}
         className={cn(
-          "fixed dialog-center z-overlay grid max-h-dialog-max-height w-full max-w-dialog-mobile gap-4 overflow-y-auto overscroll-y-contain rounded-lg border bg-card p-dialog-padding text-card-foreground shadow-overlay outline-none focus:outline-none sm:max-w-lg",
+          "fixed dialog-center z-dialog grid max-h-dialog-max-height w-full max-w-dialog-mobile gap-4 overflow-y-auto overscroll-y-contain rounded-lg border bg-card p-dialog-padding text-card-foreground shadow-overlay outline-none focus:outline-none sm:max-w-lg",
           "motion-safe:data-[state=open]:animate-[zk-zoom-in_var(--motion-base)_var(--ease-enter)]",
           "motion-safe:data-[state=closed]:animate-[zk-zoom-out_var(--motion-base)_var(--ease-exit)]",
           className,
         )}
         {...props}
       >
-        {children}
+        <OverlayMountContext.Provider value={mount}>{children}</OverlayMountContext.Provider>
         <DialogPrimitive.Close className={overlayDialogCloseClass}>
           <X className="size-4" />
           <span className="sr-only">{closeLabel ?? messages.close}</span>

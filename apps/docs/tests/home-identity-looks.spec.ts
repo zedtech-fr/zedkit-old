@@ -48,6 +48,7 @@ test("the section is a set of examples, not a count of identities", async ({ pag
   const section = page.locator("#identities");
   await expect(section.getByRole("heading", { name: "Same components, different products", level: 2 })).toBeVisible();
   await expect(section).not.toContainText(/\bsix\b/i);
+  await expect(page.locator("[data-home-identity-looks] p").first()).toContainText("Live components, not screenshots.");
 });
 
 test("tabs switch the example and its identity without leaving the page", async ({ page }) => {
@@ -77,6 +78,9 @@ test("mobile looks does not overflow horizontally", async ({ page }) => {
     const looks = page.locator("[data-home-identity-looks]");
     await looks.scrollIntoViewIfNeeded();
     await expect(looks.getByRole("tablist")).toBeVisible();
+    await expect(looks.locator("[data-slot='scroll-gallery']")).toBeVisible();
+    const tablistLayout = await looks.getByRole("tablist").evaluate((el) => getComputedStyle(el).display);
+    expect(tablistLayout).toBe("flex");
     const box = await looks.evaluate((el) => {
       const rect = el.getBoundingClientRect();
       return {

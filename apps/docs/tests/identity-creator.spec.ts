@@ -67,7 +67,7 @@ test.describe("home closing scene", () => {
     expect(posts).toHaveLength(0);
   });
 
-  test("Start creating opens the editor with the text in place, focused, and a way back; nothing is sent", async ({ page }) => {
+  test("Start creating opens the widget in place with the text prefilled and focused; the URL does not change", async ({ page }) => {
     const posts = await service(page, (_p, route) => route.abort());
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto(BASE, { waitUntil: "networkidle" });
@@ -76,11 +76,26 @@ test.describe("home closing scene", () => {
     await scene.getByLabel("Your product and brand").fill("Film restoration. Like https://atelier-nord.example.org/ please.");
     await expect(scene.getByRole("list", { name: "Links found in your text" })).toContainText("atelier-nord.example.org");
     await scene.getByRole("button", { name: "Start creating" }).click();
-    await page.waitForURL("**/features/identity-editor#create");
-    const field = page.getByLabel("Your product and brand");
+    await expect(page).toHaveURL(`${BASE}/`);
+    const field = page.locator("#identity-assistant-brief");
+    await expect(field).toBeVisible();
     await expect(field).toHaveValue("Film restoration. Like https://atelier-nord.example.org/ please.");
     await expect(field).toBeFocused();
     expect(posts).toHaveLength(0);
+    await expect(page.getByRole("link", { name: "Open the detailed editor" })).toBeVisible();
+  });
+
+  test("Start creating with an empty brief opens the widget unchanged, and the editor link keeps a way back", async ({ page }) => {
+    await service(page, (_p, route) => route.abort());
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    const scene = page.locator("#your-identity");
+    await scene.scrollIntoViewIfNeeded();
+    await scene.getByRole("button", { name: "Start creating" }).click();
+    await expect(page).toHaveURL(`${BASE}/`);
+    await expect(page.locator("#identity-assistant-brief")).toHaveValue("");
+    await page.getByRole("link", { name: "Open the detailed editor" }).click();
+    await page.waitForURL("**/features/identity-editor");
     await page.getByRole("link", { name: "← Back to the examples" }).click();
     await page.waitForURL("**/#identities");
   });
@@ -102,21 +117,25 @@ test.describe("home closing scene", () => {
   });
 });
 
-test.describe("the assistant folds away, and on a phone the conversation and the preview take turns", () => {
-  test("it starts folded so the editor keeps its order; a click, #create or a brief from the home page opens it", async ({ page }) => {
+test.describe("the assistant lives in IdentityDock on the demo editor", () => {
+  test("no inline accordion; the dock opens with the describe form when creating", async ({ page }) => {
     await service(page, (_posted, route) => route.abort());
     for (const width of [390, 1440]) {
       await page.setViewportSize({ width, height: 900 });
-      await page.goto(EDITOR, { waitUntil: "networkidle" });
-      const summary = page.getByText("Create an identity from a description");
-      await expect(summary).toBeVisible();
-      await expect(page.locator("#identity-assistant-brief")).toBeHidden();
-      if (width < 640) expect((await summary.boundingBox())!.height).toBeGreaterThanOrEqual(43.5);
-      await summary.click();
-      await expect(page.locator("#identity-assistant-brief")).toBeVisible();
       await page.goto(OPEN, { waitUntil: "networkidle" });
-      await expect(page.locator("#identity-assistant-brief")).toBeFocused();
+      await expect(page.locator("[data-slot='identity-assistant']")).toHaveCount(0);
+      await expect(page.getByText("Create an identity from a description")).toHaveCount(0);
+      await expect(page.getByTestId("identity-dock")).toBeVisible();
+      await expect(page.locator("#identity-assistant-brief")).toBeVisible();
+      await expect(page.getByRole("button", { name: "Generate", exact: true })).toBeVisible();
     }
+  });
+
+  test("#create still focuses the dock brief after handoff", async ({ page }) => {
+    await service(page, (_posted, route) => route.abort());
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(OPEN, { waitUntil: "networkidle" });
+    await expect(page.locator("#identity-assistant-brief")).toBeFocused();
   });
 
   test("390px: a proposal takes the visitor to the preview with focus; the way back is one tap; using it returns to the form", async ({ page }) => {
@@ -124,6 +143,7 @@ test.describe("the assistant folds away, and on a phone the conversation and the
     const posts = await service(page, (posted, route) => route.fulfill(ok(posted, WARM, { references: [used] })));
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(OPEN, { waitUntil: "networkidle" });
+    await expect(page.locator("#identity-assistant-brief")).toBeVisible();
     const views = page.getByRole("group", { name: "Conversation or preview" });
     const conversation = views.getByRole("button", { name: "Conversation" });
     const preview = views.getByRole("button", { name: "Preview" });
@@ -139,7 +159,6 @@ test.describe("the assistant folds away, and on a phone the conversation and the
     await expect(page.locator("[data-assistant-pane='conversation']")).toBeHidden();
     // What happened to the links qualifies the proposal, so it stays on screen when the conversation is hidden.
     await expect(page.locator("[data-assistant-reference-report]")).toContainText("Atelier Nord Read as text only");
-    await expect(page.locator("[data-assistant-status]")).toContainText("A proposed look is ready.");
     // The switch is on screen after the change: nothing to scroll back for.
     const box = (await views.boundingBox())!;
     expect(box.y).toBeGreaterThanOrEqual(0);
@@ -161,20 +180,20 @@ test.describe("the assistant folds away, and on a phone the conversation and the
     await expect(page.getByText("This is your draft as it is now.")).toBeVisible();
   });
 
-  test("an idle status line takes no room: no blank band between the switch and the form", async ({ page }) => {
+  test("an idle status line takes no room: greeting, then the composer, no blank band", async ({ page }) => {
     await service(page, (posted, route) => route.fulfill(ok(posted)));
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(OPEN, { waitUntil: "networkidle" });
-    const status = await page.locator("[data-assistant-status]").boundingBox();
-    expect(status!.height).toBe(0);
-    const views = (await page.getByRole("group", { name: "Conversation or preview" }).boundingBox())!;
-    const label = (await page.getByText("Your product and brand").first().boundingBox())!;
-    expect(label.y - (views.y + views.height), "the form follows the switch at one gap, not two").toBeLessThanOrEqual(24);
+    await expect(page.locator("[data-assistant-notice]")).toHaveCount(0);
+    await expect(page.locator("[data-assistant-greeting]")).toContainText("Describe your product in a few plain sentences");
+    const greeting = (await page.locator("[data-assistant-greeting]").boundingBox())!;
+    const input = (await page.locator("#identity-assistant-brief").boundingBox())!;
+    expect(input.y - (greeting.y + greeting.height), "the composer follows the greeting at one gap, not two").toBeLessThanOrEqual(48);
   });
 
   for (const [name, reply, text] of [
     ["the service is down", { status: 503, json: { error: "unavailable", reason: "unavailable" } }, "[data-assistant-unavailable]"],
-    ["a quota refusal", { status: 429, headers: { "retry-after": "1800" }, json: { error: "quota", retryAfterSec: 1800 } }, "[data-assistant-status]"],
+    ["a quota refusal", { status: 429, headers: { "retry-after": "1800" }, json: { error: "quota", retryAfterSec: 1800 } }, "[data-assistant-notice]"],
   ] as const) {
     test(`390px: when ${name}, the message is on screen and not behind the pinned preview`, async ({ page }) => {
       await service(page, (_posted, route) => route.fulfill({ contentType: "application/json", ...reply }));
@@ -246,8 +265,9 @@ test.describe("the assistant in the editor", () => {
     await brief(page, "Film restoration, https://atelier-nord.example.org/ and https://missing.example.org/");
     await page.getByRole("button", { name: "Generate" }).click();
     const proposal = page.locator("[data-assistant-proposal]");
-    await expect(proposal.getByRole("group", { name: "Light" })).toBeVisible();
-    await expect(proposal.getByRole("group", { name: "Dark" })).toBeVisible();
+    const compare = proposal.locator("[data-assistant-proposal-compare]");
+    await expect(compare.getByRole("group", { name: "Light" }).last()).toBeVisible();
+    await expect(compare.getByRole("group", { name: "Dark" }).last()).toBeVisible();
     expect(posts[0].references).toEqual(["https://atelier-nord.example.org/", "https://missing.example.org/"]);
     // Honest about the links: text only for the one that was read, a reason for the one that was not.
     const report = page.locator("[data-assistant-reference-report]");
@@ -293,9 +313,9 @@ test.describe("the assistant in the editor", () => {
     await page.goto(OPEN, { waitUntil: "networkidle" });
     await brief(page, "A ceramics shop");
     await page.getByRole("button", { name: "Generate" }).click();
-    await expect(page.getByText("Working on it. Your current look is unchanged.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Cancel" })).toBeVisible();
     await page.getByRole("button", { name: "Cancel" }).click();
-    await expect(page.getByText("Cancelled. Nothing changed.")).toBeVisible();
+    await expect(page.locator("[data-assistant-notice]")).toContainText("Cancelled. Nothing changed.");
     release();
     await page.waitForTimeout(600);
     await expect(page.locator("[data-assistant-proposal]")).toHaveCount(0);
@@ -312,7 +332,7 @@ test.describe("the assistant in the editor", () => {
     await page.getByRole("button", { name: "Generate" }).click();
     await expect(page.locator("[data-assistant-proposal]")).toBeVisible();
     await page.getByRole("button", { name: "Generate" }).click();
-    await expect(page.locator("[data-assistant-status]")).toContainText("The daily limit for the assistant has been reached. Try again in 30 minutes.");
+    await expect(page.locator("[data-assistant-notice]")).toContainText("The assistant limit has been reached. Try again in 30 minutes.");
     await expect(page.locator("[data-assistant-proposal]")).toBeVisible();
     await expect(page.locator("main")).not.toContainText(/remaining|left today|requests left/i);
   });
@@ -322,7 +342,7 @@ test.describe("the assistant in the editor", () => {
     await page.goto(OPEN, { waitUntil: "networkidle" });
     await brief(page, "A ceramics shop");
     await page.getByRole("button", { name: "Generate" }).click();
-    await expect(page.locator("[data-assistant-status]")).toContainText("could not be used, so nothing changed");
+    await expect(page.locator("[data-assistant-notice]")).toContainText("could not be used, so nothing changed");
     await expect(page.locator("[data-assistant-proposal]")).toHaveCount(0);
     await expect(page.getByLabel("Radius", { exact: true })).toHaveValue("0.5rem");
   });
@@ -462,12 +482,12 @@ test.describe("fit and access", () => {
       await page.addInitScript((theme) => localStorage.setItem("theme", theme), mode);
       await service(page, (posted, route) => route.fulfill(ok(posted)));
       await page.goto(OPEN, { waitUntil: "networkidle" });
-      await assertA11yGate(page, "[data-slot='identity-assistant']");
+      await assertA11yGate(page, "[data-slot='identity-dock-panel'], [data-slot='identity-dock-body']");
       await brief(page, "A ceramics shop, like https://atelier-nord.example.org/");
       await page.getByRole("button", { name: "Generate" }).click();
       await expect(page.locator("[data-assistant-proposal]")).toBeVisible();
-      await assertA11yGate(page, "[data-slot='identity-assistant']");
-      await page.locator("[data-slot='identity-assistant']").screenshot({ path: `test-results/identity-creator-${mode}.png` });
+      await assertA11yGate(page, "[data-assistant-proposal]");
+      await page.locator("[data-slot='identity-dock-panel']").first().screenshot({ path: `test-results/identity-creator-${mode}.png` });
     });
   }
 });

@@ -210,9 +210,10 @@ jobs:
       - run: pnpm registry:build
       - run: bash scripts/quickstart-smoke.sh
 
-  # Follows the adoption instructions the site shows (home page and component pages), and nothing else, in clean
-  # Next.js projects: install Button, copy Button and Drawer by CLI and by hand, Theme, Motion, plus a negative
-  # control that must fail. Not in ci-required until it has been stable on main for a while.
+  # Follows the adoption instructions the site shows (home, getting-started, component pages), and nothing else,
+  # in clean Next.js projects: install Button, copy Button and Drawer by CLI and by hand, Theme, Motion, the
+  # getting-started package adds, plus a negative control that must fail. Not in ci-required until it has been
+  # stable on main for a while.
   adoption-smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 30

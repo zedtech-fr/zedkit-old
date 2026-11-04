@@ -1,0 +1,80 @@
+/** Default English copy for brief-routed specimens (override via component props later). */
+export const specimenMessagesEn = {
+  commerce: {
+    heading: "Shop catalog",
+    description: "Pick a piece, adjust price and stock, save.",
+    listAriaLabel: "Products",
+    priceLabel: "Price (EUR)",
+    stockLabel: "Stock",
+    save: "Save product",
+    saved: (name: string) => `${name} updated.`,
+    lowStock: (count: number) => `${count} left`,
+    inStock: (count: number) => `${count} in stock`,
+  },
+  saasDashboard: {
+    heading: "Workspace usage",
+    description: "Quotas and seats for this month.",
+    stats: [
+      { label: "Active projects", value: "12" },
+      { label: "Seats used", value: "8 / 10" },
+    ],
+    quotasAriaLabel: "Quotas",
+    quotaLabel: "API calls",
+    quotaText: (used: number, limit: number) => `${used.toLocaleString()} / ${limit.toLocaleString()}`,
+    teamHeading: "Team",
+    invite: "Invite",
+    inviteTitle: "Invite teammate",
+    emailLabel: "Email",
+    emailPlaceholder: "name@company.com",
+    send: "Send invite",
+    invitedRole: "Invited",
+    invitedMessage: (email: string) => `Invite sent to ${email}.`,
+    teamAriaLabel: "Team members",
+  },
+  editorial: {
+    heading: "Story desk",
+    description: "Edit the queue, preview the reader view.",
+    queueAriaLabel: "Story queue",
+    columns: { story: "Story", status: "Status" },
+    headlineLabel: "Headline",
+    standfirstLabel: "Standfirst",
+    previewLabel: "Reader preview",
+    publish: "Publish",
+    saveDraft: "Save draft",
+    published: (headline: string) => `Published “${headline}”.`,
+    drafted: (headline: string) => `Draft saved for “${headline}”.`,
+    statuses: {
+      draft: { label: "Draft", tone: "secondary" as const },
+      published: { label: "Live", tone: "success" as const },
+    },
+    seed: [
+      {
+        id: "1",
+        headline: "City opens late-night market",
+        standfirst: "Vendors test longer hours through winter.",
+        status: "draft" as const,
+      },
+      {
+        id: "2",
+        headline: "Interview: studio on craft",
+        standfirst: "Why small batches beat scale.",
+        status: "published" as const,
+      },
+    ],
+  },
+  serviceBooking: {
+    heading: "Book a visit",
+    description: "Choose a service and a time that works.",
+    servicesAriaLabel: "Services",
+    services: [
+      { id: "cut", label: "Haircut", duration: "45 min" },
+      { id: "color", label: "Colour", duration: "90 min" },
+    ],
+    slotsAriaLabel: "Available times",
+    slots: ["09:00", "11:30", "14:00", "16:30"],
+    book: "Confirm booking",
+    booked: (service: string, slot: string) => `${service} booked at ${slot}.`,
+  },
+} as const;
+
+export type SpecimenMessages = typeof specimenMessagesEn;

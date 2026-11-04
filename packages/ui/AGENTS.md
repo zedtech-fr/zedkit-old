@@ -9,6 +9,8 @@ Rules:
 
 - New code goes in `src/`, tests in `tests/unit/` (Testing
   Library + jsdom for rendered output, plain vitest otherwise).
+- Animate triggers (`data-animate`, `<Animate>`): types, grammar and
+  reduced-motion rules in [docs/animate-spec.md](docs/animate-spec.md).
 - Every public export gets a `## <need>` entry in CATALOG.md
   (format in `docs/catalog/README.md`), then run
   `pnpm catalog:build` from the root.

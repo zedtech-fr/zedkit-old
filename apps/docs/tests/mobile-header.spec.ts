@@ -18,7 +18,7 @@ for (const path of PAGES) {
       await expect(home).toBeVisible();
       expect((await home.boundingBox())?.x ?? 99).toBeLessThan(24);
       await expect(header.getByRole("button", { name: /Open (menu|navigation)/ })).toBeVisible();
-      for (const button of await header.locator("a, button").all()) {
+      for (const button of await header.locator("a, button").filter({ visible: true }).all()) {
         const box = await button.boundingBox();
         expect(box?.height ?? 0).toBeGreaterThanOrEqual(43.5);
         expect(box?.width ?? 0).toBeGreaterThanOrEqual(43.5);

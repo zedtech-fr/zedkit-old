@@ -16,7 +16,7 @@ export function HomeHeroLead({ className }: { className?: string }) {
       className={`min-w-0 items-start ${className ?? ""}`}
       data-home-hero-lead=""
     >
-      <Heading level={1} className="type-site-h1 max-w-lg text-balance">
+      <Heading level={1} typeRole="display" className="max-w-lg text-balance">
         {homeCopy.hero.title}
       </Heading>
       <Stack gap={2} className="items-start">
@@ -27,13 +27,13 @@ export function HomeHeroLead({ className }: { className?: string }) {
             <ArrowRight aria-hidden="true" data-hero-play-arrow="" className="inline-block size-4 align-text-bottom max-lg:rotate-90" />
           </span>
         </Text>
-        <Text variant="muted" className={`max-w-md ${DOCS_TYPE_BODY_CLASS}`}>
+        <Text variant="muted" typeRole="body" className={`max-w-md ${DOCS_TYPE_BODY_CLASS}`}>
           {homeCopy.hero.sub}
         </Text>
       </Stack>
       <Stack gap={HOME_CARD_CONTENT_GAP} className="items-start">
         <HomeHeroLeadActions />
-        <Text variant="muted" className={HOME_METADATA_TEXT_CLASS}>
+        <Text variant="muted" typeRole="caption" className={HOME_METADATA_TEXT_CLASS}>
           {homeCopy.hero.facts}
         </Text>
       </Stack>

@@ -58,6 +58,7 @@ export {
 export {
   Drawer,
   type DrawerProps,
+  type DrawerSize,
   DrawerBody,
   DrawerClose,
   DrawerCloseButton,
@@ -71,6 +72,7 @@ export {
   DrawerTitle,
   DrawerTrigger,
 } from "./drawer.js";
+export { type OverlayInitialFocus } from "./overlay-modal.js";
 export {
   Field,
   FieldContent,
@@ -104,15 +106,30 @@ export {
   Container,
   containerVariants,
   Section,
+  SectionScroll,
   Stack,
   stackVariants,
   type ContainerProps,
   type SectionProps,
+  type SectionScrollProps,
   type StackProps,
 } from "./layout.js";
+export {
+  Animate,
+  AnimateObserver,
+  observeAnimate,
+  ANIMATE_PRESETS,
+  ANIMATE_TRIGGERS,
+  type AnimateMotion,
+  type AnimateOn,
+  type AnimatePreset,
+  type AnimateProps,
+  type AnimateTrigger,
+} from "./animate.js";
 export { LivePulse, type LivePulseProps } from "./live-pulse.js";
 export { StatusDot, type StatusDotProps, type StatusDotTone } from "./status-dot.js";
 export { ProgressBar, type ProgressBarProps } from "./progress-bar.js";
+export { PromptInput, type PromptInputProps } from "./prompt-input.js";
 export { Checkmark, type CheckmarkProps } from "./checkmark.js";
 export { StatusLabel, type StatusLabelProps, type StatusLabelTone } from "./status-label.js";
 export { UpdatedAgo, type UpdatedAgoProps } from "./updated-ago.js";
@@ -147,7 +164,9 @@ export {
   SelectValue,
 } from "./select.js";
 export { Separator, type SeparatorProps } from "./separator.js";
+export { Surface, surfaceVariants, surfaceGlassPanelClass, applySurfaceGlassPanel, type SurfaceProps } from "./surface.js";
 export { SCROLL_SCENES_MAX, ScrollScenes, type ScrollScene, type ScrollScenesProps } from "./scroll-scenes.js";
+export { ScrollGallery, type ScrollGalleryProps } from "./scroll-gallery.js";
 export { Skeleton, type SkeletonProps } from "./skeleton.js";
 export {
   Table,
@@ -168,6 +187,7 @@ export {
   type WizardStepState,
   type WizardStepsProps,
 } from "./wizard-steps.js";
+export { WidgetButton, type WidgetButtonProps } from "./widget-button.js";
 export { Switch } from "./switch.js";
 export { Tabs, TabsContent, TabsList, TabsTrigger, type TabsProps } from "./tabs.js";
 export { Textarea, type TextareaProps } from "./textarea.js";
@@ -178,8 +198,13 @@ export {
   headingVariants,
   Text,
   textVariants,
+  typeRoleClass,
+  signatureMotionClass,
+  headingLevelDefaultRole,
   type HeadingProps,
   type TextProps,
+  type TypeRole,
+  type SignatureMotion,
 } from "./typography.js";
 export { cn } from "./utils.js";
 export { CardSkeleton, type CardSkeletonProps } from "./card-skeleton.js";

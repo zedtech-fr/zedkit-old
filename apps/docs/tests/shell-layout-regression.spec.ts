@@ -173,6 +173,13 @@ for (const width of [1280, 1600] as const) {
   test(`home band spacing and width stay consistent at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
     await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.waitForFunction(() => {
+      const bandIds = ["identities", "get-started", "components", "entry-points"] as const;
+      return bandIds.every((id) => {
+        const section = document.getElementById(id);
+        return section?.querySelector("[data-slot='container']") != null;
+      });
+    });
 
     const metrics = await page.evaluate(() => {
       const containerBox = (root: Element | null | undefined) => {

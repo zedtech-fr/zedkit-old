@@ -360,7 +360,8 @@ describe("drawer", () => {
     render(<OpenDrawer direction="bottom" />);
     await user.click(screen.getByRole("button", { name: "Open drawer" }));
     const sheet = screen.getByRole("dialog", { name: "Delivery details" });
-    expect(sheet.className).toContain("z-overlay");
+    expect(sheet.className).toContain("z-drawer");
+    expect(sheet.className).not.toContain("z-overlay");
     expect(sheet.className).toContain("max-h-drawer-sheet-max-height");
     expect(sheet.className).not.toContain("96dvh");
     expect(document.querySelector("[data-vaul-overlay]")?.className).toContain("z-overlay");
@@ -373,6 +374,24 @@ describe("drawer", () => {
     const panel = screen.getByRole("dialog", { name: "Delivery details" });
     expect(panel.className).toContain("sm:max-w-drawer-side");
     expect(panel.className).not.toContain("sm:max-w-md");
+  });
+
+  it("accepts lg side width for wide assistant panels", async () => {
+    const user = userEvent.setup();
+    render(
+      <Drawer direction="right">
+        <DrawerTrigger asChild>
+          <Button>Open drawer</Button>
+        </DrawerTrigger>
+        <DrawerContent size="lg">
+          <DrawerTitle>Delivery details</DrawerTitle>
+        </DrawerContent>
+      </Drawer>,
+    );
+    await user.click(screen.getByRole("button", { name: "Open drawer" }));
+    const panel = screen.getByRole("dialog", { name: "Delivery details" });
+    expect(panel.className).toContain("sm:max-w-drawer-side-lg");
+    expect(panel.className).toContain("shadow-overlay");
   });
 
   it("styles handle, header, and footer from theme tokens", () => {
@@ -480,6 +499,47 @@ describe("drawer", () => {
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(document.activeElement).toBe(trigger);
+  });
+
+  it("focuses the panel itself on open, never a field", async () => {
+    const user = userEvent.setup();
+    render(
+      <Drawer direction="right">
+        <DrawerTrigger asChild>
+          <Button>Open drawer</Button>
+        </DrawerTrigger>
+        <DrawerContent>
+          <DrawerTitle>Delivery details</DrawerTitle>
+          <input aria-label="Name" defaultValue="Ada" />
+        </DrawerContent>
+      </Drawer>,
+    );
+    await user.click(screen.getByRole("button", { name: "Open drawer" }));
+    const dialog = screen.getByRole("dialog", { name: "Delivery details" });
+    expect(document.activeElement).toBe(dialog);
+    const field = screen.getByRole("textbox", { name: "Name" }) as HTMLInputElement;
+    expect(field.selectionStart).toBe(field.selectionEnd);
+  });
+
+  it("initialFocus moves to the field with the caret at the end", async () => {
+    const user = userEvent.setup();
+    render(
+      <Drawer direction="right">
+        <DrawerTrigger asChild>
+          <Button>Open drawer</Button>
+        </DrawerTrigger>
+        <DrawerContent initialFocus="#drawer-name">
+          <DrawerTitle>Delivery details</DrawerTitle>
+          <input id="drawer-name" aria-label="Name" defaultValue="Ada" />
+        </DrawerContent>
+      </Drawer>,
+    );
+    await user.click(screen.getByRole("button", { name: "Open drawer" }));
+    screen.getByRole("dialog", { name: "Delivery details" });
+    const field = screen.getByRole("textbox", { name: "Name" }) as HTMLInputElement;
+    expect(document.activeElement).toBe(field);
+    expect(field.selectionStart).toBe(3);
+    expect(field.selectionEnd).toBe(3);
   });
 
   it("does not mount-autofocus when modal is false", async () => {

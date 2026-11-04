@@ -1,15 +1,16 @@
 "use client";
 
-import { useMemo, type Ref, type RefObject } from "react";
-import { Button, Field, FieldLabel, Stack, Text, Textarea, type IdentityTokens } from "@zedtech/zedkit-ui";
+import { useEffect, useMemo, useState, type Ref, type RefObject } from "react";
+import { Button, PromptInput, Stack, Text, type IdentityTokens } from "@zedtech/zedkit-ui";
 
 import { identityAssistantCopy as copy } from "@/components/i18n/identity-assistant-copy";
-import { IdentityMiniPreview } from "@/components/identity-mini-preview";
+import { ProposalBeforeAfter } from "@/components/identity-proposal-compare";
 import { ReferenceReportList } from "@/components/identity-references";
 import type { Unavailable, Turn } from "@/lib/identity-assistant";
 import { LIMITS } from "@/lib/identity-assistant";
 import { repairContrast } from "@/lib/identity-contrast-repair";
 import type { Notice, Proposal } from "@/lib/identity-creator-session";
+import { specimenDomainFromBrief } from "@/lib/brief-specimen-domain";
 import { tokenDiff } from "@/lib/identity-token-diff";
 
 /** The wording of a refusal, a failure or a cancellation. Never claims an allowance it cannot know. */
@@ -42,7 +43,41 @@ export function noticeText(notice: Notice): string {
   }
 }
 
-/** The one place a brief is written and sent. Typing here costs nothing; only pressing the button asks the assistant. */
+const PLACEHOLDER_ROTATE_MS = 4000;
+
+/** Cycles the example prompts while the composer is empty, unless the visitor asked for reduced motion. */
+function useRotatingPlaceholder(active: boolean): string {
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    if (!active || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const timer = window.setInterval(() => setIndex((n) => (n + 1) % copy.composerPlaceholders.length), PLACEHOLDER_ROTATE_MS);
+    return () => window.clearInterval(timer);
+  }, [active]);
+  const current = copy.composerPlaceholders[index];
+  return current === undefined ? copy.placeholder : current;
+}
+
+/** Failures and refusals read as an assistant turn, not a status strip under the composer. */
+export function AssistantNoticeBubble({ notice }: { notice: Notice }) {
+  if (notice.kind === "unavailable") return null;
+  return (
+    <Stack
+      gap={1}
+      className="max-w-[95%] rounded-2xl rounded-tl-sm border border-border bg-muted px-3 py-2 text-sm"
+      data-assistant-notice=""
+      role="status"
+    >
+      <Text as="span" className="font-medium text-foreground">
+        {copy.assistant}
+      </Text>
+      <Text as="span" className="text-muted-foreground">
+        {noticeText(notice)}
+      </Text>
+    </Stack>
+  );
+}
+
+/** The one place a brief is written and sent: a chat composer. Typing here costs nothing; only sending asks the assistant. */
 export function BriefForm({
   value,
   onValue,
@@ -51,7 +86,7 @@ export function BriefForm({
   blocked,
   onSubmit,
   onCancel,
-  textareaRef,
+  inputRef,
 }: {
   value: string;
   onValue: (value: string) => void;
@@ -60,52 +95,43 @@ export function BriefForm({
   blocked: boolean;
   onSubmit: () => void;
   onCancel: () => void;
-  textareaRef: Ref<HTMLTextAreaElement>;
+  inputRef: Ref<HTMLTextAreaElement>;
 }) {
   const left = LIMITS.prompt - value.length;
+  const placeholder = useRotatingPlaceholder(!refining);
   return (
     <Stack gap={2}>
-      <Field>
-        <FieldLabel htmlFor="identity-assistant-brief">{refining ? copy.followUpLabel : copy.briefLabel}</FieldLabel>
-        <Textarea
-          id="identity-assistant-brief"
-          ref={textareaRef}
-          rows={4}
-          placeholder={refining ? copy.refinePlaceholder : copy.placeholder}
-          maxLength={LIMITS.prompt}
-          value={value}
-          readOnly={busy}
-          className="scroll-mt-28 max-lg:[@media(min-height:48rem)]:scroll-mt-80"
-          aria-describedby="identity-assistant-brief-hint"
-          onChange={(event) => onValue(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-              event.preventDefault();
-              onSubmit();
-            }
-          }}
-        />
-      </Field>
-      <Text variant="muted" id="identity-assistant-brief-hint" className="text-sm">
-        {refining ? copy.followUpHint : copy.briefHint} {left < 100 ? copy.charsLeft(left) : null}
-      </Text>
-      <Stack direction="horizontal" gap={2} className="flex-wrap">
-        <Button type="button" onClick={onSubmit} disabled={busy || blocked || value.trim() === ""} aria-busy={busy || undefined}>
-          {refining ? copy.refine : copy.generate}
-        </Button>
-        {busy ? (
-          <Button type="button" variant="outline" onClick={onCancel}>
-            {copy.cancel}
-          </Button>
-        ) : null}
-      </Stack>
+      <PromptInput
+        id="identity-assistant-brief"
+        ref={inputRef}
+        rows={1}
+        autoComplete="off"
+        placeholder={refining ? copy.refinePlaceholder : placeholder}
+        maxLength={LIMITS.prompt}
+        value={value}
+        busy={busy}
+        disabled={blocked}
+        sendLabel={refining ? copy.refine : copy.generate}
+        {...(busy ? { onCancel, cancelLabel: copy.cancel } : {})}
+        aria-label={refining ? copy.followUpLabel : copy.briefLabel}
+        aria-describedby={left < 100 ? "identity-assistant-brief-count" : undefined}
+        onChange={(event) => onValue(event.target.value)}
+        onSubmit={() => {
+          if (!busy && !blocked && value.trim() !== "") onSubmit();
+        }}
+      />
+      {left < 100 ? (
+        <Text variant="muted" id="identity-assistant-brief-count" typeRole="label">
+          {copy.charsLeft(left)}
+        </Text>
+      ) : null}
     </Stack>
   );
 }
 
 export function AssistantHeading() {
   return (
-    <Text variant="muted" className="text-sm">
+    <Text variant="muted" typeRole="body">
       {copy.intro}
     </Text>
   );
@@ -122,14 +148,23 @@ export function ViewSwitch({
   onView,
   waiting,
   previewRef,
+  always = false,
 }: {
   view: View;
   onView: (view: View) => void;
   waiting: boolean;
   previewRef: RefObject<HTMLButtonElement | null>;
+  always?: boolean;
 }) {
   return (
-    <Stack direction="horizontal" gap={2} role="group" aria-label={copy.views.label} data-assistant-views="" className="lg:hidden">
+    <Stack
+      direction="horizontal"
+      gap={2}
+      role="group"
+      aria-label={copy.views.label}
+      data-assistant-views=""
+      className={always ? undefined : "lg:hidden"}
+    >
       <Button type="button" variant="outline" aria-pressed={view === "conversation"} className="flex-1" onClick={() => onView("conversation")}>
         {copy.views.conversation}
       </Button>
@@ -153,7 +188,7 @@ export function Thread({ turns }: { turns: readonly Turn[] }) {
   return (
     <ol aria-label={copy.thread} className="m-0 flex list-none flex-col gap-2 p-0" data-assistant-thread="">
       {turns.map((turn, index) => (
-        <li key={`${index}-${turn.role}`} className="text-sm">
+        <li key={`${index}-${turn.role}`} className="text-zk-type-body">
           <Text as="span" className="font-medium text-foreground">
             {turn.role === "user" ? copy.you : copy.assistant}
           </Text>{" "}
@@ -166,9 +201,13 @@ export function Thread({ turns }: { turns: readonly Turn[] }) {
   );
 }
 
-export function UnavailableBanner({ reason }: { reason: Unavailable }) {
+export function UnavailableBanner({ reason, live = true }: { reason: Unavailable; live?: boolean }) {
   return (
-    <Text role="status" className="rounded-md border border-border bg-muted px-3 py-2 text-sm" data-assistant-unavailable="">
+    <Text
+      role={live ? "status" : undefined}
+      className="rounded-md border border-border bg-muted px-3 py-2 text-zk-type-body"
+      data-assistant-unavailable=""
+    >
       {copy.unavailable(reason)}
     </Text>
   );
@@ -180,16 +219,41 @@ function contrastNote(repaired: { adjusted: number; remaining: number }): string
   return repaired.adjusted > 0 ? copy.proposal.contrastAdjusted(repaired.adjusted) : copy.proposal.contrastOk;
 }
 
+function ProposalApplyRow({
+  busy,
+  tokens,
+  onUse,
+  onDiscard,
+}: {
+  busy: boolean;
+  tokens: IdentityTokens;
+  onUse: (tokens: IdentityTokens) => void;
+  onDiscard: () => void;
+}) {
+  return (
+    <Stack direction="horizontal" gap={2} className="flex-wrap">
+      <Button type="button" onClick={() => onUse(tokens)} disabled={busy}>
+        {copy.proposal.apply}
+      </Button>
+      <Button type="button" variant="outline" onClick={onDiscard} disabled={busy}>
+        {copy.proposal.discard}
+      </Button>
+    </Stack>
+  );
+}
+
 /** A proposal to look at, in light and dark, with what changed and why. Using it is the only thing that changes the draft. */
 export function ProposalCard({
   proposal,
   current,
+  domainBrief,
   busy,
   onUse,
   onDiscard,
 }: {
   proposal: Proposal;
   current: IdentityTokens;
+  domainBrief: string;
   busy: boolean;
   onUse: (tokens: IdentityTokens) => void;
   onDiscard: () => void;
@@ -197,27 +261,28 @@ export function ProposalCard({
   // Readable text is a promise of the kit, so a proposal that misses it is nudged by arithmetic, and the page says so.
   const repaired = useMemo(() => repairContrast(proposal.tokens), [proposal.tokens]);
   const rows = useMemo(() => tokenDiff(current, repaired.tokens), [current, repaired.tokens]);
+  const domain = useMemo(() => specimenDomainFromBrief(domainBrief), [domainBrief]);
   return (
     <Stack gap={3} role="region" aria-label={copy.proposal.title} aria-busy={busy || undefined} data-assistant-proposal="" className={busy ? "opacity-60" : undefined}>
-      <Text as="span" className="text-base font-semibold text-foreground">
+      <Text as="span" typeRole="label" className="font-semibold text-foreground">
         {copy.proposal.title}
       </Text>
       {proposal.summary ? (
-        <Text className="m-0 text-sm">
+        <Text typeRole="body" className="m-0">
           <Text as="span" className="font-medium">
             {copy.proposal.summaryLabel}:
           </Text>{" "}
           {proposal.summary}
         </Text>
       ) : null}
-      <Text variant="muted" className="text-sm">
+      <Text variant="muted" typeRole="body">
         {copy.proposal.changes(rows.length)}. {contrastNote(repaired)}
       </Text>
-      <IdentityMiniPreview tokens={repaired.tokens} id={`proposal-${proposal.requestId}`} />
+      <ProposalBeforeAfter current={current} proposed={repaired.tokens} requestId={proposal.requestId} domain={domain} />
       {rows.length > 0 ? (
-        <details className="text-sm">
+        <details className="text-zk-type-body">
           <summary className="flex min-h-11 cursor-pointer items-center focus-ring">{copy.proposal.showChanges}</summary>
-          <ul className="m-0 flex list-none flex-col gap-1 p-0 font-mono text-sm">
+          <ul className="m-0 flex list-none flex-col gap-1 p-0 font-mono text-zk-type-small">
             {rows.map((row) => (
               <li key={row.path} className="break-words">
                 {row.path}: {row.from} → {row.to}
@@ -226,15 +291,8 @@ export function ProposalCard({
           </ul>
         </details>
       ) : null}
-      <Stack direction="horizontal" gap={2} className="flex-wrap">
-        <Button type="button" onClick={() => onUse(repaired.tokens)} disabled={busy}>
-          {copy.proposal.apply}
-        </Button>
-        <Button type="button" variant="outline" onClick={onDiscard} disabled={busy}>
-          {copy.proposal.discard}
-        </Button>
-      </Stack>
-      <Text variant="muted" className="text-sm">
+      <ProposalApplyRow busy={busy} tokens={repaired.tokens} onUse={onUse} onDiscard={onDiscard} />
+      <Text variant="muted" typeRole="body">
         {copy.proposal.note}
       </Text>
     </Stack>

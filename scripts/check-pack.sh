@@ -144,13 +144,15 @@ size_budget() {
     echo "$label: size $bytes / $max ok"
   fi
 }
-# Measured 42212 on 2 Nov 2026 (identity tokens, route modal, ThemeScope ref and nested-identity handling);
-# the previous 40800 was already exceeded at 41771 before this change. Keep roughly 2% headroom.
-# Raised from 43100 to 43500 on 3 Nov 2026: measured 43137 with the OptionCard check indicator.
 # Raised from 43500 to 44500 on 4 Nov 2026: measured 44141 with ScrollReset (route scroll reset).
-size_budget ui 44500
-# Marketing entry (separate from the main budget); measured 785 with GlassSurface only, 4437 on 3 Nov 2026 with LogoBand and Testimonials.
-size_budget ui 8000 marketing
+# Raised to 45500 on 4 Nov 2026 after syncing main: signature type-role and motion exports on top of ScrollReset.
+# IdentityDock chrome + vaul sheet moved to apps/docs (4 Nov 2026); ui gzip measured 44660.
+# Raised to 48000 on 4 Nov 2026: Animate runtime + types (measured 46973).
+size_budget ui 48000
+# Marketing entry (separate from the main budget); measured 785 with GlassSurface only;
+# 9865 with L2 domain specimens plus goal/reference marketing sections (Hero, Pricing, …);
+# 10020 after specimen-primitives barrel; tokenized keyword routing measured 10084 gzip.
+size_budget ui 10200 marketing
 # 4 Nov 2026: validate --setup completion check (setup-check.ts). Measured
 # 18465; 17400 cannot fit a new module (gzip delta vs 17268 baseline is
 # ~1.2KB). Budget = measured + 2% = 18835.
