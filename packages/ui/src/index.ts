@@ -128,6 +128,7 @@ export {
 export { LivePulse, type LivePulseProps } from "./live-pulse.js";
 export { StatusDot, type StatusDotProps, type StatusDotTone } from "./status-dot.js";
 export { ProgressBar, type ProgressBarProps } from "./progress-bar.js";
+export { PromptInput, type PromptInputProps } from "./prompt-input.js";
 export { Checkmark, type CheckmarkProps } from "./checkmark.js";
 export { StatusLabel, type StatusLabelProps, type StatusLabelTone } from "./status-label.js";
 export { UpdatedAgo, type UpdatedAgoProps } from "./updated-ago.js";
