@@ -272,6 +272,33 @@ describe("setup-ai v2 kit", () => {
     }
   });
 
+  it("documents sample-2 scorer fixes T1–T3 in setup-ai SKILL and catalog templates", () => {
+    const raw = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
+    expect(raw).toMatch(/Before ANY tool call/iu);
+    expect(raw.indexOf("Before ANY tool call")).toBeLessThan(raw.indexOf("## Phase A"));
+    expect(raw).toMatch(/Do not.*Running phase A/iu);
+    expect(raw).toMatch(/Domain vs docs reconciliation/iu);
+    expect(raw).toMatch(/enforced by/iu);
+    expect(raw).toMatch(/Links in repo skills/iu);
+    expect(raw).toContain("../../domain/booking.md");
+    expect(raw).toMatch(/test -e.*every relative link target/iu);
+    expect(raw).toMatch(/UNVERIFIED:/u);
+    for (const name of ["domain-change", "add-capability", "add-migration"] as const) {
+      const tmpl = readFileSync(
+        join(kitDir(), "skills", "setup-ai", "templates", "catalog", name, "SKILL.md.tmpl"),
+        "utf8",
+      );
+      expect(tmpl, name).toContain("[domain rules](../../domain/booking.md)");
+      expect(tmpl, name).toMatch(/\[product\]\(\.\.\/\.\.\/product\.md\)/u);
+      expect(tmpl, name).not.toMatch(/\(\.\.\/domain\//u);
+    }
+    const issue = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "kit-issue.template.md"),
+      "utf8",
+    );
+    expect(issue).toMatch(/UNVERIFIED.*why/iu);
+  });
+
   it("installs templates beside setup-ai for every preset that ships setup-ai; validate stays clean", () => {
     const manifest = readManifest();
     if (!manifest.ok) throw manifest.error;

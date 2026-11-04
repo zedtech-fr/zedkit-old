@@ -76,14 +76,14 @@ Score each axis 0-3. Cite evidence (file path, `file:line`, or transcript quote)
 - 0: The user had to leave the flow to fix the tool (copy files by hand, edit config).
 - 1: Several detours or surprise questions.
 - 2: Zero manual file copies; at most the batched interview; a clear next step at each phase.
-- 3: As 2, with **Tell the user first** as the first assistant output **after `/setup-ai` loads** (install output before the skill is excluded), and an end summary the owner could act on in a minute.
+- 3: As 2, with **Tell the user first** as the first assistant output **after `/setup-ai` loads** (install output before the skill is excluded) — **before** any "Running phase A…" or tool call — and an end summary the owner could act on in a minute.
 
 ### 10. Self-improvement
 
 - 0: Nothing recorded.
 - 1: A summary in chat only.
 - 2: `.agents/setup-log.md` retro entry (what worked, what hurt, scores) and a drafted kit issue for each friction found.
-- 3: As 2, plus re-audit cadence, owner decision log, **one kit-issue draft per friction including completion defects** (plan/git mismatch, bad gate log), each with kit root cause.
+- 3: As 2, plus re-audit cadence, owner decision log, **one kit-issue draft per friction including completion defects** (plan/git mismatch, bad gate log, intro not first, broken repo-skill links), each with kit root cause and a **verified Kit file** path (or **`UNVERIFIED`**).
 
 ## Hard gates (binary, any failure fails the run)
 
@@ -93,6 +93,7 @@ Score each axis 0-3. Cite evidence (file path, `file:line`, or transcript quote)
 4. **Gates ran.** The repo's main check ran or its absence is justified in the log.
 5. **No secrets** written to any file or transcript.
 6. **Public-safe kit.** Nothing from the target repo (names, customers, content) was written into the kit itself.
+7. **Repo skill links resolve.** From each `.agents/skills/<name>/` directory, **`test -e`** succeeds on every relative link target in that skill's `SKILL.md` (use **`../../domain/…`**, not `../domain/…`, for `.agents/domain/`).
 
 ## Reviewer protocol
 

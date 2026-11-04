@@ -5,11 +5,13 @@ description: "Set up or improve this repo's AI setup from what the repo actually
 
 # Setup AI
 
+**Before ANY tool call** after reading this skill, output the **Tell the user first** block below as your **next** assistant message — no phase A inventory, no subagent spawns, no repo reads, no file writes until after that message is sent.
+
 Make the AI setup of **this** repo true and specific. Generic advice is already in the kit; your job is what only this repo can say: its product, domain rules, commands, layout, traps, and repeated workflows.
 
 ## Tell the user first
 
-**Output order:** This block is the **first output after `/setup-ai` starts** (your first assistant message once the skill is loaded) — before phase A inventory, subagent spawns, or file writes — including **headless**, **CI**, and **non-interactive** runs. Paste it as plain text; never skip it because nobody is chatting live. **Exclude** mechanical install output that ran **before** the skill loaded (for example `npx zedkit-ai setup` or package manager lines); those stay above this block in the transcript.
+**Output order:** This block is the **first output after `/setup-ai` starts** (your first assistant message once the skill is loaded) — before phase A inventory, subagent spawns, or file writes — including **headless**, **CI**, and **non-interactive** runs. Paste it as plain text; never skip it because nobody is chatting live. **Do not** open with "Running phase A…", inventory lists, or tool calls — the intro **is** phase A's start from the user's perspective until this message is sent. **Exclude** mechanical install output that ran **before** the skill loaded (for example `npx zedkit-ai setup` or package manager lines); those stay above this block in the transcript.
 
 When `/setup-ai` starts (or the user asks to set up AI), say this in plain language before phase A — no interview yet:
 
@@ -164,7 +166,13 @@ Open **`templates/README.md`** in this skill folder (after install: `.agents/ski
 
 Each domain file includes **rules, invariants, edge cases**, sources (`file:line` or `source: owner`), a **Status** column (**`current`** = enforced in code today, **`target`** = planned policy), and a **Test** column. For **Test** paths: **open the test file**, confirm it asserts the rule's behavior (not merely a nearby module); use **`no test — flag`** when nothing applies. **`current`** rules must be verified in code; **`target`** rules must not be written as if already enforced.<!-- if:agent=ui-designer --> Use **`ui-designer`** and **`copywriter`** for `design.md` when UI exists.<!-- /if -->
 
-**Personas (score 3 path):** add a **Journey tests** column — test path per persona or **`no test — flag`** (see `templates/personas-v2.template.md`).
+### Domain vs docs reconciliation (after domain files)
+
+Compare **product docs, README, ADRs**, and other policy sources against each `.agents/domain/*.md` file. For every rule or constraint documented outside domain files but **absent** from them (for example business hours or slot length in README only), add a **`current`** row with doc source (`file:line` or `source: owner`) or list it under **Plan gaps** / product open questions — do not leave silent drift.
+
+**Personas (score 3 path):** add a **Journey tests** column — test path per persona or **`no test — flag`** (see `templates/personas-v2.template.md`). When the journey column names a **route**, the test must exercise that route (e2e or integration); otherwise use **`no test — flag`**.
+
+**AGENTS non-negotiables:** for each claim **enforced by** a command (for example `pnpm test`, `pnpm lint`), **open** what that script runs (package.json script, CI job, turbo task). If the command cannot detect the rule (module boundary, policy prose, etc.), move it to the **Unenforced rules** inventory — do not label it enforced.
 
 **Design (score 3 path, multilingual repos):** add **Do / don't by language** with real UI strings from cited screens (`file:line`), not generic placeholders.
 
@@ -184,7 +192,9 @@ Do not delete sidecars that differ materially from the template in ways the user
 
 ## Phase D — Catalog skills
 
-Propose copies from **`templates/catalog/`** (each skill folder has `SKILL.md.tmpl`) into `.agents/skills/<name>/SKILL.md` (see **`templates/README.md`**). Customize paths and gate commands. Prefer **domain-change** when money or policy edits are common; **add-migration** when schema changes are frequent; **add-capability** for full-stack features. After adding a repo skill, re-run `npx zedkit-ai setup` (no flags needed) to wire it into provider layers; never `ln` or `cp` by hand.
+Propose copies from the **`templates/catalog`** folder (each skill folder has `SKILL.md.tmpl`) into `.agents/skills/<name>/SKILL.md` (see **`templates/README.md`**). Customize paths and gate commands. Prefer **domain-change** when money or policy edits are common; **add-migration** when schema changes are frequent; **add-capability** for full-stack features. After adding a repo skill, re-run `npx zedkit-ai setup` (no flags needed) to wire it into provider layers; never `ln` or `cp` by hand.
+
+**Links in repo skills:** paths in `.agents/skills/<name>/SKILL.md` are relative to **that skill folder**. Docs under `.agents/` use **`../../`** — for example `../../domain/booking.md` (domain rules) and `../../product.md` (product summary); rename `booking` to your area. Copy the link shape from **`templates/catalog/domain-change/SKILL.md.tmpl`** (and sibling catalog files). After writing, **`cd`** to the skill directory and run **`test -e`** on every relative link target (or fix the path). Do not use `../domain/…` from a skill folder — that resolves under `.agents/skills/domain/`, not `.agents/domain/`.
 
 | Tier       | Meaning                                          |
 | ---------- | ------------------------------------------------ |
@@ -279,7 +289,7 @@ Then:
 
 1. **Self-score** — open `templates/setup-rubric.md` and score 0–3 on each of the 10 axes. Cite evidence per axis (file path, `file:line`, or transcript quote); no evidence means no score above 1. The rubric sets the pass targets and hard gates.
 2. **Setup log** — append a retro entry to `.agents/setup-log.md` from `templates/setup-log.template.md`: date, what worked, what hurt, **Providers table + Wired**, scores, decisions (`source: owner` where the owner chose), **Sidecar cleanup**, gate outcomes (see template), open kit frictions.
-3. **Kit friction** — for **each** friction you observed (stale sidecar, validate gap, tool detour, bad gate log format, **missing plan row**, plan/git mismatch, …), draft **one** public-safe issue from `templates/kit-issue.template.md` with **Kit root cause** filled; map friction → kit file → fix. **Completion defects count** (log missing `CMD:`/`EXIT:`, prettier appended after `EXIT:`). If there were zero frictions, say so in the log — do not skip the checklist.
+3. **Kit friction** — for **each** friction you observed (stale sidecar, validate gap, tool detour, bad gate log format, **missing plan row**, plan/git mismatch, intro not first, broken repo-skill links, …), draft **one** public-safe issue from `templates/kit-issue.template.md` with **Kit root cause** filled; map friction → kit file → fix. **Kit file** must be a path that **exists** in the kit tree (`grep` / `test -e` under `packages/ai/kit/` in the kit repo, or the installed `@zedtech/zedkit-ai` kit path) — otherwise write **`UNVERIFIED: <why>`**. **Completion defects count** (log missing `CMD:`/`EXIT:`, prettier appended after `EXIT:`). If there were zero frictions, say so in the log — do not skip the checklist.
 4. **Re-audit cadence** — set the next check: after the next release, or when product, domain rules, or providers change; record the trigger in the log entry.
 
 **Phase E checklist (before you finish):**
@@ -287,7 +297,8 @@ Then:
 - [ ] Providers value table + **Wired:** in setup-log
 - [ ] Plan rows cover **`git status` / `git diff --name-only`** after Write (or **Plan gaps** documented)
 - [ ] Gate log files: **`CMD:`** first line, **`EXIT:<code>`** last line (separate files per command)
-- [ ] One kit-issue draft per friction (or explicit "none")
+- [ ] Repo skill links: from each `.agents/skills/*/`, **`test -e`** every relative markdown link target
+- [ ] One kit-issue draft per friction (or explicit "none"); each **Kit file** verified or **`UNVERIFIED`**
 - [ ] Sidecar cleanup recorded if any `*.kit.md` removed
 - [ ] Self-score mean and hard gates noted
 

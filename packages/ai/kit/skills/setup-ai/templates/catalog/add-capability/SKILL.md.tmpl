@@ -6,12 +6,16 @@ Repo-specific workflow — paths and commands below are **placeholders**. Replac
 
 ## Before you start
 
-- Read `.agents/product.md` and the relevant `.agents/domain/*.md` rules.
-- Confirm the capability is in the plan tier **must** or **should** (not a one-off).
+From this skill folder (`.agents/skills/add-capability/`), read:
+
+- [product](../../product.md)
+- [domain rules](../../domain/booking.md) — use the real `.agents/domain/<area>.md` paths for this repo
+
+Confirm the capability is in the plan tier **must** or **should** (not a one-off).
 
 ## Steps
 
-1. **Spec the slice** — one journey, acceptance criteria, non-goals (link `product.md`).
+1. **Spec the slice** — one journey, acceptance criteria, non-goals (link [product](../../product.md)).
 2. **Domain check** — list rules touched; add rows to domain docs if policy changes (`source: owner` when the owner confirmed).
 3. **Implement** — follow repo boundaries; smallest diff.
 4. **Prove** — run the repo gate commands from root `AGENTS.md`; add or extend tests for new rules.
