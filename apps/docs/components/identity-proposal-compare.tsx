@@ -24,7 +24,11 @@ function CompareBlock({
       <Text typeRole="label" className="text-foreground">
         {label}
       </Text>
-      <IdentityMiniPreview tokens={tokens} id={id} domain={domain} compact={compact} />
+      {compact ? (
+        <IdentityMiniPreview tokens={tokens} id={id} domain={domain} compact />
+      ) : (
+        <IdentityMiniPreview tokens={tokens} id={id} domain={domain} />
+      )}
     </Stack>
   );
 }
