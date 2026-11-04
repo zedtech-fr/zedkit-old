@@ -4298,6 +4298,10 @@
             {
               "title": "Solo card",
               "code": "import { OptionCard } from \"@zedtech/zedkit-ui\";\nconst [solo, setSolo] = useState(false);\n<OptionCard title=\"Solo option\" checked={solo} onChange={() => setSolo(!solo)} />"
+            },
+            {
+              "title": "Pick one",
+              "code": "import { OptionCards } from \"@zedtech/zedkit-ui\";\nconst [delivery, setDelivery] = useState([\"standard\"]); // always one id\n<OptionCards multiple={false} label=\"Delivery\" options={options} selected={delivery} onChange={setDelivery} />"
             }
           ],
           "adoption": {
@@ -4323,7 +4327,7 @@
             ]
           },
           "registry": "wizard-steps",
-          "a11y": "List carries `aria-label=\"Progress\"`; current step gets `aria-current=\"step\"`. Cards are native checkboxes in labels.",
+          "a11y": "List carries `aria-label=\"Progress\"`; current step gets `aria-current=\"step\"`. Cards are native checkboxes in labels; with `multiple={false}` they are native radios in a `radiogroup`, one name per group, arrow keys move the choice.",
           "troubleshooting": "Steps stuck done/todo — `current` is a 0-based index; past the last step everything reads done. Missing connector — composed `WizardStep` rows show one only with `showConnector` (automatic in `WizardSteps`).",
           "seeAlso": [
             "Build validated forms with labels, errors, and pending state"

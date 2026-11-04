@@ -1210,8 +1210,8 @@ import { AppShell } from "@zedtech/zedkit-ui";
 - When to use: For 2–6 step flows with choices per step.
 - When not to use: For single forms — use Form instead of inventing steps.
 - See also: `Build validated forms with labels, errors, and pending state`
-- Examples: Simple, Composed steps, Solo card
-- A11y: List carries `aria-label="Progress"`; current step gets `aria-current="step"`. Cards are native checkboxes in labels.
+- Examples: Simple, Composed steps, Solo card, Pick one
+- A11y: List carries `aria-label="Progress"`; current step gets `aria-current="step"`. Cards are native checkboxes in labels; with `multiple={false}` they are native radios in a `radiogroup`, one name per group, arrow keys move the choice.
 - Mobile: Below `sm`, `WizardSteps` shows `Step {n} of {count} · {title}` plus a progress bar; the horizontal step list stays visible from `sm` up.
 - Registry: wizard-steps
 - Troubleshooting: Steps stuck done/todo — `current` is a 0-based index; past the last step everything reads done. Missing connector — composed `WizardStep` rows show one only with `showConnector` (automatic in `WizardSteps`).
@@ -1235,6 +1235,12 @@ import { Wizard, WizardStep } from "@zedtech/zedkit-ui";
 import { OptionCard } from "@zedtech/zedkit-ui";
 const [solo, setSolo] = useState(false);
 <OptionCard title="Solo option" checked={solo} onChange={() => setSolo(!solo)} />
+```
+
+```ts
+import { OptionCards } from "@zedtech/zedkit-ui";
+const [delivery, setDelivery] = useState(["standard"]); // always one id
+<OptionCards multiple={false} label="Delivery" options={options} selected={delivery} onChange={setDelivery} />
 ```
 
 ## Show key-value details and a live indicator

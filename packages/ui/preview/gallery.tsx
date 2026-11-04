@@ -410,6 +410,16 @@ export function Gallery() {
             selected={["a"]}
             onChange={() => {}}
           />
+          <OptionCards
+            multiple={false}
+            label="Pick one"
+            options={[
+              { id: "a", title: "Alpha", description: "First option." },
+              { id: "b", title: "Beta", description: "Second option." },
+            ]}
+            selected={["b"]}
+            onChange={() => {}}
+          />
         </GallerySection>
 
         <GallerySection id="marketing" title="Marketing">

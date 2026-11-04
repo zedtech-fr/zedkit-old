@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import type * as React from "react";
 import { Check } from "lucide-react";
 
@@ -18,6 +19,8 @@ export interface OptionCardsProps {
   onChange: (ids: string[]) => void;
   label?: string;
   className?: string;
+  /** `true` (default): tick any number of cards. `false`: pick exactly one, as radio inputs. */
+  multiple?: boolean;
 }
 
 export interface OptionCardProps {
@@ -26,14 +29,26 @@ export interface OptionCardProps {
   checked: boolean;
   onChange: () => void;
   className?: string;
+  /** Native input kind: `checkbox` (default) or `radio` for a pick-one group. */
+  type?: "checkbox" | "radio";
+  /** Radio group name; pass the same value on every card of a group. */
+  name?: string | undefined;
 }
 
 /**
- * One selectable card (checkbox + visible check indicator + title + description). Compose
- * custom pickers with these; `OptionCards` covers the plain
- * `options[]` case with the same markup.
+ * One selectable card (checkbox or radio + visible check indicator + title + description).
+ * Compose custom pickers with these; `OptionCards` covers the plain `options[]` case with
+ * the same markup.
  */
-export function OptionCard({ title, description, checked, onChange, className }: OptionCardProps) {
+export function OptionCard({
+  title,
+  description,
+  checked,
+  onChange,
+  className,
+  type = "checkbox",
+  name,
+}: OptionCardProps) {
   return (
     <label
       data-slot="option-card"
@@ -42,11 +57,14 @@ export function OptionCard({ title, description, checked, onChange, className }:
         className,
       )}
     >
-      <input type="checkbox" className="peer sr-only" checked={checked} onChange={onChange} />
+      <input type={type} name={name} className="peer sr-only" checked={checked} onChange={onChange} />
       <span
         data-slot="option-card-indicator"
         aria-hidden="true"
-        className="mt-0.5 grid size-5 shrink-0 place-content-center rounded-sm border border-input text-transparent transition-colors peer-checked:border-primary peer-checked:bg-primary peer-checked:text-primary-foreground"
+        className={cn(
+          "mt-0.5 grid size-5 shrink-0 place-content-center border border-input text-transparent transition-colors peer-checked:border-primary peer-checked:bg-primary peer-checked:text-primary-foreground",
+          type === "radio" ? "rounded-full" : "rounded-sm",
+        )}
       >
         <Check className="size-3.5" strokeWidth={3} />
       </span>
@@ -58,14 +76,26 @@ export function OptionCard({ title, description, checked, onChange, className }:
   );
 }
 
-export function OptionCards({ options, selected, onChange, label, className }: OptionCardsProps) {
+export function OptionCards({
+  options,
+  selected,
+  onChange,
+  label,
+  className,
+  multiple = true,
+}: OptionCardsProps) {
   const messages = useUiMessages();
+  const name = useId();
   function toggle(id: string): void {
+    if (!multiple) {
+      onChange([id]);
+      return;
+    }
     onChange(selected.includes(id) ? selected.filter((entry) => entry !== id) : [...selected, id]);
   }
 
   return (
-    <div data-slot="option-cards" role="group" aria-label={label ?? messages.options} className={cn("grid gap-3 sm:grid-cols-2", className)}>
+    <div data-slot="option-cards" role={multiple ? "group" : "radiogroup"} aria-label={label ?? messages.options} className={cn("grid gap-3 sm:grid-cols-2", className)}>
       {options.map((option) => (
         <OptionCard
           key={option.id}
@@ -73,6 +103,8 @@ export function OptionCards({ options, selected, onChange, label, className }: O
           description={option.description}
           checked={selected.includes(option.id)}
           onChange={() => toggle(option.id)}
+          type={multiple ? "checkbox" : "radio"}
+          name={multiple ? undefined : name}
         />
       ))}
     </div>

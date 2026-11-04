@@ -216,7 +216,8 @@
       "demo": "WizardDemo",
       "examples": {
         "Composed steps": "WizardComposedDemo",
-        "Solo card": "WizardSoloDemo"
+        "Solo card": "WizardSoloDemo",
+        "Pick one": "WizardPickOneDemo"
       }
     },
     "Show key-value details and a live indicator": {
