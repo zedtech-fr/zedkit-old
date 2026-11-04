@@ -22,6 +22,7 @@ import { identityEditorCopy } from "@/components/i18n/identity-editor-copy";
 import { ContrastChips, DRAFT_SELECTOR, DraftCard, EditorFields } from "@/components/identity-editor-fields";
 import { IdentityEditorExport } from "@/components/identity-editor-export";
 import { IdentityAssistant } from "@/components/identity-assistant";
+import { IdentityEditorDockEntry } from "@/components/identity-editor-dock-entry";
 import { IdentityEditorKeepBar, IdentityEditorPreviewBar } from "@/components/identity-editor-toolbar";
 import { DEFAULT_IDENTITY } from "@/lib/default-identity";
 import { useDraftTokens } from "@/lib/identity-editor-draft";
@@ -158,8 +159,9 @@ function IdentityEditorBody(props: EditorBodyProps) {
           {props.appliedSite ? <Text role="status">{identityEditorCopy.panel.applied}</Text> : null}
         </Stack>
         {/* A folded row on a phone: pulled up to the card above it so the first adjustment stays on the first screen. */}
-        <Stack className="max-lg:order-4 max-lg:-mt-5">
+        <Stack className="max-lg:order-4 max-lg:-mt-5" gap={4}>
           <IdentityAssistant tokens={props.tokens} onUse={props.onUse} />
+          <IdentityEditorDockEntry />
         </Stack>
         <Stack className="empty:hidden max-lg:order-5">
           <ContrastChips warnings={identityContrastWarnings(props.tokens)} onFix={props.onFix} />

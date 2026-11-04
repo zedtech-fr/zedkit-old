@@ -43,6 +43,41 @@ export function noticeText(notice: Notice): string {
   }
 }
 
+function BriefFormActions({
+  refining,
+  busy,
+  blocked,
+  value,
+  onSubmit,
+  onCancel,
+}: {
+  refining: boolean;
+  busy: boolean;
+  blocked: boolean;
+  value: string;
+  onSubmit: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <Stack direction="horizontal" gap={2} className="flex-wrap">
+      <Button
+        type="button"
+        size="lg"
+        onClick={onSubmit}
+        disabled={busy || blocked || value.trim() === ""}
+        aria-busy={busy || undefined}
+      >
+        {refining ? copy.refine : copy.generate}
+      </Button>
+      {busy ? (
+        <Button type="button" variant="outline" onClick={onCancel}>
+          {copy.cancel}
+        </Button>
+      ) : null}
+    </Stack>
+  );
+}
+
 /** The one place a brief is written and sent. Typing here costs nothing; only pressing the button asks the assistant. */
 export function BriefForm({
   value,
@@ -90,16 +125,7 @@ export function BriefForm({
       <Text variant="muted" id="identity-assistant-brief-hint" className="text-sm">
         {refining ? copy.followUpHint : copy.briefHint} {left < 100 ? copy.charsLeft(left) : null}
       </Text>
-      <Stack direction="horizontal" gap={2} className="flex-wrap">
-        <Button type="button" onClick={onSubmit} disabled={busy || blocked || value.trim() === ""} aria-busy={busy || undefined}>
-          {refining ? copy.refine : copy.generate}
-        </Button>
-        {busy ? (
-          <Button type="button" variant="outline" onClick={onCancel}>
-            {copy.cancel}
-          </Button>
-        ) : null}
-      </Stack>
+      <BriefFormActions refining={refining} busy={busy} blocked={blocked} value={value} onSubmit={onSubmit} onCancel={onCancel} />
     </Stack>
   );
 }

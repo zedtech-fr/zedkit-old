@@ -76,6 +76,10 @@ export const identityEditorCopy = {
   panel: {
     hint: "Change spacing first, then watch the card. Preview dark changes the card only.",
     applied: "Applied to the whole site.",
+    dockEntryTitle: "Keep creating while you browse",
+    dockEntryBody:
+      "Open Make it yours from any docs page to describe a look in the floating panel (Ctrl+I or ⌘I). Your brief stays with you as you navigate.",
+    dockEntryAction: "Open the floating assistant",
   },
   library: {
     heading: "Save and apply",

@@ -103,20 +103,30 @@ test.describe("home closing scene", () => {
 });
 
 test.describe("the assistant folds away, and on a phone the conversation and the preview take turns", () => {
-  test("it starts folded so the editor keeps its order; a click, #create or a brief from the home page opens it", async ({ page }) => {
+  test("the describe prompt is open by default; folding hides it; #create focuses the field", async ({ page }) => {
     await service(page, (_posted, route) => route.abort());
     for (const width of [390, 1440]) {
       await page.setViewportSize({ width, height: 900 });
       await page.goto(EDITOR, { waitUntil: "networkidle" });
       const summary = page.getByText("Create an identity from a description");
       await expect(summary).toBeVisible();
-      await expect(page.locator("#identity-assistant-brief")).toBeHidden();
+      await expect(page.locator("#identity-assistant-brief")).toBeVisible();
+      await expect(page.getByRole("button", { name: "Generate", exact: true })).toBeVisible();
       if (width < 640) expect((await summary.boundingBox())!.height).toBeGreaterThanOrEqual(43.5);
       await summary.click();
-      await expect(page.locator("#identity-assistant-brief")).toBeVisible();
+      await expect(page.locator("#identity-assistant-brief")).toBeHidden();
       await page.goto(OPEN, { waitUntil: "networkidle" });
       await expect(page.locator("#identity-assistant-brief")).toBeFocused();
     }
+  });
+
+  test("floating assistant entry opens the dock on the docs hub", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(EDITOR, { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: "Open the floating assistant" }).click();
+    await page.waitForURL("**/docs");
+    await expect(page.getByTestId("identity-dock")).toBeVisible();
+    await expect(page.locator("#identity-assistant-brief")).toBeVisible();
   });
 
   test("390px: a proposal takes the visitor to the preview with focus; the way back is one tap; using it returns to the form", async ({ page }) => {

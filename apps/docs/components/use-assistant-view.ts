@@ -26,7 +26,7 @@ function scrollToAssistant() {
  * focus with it (the button that had it is hidden by then); using or discarding it brings the visitor back.
  */
 export function useAssistantView({ proposalId, onBrief }: { proposalId: string | undefined; onBrief: (brief: string) => void }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [view, setView] = useState<View>("conversation");
   const [focus, setFocus] = useState<FocusRequest | null>(null);
   const textarea = useRef<HTMLTextAreaElement>(null);
