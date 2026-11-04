@@ -55,6 +55,14 @@ function reasoningEffort(raw) {
   return effort === "minimal" ? "" : effort;
 }
 
+/** Only OpenAI reasoning SKUs accept `reasoning_effort`; Muse and other chat models reject it. */
+export function reasoningEffortForModel(model, raw) {
+  const effort = reasoningEffort(raw);
+  if (!effort) return "";
+  if (/^o[0-9]/i.test(model) || /^gpt-5/i.test(model)) return effort;
+  return "";
+}
+
 function provider(env, prefix) {
   const base = env[`${prefix}BASE_URL`];
   const key = env[`${prefix}API_KEY`];
@@ -62,11 +70,12 @@ function provider(env, prefix) {
   if (!base || !key || !model) return null;
   const input = microUsd(env[`${prefix}PRICE_INPUT_USD_PER_MTOK`]);
   const output = microUsd(env[`${prefix}PRICE_OUTPUT_USD_PER_MTOK`]);
+  const modelName = String(model).trim();
   return {
-    base: String(base).replace(/\/$/, ""),
-    key: String(key),
-    model: String(model),
-    effort: reasoningEffort(env[`${prefix}REASONING_EFFORT`]),
+    base: String(base).trim().replace(/\/$/, ""),
+    key: String(key).trim(),
+    model: modelName,
+    effort: reasoningEffortForModel(modelName, env[`${prefix}REASONING_EFFORT`]),
     /** Micro-dollars per million tokens. Null until the price is configured: no price, no spend. */
     priceInput: input,
     priceOutput: output,
@@ -97,7 +106,9 @@ export function loadConfig(env) {
   const usableFallback = fallback && fallback.priceInput !== null && fallback.priceOutput !== null ? fallback : null;
 
   let maxOutputTokens = integer(env.IDENTITY_AI_MAX_TOKENS, { fallback: DEFAULTS.maxOutputTokens, min: 256, max: HARD.maxOutputTokens });
-  if (primary?.effort || usableFallback?.effort) {
+  const envReasoningEffort = reasoningEffort(env.IDENTITY_AI_REASONING_EFFORT);
+  const fallbackEnvReasoningEffort = reasoningEffort(env.IDENTITY_AI_FALLBACK_REASONING_EFFORT);
+  if (envReasoningEffort || fallbackEnvReasoningEffort || primary?.effort || usableFallback?.effort) {
     // Reasoning consumes output budget before the JSON answer; the default 4000 cap starves the reply (#1203 regression).
     maxOutputTokens = Math.max(maxOutputTokens, HARD.maxOutputTokens);
   }
