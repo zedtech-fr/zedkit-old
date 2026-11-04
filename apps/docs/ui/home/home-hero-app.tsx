@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { MousePointer2 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { Stack } from "@zedtech/zedkit-ui";
 import type { PreviewMode } from "@/components/admin-dashboard-demo-app";
 import { projectTrackerDemoCopy } from "@/components/i18n/project-tracker-demo-copy";
@@ -15,6 +15,7 @@ import { HeroShell, HeroSidebar, HeroTopBar } from "@/ui/home/home-hero-shell-pa
 import { HeroTeamPage } from "@/ui/home/home-hero-team";
 import { homeCopy } from "@/ui/home/i18n/home-copy";
 import type { HeroPageId } from "@/ui/home/i18n/home-hero-copy";
+import { useHeroAgent } from "@/ui/home/use-hero-agent";
 import { useHeroTour } from "@/ui/home/use-hero-tour";
 import { useMotionOk } from "@/ui/home/use-motion-ok";
 
@@ -22,6 +23,10 @@ const HomeAdminDashboardDemo = dynamic(
   () => import("@/components/demos/home-admin-dashboard-demo").then((mod) => ({ default: mod.HomeAdminDashboardDemo })),
   { loading: () => <Stack className="min-h-32 flex-1" aria-hidden="true" /> },
 );
+
+/** The agent panel is its own chunk: fetched when the tour is about to use it or the visitor first opens it. */
+const loadAgentPanel = () => import("@/ui/home/home-hero-agent-panel");
+const HeroAgentPanel = dynamic(loadAgentPanel);
 
 const copy = homeCopy.heroApp;
 
@@ -82,13 +87,33 @@ function Pages({ page, preview, onPreviewChange, motionOk }: Pick<AppProps, "pag
 export function HomeHeroApp({ page, onPage, intro, preview, onPreviewChange, onLook, tour }: AppProps) {
   const motionOk = useMotionOk();
   const root = useRef<HTMLDivElement>(null);
-  useHeroTour({ rootRef: root, enabled: tour.available, playing: tour.playing, onTakeover: tour.onTakeover, onLook });
+  const agent = useHeroAgent();
+  const panelId = useId();
+  useHeroTour({
+    rootRef: root,
+    enabled: tour.available,
+    playing: tour.playing,
+    onTakeover: tour.onTakeover,
+    onLook,
+    agent: { preload: () => void loadAgentPanel(), reset: agent.reset, paste: agent.setDraft },
+  });
   return (
     <div ref={root} role="region" aria-label={copy.label} data-hero-window="" data-intro={intro ? "" : undefined} className="relative min-w-0">
-      <HeroShell sidebar={<HeroSidebar page={page} onPage={onPage} />} topbar={<HeroTopBar page={page} onPage={onPage} />}>
+      <HeroShell sidebar={<HeroSidebar page={page} onPage={onPage} />} topbar={<HeroTopBar page={page} onPage={onPage} agent={{ open: agent.open, panelId, onToggle: agent.toggle }} />}>
         <Pages page={page} preview={preview} onPreviewChange={onPreviewChange} motionOk={motionOk} />
       </HeroShell>
-      <span data-hero-cursor="" aria-hidden="true" className="pointer-events-none absolute top-0 left-0 text-foreground">
+      {agent.open ? (
+        <HeroAgentPanel
+          id={panelId}
+          draft={agent.draft}
+          status={agent.status}
+          step={agent.step}
+          onDraft={agent.setDraft}
+          onSubmit={agent.submit}
+          onClose={agent.toggle}
+        />
+      ) : null}
+      <span data-hero-cursor="" aria-hidden="true" className="pointer-events-none absolute top-0 left-0 z-30 text-foreground">
         <MousePointer2 className="size-5 fill-foreground text-background" />
       </span>
     </div>
