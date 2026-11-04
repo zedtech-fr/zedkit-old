@@ -1378,25 +1378,34 @@ import { Container, Section } from "@zedtech/zedkit-ui";
 
 ## Render headings and body text without raw tags
 
-- Import: `@zedtech/zedkit-ui` — `Heading`, `HeadingProps`, `headingVariants`, `Text`, `TextProps`, `textVariants`
+- Import: `@zedtech/zedkit-ui` — `Heading`, `HeadingProps`, `headingVariants`, `Text`, `TextProps`, `textVariants`, `typeRoleClass`, `signatureMotionClass`, `headingLevelDefaultRole`, `TypeRole`, `SignatureMotion`
 - Wraps: `class-variance-authority` (styles follow the documented shadcn typography recipes; no registry item exists)
 - Status: stable
 - Short name: Typography
 - Audience: Developers writing kit pages with consistent type.
-- Purpose: Heading levels and Text variants with theme-aware styles.
+- Purpose: Heading levels and Text variants with theme-aware styles; visual roles decouple size from semantic level (`typeRole` / `typeRoleClass`).
 - When to use: For every heading and paragraph in kit UI.
 - When not to use: For raw HTML emails or markdown — style those separately.
 - See also: `Stack content and group titled sections`
 - Examples: Simple, Heading styles on a link (asChild)
 - A11y: Keep one `h1` per page; `asChild` merges styles onto the child — keep the outline meaningful.
 - Registry: typography
+- Utilities: `text-zk-type-*`, `motion-reveal`, `motion-settle`, `motion-emphasis`, `motion-glide`, `motion-feedback` (class names in `styles.css`, not JS imports)
 - Troubleshooting: Wrong tag in the outline — `level` picks the size but `as` picks the tag; set both when they differ. Anchor hidden under a sticky header — heading scroll margin comes from the `--spacing-heading-scroll` theme token.
 
 ```ts
-import { Heading, Text } from "@zedtech/zedkit-ui";
-<Heading level={1}>Page title</Heading>
+import {
+  Heading,
+  Text,
+  typeRoleClass,
+  signatureMotionClass,
+  headingLevelDefaultRole,
+  type TypeRole,
+  type SignatureMotion,
+} from "@zedtech/zedkit-ui";
+<Heading level={1} typeRole="display">Page title</Heading>
 <Heading level={2} as="div">Styled as h2, neutral tag</Heading>
-<Text>Body copy.</Text>
+<Text typeRole="body">Body copy.</Text>
 <Text variant="muted">Secondary copy.</Text>
 ```
 

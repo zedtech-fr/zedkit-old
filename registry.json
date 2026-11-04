@@ -516,6 +516,10 @@
       ],
       "files": [
         {
+          "path": "registry/ui/type-roles.ts",
+          "type": "registry:ui"
+        },
+        {
           "path": "registry/ui/typography.tsx",
           "type": "registry:ui"
         }

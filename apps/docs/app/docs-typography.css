@@ -111,7 +111,7 @@
   letter-spacing: -0.02em;
 }
 
-#home-page .type-site-h1 {
+#home-page [data-home-hero-lead] [data-slot="heading"] {
   font-size: var(--zk-type-h1-size);
   font-weight: var(--zk-type-h1-weight, 600);
   line-height: 1.1;
@@ -130,7 +130,7 @@
   line-height: var(--zk-type-card-title-leading);
 }
 
-[data-catalog-shell] .type-site-lead {
+[data-catalog-shell] .text-zk-type-lead {
   font-size: var(--zk-type-lead-size);
   font-weight: var(--zk-type-lead-weight);
   line-height: var(--zk-type-lead-leading);
@@ -177,33 +177,7 @@
 }
 
 .text-zk-type-lead {
-  font-size: var(--zk-type-lead-size);
-  font-weight: var(--zk-type-lead-weight);
-  line-height: var(--zk-type-lead-leading);
-}
-
-.text-zk-type-small {
-  font-size: var(--zk-type-small-size);
-  font-weight: var(--zk-type-small-weight);
-  line-height: var(--zk-type-small-leading);
-}
-
-.text-zk-type-h3 {
-  font-size: var(--zk-type-h3-size);
-  font-weight: var(--zk-type-h3-weight);
-  line-height: var(--zk-type-h3-leading);
-}
-
-.text-zk-type-body {
-  font-size: var(--zk-type-body-size);
-  font-weight: var(--zk-type-body-weight);
-  line-height: var(--zk-type-body-leading);
-}
-
-.text-zk-type-label {
-  font-size: var(--zk-type-label-size);
-  font-weight: var(--zk-type-label-weight);
-  line-height: var(--zk-type-label-leading);
+  color: hsl(var(--muted-foreground));
 }
 
 .text-home-persuasion {

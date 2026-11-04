@@ -178,8 +178,13 @@ export {
   headingVariants,
   Text,
   textVariants,
+  typeRoleClass,
+  signatureMotionClass,
+  headingLevelDefaultRole,
   type HeadingProps,
   type TextProps,
+  type TypeRole,
+  type SignatureMotion,
 } from "./typography.js";
 export { cn } from "./utils.js";
 export { CardSkeleton, type CardSkeletonProps } from "./card-skeleton.js";
