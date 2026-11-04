@@ -18,7 +18,7 @@ export function IdentityDockAssistantGrid(props: {
   busy: boolean;
   previewTokens: IdentityTokens;
   domainBrief: string;
-  textareaRef: RefObject<HTMLTextAreaElement | null>;
+  inputRef: RefObject<HTMLInputElement | null>;
   onBrief: (brief: string) => void;
   onSubmit: () => void;
   onQuickRefine: (prompt: string) => void;
@@ -27,7 +27,7 @@ export function IdentityDockAssistantGrid(props: {
   onDiscard: () => void;
 }) {
   return (
-    <Stack gap={4} className="min-w-0 lg:grid lg:grid-cols-2 lg:items-start">
+    <Stack gap={4} className="min-w-0">
       <ConversationPane
         view={props.view}
         session={props.session}
@@ -38,7 +38,7 @@ export function IdentityDockAssistantGrid(props: {
         onSubmit={props.onSubmit}
         onQuickRefine={props.onQuickRefine}
         onCancel={props.onCancel}
-        textareaRef={props.textareaRef}
+        inputRef={props.inputRef}
       />
       <Stack gap={4} className="min-w-0">
         <ReferenceReportList report={props.session.references} />

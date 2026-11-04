@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, type Ref, type RefObject } from "react";
-import { Button, Field, FieldLabel, Stack, Text, Textarea, type IdentityTokens } from "@zedtech/zedkit-ui";
+import { useEffect, useMemo, useState, type FormEvent, type Ref, type RefObject } from "react";
+import { Button, Input, Stack, Text, type IdentityTokens } from "@zedtech/zedkit-ui";
 
 import { identityAssistantCopy as copy } from "@/components/i18n/identity-assistant-copy";
 import { ProposalBeforeAfter } from "@/components/identity-proposal-compare";
@@ -62,7 +62,6 @@ function BriefFormActions({
     <Stack direction="horizontal" gap={2} className="flex-wrap">
       <Button
         type="button"
-        size="lg"
         onClick={onSubmit}
         disabled={busy || blocked || value.trim() === ""}
         aria-busy={busy || undefined}
@@ -78,7 +77,27 @@ function BriefFormActions({
   );
 }
 
-/** The one place a brief is written and sent. Typing here costs nothing; only pressing the button asks the assistant. */
+const PLACEHOLDER_ROTATE_MS = 4000;
+
+/** Cycles the example prompts while the composer is empty, unless the visitor asked for reduced motion. */
+function useRotatingPlaceholder(active: boolean): string {
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    if (!active || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const timer = window.setInterval(() => setIndex((n) => (n + 1) % copy.composerPlaceholders.length), PLACEHOLDER_ROTATE_MS);
+    return () => window.clearInterval(timer);
+  }, [active]);
+  const current = copy.composerPlaceholders[index];
+  return current === undefined ? copy.placeholder : current;
+}
+
+/** Enter in the composer sends through the same path as the send button, without reloading the page. */
+function submitForm(event: FormEvent, onSubmit: () => void): void {
+  event.preventDefault();
+  onSubmit();
+}
+
+/** The one place a brief is written and sent: a chat composer. Typing here costs nothing; only sending asks the assistant. */
 export function BriefForm({
   value,
   onValue,
@@ -87,7 +106,7 @@ export function BriefForm({
   blocked,
   onSubmit,
   onCancel,
-  textareaRef,
+  inputRef,
 }: {
   value: string;
   onValue: (value: string) => void;
@@ -96,36 +115,42 @@ export function BriefForm({
   blocked: boolean;
   onSubmit: () => void;
   onCancel: () => void;
-  textareaRef: Ref<HTMLTextAreaElement>;
+  inputRef: Ref<HTMLInputElement>;
 }) {
   const left = LIMITS.prompt - value.length;
+  const placeholder = useRotatingPlaceholder(!refining);
   return (
     <Stack gap={2}>
-      <Field>
-        <FieldLabel htmlFor="identity-assistant-brief">{refining ? copy.followUpLabel : copy.briefLabel}</FieldLabel>
-        <Textarea
-          id="identity-assistant-brief"
-          ref={textareaRef}
-          rows={4}
-          placeholder={refining ? copy.refinePlaceholder : copy.placeholder}
-          maxLength={LIMITS.prompt}
-          value={value}
-          readOnly={busy}
-          className="scroll-mt-28 max-lg:[@media(min-height:48rem)]:scroll-mt-80"
-          aria-describedby="identity-assistant-brief-hint"
-          onChange={(event) => onValue(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-              event.preventDefault();
-              onSubmit();
-            }
-          }}
-        />
-      </Field>
-      <Text variant="muted" id="identity-assistant-brief-hint" className="text-sm">
-        {refining ? copy.followUpHint : copy.briefHint} {left < 100 ? copy.charsLeft(left) : null}
-      </Text>
-      <BriefFormActions refining={refining} busy={busy} blocked={blocked} value={value} onSubmit={onSubmit} onCancel={onCancel} />
+      <form onSubmit={(event) => submitForm(event, onSubmit)}>
+        <Stack direction="horizontal" gap={2} className="items-center">
+          <Input
+            id="identity-assistant-brief"
+            ref={inputRef}
+            type="text"
+            autoComplete="off"
+            placeholder={refining ? copy.refinePlaceholder : placeholder}
+            maxLength={LIMITS.prompt}
+            value={value}
+            readOnly={busy}
+            className="min-w-0 flex-1"
+            aria-label={refining ? copy.followUpLabel : copy.briefLabel}
+            aria-describedby={left < 100 ? "identity-assistant-brief-count" : undefined}
+            onChange={(event) => onValue(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+                event.preventDefault();
+                onSubmit();
+              }
+            }}
+          />
+          <BriefFormActions refining={refining} busy={busy} blocked={blocked} value={value} onSubmit={onSubmit} onCancel={onCancel} />
+        </Stack>
+      </form>
+      {left < 100 ? (
+        <Text variant="muted" id="identity-assistant-brief-count" className="text-sm">
+          {copy.charsLeft(left)}
+        </Text>
+      ) : null}
     </Stack>
   );
 }

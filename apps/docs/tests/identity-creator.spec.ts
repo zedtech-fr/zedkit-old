@@ -67,7 +67,7 @@ test.describe("home closing scene", () => {
     expect(posts).toHaveLength(0);
   });
 
-  test("Start creating opens the editor with the text in place, focused, and a way back; nothing is sent", async ({ page }) => {
+  test("Start creating opens the widget in place with the text prefilled and focused; the URL does not change", async ({ page }) => {
     const posts = await service(page, (_p, route) => route.abort());
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto(BASE, { waitUntil: "networkidle" });
@@ -76,11 +76,26 @@ test.describe("home closing scene", () => {
     await scene.getByLabel("Your product and brand").fill("Film restoration. Like https://atelier-nord.example.org/ please.");
     await expect(scene.getByRole("list", { name: "Links found in your text" })).toContainText("atelier-nord.example.org");
     await scene.getByRole("button", { name: "Start creating" }).click();
-    await page.waitForURL("**/features/identity-editor#create");
-    const field = page.getByLabel("Your product and brand");
+    await expect(page).toHaveURL(`${BASE}/`);
+    const field = page.locator("#identity-assistant-brief");
+    await expect(field).toBeVisible();
     await expect(field).toHaveValue("Film restoration. Like https://atelier-nord.example.org/ please.");
     await expect(field).toBeFocused();
     expect(posts).toHaveLength(0);
+    await expect(page.getByRole("link", { name: "Open the detailed editor" })).toBeVisible();
+  });
+
+  test("Start creating with an empty brief opens the widget unchanged, and the editor link keeps a way back", async ({ page }) => {
+    await service(page, (_p, route) => route.abort());
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    const scene = page.locator("#your-identity");
+    await scene.scrollIntoViewIfNeeded();
+    await scene.getByRole("button", { name: "Start creating" }).click();
+    await expect(page).toHaveURL(`${BASE}/`);
+    await expect(page.locator("#identity-assistant-brief")).toHaveValue("");
+    await page.getByRole("link", { name: "Open the detailed editor" }).click();
+    await page.waitForURL("**/features/identity-editor");
     await page.getByRole("link", { name: "← Back to the examples" }).click();
     await page.waitForURL("**/#identities");
   });
@@ -165,14 +180,15 @@ test.describe("the assistant lives in IdentityDock on the demo editor", () => {
     await expect(page.getByText("This is your draft as it is now.")).toBeVisible();
   });
 
-  test("an idle status line takes no room: no blank band between the switch and the form", async ({ page }) => {
+  test("an idle status line takes no room: greeting, then the composer, no blank band", async ({ page }) => {
     await service(page, (posted, route) => route.fulfill(ok(posted)));
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(OPEN, { waitUntil: "networkidle" });
     await expect(page.locator("[data-assistant-status]")).toHaveText("");
-    const views = (await page.getByRole("group", { name: "Conversation or preview" }).boundingBox())!;
-    const label = (await page.getByText("Your product and brand").first().boundingBox())!;
-    expect(label.y - (views.y + views.height), "the form follows the switch at one gap, not two").toBeLessThanOrEqual(24);
+    await expect(page.locator("[data-assistant-greeting]")).toContainText("Describe your product in a few plain sentences");
+    const greeting = (await page.locator("[data-assistant-greeting]").boundingBox())!;
+    const input = (await page.locator("#identity-assistant-brief").boundingBox())!;
+    expect(input.y - (greeting.y + greeting.height), "the composer follows the greeting at one gap, not two").toBeLessThanOrEqual(48);
   });
 
   for (const [name, reply, text] of [
@@ -249,8 +265,9 @@ test.describe("the assistant in the editor", () => {
     await brief(page, "Film restoration, https://atelier-nord.example.org/ and https://missing.example.org/");
     await page.getByRole("button", { name: "Generate" }).click();
     const proposal = page.locator("[data-assistant-proposal]");
-    await expect(proposal.getByRole("group", { name: "Light" })).toBeVisible();
-    await expect(proposal.getByRole("group", { name: "Dark" })).toBeVisible();
+    // The proposal shows before and after specimens, each with a Light and a Dark group; pin the first of each.
+    await expect(proposal.getByRole("group", { name: "Light" }).first()).toBeVisible();
+    await expect(proposal.getByRole("group", { name: "Dark" }).first()).toBeVisible();
     expect(posts[0].references).toEqual(["https://atelier-nord.example.org/", "https://missing.example.org/"]);
     // Honest about the links: text only for the one that was read, a reason for the one that was not.
     const report = page.locator("[data-assistant-reference-report]");

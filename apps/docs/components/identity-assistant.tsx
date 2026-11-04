@@ -64,7 +64,7 @@ export function IdentityAssistant({ tokens, onUse }: { tokens: IdentityTokens; o
           <AssistantHeading />
           <ViewSwitch view={ui.view} onView={ui.setView} waiting={session.proposal !== null} previewRef={ui.previewButton} />
           <ReferenceReportList report={session.references} />
-          <ConversationPane view={ui.view} session={session} off={off} brief={brief} busy={busy} onBrief={setBrief} onSubmit={send} onQuickRefine={quickRefine} onCancel={cancel} textareaRef={ui.textarea} />
+          <ConversationPane view={ui.view} session={session} off={off} brief={brief} busy={busy} onBrief={setBrief} onSubmit={send} onQuickRefine={quickRefine} onCancel={cancel} inputRef={ui.field} />
           <AssistantFeedback
             text={busy ? copy.working : session.notice && session.notice.kind !== "unavailable" ? noticeText(session.notice) : session.proposal ? copy.views.proposalReady : null}
             off={off}

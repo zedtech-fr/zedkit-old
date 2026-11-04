@@ -29,7 +29,7 @@ export function useAssistantView({ proposalId, onBrief }: { proposalId: string |
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<View>("conversation");
   const [focus, setFocus] = useState<FocusRequest | null>(null);
-  const textarea = useRef<HTMLTextAreaElement>(null);
+  const field = useRef<HTMLInputElement>(null);
   const previewButton = useRef<HTMLButtonElement>(null);
 
   useCreatorHandoff((brief) => {
@@ -41,15 +41,19 @@ export function useAssistantView({ proposalId, onBrief }: { proposalId: string |
   useEffect(() => {
     if (!focus) return;
     if (focus.scroll) scrollToAssistant();
-    textarea.current?.focus({ preventScroll: focus.scroll });
+    field.current?.focus({ preventScroll: focus.scroll });
   }, [focus]);
 
   useEffect(() => {
     if (!proposalId) return;
     setView("preview");
     // Only when focus is nowhere or already in the assistant: a visitor typing in a field of the editor keeps it.
+    // Focus anywhere in the dock (composer, buttons, or the sheet itself, which the drawer focuses on open) yields.
     const active = document.activeElement;
-    const free = !active || active === document.body || active.closest("[data-slot='identity-assistant']") !== null;
+    const free =
+      !active ||
+      active === document.body ||
+      active.closest("[data-slot='identity-assistant'], [data-slot='identity-dock-panel'], [data-slot='identity-dock-sheet']") !== null;
     if (free && previewButton.current && previewButton.current.offsetParent !== null) previewButton.current.focus({ preventScroll: true });
   }, [proposalId]);
 
@@ -58,7 +62,7 @@ export function useAssistantView({ proposalId, onBrief }: { proposalId: string |
     setOpen,
     view,
     setView,
-    textarea,
+    field,
     previewButton,
     /** Runs an action that ends the proposal, then returns to the form with focus in it. */
     backToConversation(action: () => void) {

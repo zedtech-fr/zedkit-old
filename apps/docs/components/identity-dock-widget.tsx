@@ -28,6 +28,8 @@ import { useIdentityDockKeyboard } from "@/components/use-identity-dock-keyboard
 import { DEFAULT_IDENTITY } from "@/lib/default-identity";
 import { IDENTITY_EDITOR_HREF } from "@/lib/site-links.mjs";
 import { useIdentityAssistantStore } from "@/lib/identity-assistant-store";
+import { consumeCreateArrival } from "@/lib/identity-create-arrival";
+import { IDENTITY_DOCK_OPEN } from "@/lib/identity-dock-open";
 import { docsSiteCustomStorageKey } from "@/lib/site-identity-storage";
 
 const IdentityDockSheet = dynamic(
@@ -69,8 +71,20 @@ function useEditorDockAutoOpen(onEditor: boolean, setBrief: (value: string) => v
     setExpanded(true);
   });
   useEffect(() => {
-    if (onEditor && window.location.hash === "#create") setExpanded(true);
+    if (onEditor && (window.location.hash === "#create" || consumeCreateArrival())) setExpanded(true);
   }, [onEditor, setExpanded]);
+}
+
+function useIdentityDockOpenRequest(setBrief: (value: string) => void, setExpanded: (open: boolean) => void) {
+  useEffect(() => {
+    const open = (event: Event) => {
+      const brief = (event as CustomEvent<unknown>).detail;
+      if (typeof brief === "string" && brief.trim() !== "") setBrief(brief);
+      setExpanded(true);
+    };
+    window.addEventListener(IDENTITY_DOCK_OPEN, open);
+    return () => window.removeEventListener(IDENTITY_DOCK_OPEN, open);
+  }, [setBrief, setExpanded]);
 }
 
 function IdentityDockWidget() {
@@ -84,6 +98,7 @@ function IdentityDockWidget() {
   const triggerRef = useIdentityDockKeyboard(expanded, setExpanded);
 
   useEditorDockAutoOpen(onEditor, setBrief, setExpanded);
+  useIdentityDockOpenRequest(setBrief, setExpanded);
 
   useEffect(() => {
     setPreviewTokens(baseTokens);

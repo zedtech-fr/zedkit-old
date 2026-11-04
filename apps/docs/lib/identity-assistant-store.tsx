@@ -31,7 +31,6 @@ type IdentityAssistantStore = {
   setExpanded: (open: boolean) => void;
   toggleExpanded: () => void;
   ensureAssistantStatus: () => () => void;
-  startNewConversation: () => void;
 };
 
 const IdentityAssistantStoreContext = createContext<IdentityAssistantStore | null>(null);
@@ -77,13 +76,6 @@ function IdentityAssistantStoreProvider({ children }: { children: ReactNode }) {
 
   const toggleExpanded = useCallback(() => setExpanded((open) => !open), []);
 
-  const startNewConversation = useCallback(() => {
-    cancel();
-    clearIdentityDockPersist();
-    dispatch({ type: "reset" });
-    setBrief("");
-  }, [cancel]);
-
   const value = useMemo(
     () => ({
       session,
@@ -97,9 +89,8 @@ function IdentityAssistantStoreProvider({ children }: { children: ReactNode }) {
       setExpanded,
       toggleExpanded,
       ensureAssistantStatus,
-      startNewConversation,
     }),
-    [session, status, submit, cancel, brief, expanded, toggleExpanded, ensureAssistantStatus, startNewConversation],
+    [session, status, submit, cancel, brief, expanded, toggleExpanded, ensureAssistantStatus],
   );
 
   return <IdentityAssistantStoreContext.Provider value={value}>{children}</IdentityAssistantStoreContext.Provider>;
