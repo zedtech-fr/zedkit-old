@@ -152,9 +152,8 @@ size_budget() {
 size_budget ui 45500
 # Marketing entry (separate from the main budget); measured 785 with GlassSurface only;
 # 9865 with L2 domain specimens plus goal/reference marketing sections (Hero, Pricing, …);
-# 10020 after specimen-primitives barrel so dist smoke resolves without `#` → src;
-# 10207 after whole-word keyword routing in selectSpecimenDomain.
-size_budget ui 10400 marketing
+# 10020 after specimen-primitives barrel so dist smoke resolves without `#` → src.
+size_budget ui 10200 marketing
 # 4 Nov 2026: dist-size review. Clean-measured 17148 (USAGE to kit data, drift
 # frontmatter/wiring/universe dedup; no behavior change); budget lowered to
 # 17400 to lock the gain. Note: measured + 3% would be 17662, above the old
