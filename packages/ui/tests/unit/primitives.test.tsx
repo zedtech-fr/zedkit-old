@@ -92,6 +92,19 @@ describe("primitives", () => {
     const link = screen.getByRole("link", { name: "Save" });
     expect(link.className).toContain("border-input");
     expect(link.getAttribute("href")).toBe("/save");
+    expect(link.getAttribute("data-size")).toBe("default");
+  });
+
+  it("keeps sm ghost padding on asChild anchor roots", () => {
+    render(
+      <Button asChild variant="ghost" size="sm">
+        <a href="/docs">More in the kit</a>
+      </Button>,
+    );
+    const link = screen.getByRole("link", { name: "More in the kit" });
+    expect(link.className).toContain("px-3");
+    expect(link.getAttribute("data-variant")).toBe("ghost");
+    expect(link.getAttribute("data-size")).toBe("sm");
   });
 
   it("renders a badge with its text", () => {

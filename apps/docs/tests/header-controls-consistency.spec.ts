@@ -63,6 +63,32 @@ for (const theme of ["light", "dark"] as const) {
       expect(padding.cursor).not.toBe("default");
 
       await fullSteps.screenshot({ path: shotPath(`consistency-after-full-steps-${name}-${theme}.png`) });
+
+      await page.locator("#entry-points").scrollIntoViewIfNeeded();
+      const entryCtas = [
+        "Start with buttons",
+        "Start with the Nest bootstrap",
+        "Open SEO docs",
+        "Open agent setup docs",
+        "What gets installed",
+        "AI setup docs",
+      ] as const;
+      for (const label of entryCtas) {
+        const link = page.getByRole("link", { name: label });
+        await expect(link).toBeVisible();
+        const pad = await link.evaluate((el) => {
+          const style = getComputedStyle(el);
+          return {
+            left: parseFloat(style.paddingLeft),
+            right: parseFloat(style.paddingRight),
+          };
+        });
+        expect(pad.left, label).toBeGreaterThan(0);
+        expect(pad.right, label).toBeGreaterThan(0);
+      }
+      await page
+        .locator("#entry-points [data-home-secondary-links]")
+        .screenshot({ path: shotPath(`consistency-after-more-in-kit-${name}-${theme}.png`) });
     });
   }
 }

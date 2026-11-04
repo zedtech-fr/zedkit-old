@@ -508,6 +508,40 @@ a[class*="px-badge-inline"] {
 }
 
 /*
+ * Button `asChild` merges onto `<a>`. Keep the same horizontal padding and
+ * height tokens as `<button>` roots when utilities are stripped or overridden.
+ */
+@layer components {
+  :where(a[data-slot="button"]:not([data-variant="link"])) {
+    box-sizing: border-box;
+    text-decoration-line: none;
+  }
+
+  :where(a[data-slot="button"][data-size="sm"]:not([data-variant="link"])) {
+    min-height: var(--spacing-control-height-sm);
+    padding-inline: calc(var(--spacing) * 3);
+  }
+
+  :where(a[data-slot="button"][data-size="default"]:not([data-variant="link"])) {
+    min-height: var(--spacing-control-height);
+    padding-inline: calc(var(--spacing) * 4);
+    padding-block: calc(var(--spacing) * 2);
+  }
+
+  :where(a[data-slot="button"][data-size="lg"]:not([data-variant="link"])) {
+    min-height: var(--spacing-control-height-lg);
+    padding-inline: calc(var(--spacing) * 8);
+  }
+
+  :where(a[data-slot="button"][data-size="icon"]:not([data-variant="link"])) {
+    min-height: var(--spacing-control-height);
+    min-width: var(--spacing-control-height);
+    padding-inline: 0;
+    padding-block: 0;
+  }
+}
+
+/*
  * Table scroll hints: the Table edge observer sets data-edge-left/right
  * when the first or last column is cut off, and the cut edge fades over
  * --zk-table-fade. No attributes, no fade: fitted tables stay crisp.

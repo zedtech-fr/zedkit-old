@@ -85,7 +85,9 @@ test.describe("site header navigation (#1034)", () => {
 
     await page.keyboard.press("Escape");
     await useIdentity(page, "mist", "light");
-    await header.getByRole("button", { name: "Guides" }).hover();
+    const guides = header.getByRole("button", { name: "Guides" });
+    await guides.click();
+    await expect(guides).toHaveAttribute("aria-expanded", "true");
     await expect(header.getByRole("link", { name: "Getting started", exact: true })).toBeVisible();
     await expect(panel).toBeVisible();
     const mist = await panel.evaluate((el) => {
