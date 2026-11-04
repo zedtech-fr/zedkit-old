@@ -137,10 +137,9 @@ export function BriefForm({
             aria-describedby={left < 100 ? "identity-assistant-brief-count" : undefined}
             onChange={(event) => onValue(event.target.value)}
             onKeyDown={(event) => {
-              if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-                event.preventDefault();
-                onSubmit();
-              }
+              if (event.key !== "Enter" || event.shiftKey) return;
+              event.preventDefault();
+              onSubmit();
             }}
           />
           <BriefFormActions refining={refining} busy={busy} blocked={blocked} value={value} onSubmit={onSubmit} onCancel={onCancel} />

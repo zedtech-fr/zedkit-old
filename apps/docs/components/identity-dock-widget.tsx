@@ -122,13 +122,7 @@ function IdentityDockWidget() {
       </IdentityDockTrigger>
       {expanded ? (
         narrow ? (
-          <IdentityDockSheet
-            open={expanded}
-            onOpenChange={setExpanded}
-            aria-label={identityDockCopy.panelTitle}
-            detentLabels={identityDockCopy.detentLabels}
-            detentGroupLabel={identityDockCopy.detentGroupLabel}
-          >
+          <IdentityDockSheet open={expanded} onOpenChange={setExpanded} aria-label={identityDockCopy.panelTitle}>
             <Stack
               data-slot="identity-dock-panel"
               data-state="open"
@@ -138,7 +132,7 @@ function IdentityDockWidget() {
             </Stack>
           </IdentityDockSheet>
         ) : (
-          <IdentityDockPanel open={expanded} aria-label={identityDockCopy.panelTitle}>
+          <IdentityDockPanel open={expanded} aria-label={identityDockCopy.panelTitle} className="sm:min-h-[min(28rem,85dvh)]">
             {panel}
           </IdentityDockPanel>
         )

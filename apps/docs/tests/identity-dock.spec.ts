@@ -190,6 +190,15 @@ test.describe("IdentityDock", () => {
     await expect(page.getByTestId("identity-dock")).toBeVisible();
   });
 
+  test("390px: sheet height is adjusted with the drag handle, not text detent buttons", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.keyboard.press("Control+I");
+    await expect(page.locator("[data-slot='identity-dock-sheet']")).toBeVisible();
+    await expect(page.getByRole("button", { name: /peek height|half height|full height/i })).toHaveCount(0);
+    await expect(page.locator("[data-slot='drawer-handle']")).toBeVisible();
+  });
+
   test("390px: quota feedback stays visible inside the dock panel", async ({ page }) => {
     await service(page, (_posted, route) =>
       route.fulfill({
@@ -209,7 +218,7 @@ test.describe("IdentityDock", () => {
     await expect(message).not.toBeEmpty();
     await expect(message).toBeInViewport();
     const box = await message.boundingBox();
-    const panelBox = await page.locator("[data-slot='identity-dock-panel']").boundingBox();
+    const panelBox = (await page.locator("[data-slot='identity-dock-sheet'], [data-slot='identity-dock-panel']").first().boundingBox())!;
     expect(box).toBeTruthy();
     expect(panelBox).toBeTruthy();
     expect(box!.y).toBeGreaterThanOrEqual(panelBox!.y);
