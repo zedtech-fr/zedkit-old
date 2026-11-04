@@ -8,14 +8,14 @@ import { AssistantHeading, ViewSwitch, noticeText } from "@/components/identity-
 import { IdentityDockAssistantGrid } from "@/components/identity-dock-assistant-grid";
 import { DockFeedback } from "@/components/identity-dock-feedback";
 import { IdentityDockPanelToolbar } from "@/components/identity-dock-panel-toolbar";
+import { useAssistantSubmitHandlers } from "@/components/use-assistant-submit";
 import { useAssistantView } from "@/components/use-assistant-view";
 import { useIdentityAssistant } from "@/components/use-identity-assistant";
 import { useIdentityAssistantStore } from "@/lib/identity-assistant-store";
-import { checkInput } from "@/lib/identity-assistant";
 import { applyWidgetSpecimenPreview } from "@/lib/identity-widget-specimen-preview";
 import { dispatchIdentityEditorDraftApply } from "@/lib/identity-editor-draft-apply";
+import { specimenBriefFromThread } from "@/lib/brief-specimen-domain";
 import { IDENTITY_EDITOR_HREF } from "@/lib/site-links.mjs";
-import { linksInText } from "@/lib/identity-links-in-text";
 import type { IdentityTokens } from "@zedtech/zedkit-ui";
 
 function assistantFeedbackText(session: ReturnType<typeof useIdentityAssistant>["session"], busy: boolean): string | null {
@@ -56,16 +56,12 @@ export function IdentityDockAssistantPanel({
   const ui = useAssistantView({ proposalId: session.proposal?.requestId, onBrief: setBrief });
   const busy = session.pending !== null;
   const off = status !== null && !status.available ? status.reason : null;
+  const { send, quickRefine } = useAssistantSubmitHandlers(brief, submit, busy, off !== null);
+  const domainBrief = specimenBriefFromThread(session.thread, brief);
 
   useEffect(() => {
     panelRef.current?.querySelector<HTMLElement>("textarea:not([disabled])")?.focus({ preventScroll: true });
   }, []);
-
-  function send() {
-    const references = linksInText(brief).urls;
-    if (checkInput({ prompt: brief, references }) !== "ok") return;
-    submit(brief, references);
-  }
 
   return (
     <Stack ref={panelRef} className="min-h-0 flex-1 gap-0 overflow-hidden" data-slot="identity-dock-body">
@@ -80,9 +76,11 @@ export function IdentityDockAssistantPanel({
           brief={brief}
           busy={busy}
           previewTokens={previewTokens}
+          domainBrief={domainBrief}
           textareaRef={ui.textarea}
           onBrief={setBrief}
           onSubmit={send}
+          onQuickRefine={quickRefine}
           onCancel={cancel}
           onUse={(next) => acceptProposal(ui.backToConversation, onPreviewTokens, dispatch, setBrief, next)}
           onDiscard={() => ui.backToConversation(() => dispatch({ type: "discard" }))}
