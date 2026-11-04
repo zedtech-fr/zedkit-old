@@ -92,7 +92,7 @@ function IdentityDockWidget() {
           aria-keyshortcuts="Control+I Meta+I"
           title={identityDockCopy.shortcutHint}
           tabIndex={expanded ? -1 : undefined}
-          className={cn(expanded && "pointer-events-none fixed size-px overflow-hidden opacity-0")}
+          className={cn(expanded && "pointer-events-none opacity-0")}
           onClick={() => setExpanded(true)}
         >
           <IdentityDockSwatch />
@@ -101,7 +101,7 @@ function IdentityDockWidget() {
           </Text>
         </IdentityDockTrigger>
       </IdentityDock>
-      <Drawer open={expanded} onOpenChange={setExpanded} direction="right" mobile="sheet" modal={false}>
+      <Drawer open={expanded} onOpenChange={setExpanded} direction="right" mobile="sheet" modal={false} handleOnly>
         <DrawerContent
           size="lg"
           modal={false}

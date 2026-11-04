@@ -16,6 +16,8 @@ export type PromptInputProps = Omit<
   onCancel?: () => void;
   cancelLabel?: string;
   busy?: boolean;
+  /** Blocks sending while the field stays editable (`disabled` blocks both): a draft costs nothing, only sending does. */
+  sendDisabled?: boolean;
 };
 
 type PromptInputActionsProps = {
@@ -66,6 +68,7 @@ export function PromptInput({
   onCancel,
   cancelLabel,
   busy,
+  sendDisabled: sendBlocked,
   className,
   value,
   disabled,
@@ -74,9 +77,8 @@ export function PromptInput({
   ref,
   ...props
 }: PromptInputProps) {
-  const trimmed = String(value ?? "").trim();
-  const empty = trimmed === "";
-  const blocked = disabled === true || busy === true;
+  const empty = String(value ?? "").trim() === "";
+  const blocked = disabled === true || busy === true || sendBlocked === true;
 
   return (
     <form

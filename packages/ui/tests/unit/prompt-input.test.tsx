@@ -9,7 +9,13 @@ describe("PromptInput", () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
     render(
-      <PromptInput sendLabel="Generate" value="Hello" onChange={() => {}} onSubmit={onSubmit} aria-label="Brief" />,
+      <PromptInput
+        sendLabel="Generate"
+        value="Hello"
+        onChange={() => {}}
+        onSubmit={onSubmit}
+        aria-label="Brief"
+      />,
     );
     const field = screen.getByLabelText("Brief");
     await user.type(field, "{Enter}");
@@ -20,17 +26,57 @@ describe("PromptInput", () => {
   });
 
   it("disables send when the value is empty", () => {
-    render(<PromptInput sendLabel="Generate" value="" onChange={() => {}} onSubmit={() => {}} aria-label="Brief" />);
-    expect((screen.getByRole("button", { name: "Generate" }) as HTMLButtonElement).disabled).toBe(true);
+    render(
+      <PromptInput
+        sendLabel="Generate"
+        value=""
+        onChange={() => {}}
+        onSubmit={() => {}}
+        aria-label="Brief"
+      />,
+    );
+    expect(
+      (screen.getByRole("button", { name: "Generate" }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
   });
 
   it("calls onSubmit from the send button", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
     render(
-      <PromptInput sendLabel="Generate" value="Hi" onChange={() => {}} onSubmit={onSubmit} aria-label="Brief" />,
+      <PromptInput
+        sendLabel="Generate"
+        value="Hi"
+        onChange={() => {}}
+        onSubmit={onSubmit}
+        aria-label="Brief"
+      />,
     );
     await user.click(screen.getByRole("button", { name: "Generate" }));
     expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the field editable while sendDisabled blocks Enter and the send button", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    render(
+      <PromptInput
+        sendLabel="Generate"
+        value="Hi"
+        sendDisabled
+        onChange={() => {}}
+        onSubmit={onSubmit}
+        aria-label="Brief"
+      />,
+    );
+    const field = screen.getByLabelText("Brief") as HTMLTextAreaElement;
+    expect(field.disabled).toBe(false);
+    expect(
+      (screen.getByRole("button", { name: "Generate" }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+    await user.type(field, "{Enter}");
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 });

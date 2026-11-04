@@ -22,6 +22,7 @@ export function ChatLog({ messages, pending }: { messages: readonly ChatMessage[
           <li
             key={`${index}-${message.role}`}
             data-role={message.role}
+            {...(message.role === "notice" ? { "data-assistant-notice": "" } : {})}
             className={cn(
               "flex max-w-[90%] flex-col gap-1 rounded-2xl px-3 py-2 text-sm",
               user ? "self-end rounded-tr-sm bg-primary text-primary-foreground" : "self-start rounded-tl-sm border border-border bg-muted",
@@ -30,7 +31,11 @@ export function ChatLog({ messages, pending }: { messages: readonly ChatMessage[
             <Text as="span" className={cn("font-medium", user ? "text-primary-foreground" : "text-foreground")}>
               {user ? copy.you : copy.assistant}
             </Text>
-            <Text as="span" className={cn("whitespace-pre-wrap", user ? "text-primary-foreground" : "text-muted-foreground")}>
+            <Text
+              as="span"
+              {...(message.role === "notice" ? { role: "status" } : {})}
+              className={cn("whitespace-pre-wrap", user ? "text-primary-foreground" : "text-muted-foreground")}
+            >
               {text}
             </Text>
           </li>

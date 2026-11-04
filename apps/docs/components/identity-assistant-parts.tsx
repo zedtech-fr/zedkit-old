@@ -110,7 +110,7 @@ export function BriefForm({
         maxLength={LIMITS.prompt}
         value={value}
         busy={busy}
-        disabled={blocked}
+        sendDisabled={blocked}
         sendLabel={refining ? copy.refine : copy.generate}
         {...(busy ? { onCancel, cancelLabel: copy.cancel } : {})}
         aria-label={refining ? copy.followUpLabel : copy.briefLabel}

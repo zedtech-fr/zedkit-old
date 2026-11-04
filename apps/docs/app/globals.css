@@ -62,6 +62,13 @@
   visibility: hidden;
 }
 
+/* The label swaps with a fade when scroll-spy settles; under reduced motion it swaps at once (and axe never reads a half-faded colour). */
+@media (prefers-reduced-motion: reduce) {
+  [data-toc-popover-trigger] span {
+    transition: none;
+  }
+}
+
 /* Phone search: hidden while a drawer or dialog is open. */
 body:has([data-vaul-overlay][data-state="open"]) [data-search-pill],
 body:has([role="dialog"][data-state="open"]) [data-search-pill] {
