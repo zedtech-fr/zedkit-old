@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ALL_PROVIDERS, installKit } from "#install.js";
 import { agentsForPreset, commandsForPreset, kitDir, readManifest } from "#kit.js";
-import { checkDrift, validateKit } from "#validate.js";
+import { checkDrift, checkKitDocs, validateKit } from "#validate.js";
 import { put, tempDir } from "./helpers.js";
 
 const MATRIX = ["cursor", "claude", "codex", "muse"] as const;
@@ -36,10 +36,11 @@ function firstSkill(dest: string): string {
   return first;
 }
 
-/** Install, validate, rerun, drift: the parity contract every cell must keep. */
+/** Install, validate, rerun, drift, docs: the parity contract every cell must keep. */
 function parityCell(dest: string, preset: string, providers: readonly string[] | undefined, adopt = false): void {
   install(dest, preset, providers, adopt);
   expect(validateKit(join(dest, ".agents")), "validate").toEqual([]);
+  expect(checkKitDocs(dest, join(dest, ".agents")), "docs").toEqual([]);
   const again = install(dest, preset, providers, adopt);
   expect(again.filter((action) => action.kind !== "skip"), "rerun").toEqual([]);
   expect(checkDrift(dest, join(dest, ".agents")), "drift").toEqual([]);
@@ -161,5 +162,21 @@ describe("provider matrix", () => {
     parityCell(dest, "setup", ["claude", "cursor"], true);
     expectRealDirLayer(dest, "claude");
     expect(lstatSync(join(dest, "CLAUDE.md")).isSymbolicLink()).toBe(true);
+  });
+
+  it("starter x adopt twice: conditional text resolves once, rerun is a no-op", () => {
+    const dest = tempDir();
+    parityCell(dest, "starter", ["cursor"], true);
+  });
+
+  it("starter x adopt over an existing AGENTS.md appends the resolved ladder", () => {
+    const dest = tempDir();
+    put(dest, "AGENTS.md", "# Mine\n");
+    parityCell(dest, "starter", ["cursor"], true);
+    const text = readFileSync(join(dest, "AGENTS.md"), "utf8");
+    expect(text).toContain("# Mine");
+    expect(text).toContain("## Before writing any code");
+    expect(text).not.toContain("ponytail-review");
+    expect(text).not.toContain("<!-- if:");
   });
 });

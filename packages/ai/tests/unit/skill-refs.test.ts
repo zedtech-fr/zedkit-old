@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { skillRefNames } from "#skill-refs.js";
+import { backtickedRefNames, skillRefNames } from "#skill-refs.js";
 
 describe("skillRefNames", () => {
   it("reads Skill tool quotes, backticks, and a pair", () => {
@@ -28,5 +28,24 @@ describe("skillRefNames", () => {
       "to-spec",
       "to-tickets",
     ]);
+  });
+
+  it("ignores conditional markers", () => {
+    expect(skillRefNames("a<!-- if:skill=tdd -->b<!-- /if -->c")).toEqual([]);
+  });
+});
+
+describe("backtickedRefNames", () => {
+  it("reads bare backticked tokens and skips paths, slashes, and dotted names", () => {
+    const text = [
+      "Use `tdd`; for edge cases use `adversarial-tests`.",
+      "Run `/setup-ai` and `/tmp`.",
+      "see `package.json` and `file:line`.",
+    ].join("\n");
+    expect(backtickedRefNames(text).sort()).toEqual(["adversarial-tests", "tdd"]);
+  });
+
+  it("ignores conditional markers", () => {
+    expect(backtickedRefNames("a<!-- if:skill=tdd -->b<!-- /if -->c")).toEqual([]);
   });
 });

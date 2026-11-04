@@ -39,12 +39,12 @@ describe("installKit", () => {
     expect(readFileSync(join(dest, ".cursor/rules/project.mdc"), "utf8")).toContain("alwaysApply: true");
   });
 
-  it("starter preset stays small: five skills, three subagents, two commands", () => {
+  it("starter preset stays small: eight skills, three subagents, two commands", () => {
     const manifest = readManifest();
     if (!manifest.ok) throw manifest.error;
     const starter = manifest.value.presets.starter;
     if (!Array.isArray(starter)) throw new Error("starter preset must list skills");
-    expect(starter).toHaveLength(5);
+    expect(starter).toHaveLength(8);
     expect(agentsForPreset(manifest.value, "starter")).toHaveLength(3);
     expect(commandsForPreset(manifest.value, "starter")).toHaveLength(2);
   });
@@ -386,6 +386,33 @@ describe("installKit", () => {
     const badResult = installKit({ dest: tempDir(), kit: bad, preset: "core" });
     expect(badResult.ok).toBe(false);
     if (!badResult.ok) expect(badResult.error.message).toContain("must be a string list");
+  });
+
+  it("setup ignores a dirty v1 personas template when v2 is installed", () => {
+    const kit = tempDir();
+    put(kit, "kit.json", JSON.stringify({ presets: { setup: ["alpha"] }, agents: [] }));
+    put(kit, "skills/alpha/SKILL.md", "x");
+    put(kit, "skills/setup-ai/templates/personas-v2.template.md", "clean\n");
+    put(kit, "personas.template.md", 'Call the Skill tool with "ghost".\n');
+    put(kit, "AGENTS.template.md", "t");
+    put(kit, "THIRD_PARTY_NOTICES.md", "n");
+    const result = installKit({ dest: tempDir(), kit, preset: "setup", providers: [] });
+    expect(result.ok).toBe(true);
+  });
+
+  it("setup fails before writing when the installed v2 personas names a missing skill", () => {
+    const kit = tempDir();
+    put(kit, "kit.json", JSON.stringify({ presets: { setup: ["alpha"] }, agents: [] }));
+    put(kit, "skills/alpha/SKILL.md", "x");
+    put(kit, "skills/setup-ai/templates/personas-v2.template.md", 'Call the Skill tool with "ghost".\n');
+    put(kit, "personas.template.md", "clean\n");
+    put(kit, "AGENTS.template.md", "t");
+    put(kit, "THIRD_PARTY_NOTICES.md", "n");
+    const dest = tempDir();
+    const result = installKit({ dest, kit, preset: "setup", providers: [] });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.message).toContain('preset "setup" has dangling references');
+    expect(existsSync(join(dest, ".agents"))).toBe(false);
   });
 
   it("returns an error when the kit manifest lists a missing skill", () => {

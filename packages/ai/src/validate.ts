@@ -1,11 +1,12 @@
 // Original work by the same author.
 import { existsSync, lstatSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join, relative, sep } from "node:path";
 import { tryCatch } from "@zedtech/zedkit-core";
-import { readManifest } from "./kit.js";
+import { kitDir, kitUniverse, readManifest } from "./kit.js";
 import { parseFrontmatter } from "./frontmatter.js";
 import { lensClosureIssues } from "./lenses.js";
-import { danglingSkillRefs, skillRefFiles } from "./skill-refs.js";
+import { danglingKitRefs, skillRefFiles, type RefUniverse } from "./skill-refs.js";
+import { resolveConditionals, withoutMarkers, type Availability } from "./conditional.js";
 
 export type Issue = { path: string; message: string };
 
@@ -191,15 +192,77 @@ function namesIn(root: string, dir: string): string[] {
   return mdFiles(full).map((file) => file.replace(/\.md$/, ""));
 }
 
-// A skill, agent or command that tells the agent to run a skill must name
-// one that is installed in this tree. Checked on the files present, so a
-// preset that omitted the target fails the same way the full kit would.
-function checkSkillRefs(root: string, skills: Set<string>, issues: Issue[]): void {
-  const files = skillRefFiles(root, [...skills], namesIn(root, "agents"), namesIn(root, "commands"));
-  for (const issue of danglingSkillRefs(files, skills)) issues.push(issue);
+// Reference closure over the kit universe: a skill, agent or command that
+// names a kit skill/agent must name one installed in this tree (in any
+// kind). Checked on the files present, so a preset that omitted the target
+// fails the same way the full kit would. Bare backticked tokens count only
+// in kit-origin files — same name ships in the bundled kit — where a kit
+// name is a reference by convention; in user-authored files the same token
+// is an ordinary word. A user file shadowing a kit name (kit sidecar
+// beside it) is user prose too.
+function refUniverse(kit: string): RefUniverse {
+  const uni = tryCatch(() => kitUniverse(kit));
+  if (!uni.ok) return { skills: new Set(), agents: new Set(), commands: new Set() };
+  return {
+    skills: new Set(uni.value.skills),
+    agents: new Set(uni.value.agents),
+    commands: new Set(uni.value.commands),
+  };
 }
 
-function collect(root: string): Issue[] {
+function installedUnion(sets: ReadonlySet<string>[]): Set<string> {
+  const installed = new Set<string>();
+  for (const set of sets) {
+    for (const name of set) installed.add(name);
+  }
+  for (const name of [...installed]) {
+    if (name.startsWith("zk-")) installed.add(name.slice("zk-".length));
+  }
+  return installed;
+}
+
+function checkSkillRefs(root: string, skills: Set<string>, kit: string, issues: Issue[]): void {
+  const agents = namesIn(root, "agents");
+  const commands = namesIn(root, "commands");
+  const universe = refUniverse(kit);
+  const installed = installedUnion([skills, new Set(agents), new Set(commands)]);
+  const shadowed = new Set<string>();
+  for (const name of skills) {
+    if (name.startsWith("zk-")) shadowed.add(join("skills", name.slice("zk-".length), "SKILL.md"));
+  }
+  for (const dir of ["agents", "commands"]) {
+    const full = join(root, dir);
+    if (!existsSync(full)) continue;
+    for (const file of readdirSync(full).filter((entry) => entry.endsWith(".kit.md"))) {
+      shadowed.add(join(dir, file.replace(/\.kit\.md$/, ".md")));
+    }
+  }
+  const isKitOrigin = (path: string): boolean => {
+    if (shadowed.has(path)) return false;
+    const [top, name] = path.split(sep);
+    if (top === "skills" && name !== undefined) {
+      const base = name.startsWith("zk-") ? name.slice("zk-".length) : name;
+      return universe.skills.has(base);
+    }
+    if (top === "agents" && name !== undefined) return universe.agents.has(name.replace(/\.md$/, ""));
+    if (top === "commands" && name !== undefined) return universe.commands.has(name.replace(/\.md$/, ""));
+    return false;
+  };
+  const files = skillRefFiles(root, [...skills], agents, commands, isKitOrigin);
+  for (const issue of danglingKitRefs(files, installed, universe)) issues.push(issue);
+  // Top-level kit docs: personas.md ships from a kit template, so its
+  // references close like any kit file. THIRD_PARTY_NOTICES.md names every
+  // vendored skill by design (attribution, not invocation) and is exempt;
+  // any other top-level file is the user's own and unscanned.
+  const personas = join(root, "personas.md");
+  if (existsSync(personas) && existsSync(join(kit, "personas.template.md"))) {
+    const text = readFileSync(personas, "utf8");
+    const docs = [{ path: "personas.md", text, kitOrigin: true }];
+    for (const issue of danglingKitRefs(docs, installed, universe)) issues.push(issue);
+  }
+}
+
+function collect(root: string, kit: string): Issue[] {
   const issues: Issue[] = [];
   const skills = new Set(dirsIn(join(root, "skills")));
   for (const name of skills) checkSkill(root, name, issues);
@@ -218,7 +281,7 @@ function collect(root: string): Issue[] {
   checkManifest(root, issues);
   checkLadder(root, issues);
   checkLineEndings(root, issues);
-  checkSkillRefs(root, skills, issues);
+  checkSkillRefs(root, skills, kit, issues);
   checkLenses(root, skills, issues);
   return issues;
 }
@@ -236,13 +299,16 @@ function checkLenses(root: string, skills: Set<string>, issues: Issue[]): void {
  * Check a directory laid out as `skills/<name>/SKILL.md`, `agents/<name>.md`,
  * `commands/<name>.md` and optionally `kit.json`. Returns every problem
  * found; empty means valid. An unreadable entry (dangling symlink,
- * permissions) is reported as a problem instead of throwing.
+ * permissions) is reported as a problem instead of throwing. `kit`
+ * locates the bundled kit for the reference universe (defaults to this
+ * package's kit); an unreadable kit disables the /name and backticked
+ * forms, while Skill-tool calls still count.
  */
-export function validateKit(root: string): Issue[] {
+export function validateKit(root: string, kit: string = kitDir()): Issue[] {
   if (!existsSync(root)) {
     return [{ path: root, message: "directory does not exist" }];
   }
-  const result = tryCatch(() => collect(root));
+  const result = tryCatch(() => collect(root, kit));
   return result.ok ? result.value : [{ path: root, message: `cannot read: ${result.error.message}` }];
 }
 
@@ -379,4 +445,51 @@ export function checkDrift(projectRoot: string, source: string): Issue[] {
     return issues;
   });
   return run.ok ? run.value : [{ path: projectRoot, message: `cannot check drift: ${run.error.message}` }];
+}
+
+/**
+ * Reference closure for the kit-written root docs: the AGENTS.md the
+ * installer writes from the kit template, resolved against the installed
+ * sets read from `source` (the project's `.agents/` dir). Verbatim
+ * marker-stripped-or-resolved template lines count as kit-written — old
+ * installs and the appended ladder match by line too — while user edits
+ * and additions are skipped. CLAUDE.md is never scanned: a link carries
+ * the same bytes as AGENTS.md, a real file is the user's own. Paths are
+ * relative to `projectRoot`.
+ */
+export function checkKitDocs(projectRoot: string, source: string, kit: string = kitDir()): Issue[] {
+  const run = tryCatch(() => {
+    const agentsMd = join(projectRoot, "AGENTS.md");
+    const stat = tryCatch(() => statSync(agentsMd));
+    if (!stat.ok || !stat.value.isFile()) return [];
+    const template = tryCatch(() => readFileSync(join(kit, "AGENTS.template.md"), "utf8"));
+    if (!template.ok) return [];
+    const skills = new Set(dirsIn(join(source, "skills")));
+    const avail: Availability = {
+      skills,
+      agents: new Set(namesIn(source, "agents")),
+      commands: new Set(namesIn(source, "commands")),
+    };
+    const resolved = tryCatch(() => resolveConditionals(template.value, avail));
+    if (!resolved.ok) return [];
+    // Verbatim lines of either the marker-stripped or the resolved template
+    // count as kit-written: old installs match the stripped text (so stale
+    // references still fail), fresh installs match the resolved text.
+    const kitLines = new Set(
+      `${withoutMarkers(template.value)}\n${resolved.value}`
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => line !== ""),
+    );
+    const text = readFileSync(agentsMd, "utf8");
+    const kitText = text
+      .split("\n")
+      .filter((line) => kitLines.has(line.trim()))
+      .join("\n");
+    const universe = refUniverse(kit);
+    const installed = installedUnion([avail.skills, avail.agents, avail.commands]);
+    const files = [{ path: "AGENTS.md", text: kitText, kitOrigin: true }];
+    return danglingKitRefs(files, installed, universe);
+  });
+  return run.ok ? run.value : [];
 }

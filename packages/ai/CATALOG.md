@@ -30,7 +30,7 @@ for (const action of result.value) console.log(action.kind, action.path);
 
 CLI equivalent: `zedkit-ai setup . --provider cursor` (onboarding: **`--preset setup` by default**, same as `init --preset setup --adopt`) or `zedkit-ai init .` (`--provider cursor,claude,codex,all`; `--target` is an alias; `--adopt` keeps colliding user files and skips identical kit copies; run `--help` for every provider id)
 
-Presets: `starter` (onboard + review; default), `setup` (starter plus domain,
+Presets: `starter` (onboard + review + test-first; default), `setup` (starter plus domain,
 review lenses, retro, rules-upkeep, product/UI/copy subagents, and setup-ai
 `templates/` under `.agents/skills/setup-ai/`, including the setup rubric and
 score-and-learn templates), `core`

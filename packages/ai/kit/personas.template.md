@@ -1,8 +1,8 @@
 # Project personas
 
-Named audiences for `persona-review`. The skill reads this file, picks 2–4
+Named audiences<!-- if:skill=persona-review --> for `persona-review`<!-- /if -->.<!-- if:skill=persona-review --> The skill reads this file, picks 2–4
 personas per change, and requires evidence (command, screenshot, `file:line`)
-for every verdict. Customize names and details per project; keep one row each
+for every verdict.<!-- /if --> Customize names and details per project; keep one row each
 for the end client, the integrator, and the operator.
 
 | Persona                                | Task                                                                                | Bar                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |

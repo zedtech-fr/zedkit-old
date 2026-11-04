@@ -109,8 +109,9 @@ already has — search it first.
    reduced-motion, or a change so small that motion would delay feedback.
    Example refusal: a modal that appears with no fade and hides what changed.
 9. **Handoffs.** Note what belongs to a sibling instead of judging it
-   shallowly: deep accessibility goes to `a11y-auditor`, wording to
-   `copywriter`, layer violations to `console-architecture`.
+   shallowly: wording goes to `copywriter`<!-- if:agent=a11y-auditor -->, deep
+   accessibility to `a11y-auditor`<!-- /if --><!-- if:agent=console-architecture -->,
+   layer violations to `console-architecture`<!-- /if -->.
 
 ## Rules
 

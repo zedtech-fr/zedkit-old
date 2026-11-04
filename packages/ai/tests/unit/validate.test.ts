@@ -2,7 +2,7 @@ import { mkdirSync, readFileSync, symlinkSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { installKit } from "#install.js";
-import { checkDrift, validateKit } from "#validate.js";
+import { checkDrift, checkKitDocs, validateKit } from "#validate.js";
 import { kitDir } from "#kit.js";
 import { AGENT, COMMAND, put, SKILL, tempDir } from "./helpers.js";
 
@@ -58,17 +58,23 @@ describe("validateKit", () => {
     );
   });
 
+  it("ignores /names and words outside the kit universe (fiction routes)", () => {
+    const root = tempDir();
+    put(root, "skills/alpha/SKILL.md", `${SKILL("alpha")}\nRun \`/delta\` for the \`checkout\` step.\n`);
+    expect(validateKit(root)).toEqual([]);
+  });
+
   it("flags a skill, agent or command that runs a skill which is not installed", () => {
     const root = tempDir();
     put(root, "skills/alpha/SKILL.md", `${SKILL("alpha")}\nCall the Skill tool with "beta".\n`);
-    put(root, "skills/gamma/SKILL.md", `${SKILL("gamma")}\nRun \`/delta\`.\n`);
+    put(root, "skills/gamma/SKILL.md", `${SKILL("gamma")}\nRun the Skill tool with "delta".\n`);
     put(root, "agents/reader.md", `${AGENT("reader")}\nCall the Skill tool with "ghost".\n`);
-    put(root, "commands/go.md", `${COMMAND("alpha")}\nThen /missing-skill.\n`);
+    put(root, "commands/go.md", `${COMMAND("alpha")}\nCall the Skill tool with "missing-skill".\n`);
     const found = messages(root);
-    expect(found).toContain('skills/alpha/SKILL.md: references skill "beta", which is not installed');
-    expect(found).toContain('skills/gamma/SKILL.md: references skill "delta", which is not installed');
-    expect(found).toContain('agents/reader.md: references skill "ghost", which is not installed');
-    expect(found).toContain('commands/go.md: references skill "missing-skill", which is not installed');
+    expect(found).toContain('skills/alpha/SKILL.md: references skill "beta", which this preset does not install');
+    expect(found).toContain('skills/gamma/SKILL.md: references skill "delta", which this preset does not install');
+    expect(found).toContain('agents/reader.md: references skill "ghost", which this preset does not install');
+    expect(found).toContain('commands/go.md: references skill "missing-skill", which this preset does not install');
   });
 
   it("accepts a skill reference when that skill is installed", () => {
@@ -76,6 +82,77 @@ describe("validateKit", () => {
     put(root, "skills/alpha/SKILL.md", `${SKILL("alpha")}\nCall the Skill tool with "beta". Run \`/beta\`.\n`);
     put(root, "skills/beta/SKILL.md", SKILL("beta"));
     expect(validateKit(root)).toEqual([]);
+  });
+
+  it("flags a kit file naming a kit skill no installed kind provides", () => {
+    const root = tempDir();
+    put(root, "skills/review/SKILL.md", `${SKILL("review")}\nUse \`tdd\`.\n`);
+    expect(messages(root)).toContain('skills/review/SKILL.md: references skill "tdd", which this preset does not install');
+  });
+
+  it("reports the agent kind for agent names", () => {
+    const root = tempDir();
+    put(root, "agents/verifier.md", `${AGENT("verifier")}\nAsk \`architect\`.\n`);
+    expect(messages(root)).toContain('agents/verifier.md: references agent "architect", which this preset does not install');
+  });
+
+  it("accepts a kit name installed under any kind", () => {
+    const root = tempDir();
+    put(root, "skills/review/SKILL.md", `${SKILL("review")}\nUse \`tdd\`.\nladder\n`);
+    put(root, "agents/tdd.md", AGENT("tdd"));
+    expect(validateKit(root)).toEqual([]);
+  });
+
+  it("treats backticked kit names in user-authored files as ordinary words", () => {
+    const root = tempDir();
+    put(root, "skills/my-thing/SKILL.md", `${SKILL("my-thing")}\nRun the \`plan\` phase, then \`review\` output.\n`);
+    expect(validateKit(root)).toEqual([]);
+  });
+
+  it("treats a user file shadowing a kit name as user prose, and satisfies refs from the sidecar", () => {
+    const root = tempDir();
+    put(root, "skills/review/SKILL.md", `${SKILL("review")}\nMy own notes on the \`plan\` phase and ladder.\n`);
+    put(root, "skills/zk-review/SKILL.md", `${SKILL("review")}\nladder\n`);
+    expect(validateKit(root)).toEqual([]);
+  });
+
+  it("flags a personas.md naming a kit skill the tree does not install", () => {
+    const root = tempDir();
+    put(root, "skills/review/SKILL.md", `${SKILL("review")}\nladder\n`);
+    put(root, "personas.md", "# Project personas\n\nNamed audiences for `persona-review`.\n");
+    expect(messages(root)).toContain(
+      'personas.md: references skill "persona-review", which this preset does not install',
+    );
+  });
+
+  it("exempts the attribution notice, which names every vendored skill by design", () => {
+    const root = tempDir();
+    put(root, "skills/review/SKILL.md", `${SKILL("review")}\nladder\n`);
+    put(root, "THIRD_PARTY_NOTICES.md", "# Notices\n\nVendored skills: `tdd`, `ponytail`, `plan`.\n");
+    expect(validateKit(root)).toEqual([]);
+  });
+
+  it("flags old AGENTS.md template lines naming an uninstalled skill, and skips user lines", () => {
+    const root = tempDir();
+    put(root, ".agents/skills/review/SKILL.md", `${SKILL("review")}\nladder\n`);
+    put(root, "AGENTS.md", "# Mine\n\nRun the `plan` phase on Fridays.\n");
+    expect(checkKitDocs(root, join(root, ".agents"))).toEqual([]);
+    put(root, "AGENTS.md", "at the first rung that holds (skill `ponytail-review` has the full text):\n");
+    const found = checkKitDocs(root, join(root, ".agents")).map((i) => `${i.path}: ${i.message}`);
+    expect(found).toContain('AGENTS.md: references skill "ponytail-review", which this preset does not install');
+  });
+
+  it("never scans CLAUDE.md: a link duplicates AGENTS.md, a real file is the user's own", () => {
+    const root = tempDir();
+    put(root, ".agents/skills/review/SKILL.md", `${SKILL("review")}\nladder\n`);
+    put(root, "AGENTS.md", "# Mine\n");
+    symlinkSync(join(root, "AGENTS.md"), join(root, "CLAUDE.md"));
+    expect(checkKitDocs(root, join(root, ".agents"))).toEqual([]);
+    const owned = tempDir();
+    put(owned, ".agents/skills/review/SKILL.md", `${SKILL("review")}\nladder\n`);
+    put(owned, "AGENTS.md", "# Mine\n");
+    put(owned, "CLAUDE.md", "See `ponytail-review` and `plan`.\n");
+    expect(checkKitDocs(owned, join(owned, ".agents"))).toEqual([]);
   });
 
   it("flags a command that names no installed skill", () => {
