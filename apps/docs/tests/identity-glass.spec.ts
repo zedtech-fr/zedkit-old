@@ -22,6 +22,28 @@ async function surface(page: Page, className: string) {
 const ms = (value: string) => Number.parseFloat(value) * (value.trim().endsWith("ms") ? 1 : 1000);
 
 test.describe("glass identity", () => {
+  test("site header is one translucent frosted layer", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(HOME, { waitUntil: "networkidle" });
+    await useIdentity(page, "glass", "light");
+    const bar = await page.evaluate(() => {
+      const header = document.querySelector("#nd-nav")!;
+      const inner = header.firstElementChild!;
+      const h = getComputedStyle(header);
+      const i = getComputedStyle(inner);
+      const alpha = Number(/rgba\([^)]*,\s*([\d.]+)\)/.exec(h.backgroundColor)?.[1] ?? 1);
+      return { alpha, filter: h.backdropFilter, innerFilter: i.backdropFilter, innerBg: i.backgroundColor, shadow: h.boxShadow };
+    });
+    expect(bar.alpha).toBeGreaterThanOrEqual(0.55);
+    expect(bar.alpha).toBeLessThanOrEqual(0.7);
+    expect(bar.filter).toContain("blur(");
+    expect(bar.filter).toContain("saturate(");
+    // A blurred child of a blurred header blurs nothing and stacks a second tint.
+    expect(bar.innerFilter).toBe("none");
+    expect(bar.innerBg).toBe("rgba(0, 0, 0, 0)");
+    expect(bar.shadow).not.toBe("none");
+  });
+
   test("makes cards and popovers translucent with a backdrop blur", async ({ page }) => {
     await page.goto(HOME, { waitUntil: "networkidle" });
     // Glass is the site default: compare against a solid identity first.

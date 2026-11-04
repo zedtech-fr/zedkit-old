@@ -291,6 +291,8 @@
   --spacing-live-pulse-gap: 0.375rem;
   --spacing-secret-field-gap: 0.5rem;
   --spacing-page-header-title-gap: 0.25rem;
+  /* Space between a back link above the header and the title. */
+  --spacing-page-header-back-gap: 0.75rem;
   --spacing-page-header-offset: 1.5rem;
   --spacing-page-header-gap: 1rem;
   --spacing-page-header-actions-gap: 0.5rem;

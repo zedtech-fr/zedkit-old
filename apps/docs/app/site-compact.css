@@ -100,13 +100,7 @@
   background-image: var(--zk-site-sheen);
   box-shadow: var(--zk-shadow-sm);
 }
-:root[data-identity="glass"] #nd-nav > div,
-:root[data-identity="glass"] #nd-mobile-nav {
-  background-color: hsl(var(--background) / 0.6);
-  border-bottom-color: hsl(var(--zk-glass-edge) / var(--zk-glass-edge-alpha));
-  -webkit-backdrop-filter: var(--zk-glass-filter);
-  backdrop-filter: var(--zk-glass-filter);
-}
+/* Glass header bars: see globals.css (one blurred layer, kit --zk-glass-bar-* tokens). */
 :root[data-identity="glass"] #nd-nav nav :is(button, a[aria-label], [data-search]) {
   background-image: var(--zk-site-sheen);
   background-color: hsl(var(--card) / var(--zk-glass-alpha));

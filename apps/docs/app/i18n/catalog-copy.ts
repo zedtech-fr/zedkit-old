@@ -1,7 +1,8 @@
 /** English copy for the catalog page. Keys only; no markup. */
 export const catalogCopy = {
   metadata: {
-    title: (siteTitle: string) => `Catalog · ${siteTitle}`,
+    /** The root layout template adds " · zedkit". */
+    title: "Catalog",
     description: "Browse and filter every zedkit catalog need by area, maturity, and search text.",
   },
   jsonLd: {
