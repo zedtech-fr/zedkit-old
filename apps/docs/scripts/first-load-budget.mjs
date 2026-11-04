@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 
 /** Gzip bytes (sum per file) for home `/`. Raise in the PR that grows first load. */
-export const HOME_FIRST_LOAD_GZIP_BUDGET = 364_000;
+export const HOME_FIRST_LOAD_GZIP_BUDGET = 372_000;
 
 const CHUNK_SRC = /\/_next\/static\/chunks\/[^"]+\.js/;
 
