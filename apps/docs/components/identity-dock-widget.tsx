@@ -21,6 +21,7 @@ import {
 
 import { identityDockCopy } from "@/components/i18n/identity-dock-copy";
 import { IdentityDockAssistantPanel } from "@/components/identity-dock-assistant-panel";
+import { useCreatorHandoff } from "@/components/use-creator-handoff";
 import { useIdentityDockKeyboard } from "@/components/use-identity-dock-keyboard";
 import { DEFAULT_IDENTITY } from "@/lib/default-identity";
 import { IDENTITY_EDITOR_HREF } from "@/lib/site-links.mjs";
@@ -55,19 +56,27 @@ function readSiteTokens(identityId: string): IdentityTokens {
   return identityPresets[isPresetId(DEFAULT_IDENTITY) ? DEFAULT_IDENTITY : "glass"];
 }
 
+function useEditorDockAutoOpen(onEditor: boolean, setBrief: (value: string) => void, setExpanded: (open: boolean) => void) {
+  useCreatorHandoff((brief) => {
+    if (brief) setBrief(brief);
+    setExpanded(true);
+  });
+  useEffect(() => {
+    if (onEditor && window.location.hash === "#create") setExpanded(true);
+  }, [onEditor, setExpanded]);
+}
+
 function IdentityDockWidget() {
   const pathname = usePathname();
   const onEditor = pathname === IDENTITY_EDITOR_HREF;
   const identityId = useIdentity(DEFAULT_IDENTITY);
   const baseTokens = useMemo(() => readSiteTokens(identityId), [identityId]);
   const [previewTokens, setPreviewTokens] = useState(baseTokens);
-  const { expanded, setExpanded } = useIdentityAssistantStore();
+  const { expanded, setExpanded, setBrief } = useIdentityAssistantStore();
   const narrow = useNarrowViewport();
   const triggerRef = useIdentityDockKeyboard(expanded, setExpanded);
 
-  useEffect(() => {
-    if (onEditor) setExpanded(true);
-  }, [onEditor, setExpanded]);
+  useEditorDockAutoOpen(onEditor, setBrief, setExpanded);
 
   useEffect(() => {
     setPreviewTokens(baseTokens);

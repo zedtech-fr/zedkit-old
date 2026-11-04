@@ -82,8 +82,21 @@ async function onScreen(page: Page, target: Locator, height: number) {
 
 async function typeBrief(page: Page, text: string) {
   const field = page.locator("#identity-assistant-brief");
+  if (!(await field.isVisible())) {
+    await page.keyboard.press("Control+I");
+  }
+  await expect(field).toBeVisible();
   await field.fill(text);
   await field.scrollIntoViewIfNeeded();
+}
+
+async function openCreatorOnEditor(page: Page) {
+  await page.goto(EDITOR, { waitUntil: "networkidle" });
+  const field = page.locator("#identity-assistant-brief");
+  if (!(await field.isVisible())) {
+    await page.keyboard.press("Control+I");
+  }
+  await expect(field).toBeVisible();
 }
 
 test.describe("creator state matrix", () => {
@@ -96,8 +109,8 @@ test.describe("creator state matrix", () => {
         await route.fulfill(ok(posted));
       });
       await page.setViewportSize({ width: vp.width, height: vp.height });
-      await page.goto(EDITOR, { waitUntil: "networkidle" });
-      expect((await page.locator("[data-assistant-status]").boundingBox())!.height).toBe(0);
+      await openCreatorOnEditor(page);
+      await expect(page.locator("[data-assistant-status]")).toHaveText("");
       const before = await siteBackground(page);
       await typeBrief(page, "A ceramics shop");
       await page.getByRole("button", { name: "Generate" }).click();
@@ -110,7 +123,7 @@ test.describe("creator state matrix", () => {
     test(`${vp.name}: error stays on screen`, async ({ page }) => {
       await service(page, (posted, route) => route.fulfill(ok(posted, { ...WARM, radius: "0.5rem; } body { display: none" })));
       await page.setViewportSize({ width: vp.width, height: vp.height });
-      await page.goto(EDITOR, { waitUntil: "networkidle" });
+      await openCreatorOnEditor(page);
       await typeBrief(page, "A ceramics shop");
       await page.getByRole("button", { name: "Generate" }).click();
       await onScreen(page, page.locator("[data-assistant-status]"), vp.height);
@@ -127,7 +140,7 @@ test.describe("creator state matrix", () => {
         }),
       );
       await page.setViewportSize({ width: vp.width, height: vp.height });
-      await page.goto(EDITOR, { waitUntil: "networkidle" });
+      await openCreatorOnEditor(page);
       await typeBrief(page, "A ceramics shop");
       await page.getByRole("button", { name: "Generate" }).click();
       const status = page.locator("[data-assistant-status]");

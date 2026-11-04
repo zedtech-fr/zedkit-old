@@ -1,4 +1,4 @@
-import { Stack, Text } from "@zedtech/zedkit-ui";
+import { Stack, Text, cn } from "@zedtech/zedkit-ui";
 
 import { UnavailableBanner } from "@/components/identity-assistant-parts";
 import type { Unavailable } from "@/lib/identity-assistant";
@@ -21,7 +21,10 @@ export function DockFeedback({
       data-assistant-feedback=""
     >
       {off ? <UnavailableBanner reason={off} live={false} /> : null}
-      <Text className="min-h-5 text-sm text-muted-foreground" data-assistant-status="">
+      <Text
+        className={cn("text-sm text-muted-foreground", text ? "min-h-5" : "min-h-0")}
+        data-assistant-status=""
+      >
         {text ?? ""}
       </Text>
     </Stack>

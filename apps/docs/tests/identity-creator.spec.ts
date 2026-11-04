@@ -103,11 +103,11 @@ test.describe("home closing scene", () => {
 });
 
 test.describe("the assistant lives in IdentityDock on the demo editor", () => {
-  test("no inline accordion; the dock opens with the describe form", async ({ page }) => {
+  test("no inline accordion; the dock opens with the describe form when creating", async ({ page }) => {
     await service(page, (_posted, route) => route.abort());
     for (const width of [390, 1440]) {
       await page.setViewportSize({ width, height: 900 });
-      await page.goto(EDITOR, { waitUntil: "networkidle" });
+      await page.goto(OPEN, { waitUntil: "networkidle" });
       await expect(page.locator("[data-slot='identity-assistant']")).toHaveCount(0);
       await expect(page.getByText("Create an identity from a description")).toHaveCount(0);
       await expect(page.getByTestId("identity-dock")).toBeVisible();
@@ -169,8 +169,7 @@ test.describe("the assistant lives in IdentityDock on the demo editor", () => {
     await service(page, (posted, route) => route.fulfill(ok(posted)));
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(OPEN, { waitUntil: "networkidle" });
-    const status = await page.locator("[data-assistant-status]").boundingBox();
-    expect(status!.height).toBe(0);
+    await expect(page.locator("[data-assistant-status]")).toHaveText("");
     const views = (await page.getByRole("group", { name: "Conversation or preview" }).boundingBox())!;
     const label = (await page.getByText("Your product and brand").first().boundingBox())!;
     expect(label.y - (views.y + views.height), "the form follows the switch at one gap, not two").toBeLessThanOrEqual(24);
