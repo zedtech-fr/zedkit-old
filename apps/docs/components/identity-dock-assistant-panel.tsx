@@ -1,13 +1,12 @@
 "use client";
 
-import { X } from "lucide-react";
 import { useEffect, useRef } from "react";
-import { IconButton, Stack, Text, Button, cn } from "@zedtech/zedkit-ui";
+import { Stack } from "@zedtech/zedkit-ui";
 
 import { identityAssistantCopy as copy } from "@/components/i18n/identity-assistant-copy";
-import { identityDockCopy } from "@/components/i18n/identity-dock-copy";
 import { AssistantHeading, ViewSwitch, noticeText } from "@/components/identity-assistant-parts";
 import { IdentityDockAssistantGrid } from "@/components/identity-dock-assistant-grid";
+import { IdentityDockPanelToolbar } from "@/components/identity-dock-panel-toolbar";
 import { useAssistantView } from "@/components/use-assistant-view";
 import { useIdentityAssistant } from "@/components/use-identity-assistant";
 import { useIdentityAssistantStore } from "@/lib/identity-assistant-store";
@@ -69,23 +68,7 @@ export function IdentityDockAssistantPanel({
 
   return (
     <Stack ref={panelRef} className="min-h-0 flex-1 gap-0 overflow-hidden" data-slot="identity-dock-body">
-      <Stack direction="horizontal" gap={2} className="items-center border-b border-border px-3 py-2">
-        <Text typeRole="label" className="min-w-0 flex-1">{identityDockCopy.panelTitle}</Text>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          data-testid="identity-dock-new-conversation"
-          className={cn("h-8 shrink-0 px-2 text-xs text-muted-foreground")}
-          aria-label={identityDockCopy.newConversationLabel}
-          onClick={startNewConversation}
-        >
-          {identityDockCopy.newConversation}
-        </Button>
-        <IconButton type="button" variant="ghost" size="sm" label={identityDockCopy.closeLabel} onClick={() => setExpanded(false)}>
-          <X aria-hidden="true" />
-        </IconButton>
-      </Stack>
+      <IdentityDockPanelToolbar onNewConversation={startNewConversation} onClose={() => setExpanded(false)} />
       <Stack gap={4} className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
         <AssistantHeading />
         <ViewSwitch view={ui.view} onView={ui.setView} waiting={session.proposal !== null} previewRef={ui.previewButton} />
