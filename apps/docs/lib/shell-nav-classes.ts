@@ -8,4 +8,3 @@ export const SHELL_NAV_GUIDE_ITEM_CLASS =
 export const SHELL_NAV_GUIDE_LABEL_CLASS =
   "mt-2 px-3 py-1 text-zk-type-label font-medium text-muted-foreground";
 
-export const SHELL_VERSION_MONO_CLASS = "font-mono text-zk-type-label";

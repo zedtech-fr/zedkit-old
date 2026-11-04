@@ -32,7 +32,7 @@
   height: var(--zk-site-header-height);
   min-height: 0;
 }
-#nd-nav nav a,
+#nd-nav nav a:not([data-slot="badge"]),
 #nd-nav nav button:not([class*="max-w"]) {
   border-radius: 9999px;
   padding-block: 0.375rem;
@@ -41,7 +41,7 @@
 }
 #nd-nav nav button,
 #nd-nav nav [data-search],
-#nd-nav nav a[aria-label] {
+#nd-nav nav a[aria-label]:not([data-slot="badge"]) {
   border: var(--zk-border-width, 1px) solid hsl(var(--border) / 0.35);
   background: hsl(var(--card) / 0.6);
 }
@@ -101,7 +101,7 @@
   box-shadow: var(--zk-shadow-sm);
 }
 /* Glass header bars: see globals.css (one blurred layer, kit --zk-glass-bar-* tokens). */
-:root[data-identity="glass"] #nd-nav nav :is(button, a[aria-label], [data-search]) {
+:root[data-identity="glass"] #nd-nav nav :is(button, a[aria-label], [data-search]):not([data-slot="badge"]) {
   background-image: var(--zk-site-sheen);
   background-color: hsl(var(--card) / var(--zk-glass-alpha));
   border-color: hsl(var(--zk-glass-edge) / var(--zk-glass-edge-alpha));
