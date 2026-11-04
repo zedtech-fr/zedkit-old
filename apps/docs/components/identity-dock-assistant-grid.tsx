@@ -10,19 +10,18 @@ import type { SessionState } from "@/lib/identity-creator-session";
 import type { View } from "@/components/identity-assistant-parts";
 import type { IdentityTokens } from "@zedtech/zedkit-ui";
 
-import { DockFeedback } from "@/components/identity-dock-feedback";
-
 export function IdentityDockAssistantGrid(props: {
   view: View;
   session: SessionState;
   off: Unavailable | null;
   brief: string;
   busy: boolean;
-  feedbackText: string | null;
   previewTokens: IdentityTokens;
+  domainBrief: string;
   textareaRef: RefObject<HTMLTextAreaElement | null>;
   onBrief: (brief: string) => void;
   onSubmit: () => void;
+  onQuickRefine: (prompt: string) => void;
   onCancel: () => void;
   onUse: (tokens: IdentityTokens) => void;
   onDiscard: () => void;
@@ -37,16 +36,17 @@ export function IdentityDockAssistantGrid(props: {
         busy={props.busy}
         onBrief={props.onBrief}
         onSubmit={props.onSubmit}
+        onQuickRefine={props.onQuickRefine}
         onCancel={props.onCancel}
         textareaRef={props.textareaRef}
       />
       <Stack gap={4} className="min-w-0">
         <ReferenceReportList report={props.session.references} />
-        <DockFeedback text={props.feedbackText} off={props.off} busy={props.busy} />
         <PreviewPane
           view={props.view}
           proposal={props.session.proposal}
           tokens={props.previewTokens}
+          domainBrief={props.domainBrief}
           busy={props.busy}
           onUse={props.onUse}
           onDiscard={props.onDiscard}

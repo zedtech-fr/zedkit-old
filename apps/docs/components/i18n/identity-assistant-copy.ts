@@ -67,6 +67,9 @@ export const identityAssistantCopy = {
     lightLabel: "Light",
     darkLabel: "Dark",
     preview: "Preview of the proposal in light and dark",
+    beforeLabel: "Before",
+    afterLabel: "After",
+    compare: "Your current look and the proposal side by side.",
     apply: "Use this look",
     discard: "Discard",
     contrastAdjusted: (count: number) => `${count} ${count === 1 ? "colour was" : "colours were"} adjusted so text stays readable.`,
@@ -89,6 +92,11 @@ export const identityAssistantCopy = {
     secondary: "Browse the shop",
   },
   /** Links are written in the brief itself; the page only shows which ones it found and lets a visitor drop one. */
+  refineChips: {
+    label: "Quick refinements",
+    group: "Quick refinements",
+    hint: "Or describe the change in your own words below.",
+  },
   refinePlaceholder: "Calmer, more contrast, a serif for the headings\u2026",
   placeholder: "A small online shop selling hand-thrown ceramics. Calm and warm, a little editorial.\nIn the spirit of https://example.com/studio",
   links: {
