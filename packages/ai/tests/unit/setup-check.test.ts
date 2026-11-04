@@ -120,6 +120,18 @@ describe("checkSetup", () => {
     ]);
   });
 
+  it("requires the .prettierignore plan row when the prettier hint fires", () => {
+    const root = tempDir();
+    gitInit(root);
+    put(root, "package.json", JSON.stringify({ devDependencies: { prettier: "3.9.0" } }));
+    put(root, "PLAN.md", "PLAN.md\npackage.json\nintro-first: printed before any tool call (fresh)\n");
+    expect(checkSetup(root).issues).toEqual([
+      { path: ".prettierignore", message: "plan misses .prettierignore; add plan row: | .prettierignore | edit | exclusions for generated files |" },
+    ]);
+    put(root, "PLAN.md", "PLAN.md\npackage.json\n.prettierignore\nintro-first: printed before any tool call (fresh)\n");
+    expect(checkSetup(root).issues).toEqual([]);
+  });
+
   it("issues when the plan lacks the intro-first line", () => {
     const root = tempDir();
     gitInit(root);

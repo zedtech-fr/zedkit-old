@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { tryCatch } from "@zedtech/zedkit-core";
+import { kitPathsMissingFromPrettierIgnore, repoUsesPrettier } from "./install-next-step.js";
 import type { Issue } from "./validate.js";
 
 export type SetupCheck = { issues: Issue[]; notes: string[] };
@@ -92,6 +93,12 @@ export function checkSetup(root: string, options: { plan?: string } = {}): Setup
       if (rest.startsWith('"') && rest.endsWith('"')) rest = rest.slice(1, -1);
       if (rest === "" || rest.split("/").includes("node_modules") || covers(text, rest)) continue;
       issues.push({ path: rest, message: `plan misses ${rest}; add plan row: ${suggestPlanRow(rest)}` });
+    }
+  }
+  if (plan && repoUsesPrettier(root) && kitPathsMissingFromPrettierIgnore(root, undefined).length > 0) {
+    const text = tryCatch(() => readFileSync(plan, "utf8"));
+    if (text.ok && !covers(text.value, ".prettierignore")) {
+      issues.push({ path: ".prettierignore", message: `plan misses .prettierignore; add plan row: ${suggestPlanRow(".prettierignore")}` });
     }
   }
   if (plan) {

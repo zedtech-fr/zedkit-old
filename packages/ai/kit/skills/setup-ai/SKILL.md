@@ -359,7 +359,7 @@ Run **`npx zedkit-ai validate --setup`** (add **`--plan <file>`** if the plan is
 - Every link exists: check each one (`test -e`).
 - No placeholder like `<Project>` is left.
 - `zedkit-ai validate` is clean, the tool folders (`.claude/`, `.cursor/`) resolve, and the `.cursor` copies match `.agents/` (no drift).
-- The repo's own lint ignores the installed kit dirs (`.agents/`, provider folders): skills ship helper scripts, and a bare lint run must stay green — run it once to prove it. When Prettier is in use, add the kit paths to `.prettierignore` (approve as a plan row if the CLI printed a `prettier:` hint).
+- The repo's own lint ignores the installed kit dirs (`.agents/`, provider folders): skills ship helper scripts, and a bare lint run must stay green — run it once to prove it. When Prettier is in use, add the kit paths to `.prettierignore` (approve as a plan row when `scan` or install printed a `prettier:` hint — `validate --setup` requires the row).
 - A fresh reader, or a subagent given only the new files, can answer: what does this product do, what are the refund rules, how do I run the tests, where does X live, what must I never do here?
 
 ## Phase E — Score and learn
