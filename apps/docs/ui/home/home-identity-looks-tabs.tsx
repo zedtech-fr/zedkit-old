@@ -31,7 +31,7 @@ export function HomeIdentityLooksTabs({
       <ScrollGallery className="w-full min-w-0">
         <TabsList
           aria-label={homeIdentityLooksCopy.tabsAriaLabel}
-          className="inline-flex h-auto! min-h-11 w-max max-w-none flex-nowrap justify-start gap-1 bg-muted p-1"
+          className="inline-flex h-auto! min-h-11 w-max max-w-none flex-nowrap justify-start bg-muted p-1"
         >
           {IDENTITY_IDS.map((id) => (
             <TabsTrigger
