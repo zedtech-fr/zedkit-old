@@ -6,7 +6,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap focus-ring-control disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 motion-safe:button-press [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "box-border inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap focus-ring-control disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 motion-safe:button-press [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -31,7 +31,7 @@ const buttonVariants = cva(
       {
         variant: "link",
         class:
-          "h-auto min-h-0 bg-transparent px-0 py-0 shadow-none hover:bg-transparent active:bg-transparent",
+          "h-auto min-h-0 bg-transparent py-0 shadow-none hover:bg-transparent active:bg-transparent",
       },
       { variant: "link", size: "sm", class: "min-h-11 px-2 text-sm" },
       { variant: "link", size: "default", class: "min-h-11 px-3" },
@@ -52,6 +52,8 @@ function Button({ className, variant, size, asChild = false, ...props }: ButtonP
   return (
     <Comp
       data-slot="button"
+      data-variant={variant ?? "default"}
+      data-size={size ?? "default"}
       className={cn(buttonVariants({ variant, size }), className)}
       {...props}
     />
