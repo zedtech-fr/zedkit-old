@@ -111,7 +111,7 @@ function readIfExists(path) {
 const STATUSES = ["planned", "alpha", "beta", "stable", "deprecated"];
 
 /** Expected live need counts — Option B catalog (129 needs). */
-export const CATALOG_MATURITY_TARGETS = { stable: 63, beta: 38, alpha: 28 };
+export const CATALOG_MATURITY_TARGETS = { stable: 63, beta: 38, alpha: 29 };
 
 /** Maturity definitions — keep aligned with docs/catalog/README.md#maturity. */
 export const MATURITY_DEFINITIONS = {

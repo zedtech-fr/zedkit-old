@@ -36,6 +36,9 @@ const SKIP = new Set([
   "headingVariants",
   "stackVariants",
   "textVariants",
+  "surfaceVariants",
+  "surfaceGlassPanelClass",
+  "applySurfaceGlassPanel",
   // Context/controller wrappers: no host node of their own.
   "Form",
   "FormField",

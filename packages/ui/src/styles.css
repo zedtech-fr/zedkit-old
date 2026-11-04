@@ -365,7 +365,9 @@
   --spacing-drawer-safe-right: env(safe-area-inset-right, 0px);
   --spacing-drawer-side-mobile-width: 90%;
   --spacing-drawer-footer-safe: calc(var(--spacing-drawer-chrome-padding) + env(safe-area-inset-bottom, 0px));
+  --container-drawer-side-sm: 24rem;
   --container-drawer-side: 28rem;
+  --container-drawer-side-lg: min(37.5rem, 92vw);
   --spacing-drawer-handle-top: 1rem;
   --spacing-drawer-handle-height: 0.375rem;
   --spacing-drawer-handle-width: 3rem;

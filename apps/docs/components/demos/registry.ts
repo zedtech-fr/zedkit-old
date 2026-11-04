@@ -118,6 +118,7 @@ import { ErrorStateRetryDemo } from "./error-state-retry-demo";
 import { OfflineNoteDemo, OfflineNoteWiredDemo, OfflineNoteWordingDemo } from "./offline-note-demo";
 import { SpinnerDemo } from "./spinner-demo";
 import { SpinnerNamedDemo } from "./spinner-named-demo";
+import { SurfaceDemo } from "./surface-demo";
 import { ThemeDemo, ThemeTokensDemo, ThemeToggleDemo } from "./theme-demo";
 import { IconButtonDemo, IconButtonRowsDemo } from "./icon-button-demo";
 import { IconLabelAreasDemo } from "./icon-label-areas-demo";
@@ -187,6 +188,7 @@ export const demoRegistry = {
   ErrorStateDemo: { Demo: ErrorStateDemo, file: "error-state-demo.tsx" },
   ErrorStateRetryDemo: { Demo: ErrorStateRetryDemo, file: "error-state-retry-demo.tsx" },
   SpinnerDemo: { Demo: SpinnerDemo, file: "spinner-demo.tsx", center: true },
+  SurfaceDemo: { Demo: SurfaceDemo, file: "surface-demo.tsx" },
   SpinnerNamedDemo: { Demo: SpinnerNamedDemo, file: "spinner-named-demo.tsx", center: true },
   OfflineNoteDemo: { Demo: OfflineNoteDemo, file: "offline-note-demo.tsx" },
   OfflineNoteWiredDemo: { Demo: OfflineNoteWiredDemo, file: "offline-note-demo.tsx" },

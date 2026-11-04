@@ -58,6 +58,7 @@ export {
 export {
   Drawer,
   type DrawerProps,
+  type DrawerSize,
   DrawerBody,
   DrawerClose,
   DrawerCloseButton,
@@ -162,6 +163,7 @@ export {
   SelectValue,
 } from "./select.js";
 export { Separator, type SeparatorProps } from "./separator.js";
+export { Surface, surfaceVariants, surfaceGlassPanelClass, applySurfaceGlassPanel, type SurfaceProps } from "./surface.js";
 export { SCROLL_SCENES_MAX, ScrollScenes, type ScrollScene, type ScrollScenesProps } from "./scroll-scenes.js";
 export { ScrollGallery, type ScrollGalleryProps } from "./scroll-gallery.js";
 export { Skeleton, type SkeletonProps } from "./skeleton.js";
@@ -184,6 +186,7 @@ export {
   type WizardStepState,
   type WizardStepsProps,
 } from "./wizard-steps.js";
+export { WidgetButton, type WidgetButtonProps } from "./widget-button.js";
 export { Switch } from "./switch.js";
 export { Tabs, TabsContent, TabsList, TabsTrigger, type TabsProps } from "./tabs.js";
 export { Textarea, type TextareaProps } from "./textarea.js";

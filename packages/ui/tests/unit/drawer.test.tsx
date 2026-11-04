@@ -376,6 +376,24 @@ describe("drawer", () => {
     expect(panel.className).not.toContain("sm:max-w-md");
   });
 
+  it("accepts lg side width for wide assistant panels", async () => {
+    const user = userEvent.setup();
+    render(
+      <Drawer direction="right">
+        <DrawerTrigger asChild>
+          <Button>Open drawer</Button>
+        </DrawerTrigger>
+        <DrawerContent size="lg">
+          <DrawerTitle>Delivery details</DrawerTitle>
+        </DrawerContent>
+      </Drawer>,
+    );
+    await user.click(screen.getByRole("button", { name: "Open drawer" }));
+    const panel = screen.getByRole("dialog", { name: "Delivery details" });
+    expect(panel.className).toContain("sm:max-w-drawer-side-lg");
+    expect(panel.className).toContain("shadow-overlay");
+  });
+
   it("styles handle, header, and footer from theme tokens", () => {
     render(
       <Drawer defaultOpen>

@@ -905,14 +905,14 @@ import { Button, ConfirmDialog } from "@zedtech/zedkit-ui";
 
 ## Slide in a drawer panel
 
-- Import: `@zedtech/zedkit-ui` — `Drawer`, `DrawerProps`, `DrawerTrigger`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerBody`, `DrawerFooter`, `DrawerHandle`, `DrawerClose`, `DrawerCloseButton`, `DrawerOverlay`, `DrawerPortal`
+- Import: `@zedtech/zedkit-ui` — `Drawer`, `DrawerProps`, `DrawerSize`, `DrawerTrigger`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerBody`, `DrawerFooter`, `DrawerHandle`, `DrawerClose`, `DrawerCloseButton`, `DrawerOverlay`, `DrawerPortal`
 - Wraps: `vaul`
 - Status: beta
 - Derived from: shadcn/ui (drawer)
 - Registry: drawer
 - Short name: Drawer
 - Audience: Developers showing detail views beside a list without navigation.
-- Purpose: Slide-in panels from any edge (right-side detail on desktop, bottom sheet on mobile, left, right, or top on demand).
+- Purpose: Slide-in panels from any edge (right-side detail on desktop, bottom sheet on mobile, left, right, or top on demand). Panel chrome (border, fill, edge shadow) comes from `Surface` elevation 3 (`shadow-overlay`). Pass `size="sm" | "md" | "lg"` on `DrawerContent` for desktop side width (`md` is the default 28rem; `lg` is about min(600px, 92vw)).
 - When to use: For list-detail previews and short side forms.
 - When not to use: For multi-step flows — use a full page or wizard instead.
 - See also: `Open modal dialogs`, `Show key-value details and a live indicator`
@@ -1390,6 +1390,26 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldSet }
 <FieldError errors={[{ message: "Too short." }]} />
 ```
 
+## Shared panel surface (border, shadow, glass)
+
+- Import: `@zedtech/zedkit-ui` — `Surface`, `surfaceVariants`, `SurfaceProps`, `surfaceGlassPanelClass`, `applySurfaceGlassPanel`, `WidgetButton`, `WidgetButtonProps`
+- Wraps: none (`surface.css` frosts `variant="glass"` under the glass identity)
+- Status: alpha
+- Short name: Surface
+- Audience: Developers building floating panels or composing kit overlays.
+- Purpose: One place for panel background (solid card, popover, or glass), elevation (`0`–`3`, token shadows including `shadow-overlay`), border, radius, and optional padding.
+- When to use: Custom panels that should match Dialog, Drawer, Card, and Popover chrome; floating assistant triggers via `WidgetButton`.
+- When not to use: Marketing page sections — use `@zedtech/zedkit-ui/marketing` `GlassSurface` instead.
+- See also: `Group content in a card section`, `Slide in a drawer panel`, `Open modal dialogs`
+- A11y: Presentational wrapper — name regions with headings or `aria-label`. `WidgetButton` is a normal button (outline variant) with pill radius and card elevation.
+- Examples: Solid card panel, Glass popover hook, Widget trigger
+
+```ts
+import { Surface, WidgetButton } from "@zedtech/zedkit-ui";
+<Surface variant="solid" elevation={2} radius="xl" padding="md">Summary</Surface>
+<WidgetButton aria-label="Open assistant">Ask</WidgetButton>
+```
+
 ## Group content in a card section
 
 - Import: `@zedtech/zedkit-ui` — `Card`, `CardProps`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`
@@ -1400,7 +1420,7 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldSet }
 - Purpose: Cards with header/title/description/content/footer slots.
 - When to use: For self-contained blocks (panels, summaries, previews).
 - When not to use: For page-level layout — use AppShell and Stack instead.
-- A11y: Slots are plain containers — put headings and labels inside. Spacing comes from `--spacing-card-*` theme tokens; elevation is `shadow-md` (`--zk-shadow-md` per identity). `CardSkeleton` mirrors the same tokens so async content lands without shifting.
+- A11y: Slots are plain containers — put headings and labels inside. Spacing comes from `--spacing-card-*` theme tokens; elevation is Surface level 2 (`shadow-md`, `--zk-shadow-md` per identity). `CardSkeleton` mirrors the same tokens so async content lands without shifting.
 - See also: `Stack content and group titled sections`
 - Examples: Simple, With footer
 - Registry: card
