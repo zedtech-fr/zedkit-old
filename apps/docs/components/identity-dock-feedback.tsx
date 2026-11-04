@@ -22,7 +22,9 @@ export function DockFeedback({
     >
       {off ? <UnavailableBanner reason={off} live={false} /> : null}
       <Text
-        className={cn("text-sm text-muted-foreground", text ? "min-h-5" : "min-h-0")}
+        variant="muted"
+        typeRole="label"
+        className={cn(text ? "min-h-5" : "min-h-0")}
         data-assistant-status=""
       >
         {text ?? ""}

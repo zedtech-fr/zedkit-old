@@ -18,7 +18,7 @@ import { IDENTITY_EDITOR_HREF } from "@/lib/site-links.mjs";
 function AssistantGreeting() {
   return (
     <ol className="m-0 flex list-none flex-col gap-2 p-0" data-assistant-greeting="">
-      <li className="text-sm">
+      <li className="text-zk-type-body">
         <Text as="span" className="font-medium text-foreground">
           {copy.assistant}
         </Text>{" "}

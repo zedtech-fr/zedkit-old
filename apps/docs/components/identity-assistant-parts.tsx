@@ -146,7 +146,7 @@ export function BriefForm({
         </Stack>
       </form>
       {left < 100 ? (
-        <Text variant="muted" id="identity-assistant-brief-count" className="text-sm">
+        <Text variant="muted" id="identity-assistant-brief-count" typeRole="label">
           {copy.charsLeft(left)}
         </Text>
       ) : null}
@@ -156,7 +156,7 @@ export function BriefForm({
 
 export function AssistantHeading() {
   return (
-    <Text variant="muted" className="text-sm">
+    <Text variant="muted" typeRole="body">
       {copy.intro}
     </Text>
   );
@@ -213,7 +213,7 @@ export function Thread({ turns }: { turns: readonly Turn[] }) {
   return (
     <ol aria-label={copy.thread} className="m-0 flex list-none flex-col gap-2 p-0" data-assistant-thread="">
       {turns.map((turn, index) => (
-        <li key={`${index}-${turn.role}`} className="text-sm">
+        <li key={`${index}-${turn.role}`} className="text-zk-type-body">
           <Text as="span" className="font-medium text-foreground">
             {turn.role === "user" ? copy.you : copy.assistant}
           </Text>{" "}
@@ -230,7 +230,7 @@ export function UnavailableBanner({ reason, live = true }: { reason: Unavailable
   return (
     <Text
       role={live ? "status" : undefined}
-      className="rounded-md border border-border bg-muted px-3 py-2 text-sm"
+      className="rounded-md border border-border bg-muted px-3 py-2 text-zk-type-body"
       data-assistant-unavailable=""
     >
       {copy.unavailable(reason)}
@@ -289,25 +289,25 @@ export function ProposalCard({
   const domain = useMemo(() => specimenDomainFromBrief(domainBrief), [domainBrief]);
   return (
     <Stack gap={3} role="region" aria-label={copy.proposal.title} aria-busy={busy || undefined} data-assistant-proposal="" className={busy ? "opacity-60" : undefined}>
-      <Text as="span" className="text-base font-semibold text-foreground">
+      <Text as="span" typeRole="cardTitle" className="text-foreground">
         {copy.proposal.title}
       </Text>
       {proposal.summary ? (
-        <Text className="m-0 text-sm">
+        <Text typeRole="body" className="m-0">
           <Text as="span" className="font-medium">
             {copy.proposal.summaryLabel}:
           </Text>{" "}
           {proposal.summary}
         </Text>
       ) : null}
-      <Text variant="muted" className="text-sm">
+      <Text variant="muted" typeRole="body">
         {copy.proposal.changes(rows.length)}. {contrastNote(repaired)}
       </Text>
       <ProposalBeforeAfter current={current} proposed={repaired.tokens} requestId={proposal.requestId} domain={domain} />
       {rows.length > 0 ? (
-        <details className="text-sm">
+        <details className="text-zk-type-body">
           <summary className="flex min-h-11 cursor-pointer items-center focus-ring">{copy.proposal.showChanges}</summary>
-          <ul className="m-0 flex list-none flex-col gap-1 p-0 font-mono text-sm">
+          <ul className="m-0 flex list-none flex-col gap-1 p-0 font-mono text-zk-type-small">
             {rows.map((row) => (
               <li key={row.path} className="break-words">
                 {row.path}: {row.from} → {row.to}
@@ -317,7 +317,7 @@ export function ProposalCard({
         </details>
       ) : null}
       <ProposalApplyRow busy={busy} tokens={repaired.tokens} onUse={onUse} onDiscard={onDiscard} />
-      <Text variant="muted" className="text-sm">
+      <Text variant="muted" typeRole="body">
         {copy.proposal.note}
       </Text>
     </Stack>
