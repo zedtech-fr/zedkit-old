@@ -126,4 +126,5 @@ test("the suggest routes cap the request body and every connection has seconds t
   const proxies = [...text.matchAll(/"handler":"reverse_proxy"[^]*?"dial":"(suggest(?:-dev)?:3001)"/g)].map((match) => match[1]);
   assert.deepEqual(proxies.sort(), ["suggest-dev:3001", "suggest:3001"]);
   assert.equal([...text.matchAll(/"handler":"request_body","max_size":32000/g)].length, 2, "a body cap in front of each proxy");
+  assert.equal([...text.matchAll(/"read_timeout":90000000000/g)].length, 2, "suggest upstream read timeout matches provider budget");
 });

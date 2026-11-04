@@ -96,13 +96,19 @@ export function loadConfig(env) {
   const globalPerDay = integer(env.IDENTITY_AI_GLOBAL_PER_DAY, { fallback: DEFAULTS.globalPerDay, min: 1, max: 10_000 });
   const usableFallback = fallback && fallback.priceInput !== null && fallback.priceOutput !== null ? fallback : null;
 
+  let maxOutputTokens = integer(env.IDENTITY_AI_MAX_TOKENS, { fallback: DEFAULTS.maxOutputTokens, min: 256, max: HARD.maxOutputTokens });
+  if (primary?.effort || usableFallback?.effort) {
+    // Reasoning consumes output budget before the JSON answer; the default 4000 cap starves the reply (#1203 regression).
+    maxOutputTokens = Math.max(maxOutputTokens, HARD.maxOutputTokens);
+  }
+
   return {
     problems,
     primary,
     fallback: usableFallback,
     budget: { dailyMicro, monthlyMicro },
     limits: {
-      maxOutputTokens: integer(env.IDENTITY_AI_MAX_TOKENS, { fallback: DEFAULTS.maxOutputTokens, min: 256, max: HARD.maxOutputTokens }),
+      maxOutputTokens,
       timeoutMs: integer(env.IDENTITY_AI_TIMEOUT_MS, { fallback: DEFAULTS.timeoutMs, min: 1_000, max: HARD.maxTimeoutMs }),
       maxConcurrent: integer(env.IDENTITY_AI_MAX_CONCURRENT, { fallback: DEFAULTS.maxConcurrent, min: 1, max: HARD.maxConcurrent }),
       ipPerMinute: integer(env.IDENTITY_AI_IP_PER_MINUTE, { fallback: DEFAULTS.ipPerMinute, min: 1, max: 60 }),

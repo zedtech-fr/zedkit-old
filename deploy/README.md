@@ -55,7 +55,7 @@ reason (`disabled`, `not-configured`, `unavailable` or `killed`), and
 | `IDENTITY_AI_PRICE_INPUT_USD_PER_MTOK`, `IDENTITY_AI_PRICE_OUTPUT_USD_PER_MTOK` | The model's price per million tokens: spend is computed from it | **required** |
 | `IDENTITY_AI_BASE_URL`, `_API_KEY`, `_MODEL` | OpenAI-compatible chat completions origin (the contract the Muse route speaks). Never committed | required |
 | `IDENTITY_AI_FALLBACK_*` and `IDENTITY_AI_FALLBACK_PRICE_*` | One optional second origin, tried once after a refusal or transport failure. Without prices it is off | none |
-| `IDENTITY_AI_MAX_TOKENS` | Output tokens including reasoning | 4000, never above 8000 |
+| `IDENTITY_AI_MAX_TOKENS` | Output tokens including reasoning | 4000, never above 8000; when `IDENTITY_AI_REASONING_EFFORT` is set, the service uses the full 8000 ceiling so the JSON answer is not starved |
 | `IDENTITY_AI_TIMEOUT_MS` | Provider time per request | 45000, never above 60000 |
 | `IDENTITY_AI_MAX_CONCURRENT` | Paid jobs running at once, across instances | 2, never above 8 |
 | `IDENTITY_AI_IP_PER_MINUTE`, `_IP_PER_DAY`, `_SESSION_PER_DAY`, `_GLOBAL_PER_DAY` | Request limits per visitor address (an IPv6 visitor is its /64), per session cookie, and overall | 3, 20, 12, 300 |
