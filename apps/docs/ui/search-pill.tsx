@@ -30,7 +30,7 @@ export function SearchPill() {
             tabIndex={-1}
             aria-hidden="true"
             onClick={close}
-            className="fixed inset-0 z-overlay cursor-default bg-overlay/30 transition-opacity duration-200 motion-reduce:transition-none starting:opacity-0"
+            className="fixed inset-0 z-overlay bg-overlay/30 transition-opacity duration-200 motion-reduce:transition-none starting:opacity-0"
           />
           <div
             ref={bar}
