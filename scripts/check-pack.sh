@@ -144,22 +144,18 @@ size_budget() {
     echo "$label: size $bytes / $max ok"
   fi
 }
-# Measured 42212 on 2 Nov 2026 (identity tokens, route modal, ThemeScope ref and nested-identity handling);
-# the previous 40800 was already exceeded at 41771 before this change. Keep roughly 2% headroom.
-# Raised from 43100 to 43500 on 3 Nov 2026: measured 43137 with the OptionCard check indicator.
 # Raised from 43500 to 44500 on 4 Nov 2026: measured 44141 with ScrollReset (route scroll reset).
 # Raised to 45500 on 4 Nov 2026 after syncing main: signature type-role and motion exports on top of ScrollReset.
+# IdentityDock chrome + vaul sheet moved to apps/docs (4 Nov 2026); ui gzip measured 44660.
 size_budget ui 45500
 # Marketing entry (separate from the main budget); measured 785 with GlassSurface only;
 # 9865 with L2 domain specimens plus goal/reference marketing sections (Hero, Pricing, …);
-# 10020 after specimen-primitives barrel so dist smoke resolves without `#` → src.
+# 10020 after specimen-primitives barrel; tokenized keyword routing measured 10084 gzip.
 size_budget ui 10200 marketing
-# 4 Nov 2026: dist-size review. Clean-measured 17148 (USAGE to kit data, drift
-# frontmatter/wiring/universe dedup; no behavior change); budget lowered to
-# 17400 to lock the gain. Note: measured + 3% would be 17662, above the old
-# budget, so headroom is ~1.5%. A 10%+ shrink needs a comment-strip step
-# (measured at -4196, proposed in the PR, not taken here).
-size_budget ai 17400
+# 4 Nov 2026: validate --setup completion check (setup-check.ts). Measured
+# 18465; 17400 cannot fit a new module (gzip delta vs 17268 baseline is
+# ~1.2KB). Budget = measured + 2% = 18835.
+size_budget ai 18835
 
 if [ -f apps/docs/out/index.html ]; then
   if ! node apps/docs/scripts/check-first-load-budget.mjs; then

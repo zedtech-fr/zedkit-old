@@ -268,7 +268,17 @@ describe("preset closure", () => {
     install(dest, "starter");
     appendFileSync(join(dest, ".agents/skills/review/SKILL.md"), "\nRun `/plan` before merging.\n");
     const found = validateKit(join(dest, ".agents")).map((issue) => `${issue.path}: ${issue.message}`);
-    expect(found).toContain('skills/review/SKILL.md: references skill "plan", which this preset does not install');
+    expect(found).toContain('skills/review/SKILL.md: references command "plan", which this preset does not install');
+  });
+
+  it("flags /orchestrate on setup where the skill but not the command is installed", () => {
+    const dest = tempDir();
+    install(dest, "setup");
+    appendFileSync(join(dest, ".agents/skills/review/SKILL.md"), "\nPoint big tasks at `/orchestrate`.\n");
+    const found = validateKit(join(dest, ".agents")).map((issue) => `${issue.path}: ${issue.message}`);
+    expect(found).toContain(
+      'skills/review/SKILL.md: references command "orchestrate", which this preset does not install',
+    );
   });
 
   it("flags the unbackticked handoffs line for setup and starter, except single-word names", () => {

@@ -75,6 +75,7 @@ function ScopedCard({ look }: { look: (typeof identities)[number] }) {
   return (
     <Stack
       gap={3}
+      data-demo-specimen=""
       data-identity-scope=""
       data-identity={look.id}
       data-demo-scope={look.id}

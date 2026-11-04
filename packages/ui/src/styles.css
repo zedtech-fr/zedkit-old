@@ -293,6 +293,8 @@
   --spacing-live-pulse-gap: 0.375rem;
   --spacing-secret-field-gap: 0.5rem;
   --spacing-page-header-title-gap: 0.25rem;
+  /* Space between a back link above the header and the title. */
+  --spacing-page-header-back-gap: 0.75rem;
   --spacing-page-header-offset: 1.5rem;
   --spacing-page-header-gap: 1rem;
   --spacing-page-header-actions-gap: 0.5rem;
@@ -378,6 +380,36 @@
   [role="combobox"],
   [role="option"] {
     touch-action: manipulation;
+  }
+
+  /* Tailwind v4 preflight sets buttons to cursor:default; restore affordances. */
+  a[href],
+  button:not(:disabled),
+  summary,
+  label[for],
+  select:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]):not([data-disabled]),
+  [role="tab"]:not([aria-disabled="true"]):not([data-disabled]),
+  [role="menuitem"]:not([aria-disabled="true"]):not([data-disabled]),
+  [role="menuitemcheckbox"]:not([aria-disabled="true"]):not([data-disabled]),
+  [role="menuitemradio"]:not([aria-disabled="true"]):not([data-disabled]),
+  [role="option"]:not([aria-disabled="true"]):not([data-disabled]),
+  [role="switch"]:not([aria-disabled="true"]):not([data-disabled]),
+  [role="checkbox"]:not([aria-disabled="true"]):not([data-disabled]),
+  [role="radio"]:not([aria-disabled="true"]):not([data-disabled]),
+  [role="combobox"]:not([aria-disabled="true"]):not([data-disabled]) {
+    cursor: pointer;
+  }
+
+  input:not(:disabled):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="range"]):not([type="color"]),
+  textarea:not(:disabled) {
+    cursor: text;
+  }
+
+  :disabled,
+  [aria-disabled="true"],
+  [data-disabled] {
+    cursor: not-allowed;
   }
 }
 
@@ -602,5 +634,8 @@ html [data-vaul-drawer-direction="right"] [data-vaul-handle] {
   html [data-vaul-overlay] {
     animation: none !important;
     transition: none !important;
+  }
+  html [data-slot="identity-dock-sheet"][data-vaul-drawer] {
+    transform: none !important;
   }
 }

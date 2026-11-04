@@ -102,21 +102,25 @@ test.describe("home closing scene", () => {
   });
 });
 
-test.describe("the assistant folds away, and on a phone the conversation and the preview take turns", () => {
-  test("it starts folded so the editor keeps its order; a click, #create or a brief from the home page opens it", async ({ page }) => {
+test.describe("the assistant lives in IdentityDock on the demo editor", () => {
+  test("no inline accordion; the dock opens with the describe form when creating", async ({ page }) => {
     await service(page, (_posted, route) => route.abort());
     for (const width of [390, 1440]) {
       await page.setViewportSize({ width, height: 900 });
-      await page.goto(EDITOR, { waitUntil: "networkidle" });
-      const summary = page.getByText("Create an identity from a description");
-      await expect(summary).toBeVisible();
-      await expect(page.locator("#identity-assistant-brief")).toBeHidden();
-      if (width < 640) expect((await summary.boundingBox())!.height).toBeGreaterThanOrEqual(43.5);
-      await summary.click();
-      await expect(page.locator("#identity-assistant-brief")).toBeVisible();
       await page.goto(OPEN, { waitUntil: "networkidle" });
-      await expect(page.locator("#identity-assistant-brief")).toBeFocused();
+      await expect(page.locator("[data-slot='identity-assistant']")).toHaveCount(0);
+      await expect(page.getByText("Create an identity from a description")).toHaveCount(0);
+      await expect(page.getByTestId("identity-dock")).toBeVisible();
+      await expect(page.locator("#identity-assistant-brief")).toBeVisible();
+      await expect(page.getByRole("button", { name: "Generate", exact: true })).toBeVisible();
     }
+  });
+
+  test("#create still focuses the dock brief after handoff", async ({ page }) => {
+    await service(page, (_posted, route) => route.abort());
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(OPEN, { waitUntil: "networkidle" });
+    await expect(page.locator("#identity-assistant-brief")).toBeFocused();
   });
 
   test("390px: a proposal takes the visitor to the preview with focus; the way back is one tap; using it returns to the form", async ({ page }) => {
@@ -165,8 +169,7 @@ test.describe("the assistant folds away, and on a phone the conversation and the
     await service(page, (posted, route) => route.fulfill(ok(posted)));
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(OPEN, { waitUntil: "networkidle" });
-    const status = await page.locator("[data-assistant-status]").boundingBox();
-    expect(status!.height).toBe(0);
+    await expect(page.locator("[data-assistant-status]")).toHaveText("");
     const views = (await page.getByRole("group", { name: "Conversation or preview" }).boundingBox())!;
     const label = (await page.getByText("Your product and brand").first().boundingBox())!;
     expect(label.y - (views.y + views.height), "the form follows the switch at one gap, not two").toBeLessThanOrEqual(24);
@@ -462,12 +465,12 @@ test.describe("fit and access", () => {
       await page.addInitScript((theme) => localStorage.setItem("theme", theme), mode);
       await service(page, (posted, route) => route.fulfill(ok(posted)));
       await page.goto(OPEN, { waitUntil: "networkidle" });
-      await assertA11yGate(page, "[data-slot='identity-assistant']");
+      await assertA11yGate(page, "[data-slot='identity-dock-panel'], [data-slot='identity-dock-body']");
       await brief(page, "A ceramics shop, like https://atelier-nord.example.org/");
       await page.getByRole("button", { name: "Generate" }).click();
       await expect(page.locator("[data-assistant-proposal]")).toBeVisible();
-      await assertA11yGate(page, "[data-slot='identity-assistant']");
-      await page.locator("[data-slot='identity-assistant']").screenshot({ path: `test-results/identity-creator-${mode}.png` });
+      await assertA11yGate(page, "[data-assistant-proposal]");
+      await page.locator("[data-slot='identity-dock-panel'], [data-slot='identity-dock-sheet']").first().screenshot({ path: `test-results/identity-creator-${mode}.png` });
     });
   }
 });

@@ -18,7 +18,7 @@ export default function IdentityEditorFeaturePage() {
     <Container width="wide" className="py-section-lg">
       <Stack gap={6}>
         <Stack gap={2}>
-          <Button asChild variant="link" size="sm" className="-mx-2 -my-3 w-fit" data-editor-back="">
+          <Button asChild variant="link" size="sm" className="-mx-2 -mt-6 w-fit" data-editor-back="">
             <Link href="/#identities">{identityEditorCopy.back}</Link>
           </Button>
           <Heading level={1} typeRole="section">

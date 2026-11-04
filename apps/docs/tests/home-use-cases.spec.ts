@@ -62,7 +62,7 @@ test("the identities band links to the demo editor and no-code route (#1092)", a
   await identities.scrollIntoViewIfNeeded();
   await expect(section.getByRole("link", { name: "Try the demo editor" })).toHaveAttribute(
     "href",
-    "/features/identity-editor",
+    "/features/identity-editor#create",
   );
   await expect(section.getByRole("link", { name: "Start without writing code" })).toHaveAttribute(
     "href",

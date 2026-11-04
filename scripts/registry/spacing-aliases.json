@@ -71,6 +71,7 @@
       "--spacing-field-legend-bottom",
       "--spacing-option-card-gap",
       "--spacing-option-cards-gap",
+      "--spacing-page-header-back-gap",
       "--spacing-tabs-trigger-inline",
       "--spacing-wizard-steps-gap"
     ]
