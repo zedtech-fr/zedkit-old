@@ -347,6 +347,145 @@ describe("observeAnimate", () => {
     expect(FakeIo.instances[0]?.observed.size ?? 0).toBe(0);
     stop();
   });
+  it("reads a delay and ignores a negative or unreadable one", () => {
+    const good = document.createElement("div");
+    good.setAttribute("data-animate", "fade-up");
+    good.setAttribute("data-animate-delay", "120");
+    const negative = document.createElement("div");
+    negative.setAttribute("data-animate", "fade-up");
+    negative.setAttribute("data-animate-delay", "-5");
+    const junk = document.createElement("div");
+    junk.setAttribute("data-animate", "fade-up");
+    junk.setAttribute("data-animate-delay", "soon");
+    document.body.append(good, negative, junk);
+    const stop = observeAnimate();
+    expect(good.style.getPropertyValue("--zk-animate-delay")).toBe("120ms");
+    expect(negative.style.getPropertyValue("--zk-animate-delay")).toBe("");
+    expect(junk.style.getPropertyValue("--zk-animate-delay")).toBe("");
+    stop();
+  });
+
+  it("copies custom keyframe names for every trigger and keeps presets as they are", () => {
+    const el = document.createElement("div");
+    el.setAttribute("data-animate-appear", "wiggle");
+    el.setAttribute("data-animate-press", "squish");
+    el.setAttribute("data-animate-hover", "lift");
+    el.setAttribute("data-animate-focus", "glow");
+    document.body.append(el);
+    const stop = observeAnimate();
+    expect(el.style.getPropertyValue("--zk-animate-appear-name")).toBe("wiggle");
+    expect(el.style.getPropertyValue("--zk-animate-press-name")).toBe("squish");
+    expect(el.style.getPropertyValue("--zk-animate-focus-name")).toBe("glow");
+    expect(el.style.getPropertyValue("--zk-animate-hover-name")).toBe("");
+    stop();
+  });
+
+  it("ignores non-primary pointers for longpress and clears on leave", () => {
+    vi.useFakeTimers();
+    const el = document.createElement("button");
+    el.setAttribute("data-animate-longpress", "pulse");
+    document.body.append(el);
+    const stop = observeAnimate();
+    fireEvent.pointerDown(el, { isPrimary: false });
+    act(() => {
+      vi.advanceTimersByTime(600);
+    });
+    expect(el.hasAttribute("data-animate-longpress-on")).toBe(false);
+    fireEvent.pointerDown(el, { isPrimary: true });
+    act(() => {
+      vi.advanceTimersByTime(600);
+    });
+    expect(el.hasAttribute("data-animate-longpress-on")).toBe(true);
+    fireEvent.pointerLeave(el);
+    expect(el.hasAttribute("data-animate-longpress-on")).toBe(false);
+    stop();
+    vi.useRealTimers();
+  });
+
+  it("uses the longpress token when the page sets one", () => {
+    vi.useFakeTimers();
+    const el = document.createElement("button");
+    el.setAttribute("data-animate-longpress", "pulse");
+    el.style.setProperty("--zk-longpress-ms", "200");
+    document.body.append(el);
+    const stop = observeAnimate();
+    fireEvent.pointerDown(el, { isPrimary: true });
+    act(() => {
+      vi.advanceTimersByTime(250);
+    });
+    expect(el.hasAttribute("data-animate-longpress-on")).toBe(true);
+    stop();
+    vi.useRealTimers();
+  });
+
+  it("attaches targets inside an added subtree and forgets removed scroll nodes", async () => {
+    const stop = observeAnimate();
+    const wrap = document.createElement("section");
+    const inner = document.createElement("div");
+    inner.setAttribute("data-animate-scroll", "parallax");
+    const rect = vi.spyOn(inner, "getBoundingClientRect");
+    wrap.append(inner);
+    document.body.append(wrap);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(inner.style.getPropertyValue("--zk-animate-progress")).not.toBe("");
+    wrap.remove();
+    await act(async () => {
+      await Promise.resolve();
+    });
+    rect.mockClear();
+    document.dispatchEvent(new Event("scroll", { bubbles: true }));
+    expect(rect).not.toHaveBeenCalled();
+    stop();
+  });
+
+  it("recomputes scroll progress on resize", async () => {
+    const el = document.createElement("div");
+    el.setAttribute("data-animate-scroll", "parallax");
+    const rect = vi.spyOn(el, "getBoundingClientRect");
+    document.body.append(el);
+    const stop = observeAnimate();
+    rect.mockClear();
+    window.dispatchEvent(new Event("resize"));
+    await act(async () => {
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)));
+    });
+    expect(rect).toHaveBeenCalled();
+    stop();
+  });
+
+  it("leaves appear targets alone when IntersectionObserver is missing", () => {
+    globalThis.IntersectionObserver = undefined as never;
+    const el = document.createElement("div");
+    el.setAttribute("data-animate", "fade-up");
+    document.body.append(el);
+    const stop = observeAnimate();
+    expect(el.hasAttribute("data-animate-state")).toBe(false);
+    stop();
+  });
+
+  it("keeps running until the last observer stops", async () => {
+    const first = observeAnimate();
+    const second = observeAnimate();
+    first();
+    const early = document.createElement("div");
+    early.setAttribute("data-animate", "fade-up");
+    document.body.append(early);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(FakeIo.instances[0]?.observed.has(early)).toBe(true);
+    second();
+    const late = document.createElement("div");
+    late.setAttribute("data-animate", "fade-up");
+    document.body.append(late);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(FakeIo.instances.some((io) => io.observed.has(late))).toBe(false);
+  });
+
 });
 
 describe("AnimateObserver", () => {
