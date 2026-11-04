@@ -85,7 +85,7 @@ console.log("\n## In-scope shorthand / Tailwind (target: tokenise or CSS sheet)\
 console.log("| Kind | File | Detail |");
 console.log("|---|---|---|");
 for (const r of inScope.filter((x) => x.kind !== "css-strict")) {
-  console.log(`| ${r.kind} | \`${r.file}\` | ${r.detail.replace(/\|/g, "\\|")} |`);
+  console.log(`| ${r.kind} | \`${r.file}\` | ${r.detail.replace(/\\/g, "\\\\").replace(/\|/g, "\\|")} |`);
 }
 
 console.log("\n## Out of scope (marketing home; tracked separately)\n");
