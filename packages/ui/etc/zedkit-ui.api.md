@@ -107,6 +107,9 @@ export function applyIdentity(id: string, storageKey?: string): void;
 export function applyIdentityTokenSheet(tokens: IdentityTokens, selector: string, doc?: Document): HTMLStyleElement;
 
 // @public
+export function applyMotionPreference(preference: MotionPreference, storageKey?: string): void;
+
+// @public
 export function applySurfaceGlassPanel(element: HTMLElement, options?: Pick<VariantProps<typeof surfaceVariants>, "elevation" | "radius" | "padding">): void;
 
 // @public (undocumented)
@@ -1066,6 +1069,9 @@ export function Input(input: InputProps): React_2.JSX.Element;
 export type InputProps = React_2.ComponentProps<"input">;
 
 // @public
+export function isMotionReduced(): boolean;
+
+// @public
 export function isNamedIdentityId(id: string): boolean;
 
 // @public (undocumented)
@@ -1102,6 +1108,23 @@ export function Logo(input: LogoProps): JSX.Element;
 export interface LogoProps extends Omit<BrandLogoProps, "children" | "title" | "viewBox"> {
     title?: string;
 }
+
+// @public (undocumented)
+export const MOTION_CHANGE_EVENT = "zk-motion-change";
+
+// @public (undocumented)
+export const MOTION_STORAGE_KEY = "zk-motion";
+
+// @public (undocumented)
+export type MotionPreference = "reduce" | "no-preference";
+
+// @public
+export function MotionScript(input: MotionScriptProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type MotionScriptProps = {
+    storageKey?: string;
+};
 
 // @public (undocumented)
 export function MultiSelect(props: MultiSelectProps): JSX.Element;
@@ -1735,6 +1758,9 @@ export const useFormField: () => {
 
 // @public
 export function useIdentity(fallback?: string): string;
+
+// @public
+export function useMotionPreference(): MotionPreference;
 
 // @public
 export function useOnlineStatus(): boolean;

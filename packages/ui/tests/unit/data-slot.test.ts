@@ -9,6 +9,12 @@ const SKIP = new Set([
   "ScrollReset",
   "observeAnimate",
   "AnimateObserver",
+  // Layout hosts: data-sticky-aside-* is the selector contract, not data-slot.
+  "StickyAsideAside",
+  "StickyAsideMain",
+  "applyMotionPreference",
+  "isMotionReduced",
+  "useMotionPreference",
   "applyIdentity",
   "discardCustomIdentity",
   "applyCustomIdentity",

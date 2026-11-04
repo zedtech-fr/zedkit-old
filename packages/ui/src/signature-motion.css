@@ -22,25 +22,35 @@
 }
 
 @utility motion-reveal {
-  animation: zk-reveal-up var(--zk-motion-reveal-duration) var(--zk-motion-reveal-ease) backwards;
+  :root:not([data-motion="reduce"]) & {
+    animation: zk-reveal-up var(--zk-motion-reveal-duration) var(--zk-motion-reveal-ease) backwards;
+  }
 }
 
 @utility motion-settle {
-  animation: zk-reveal-fade var(--zk-motion-settle-duration) var(--zk-motion-settle-ease) backwards;
+  :root:not([data-motion="reduce"]) & {
+    animation: zk-reveal-fade var(--zk-motion-settle-duration) var(--zk-motion-settle-ease) backwards;
+  }
 }
 
 @utility motion-emphasis {
-  animation: zk-reveal-pop var(--zk-motion-emphasis-duration) var(--zk-motion-emphasis-ease) backwards;
+  :root:not([data-motion="reduce"]) & {
+    animation: zk-reveal-pop var(--zk-motion-emphasis-duration) var(--zk-motion-emphasis-ease) backwards;
+  }
 }
 
 @utility motion-glide {
-  transition-duration: var(--zk-motion-glide-duration);
-  transition-timing-function: var(--zk-motion-glide-ease);
+  :root:not([data-motion="reduce"]) & {
+    transition-duration: var(--zk-motion-glide-duration);
+    transition-timing-function: var(--zk-motion-glide-ease);
+  }
 }
 
 @utility motion-feedback {
-  transition-duration: var(--zk-motion-feedback-duration);
-  transition-timing-function: var(--zk-motion-feedback-ease);
+  :root:not([data-motion="reduce"]) & {
+    transition-duration: var(--zk-motion-feedback-duration);
+    transition-timing-function: var(--zk-motion-feedback-ease);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -53,4 +63,14 @@
   .motion-feedback {
     transition: none !important;
   }
+}
+
+:root[data-motion="reduce"] .motion-reveal,
+:root[data-motion="reduce"] .motion-settle,
+:root[data-motion="reduce"] .motion-emphasis {
+  animation: none !important;
+}
+:root[data-motion="reduce"] .motion-glide,
+:root[data-motion="reduce"] .motion-feedback {
+  transition: none !important;
 }

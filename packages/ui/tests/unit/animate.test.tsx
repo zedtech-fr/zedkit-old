@@ -42,13 +42,35 @@ class FakeIo implements IntersectionObserver {
   }
 }
 
-function setMotion(reduce: boolean) {
-  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-    matches: reduce && query.includes("reduce"),
-    media: query,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-  })) as unknown as typeof window.matchMedia;
+type MotionMql = {
+  matches: boolean;
+  media: string;
+  addEventListener: (type: string, fn: (event: MediaQueryListEvent) => void) => void;
+  removeEventListener: (type: string, fn: (event: MediaQueryListEvent) => void) => void;
+  dispatch: (matches: boolean) => void;
+};
+
+function setMotion(reduce: boolean): MotionMql {
+  const listeners = new Set<(event: MediaQueryListEvent) => void>();
+  const mql: MotionMql = {
+    matches: reduce,
+    media: "(prefers-reduced-motion: reduce)",
+    addEventListener: (_type, fn) => {
+      listeners.add(fn);
+    },
+    removeEventListener: (_type, fn) => {
+      listeners.delete(fn);
+    },
+    dispatch: (matches: boolean) => {
+      mql.matches = matches;
+      for (const fn of listeners) fn({ matches } as MediaQueryListEvent);
+    },
+  };
+  window.matchMedia = vi.fn().mockImplementation((query: string) => {
+    if (query.includes("reduce")) return mql;
+    return { matches: false, media: query, addEventListener: () => {}, removeEventListener: () => {} };
+  }) as unknown as typeof window.matchMedia;
+  return mql;
 }
 
 describe("animate CSS", () => {
@@ -108,6 +130,7 @@ describe("observeAnimate", () => {
   afterEach(() => {
     cleanup();
     document.body.innerHTML = "";
+    document.documentElement.removeAttribute("data-motion");
     globalThis.IntersectionObserver = restoreIo;
     vi.unstubAllGlobals();
   });
@@ -213,6 +236,115 @@ describe("observeAnimate", () => {
     document.body.append(el);
     const stop = observeAnimate();
     expect(FakeIo.instances[0]?.observed.has(el) ?? false).toBe(false);
+    stop();
+  });
+
+  it("shares one scroll listener across several observeAnimate calls", () => {
+    const spy = vi.spyOn(document, "addEventListener");
+    const el = document.createElement("div");
+    el.setAttribute("data-animate-scroll", "parallax");
+    document.body.append(el);
+    const stopA = observeAnimate();
+    const stopB = observeAnimate();
+    expect(spy.mock.calls.filter((call) => call[0] === "scroll")).toHaveLength(1);
+    stopA();
+    stopB();
+    spy.mockRestore();
+  });
+
+  it("starts scroll updates when a scroll node is added after init", async () => {
+    const stop = observeAnimate();
+    const el = document.createElement("div");
+    el.setAttribute("data-animate-scroll", "parallax");
+    vi.spyOn(el, "getBoundingClientRect").mockReturnValue({
+      top: 50,
+      height: 100,
+      bottom: 150,
+      left: 0,
+      right: 0,
+      width: 0,
+      x: 0,
+      y: 50,
+      toJSON: () => ({}),
+    });
+    vi.stubGlobal("innerHeight", 200);
+    document.body.append(el);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(el.style.getPropertyValue("--zk-animate-progress")).toBe("0.5");
+    stop();
+  });
+
+  it("stops reading detached scroll nodes", async () => {
+    const el = document.createElement("div");
+    el.setAttribute("data-animate-scroll", "parallax");
+    const rect = vi.spyOn(el, "getBoundingClientRect").mockReturnValue({
+      top: 0,
+      height: 10,
+      bottom: 10,
+      left: 0,
+      right: 0,
+      width: 0,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+    document.body.append(el);
+    const stop = observeAnimate();
+    el.remove();
+    rect.mockClear();
+    document.dispatchEvent(new Event("scroll", { bubbles: true }));
+    await act(async () => {
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)));
+    });
+    expect(rect).not.toHaveBeenCalled();
+    stop();
+  });
+
+  it("starts after reduced motion is turned off", () => {
+    const mql = setMotion(true);
+    const el = document.createElement("div");
+    el.setAttribute("data-animate", "fade-up");
+    document.body.append(el);
+    const stop = observeAnimate();
+    expect(FakeIo.instances).toHaveLength(0);
+    mql.dispatch(false);
+    expect(FakeIo.instances.length).toBeGreaterThan(0);
+    expect(FakeIo.instances[0]?.observed.has(el)).toBe(true);
+    stop();
+  });
+
+  it("drops longpress listeners when motion is reduced", async () => {
+    vi.useFakeTimers();
+    const el = document.createElement("button");
+    el.setAttribute("data-animate-longpress", "pulse");
+    document.body.append(el);
+    const stop = observeAnimate();
+    document.documentElement.setAttribute("data-motion", "reduce");
+    await act(async () => {
+      await Promise.resolve();
+    });
+    fireEvent.pointerDown(el, { isPrimary: true });
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+    expect(el.hasAttribute("data-animate-longpress-on")).toBe(false);
+    stop();
+    vi.useRealTimers();
+  });
+
+  it("pauses when data-motion is reduce", async () => {
+    const el = document.createElement("div");
+    el.setAttribute("data-animate", "fade-up");
+    document.body.append(el);
+    const stop = observeAnimate();
+    expect(FakeIo.instances[0]?.observed.has(el)).toBe(true);
+    document.documentElement.setAttribute("data-motion", "reduce");
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(FakeIo.instances[0]?.observed.size ?? 0).toBe(0);
     stop();
   });
 });

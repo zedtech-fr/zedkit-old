@@ -2835,7 +2835,7 @@
         },
         {
           "need": "Reveal and react with motion on any element",
-          "import": "`@zedtech/zedkit-ui` — `Animate`, `AnimateObserver`, `AnimateProps`, `AnimateOn`, `AnimatePreset`, `AnimateTrigger`, `AnimateMotion`, `observeAnimate`, `ANIMATE_PRESETS`, `ANIMATE_TRIGGERS`",
+          "import": "`@zedtech/zedkit-ui` — `Animate`, `AnimateObserver`, `AnimateProps`, `AnimateOn`, `AnimatePreset`, `AnimateTrigger`, `AnimateMotion`, `observeAnimate`, `ANIMATE_PRESETS`, `ANIMATE_TRIGGERS`, `MotionScript`, `MotionScriptProps`, `useMotionPreference`, `applyMotionPreference`, `isMotionReduced`, `MotionPreference`, `MOTION_STORAGE_KEY`, `MOTION_CHANGE_EVENT`",
           "wraps": "`(none)`",
           "status": "alpha",
           "shortName": "Animate",
@@ -2874,13 +2874,21 @@
                   "AnimateMotion",
                   "observeAnimate",
                   "ANIMATE_PRESETS",
-                  "ANIMATE_TRIGGERS"
+                  "ANIMATE_TRIGGERS",
+                  "MotionScript",
+                  "MotionScriptProps",
+                  "useMotionPreference",
+                  "applyMotionPreference",
+                  "isMotionReduced",
+                  "MotionPreference",
+                  "MOTION_STORAGE_KEY",
+                  "MOTION_CHANGE_EVENT"
                 ]
               }
             ]
           },
           "a11y": "`prefers-reduced-motion: reduce` leaves content visible and in place. Hover is gated to hover-capable pointers. Focus uses `:focus-visible`. Press ignores disabled. Longpress is decorative, never the only action. Appear does not set `aria-hidden`.",
-          "troubleshooting": "Nothing appears to move — mount `<AnimateObserver />` once near the app root (or call `observeAnimate()`), then check reduced motion. Content stays visible without JS by design. Scroll parallax needs `animation-timeline: view()` or the runtime fallback.",
+          "troubleshooting": "Nothing appears to move — mount `<AnimateObserver />` once near the app root (or call `observeAnimate()`), then check reduced motion and `data-motion` on `<html>`. Content stays visible without JS by design. Scroll parallax needs `animation-timeline: view()` or the runtime fallback. In-app reduce flashes on load — render `<MotionScript />` in `<head>` (same pattern as `IdentityScript`) so `data-motion=\"reduce\"` is set before paint; `useMotionPreference()` is `\"reduce\"` on the server.",
           "seeAlso": [
             "Animate entrances and hover feedback with CSS utilities",
             "Pin a stage and change scene as the page scrolls",
