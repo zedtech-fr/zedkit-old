@@ -1,10 +1,6 @@
 "use client";
 
-<<<<<<< HEAD
-import { useEffect, useLayoutEffect, useRef, type RefObject } from "react";
-=======
-import { useCallback, useEffect, useRef, type RefObject } from "react";
->>>>>>> origin/goal/reference
+import { useCallback, useEffect, useLayoutEffect, useRef, type RefObject } from "react";
 import { Stack } from "@zedtech/zedkit-ui";
 
 import { ViewSwitch, type View } from "@/components/identity-assistant-parts";
