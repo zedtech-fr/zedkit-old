@@ -63,4 +63,14 @@ describe("install next step hints", () => {
     const missing = kitPathsMissingFromPrettierIgnore(root, ["claude"]);
     expect(missing).toContain(".claude/");
   });
+
+  it("suggests pnpm install for a pnpm workspace without node_modules", () => {
+    const root = tempDir();
+    put(root, "pnpm-workspace.yaml", "packages:\n  - apps/*\n");
+    expect(installNextStepLines(root, ["cursor"])).toContain("next: pnpm install (workspace deps missing)");
+    put(root, "node_modules/.keep", "x\n");
+    expect(installNextStepLines(root, ["cursor"])).not.toContain("next: pnpm install (workspace deps missing)");
+    const plain = tempDir();
+    expect(installNextStepLines(plain, ["cursor"])).not.toContain("next: pnpm install (workspace deps missing)");
+  });
 });

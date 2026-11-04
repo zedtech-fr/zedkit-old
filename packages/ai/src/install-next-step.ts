@@ -84,6 +84,9 @@ export function installNextStepLines(
       : "note: setup+validate ok ≠ product.md; phase C adds product.md, domain/*.md, personas.md, design.md, glossary — .agents/skills/setup-ai/templates/README.md",
     "note: /setup-ai reads the code first with read-only subagents (npx zedkit-ai scan sizes them), asks only what the code cannot answer, and writes domain rules, nested AGENTS.md and .agents/model-routing.md",
   ];
+  if (existsSync(join(root, "pnpm-workspace.yaml")) && !existsSync(join(root, "node_modules"))) {
+    lines.push("next: pnpm install (workspace deps missing)");
+  }
   if (!repoUsesPrettier(root)) return lines;
   const missing = kitPathsMissingFromPrettierIgnore(root, providers);
   if (missing.length === 0) return lines;
