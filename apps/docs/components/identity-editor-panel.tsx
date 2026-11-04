@@ -271,7 +271,8 @@ function IdentityEditorPanel() {
     if (!ready) return;
     const sheet = applyIdentityTokenSheet(tokens, DRAFT_SELECTOR);
     const query = serializeIdentityEditorSearch(identity, tokens, darkPreview, darkKept);
-    window.history.replaceState(null, "", `${window.location.pathname}?${query}`);
+    const create = window.location.hash === "#create" ? "#create" : "";
+    window.history.replaceState(null, "", `${window.location.pathname}?${query}${create}`);
     return () => {
       sheet.remove();
     };

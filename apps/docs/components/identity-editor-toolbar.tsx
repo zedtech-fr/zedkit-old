@@ -228,7 +228,13 @@ function IdentityEditorKeepBar({
       </Text>
       <SaveFeedback status={status} onSave={onSave} onSaveAsNew={onSaveAsNew} />
       <Row>
-        <Button type="button" variant="outline" onClick={onApplySite}>
+        {/* Same clearance as token fields: pinned preview + header above, dock below. */}
+        <Button
+          type="button"
+          variant="outline"
+          className="scroll-mt-28 max-lg:[@media(min-height:48rem)]:scroll-mt-80 scroll-mb-24"
+          onClick={onApplySite}
+        >
           {copy.applySite}
         </Button>
         {appliedSite ? (

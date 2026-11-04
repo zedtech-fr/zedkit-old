@@ -308,7 +308,7 @@ test.describe("domain compositions", () => {
         page.waitForResponse((response) => response.url().includes("/api/identity/suggest") && response.ok()),
         page.getByRole("button", { name: "Generate" }).click(),
       ]);
-      await expect(page.locator(`[data-specimen-domain='${row.domain}']`).first()).toBeVisible();
+      await expect(page.locator(`[data-specimen-domain='${row.domain}']`)).toHaveCount(2);
     });
   }
 });

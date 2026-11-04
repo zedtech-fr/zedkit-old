@@ -69,7 +69,7 @@ function useEditorDockAutoOpen(onEditor: boolean, setBrief: (value: string) => v
     setExpanded(true);
   });
   useEffect(() => {
-    if (onEditor && window.location.hash === "#create") setExpanded(true);
+    if (window.location.hash === "#create") setExpanded(true);
   }, [onEditor, setExpanded]);
 }
 

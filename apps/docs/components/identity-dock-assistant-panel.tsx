@@ -60,7 +60,8 @@ export function IdentityDockAssistantPanel({
   const domainBrief = specimenBriefFromThread(session.thread, brief);
 
   useEffect(() => {
-    panelRef.current?.querySelector<HTMLElement>("textarea:not([disabled])")?.focus({ preventScroll: true });
+    const field = panelRef.current?.querySelector<HTMLTextAreaElement>("textarea:not([disabled])");
+    if (field && field.offsetParent !== null) field.focus({ preventScroll: true });
   }, []);
 
   return (
