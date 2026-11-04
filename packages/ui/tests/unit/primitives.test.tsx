@@ -209,8 +209,8 @@ describe("primitives", () => {
         </Heading>
       </>,
     );
-    expect(screen.getByRole("heading", { name: "Title", level: 1 }).className).toContain("text-4xl");
-    expect(screen.getByRole("heading", { name: "Section", level: 3 }).className).toContain("text-2xl");
+    expect(screen.getByRole("heading", { name: "Title", level: 1 }).className).toContain("text-zk-type-display");
+    expect(screen.getByRole("heading", { name: "Section", level: 3 }).className).toContain("text-zk-type-band");
     expect(screen.getByText("Plain").tagName).toBe("DIV");
   });
 
@@ -231,7 +231,7 @@ describe("primitives", () => {
       </Heading>,
     );
     const link = screen.getByRole("link", { name: "Section" });
-    expect(link.className).toContain("text-3xl");
+    expect(link.className).toContain("text-zk-type-section");
     expect(link.className).toContain("scroll-m-heading-scroll");
     expect(link.getAttribute("href")).toBe("#section");
   });

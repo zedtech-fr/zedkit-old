@@ -249,7 +249,7 @@ export type ContainerProps = React_2.ComponentProps<"div"> & VariantProps<typeof
 
 // @public (undocumented)
 export const containerVariants: (props?: ({
-    width?: "narrow" | "reading" | "default" | "wide" | "full" | null | undefined;
+    width?: "default" | "narrow" | "reading" | "wide" | "full" | null | undefined;
     gutter?: boolean | null | undefined;
 } & ClassProp) | undefined) => string;
 
@@ -649,16 +649,20 @@ export type FormSubmitProps = Omit<ButtonProps, "type"> & {
 // @public (undocumented)
 export function Heading(input: HeadingProps): React_2.JSX.Element;
 
+// @public
+export const headingLevelDefaultRole: Record<1 | 2 | 3 | 4, TypeRole>;
+
 // @public (undocumented)
 export type HeadingProps = React_2.ComponentProps<"h1"> & VariantProps<typeof headingVariants> & {
     level?: 1 | 2 | 3 | 4;
+    typeRole?: TypeRole;
     as?: "h1" | "h2" | "h3" | "h4" | "div";
     asChild?: boolean;
 };
 
 // @public (undocumented)
 export const headingVariants: (props?: ({
-    level?: 1 | 2 | 3 | 4 | null | undefined;
+    typeRole?: "display" | "section" | "band" | "cardTitle" | "lead" | "body" | "prose" | "small" | "label" | "nav" | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -1359,6 +1363,18 @@ export function Separator(input: SeparatorProps): React_2.JSX.Element;
 export type SeparatorProps = React_2.ComponentProps<typeof SeparatorPrimitive.Root>;
 
 // @public (undocumented)
+export type SignatureMotion = keyof typeof signatureMotionClass;
+
+// @public
+export const signatureMotionClass: {
+    readonly reveal: "motion-reveal";
+    readonly settle: "motion-settle";
+    readonly emphasis: "motion-emphasis";
+    readonly glide: "motion-glide";
+    readonly feedback: "motion-feedback";
+};
+
+// @public (undocumented)
 export function Skeleton(input: SkeletonProps): React_2.JSX.Element;
 
 // @public (undocumented)
@@ -1385,8 +1401,8 @@ export type StackProps = React_2.ComponentProps<"div"> & VariantProps<typeof sta
 
 // @public (undocumented)
 export const stackVariants: (props?: ({
-    direction?: "horizontal" | "vertical" | null | undefined;
-    gap?: 1 | 8 | 2 | 3 | 4 | 5 | 6 | 7 | null | undefined;
+    direction?: "vertical" | "horizontal" | null | undefined;
+    gap?: 4 | 1 | 2 | 3 | 5 | 6 | 7 | 8 | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -1486,6 +1502,7 @@ export type TextProps = React_2.ComponentProps<"p"> & VariantProps<typeof textVa
 // @public (undocumented)
 export const textVariants: (props?: ({
     variant?: "body" | "muted" | null | undefined;
+    typeRole?: "lead" | "body" | "prose" | "small" | "label" | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -1524,6 +1541,23 @@ export function TooltipProvider(input: React_2.ComponentProps<typeof TooltipPrim
 
 // @public (undocumented)
 export function TooltipTrigger(input: React_2.ComponentProps<typeof TooltipPrimitive.Trigger>): React_2.JSX.Element;
+
+// @public (undocumented)
+export type TypeRole = keyof typeof typeRoleClass;
+
+// @public
+export const typeRoleClass: {
+    readonly display: "text-zk-type-display";
+    readonly section: "text-zk-type-section";
+    readonly band: "text-zk-type-band";
+    readonly cardTitle: "text-zk-type-card-title";
+    readonly lead: "text-zk-type-lead";
+    readonly body: "text-zk-type-body";
+    readonly prose: "text-zk-type-prose";
+    readonly small: "text-zk-type-small";
+    readonly label: "text-zk-type-label";
+    readonly nav: "text-zk-type-nav";
+};
 
 // @public
 export function UpdatedAgo(input: UpdatedAgoProps): JSX.Element;

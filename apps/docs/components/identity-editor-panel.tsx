@@ -21,9 +21,9 @@ import {
 import { identityEditorCopy } from "@/components/i18n/identity-editor-copy";
 import { ContrastChips, DRAFT_SELECTOR, DraftCard, EditorFields } from "@/components/identity-editor-fields";
 import { IdentityEditorExport } from "@/components/identity-editor-export";
-import { IdentityAssistant } from "@/components/identity-assistant";
 import { IdentityEditorKeepBar, IdentityEditorPreviewBar } from "@/components/identity-editor-toolbar";
 import { DEFAULT_IDENTITY } from "@/lib/default-identity";
+import { IDENTITY_EDITOR_DRAFT_APPLY } from "@/lib/identity-editor-draft-apply";
 import { useDraftTokens } from "@/lib/identity-editor-draft";
 import {
   deleteNamedIdentity,
@@ -60,7 +60,6 @@ type EditorBodyProps = {
   onReset: () => void;
   onPatch: (key: string, value: string) => void;
   onFix: (warning: IdentityContrastWarning) => void;
-  onUse: (next: IdentityTokens) => void;
   onUndo: () => void;
   onLoad: (tokens: IdentityTokens, darkKept: readonly string[]) => void;
   onApplySite: () => void;
@@ -157,14 +156,10 @@ function IdentityEditorBody(props: EditorBodyProps) {
           <Text>{identityEditorCopy.panel.hint}</Text>
           {props.appliedSite ? <Text role="status">{identityEditorCopy.panel.applied}</Text> : null}
         </Stack>
-        {/* A folded row on a phone: pulled up to the card above it so the first adjustment stays on the first screen. */}
-        <Stack className="max-lg:order-4 max-lg:-mt-5">
-          <IdentityAssistant tokens={props.tokens} onUse={props.onUse} />
-        </Stack>
-        <Stack className="empty:hidden max-lg:order-5">
+        <Stack className="empty:hidden max-lg:order-4">
           <ContrastChips warnings={identityContrastWarnings(props.tokens)} onFix={props.onFix} />
         </Stack>
-        <Stack className="max-lg:order-6">
+        <Stack className="max-lg:order-5">
           <EditorFields
             tokens={props.tokens}
             scheme={scheme}
@@ -264,6 +259,15 @@ function IdentityEditorPanel() {
   useFollowSiteIdentity({ ready, identity, tokens, darkPreview, darkKept, named, onIdentity: bound.onIdentity, appliedSite, detachSite });
 
   useLayoutEffect(() => {
+    const onApply = (event: Event) => {
+      const detail = (event as CustomEvent<IdentityTokens>).detail;
+      if (detail) applySuggest(detail, false);
+    };
+    window.addEventListener(IDENTITY_EDITOR_DRAFT_APPLY, onApply);
+    return () => window.removeEventListener(IDENTITY_EDITOR_DRAFT_APPLY, onApply);
+  }, [applySuggest]);
+
+  useLayoutEffect(() => {
     if (!ready) return;
     const sheet = applyIdentityTokenSheet(tokens, DRAFT_SELECTOR);
     const query = serializeIdentityEditorSearch(identity, tokens, darkPreview, darkKept);
@@ -286,7 +290,6 @@ function IdentityEditorPanel() {
       onFix={fix}
       saveStatus={status}
       libraryProblem={libraryProblem}
-      onUse={(next) => applySuggest(next, false)}
       onUndo={undo}
       onLoad={remember}
       onApplySite={applySite}

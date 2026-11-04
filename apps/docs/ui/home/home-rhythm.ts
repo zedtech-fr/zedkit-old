@@ -18,9 +18,8 @@ export const HOME_CARD_GRID_TWO_COL = "grid min-w-0 gap-4 md:grid-cols-2";
 export const HOME_CARD_GRID_THREE_COL = "grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3";
 export const HOME_CARD_GRID_FOUR_COL = "grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-4";
 
-/** Soft enter animation; static when prefers-reduced-motion (kit motion tokens). */
-export const HOME_SECTION_REVEAL_CLASS =
-  "motion-safe:animate-[zk-fade-in_var(--motion-base)_var(--ease-enter)]";
+/** Soft enter animation; static when prefers-reduced-motion (signature motion tokens). */
+export const HOME_SECTION_REVEAL_CLASS = "motion-safe:motion-settle";
 
 /** Min-height hero preview slot while the demo chunk loads; grows with the specimen (no fixed clip). */
 export const HOME_HERO_PREVIEW_SHELL_CLASS = "min-h-0 w-full min-w-0";

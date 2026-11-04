@@ -6,6 +6,8 @@
 @import "./font-fallbacks.css";
 @import "./identities/glass.css";
 @import "./motion.css";
+@import "./signature-motion.css";
+@import "./type-roles.css";
 @import "./scroll-scenes.css";
 @import "./identities/volt.css";
 @import "./shared-type-scale.css";
@@ -666,5 +668,8 @@ html [data-vaul-drawer-direction="right"] [data-vaul-handle] {
   html [data-vaul-overlay] {
     animation: none !important;
     transition: none !important;
+  }
+  html [data-slot="identity-dock-sheet"][data-vaul-drawer] {
+    transform: none !important;
   }
 }

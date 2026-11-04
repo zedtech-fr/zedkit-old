@@ -85,7 +85,8 @@ Never hand-write an install or copy snippet in a page, prose file or
 component. They come from the typed adoption contract: the catalog `adoption`
 field (`docs/catalog/README.md`) feeding `apps/docs/lib/adoption-plan.mjs`,
 which the home and every component page render, and
-`scripts/adoption-smoke.mjs` replays the result in a clean Next.js project.
+`scripts/adoption-smoke.mjs` replays the result in a clean Next.js project
+(plus the `pnpm add` lines on getting-started that those cases do not cover).
 A stylesheet or config need says so in its catalog entry, not in prose.
 Guide snippets (`prose/guides/snippets/`) are run by the `verify-*-tutorial.mjs`
 scripts inside `pnpm catalog:check`.
@@ -107,11 +108,23 @@ scripts inside `pnpm catalog:check`.
   reversible (`lib/site-identity-storage.ts`: opt-in key, `clearDocsSiteIdentity`).
   Quotas, references and cost controls are server rules; the client never
   works around them.
+- Secondary states (idle, loading, success, error, quota, resume) stay on
+  screen at 320, 390 and 1440. Quota copy names a real retry time, never a
+  daily allowance. An unfinished brief is kept in `zk-identity-dock-v2`
+  (`lib/identity-dock-persist.ts`) so a reload restores it. The floating dock
+  opens with Control or Meta+I, closes with Escape, and on a phone is a bottom
+  sheet. Using a look
+  from the dock paints demo specimens only, never the site chrome. Brief-routed
+  specimens are commerce, saas-dashboard, editorial and service-booking.
+  Proof: `tests/identity-state-matrix.spec.ts`.
 
 ## ZedKit art direction (Product Atelier)
 
 Read [VISUAL-CONTRACT.md](./VISUAL-CONTRACT.md) before changing home,
-chrome, previews or specimens (traps included).
+chrome, previews or specimens (traps included). Type, motion,
+composition and elevation: [docs/design/signature.md](../../docs/design/signature.md)
+(named type roles and motions, not raw `font-size` or duration). Identity
+states: the matrix above. Skill `use-signature`.
 
 Scope: this docs site and its specimens. Exception: a specimen that
 must match a kit primitive's own look.
@@ -135,6 +148,7 @@ must match a kit primitive's own look.
 
 - Root [AGENTS.md](../../AGENTS.md), kit [CATALOG.md](../../packages/ui/CATALOG.md).
 - Visual contract: [VISUAL-CONTRACT.md](./VISUAL-CONTRACT.md).
+- Signature: [docs/design/signature.md](../../docs/design/signature.md).
 - Lens registry: `packages/ai/kit/skills/review/lenses.md`
   (Frontend rules: the authoritative demo rules).
 - Page layouts: [PAGE-TEMPLATE.md](./PAGE-TEMPLATE.md),

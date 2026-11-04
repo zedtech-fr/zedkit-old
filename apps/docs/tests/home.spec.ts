@@ -11,7 +11,7 @@ test("home explains the product and four entry areas", async ({ page }) => {
   await page.goto(BASE, { waitUntil: "networkidle" });
   await expect(
     page.getByRole("heading", {
-      name: "Build the parts you need. Keep the rest of your app.",
+      name: "React UI kit · Build the parts you need. Keep the rest of your app.",
       level: 1,
     }),
   ).toBeVisible();

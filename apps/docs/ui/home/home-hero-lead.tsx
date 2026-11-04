@@ -16,7 +16,7 @@ export function HomeHeroLead({ className }: { className?: string }) {
       className={`min-w-0 items-start ${className ?? ""}`}
       data-home-hero-lead=""
     >
-      <Heading level={1} className="type-site-h1 max-w-lg text-balance">
+      <Heading level={1} typeRole="display" className="max-w-lg text-balance">
         {homeCopy.hero.title}
       </Heading>
       <Stack gap={2} className="items-start">

@@ -122,7 +122,7 @@ function HomeIdentityLooksLinks() {
   return (
     <Stack direction="horizontal" gap={2} className="flex-wrap">
       <Button asChild variant="outline" size="sm" className="w-fit">
-        <Link href={IDENTITY_EDITOR_HREF}>{homeIdentityLooksCopy.openEditor}</Link>
+        <Link href={`${IDENTITY_EDITOR_HREF}#create`}>{homeIdentityLooksCopy.openEditor}</Link>
       </Button>
       <Button asChild variant="link" size="sm" className="w-fit">
         <Link href="/features/identity-kit-demos">{homeIdentityLooksCopy.seeInComponents}</Link>

@@ -4,12 +4,13 @@ import { useMemo, type Ref, type RefObject } from "react";
 import { Button, Field, FieldLabel, Stack, Text, Textarea, type IdentityTokens } from "@zedtech/zedkit-ui";
 
 import { identityAssistantCopy as copy } from "@/components/i18n/identity-assistant-copy";
-import { IdentityMiniPreview } from "@/components/identity-mini-preview";
+import { ProposalBeforeAfter } from "@/components/identity-proposal-compare";
 import { ReferenceReportList } from "@/components/identity-references";
 import type { Unavailable, Turn } from "@/lib/identity-assistant";
 import { LIMITS } from "@/lib/identity-assistant";
 import { repairContrast } from "@/lib/identity-contrast-repair";
 import type { Notice, Proposal } from "@/lib/identity-creator-session";
+import { specimenDomainFromBrief } from "@/lib/brief-specimen-domain";
 import { tokenDiff } from "@/lib/identity-token-diff";
 
 /** The wording of a refusal, a failure or a cancellation. Never claims an allowance it cannot know. */
@@ -40,6 +41,41 @@ export function noticeText(notice: Notice): string {
     default:
       return copy.failure.network;
   }
+}
+
+function BriefFormActions({
+  refining,
+  busy,
+  blocked,
+  value,
+  onSubmit,
+  onCancel,
+}: {
+  refining: boolean;
+  busy: boolean;
+  blocked: boolean;
+  value: string;
+  onSubmit: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <Stack direction="horizontal" gap={2} className="flex-wrap">
+      <Button
+        type="button"
+        size="lg"
+        onClick={onSubmit}
+        disabled={busy || blocked || value.trim() === ""}
+        aria-busy={busy || undefined}
+      >
+        {refining ? copy.refine : copy.generate}
+      </Button>
+      {busy ? (
+        <Button type="button" variant="outline" onClick={onCancel}>
+          {copy.cancel}
+        </Button>
+      ) : null}
+    </Stack>
+  );
 }
 
 /** The one place a brief is written and sent. Typing here costs nothing; only pressing the button asks the assistant. */
@@ -89,16 +125,7 @@ export function BriefForm({
       <Text variant="muted" id="identity-assistant-brief-hint" className="text-sm">
         {refining ? copy.followUpHint : copy.briefHint} {left < 100 ? copy.charsLeft(left) : null}
       </Text>
-      <Stack direction="horizontal" gap={2} className="flex-wrap">
-        <Button type="button" onClick={onSubmit} disabled={busy || blocked || value.trim() === ""} aria-busy={busy || undefined}>
-          {refining ? copy.refine : copy.generate}
-        </Button>
-        {busy ? (
-          <Button type="button" variant="outline" onClick={onCancel}>
-            {copy.cancel}
-          </Button>
-        ) : null}
-      </Stack>
+      <BriefFormActions refining={refining} busy={busy} blocked={blocked} value={value} onSubmit={onSubmit} onCancel={onCancel} />
     </Stack>
   );
 }
@@ -166,9 +193,13 @@ export function Thread({ turns }: { turns: readonly Turn[] }) {
   );
 }
 
-export function UnavailableBanner({ reason }: { reason: Unavailable }) {
+export function UnavailableBanner({ reason, live = true }: { reason: Unavailable; live?: boolean }) {
   return (
-    <Text role="status" className="rounded-md border border-border bg-muted px-3 py-2 text-sm" data-assistant-unavailable="">
+    <Text
+      role={live ? "status" : undefined}
+      className="rounded-md border border-border bg-muted px-3 py-2 text-sm"
+      data-assistant-unavailable=""
+    >
       {copy.unavailable(reason)}
     </Text>
   );
@@ -180,16 +211,41 @@ function contrastNote(repaired: { adjusted: number; remaining: number }): string
   return repaired.adjusted > 0 ? copy.proposal.contrastAdjusted(repaired.adjusted) : copy.proposal.contrastOk;
 }
 
+function ProposalApplyRow({
+  busy,
+  tokens,
+  onUse,
+  onDiscard,
+}: {
+  busy: boolean;
+  tokens: IdentityTokens;
+  onUse: (tokens: IdentityTokens) => void;
+  onDiscard: () => void;
+}) {
+  return (
+    <Stack direction="horizontal" gap={2} className="flex-wrap">
+      <Button type="button" onClick={() => onUse(tokens)} disabled={busy}>
+        {copy.proposal.apply}
+      </Button>
+      <Button type="button" variant="outline" onClick={onDiscard} disabled={busy}>
+        {copy.proposal.discard}
+      </Button>
+    </Stack>
+  );
+}
+
 /** A proposal to look at, in light and dark, with what changed and why. Using it is the only thing that changes the draft. */
 export function ProposalCard({
   proposal,
   current,
+  domainBrief,
   busy,
   onUse,
   onDiscard,
 }: {
   proposal: Proposal;
   current: IdentityTokens;
+  domainBrief: string;
   busy: boolean;
   onUse: (tokens: IdentityTokens) => void;
   onDiscard: () => void;
@@ -197,6 +253,7 @@ export function ProposalCard({
   // Readable text is a promise of the kit, so a proposal that misses it is nudged by arithmetic, and the page says so.
   const repaired = useMemo(() => repairContrast(proposal.tokens), [proposal.tokens]);
   const rows = useMemo(() => tokenDiff(current, repaired.tokens), [current, repaired.tokens]);
+  const domain = useMemo(() => specimenDomainFromBrief(domainBrief), [domainBrief]);
   return (
     <Stack gap={3} role="region" aria-label={copy.proposal.title} aria-busy={busy || undefined} data-assistant-proposal="" className={busy ? "opacity-60" : undefined}>
       <Text as="span" className="text-base font-semibold text-foreground">
@@ -213,7 +270,7 @@ export function ProposalCard({
       <Text variant="muted" className="text-sm">
         {copy.proposal.changes(rows.length)}. {contrastNote(repaired)}
       </Text>
-      <IdentityMiniPreview tokens={repaired.tokens} id={`proposal-${proposal.requestId}`} />
+      <ProposalBeforeAfter current={current} proposed={repaired.tokens} requestId={proposal.requestId} domain={domain} />
       {rows.length > 0 ? (
         <details className="text-sm">
           <summary className="flex min-h-11 cursor-pointer items-center focus-ring">{copy.proposal.showChanges}</summary>
@@ -226,14 +283,7 @@ export function ProposalCard({
           </ul>
         </details>
       ) : null}
-      <Stack direction="horizontal" gap={2} className="flex-wrap">
-        <Button type="button" onClick={() => onUse(repaired.tokens)} disabled={busy}>
-          {copy.proposal.apply}
-        </Button>
-        <Button type="button" variant="outline" onClick={onDiscard} disabled={busy}>
-          {copy.proposal.discard}
-        </Button>
-      </Stack>
+      <ProposalApplyRow busy={busy} tokens={repaired.tokens} onUse={onUse} onDiscard={onDiscard} />
       <Text variant="muted" className="text-sm">
         {copy.proposal.note}
       </Text>

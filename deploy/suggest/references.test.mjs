@@ -3,7 +3,8 @@ import { performance } from "node:perf_hooks";
 import test from "node:test";
 import { createServer } from "node:net";
 
-import { checkUrl, designSignals, extractReference, fetchReference, fetchReferences, guardedLookup, isPublicAddress, stylesheetUrls, urlsInText } from "./references.mjs";
+import { readFileSync } from "node:fs";
+import { checkUrl, cleanFontName, designSignals, extractReference, fetchReference, fetchReferences, guardedLookup, isPublicAddress, stylesheetUrls, urlsInText } from "./references.mjs";
 
 const OPTIONS = { timeoutMs: 2_000, maxBytes: 4_096, maxChars: 300 };
 const html = (body, head = "") => `<!doctype html><html><head><title>Maison Lune</title>${head}</head><body>${body}</body></html>`;
@@ -329,7 +330,7 @@ test("design signals: colours, custom properties, fonts, radii, shadows and spac
 });
 
 test("hostile CSS costs time in proportion to its size", () => {
-  for (const css of ["--a:".repeat(150_000), "border-radius:".repeat(50_000), "#".repeat(600_000), "rgb(".repeat(150_000), "padding:1px ".repeat(50_000)]) {
+  for (const css of ["--a:".repeat(150_000), "border-radius:".repeat(50_000), "#".repeat(600_000), "rgb(".repeat(150_000), "padding:1px ".repeat(50_000), "a{".repeat(300_000), ".dark{".repeat(100_000), "rgb(1 1 1/var(".repeat(60_000)]) {
     const t = performance.now();
     designSignals(css);
     assert.ok(performance.now() - t < 1_500, `took ${performance.now() - t}ms`);
@@ -339,4 +340,34 @@ test("hostile CSS costs time in proportion to its size", () => {
 test("links written in a brief are found, without the punctuation around them", () => {
   assert.deepEqual(urlsInText("Like https://linear.app, and (http://stripe.com/docs). Also https://linear.app!"), ["https://linear.app", "http://stripe.com/docs"]);
   assert.deepEqual(urlsInText("no links, just linear.app"), []);
+});
+
+test("a Tailwind 3 + next/font site: its brand colours, real font names, light scheme and dark palette come through", async () => {
+  // The CSS of a real portfolio built with Next.js and Tailwind 3, served as-is (fixture). Its brand blue exists
+  // only as `rgb(38 80 119/var(--tw-bg-opacity))`, and its fonts only under next/font's hashed names.
+  const css = readFileSync(new URL("./fixtures/tailwind3-next-portfolio.css", import.meta.url), "utf8");
+  const head = Array.from({ length: 6 }, (_, i) => `<link rel="stylesheet" href="/_next/static/css/${i}.css">`).join("");
+  const page = `<!doctype html><html lang="fr" class="light __variable_b539cb text-accent-800"><head><title>Portfolio</title>${head}</head><body><p>Développeur</p></body></html>`;
+  const routes = { "https://site.example.org/": { body: page } };
+  // The real file split over six sheets, so the tokens sit in the later ones too.
+  const size = Math.ceil(css.length / 6);
+  for (let i = 0; i < 6; i += 1) routes[`https://site.example.org/_next/static/css/${i}.css`] = { headers: { "content-type": "text/css" }, body: css.slice(i * size, (i + 1) * size) };
+  const { transport } = fakeTransport(routes);
+  const got = await fetchReference("https://site.example.org/", { ...OPTIONS, transport, sheetMaxBytes: 300_000 });
+  assert.equal(got.ok, true);
+  assert.equal(got.signals.stylesheets, 6, "every sheet read, not the first four");
+  for (const brand of ["#265077", "#1e1f26", "#ffffff"]) assert.ok(got.signals.colors.includes(brand), `${brand} in ${got.signals.colors}`);
+  assert.ok(!got.signals.colors.some((c) => /var\(|rgba\(59,\s*130,\s*246/.test(c) || /,\s*0\)$/.test(c)), `no transparent stop or framework ring: ${got.signals.colors}`);
+  assert.deepEqual(got.fonts.slice(0, 2).sort(), ["Rajdhani", "Rubik"]);
+  assert.ok(!got.fonts.some((f) => /^ui-|fallback|^__/i.test(f)), `${got.fonts}`);
+  assert.equal(got.signals.scheme, "light");
+  assert.ok(got.signals.darkColors.length > 0, "dark: utilities are read as the dark palette");
+  assert.ok(got.signals.radii.includes(".3125rem"));
+});
+
+test("font names: build hashes and fallbacks are dropped, generic names are not a choice", () => {
+  assert.equal(cleanFontName("__Rubik_b539cb"), "Rubik");
+  assert.equal(cleanFontName("__Space_Grotesk_a585f8"), "Space Grotesk");
+  for (const name of ["__Rubik_Fallback_b539cb", "ui-sans-serif", "system-ui", "Apple Color Emoji", "inherit"]) assert.equal(cleanFontName(name), "", name);
+  assert.equal(cleanFontName('"Inter Variable"'), "Inter Variable");
 });
