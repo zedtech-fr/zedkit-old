@@ -70,10 +70,10 @@ function provider(env, prefix) {
   if (!base || !key || !model) return null;
   const input = microUsd(env[`${prefix}PRICE_INPUT_USD_PER_MTOK`]);
   const output = microUsd(env[`${prefix}PRICE_OUTPUT_USD_PER_MTOK`]);
-  const modelName = String(model);
+  const modelName = String(model).trim();
   return {
-    base: String(base).replace(/\/$/, ""),
-    key: String(key),
+    base: String(base).trim().replace(/\/$/, ""),
+    key: String(key).trim(),
     model: modelName,
     effort: reasoningEffortForModel(modelName, env[`${prefix}REASONING_EFFORT`]),
     /** Micro-dollars per million tokens. Null until the price is configured: no price, no spend. */

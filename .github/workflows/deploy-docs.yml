@@ -51,6 +51,7 @@ jobs:
           IDENTITY_AI_FALLBACK_MODEL: ${{ secrets.IDENTITY_AI_FALLBACK_MODEL }}
         run: |
           umask 077
+          trim() { printf '%s' "$1" | tr -d '\r\n'; }
           : > deploy/suggest.env
           # Generation is off unless IDENTITY_AI_ENABLED is 1 and an approved budget and the prices are set.
           printf '%s=%s\n' IDENTITY_AI_ENABLED "$IDENTITY_AI_ENABLED" >> deploy/suggest.env
@@ -60,14 +61,14 @@ jobs:
           printf '%s=%s\n' IDENTITY_AI_PRICE_OUTPUT_USD_PER_MTOK "$IDENTITY_AI_PRICE_OUTPUT_USD_PER_MTOK" >> deploy/suggest.env
           printf '%s=%s\n' IDENTITY_AI_FALLBACK_PRICE_INPUT_USD_PER_MTOK "$IDENTITY_AI_FALLBACK_PRICE_INPUT_USD_PER_MTOK" >> deploy/suggest.env
           printf '%s=%s\n' IDENTITY_AI_FALLBACK_PRICE_OUTPUT_USD_PER_MTOK "$IDENTITY_AI_FALLBACK_PRICE_OUTPUT_USD_PER_MTOK" >> deploy/suggest.env
-          printf '%s=%s\n' IDENTITY_AI_BASE_URL "$IDENTITY_AI_BASE_URL" >> deploy/suggest.env
-          printf '%s=%s\n' IDENTITY_AI_API_KEY "$IDENTITY_AI_API_KEY" >> deploy/suggest.env
-          printf '%s=%s\n' IDENTITY_AI_MODEL "$IDENTITY_AI_MODEL" >> deploy/suggest.env
+          printf '%s=%s\n' IDENTITY_AI_BASE_URL "$(trim "$IDENTITY_AI_BASE_URL")" >> deploy/suggest.env
+          printf '%s=%s\n' IDENTITY_AI_API_KEY "$(trim "$IDENTITY_AI_API_KEY")" >> deploy/suggest.env
+          printf '%s=%s\n' IDENTITY_AI_MODEL "$(trim "$IDENTITY_AI_MODEL")" >> deploy/suggest.env
           printf '%s=%s\n' IDENTITY_AI_MAX_TOKENS "$IDENTITY_AI_MAX_TOKENS" >> deploy/suggest.env
           printf '%s=%s\n' IDENTITY_AI_REASONING_EFFORT "$IDENTITY_AI_REASONING_EFFORT" >> deploy/suggest.env
-          printf '%s=%s\n' IDENTITY_AI_FALLBACK_BASE_URL "$IDENTITY_AI_FALLBACK_BASE_URL" >> deploy/suggest.env
-          printf '%s=%s\n' IDENTITY_AI_FALLBACK_API_KEY "$IDENTITY_AI_FALLBACK_API_KEY" >> deploy/suggest.env
-          printf '%s=%s\n' IDENTITY_AI_FALLBACK_MODEL "$IDENTITY_AI_FALLBACK_MODEL" >> deploy/suggest.env
+          printf '%s=%s\n' IDENTITY_AI_FALLBACK_BASE_URL "$(trim "$IDENTITY_AI_FALLBACK_BASE_URL")" >> deploy/suggest.env
+          printf '%s=%s\n' IDENTITY_AI_FALLBACK_API_KEY "$(trim "$IDENTITY_AI_FALLBACK_API_KEY")" >> deploy/suggest.env
+          printf '%s=%s\n' IDENTITY_AI_FALLBACK_MODEL "$(trim "$IDENTITY_AI_FALLBACK_MODEL")" >> deploy/suggest.env
           chmod 600 deploy/suggest.env
       - name: Configure SSH
         env:

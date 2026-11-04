@@ -638,6 +638,12 @@ test("muse-spark models omit reasoning_effort even when env sets low", () => {
   assert.equal(loadConfig(env).limits.maxOutputTokens, 8_000);
 });
 
+test("provider env values are trimmed so trailing newlines on secrets do not break auth", () => {
+  const env = configured({ IDENTITY_AI_API_KEY: "sk-primary-secret\n", IDENTITY_AI_BASE_URL: "https://primary.test/\n" });
+  assert.equal(loadConfig(env).primary.key, "sk-primary-secret");
+  assert.equal(loadConfig(env).primary.base, "https://primary.test");
+});
+
 test("a provider that refuses reasoning_effort is retried once without it", async () => {
   const p = provider((call) => (call.body.reasoning_effort ? refusal(400) : reply(PATCH, { usage: { prompt_tokens: 1000, completion_tokens: 500 } })));
   const env = configured({ IDENTITY_AI_REASONING_EFFORT: "low", IDENTITY_AI_MODEL: "o4-mini" });
