@@ -48,7 +48,7 @@ already has — search it first.
      spots, or is everything even?
    - Does whitespace group, rest, or isolate — or is it leftover?
    - One surface role per job, or does every block wear the same chrome?
-   Exception: a named experiment, with a kit-shaped follow-up.
+     Exception: a named experiment, with a kit-shaped follow-up.
 
    Bad / good:
    - Bad: every card gets border + shadow + rounded corners, so nothing
@@ -71,6 +71,7 @@ already has — search it first.
      on a calendar grid (hover `.rdp-day`), `overflow-hidden` above a pinned
      scene (`overflow-clip`), fixed content inside an animated subtree, a site
      rule that reaches specimens. Cite the entry; do not restate it.
+
 5. **States.** Ask what the task is. A view that loads, saves or can come
    back empty needs loading, empty and error states, each named and
    recoverable; a form needs disabled and invalid. A reading page, a code
@@ -108,8 +109,9 @@ already has — search it first.
    reduced-motion, or a change so small that motion would delay feedback.
    Example refusal: a modal that appears with no fade and hides what changed.
 9. **Handoffs.** Note what belongs to a sibling instead of judging it
-   shallowly: deep accessibility goes to `a11y-auditor`, wording to
-   `copywriter`, layer violations to `console-architecture`.
+   shallowly: wording goes to `copywriter`<!-- if:agent=a11y-auditor -->, deep
+   accessibility to `a11y-auditor`<!-- /if --><!-- if:agent=console-architecture -->,
+   layer violations to `console-architecture`<!-- /if -->.
 
 ## Rules
 
@@ -135,7 +137,7 @@ Must fix = breaks the bar or duplicates the kit · Should fix = weakens it · Ni
 
 Design critique: <authority / competition / type roles / density / rhythm / whitespace — strongest remaining weakness>
 Lazy-client bar: <reassured / prefilled / next step / price-duration-guarantees / URL state / interrupted-resume / flaky-safe — pass or gap each>
-Handoffs: <a11y-auditor / copywriter / console-architecture — or none>
+Handoffs: <<!-- if:agent=a11y-auditor -->a11y-auditor / <!-- /if -->copywriter<!-- if:agent=console-architecture --> / console-architecture<!-- /if --> — or none>
 
 Verdict: NO BLOCKERS | BLOCKERS: <numbered>
 ```

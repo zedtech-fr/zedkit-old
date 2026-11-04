@@ -193,6 +193,12 @@ export { DetailPanelSkeleton, type DetailPanelSkeletonProps } from "./detail-pan
 export { PageHeaderSkeleton, type PageHeaderSkeletonProps } from "./page-header-skeleton.js";
 export { closeRoute, type CloseRouteOptions } from "./close-route.js";
 export {
+  ScrollReset,
+  useScrollReset,
+  type ScrollResetOptions,
+  type ScrollResetProps,
+} from "./scroll-reset.js";
+export {
   RouteModal,
   type RouteModalDirection,
   type RouteModalProps,

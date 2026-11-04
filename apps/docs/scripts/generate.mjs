@@ -23,6 +23,7 @@ import { loadRegistryBrickNames } from "../../../scripts/registry/catalog.mjs";
 import { buildLlmsFull, truncateDescription } from "@zedtech/zedkit-seo";
 import { componentPageSections } from "../lib/component-page-sections.mjs";
 import { docsOmitNeed, hrefForOmittedNeed } from "./docs-omitted-needs.mjs";
+import { readAgentOnboardingMarkdown, writeAiSetupPublicAssets } from "../lib/ai-setup-onboarding.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const APP = join(HERE, "..");
@@ -336,15 +337,23 @@ export function expandFencePreviews(text, withImport = null) {
 function writeGuidePages(outDir) {
   if (!existsSync(GUIDES_DIR)) return 0;
   let count = 0;
+  const writeOne = (sourceRel, destRel, previewImport) => {
+    const source = join(GUIDES_DIR, sourceRel);
+    if (!existsSync(source)) return;
+    const body = expandFencePreviews(
+      expandGuideSnippets(readFileSync(source, "utf8")),
+      previewImport,
+    );
+    const dest = join(outDir, destRel);
+    mkdirSync(dirname(dest), { recursive: true });
+    writeFileSync(dest, body.endsWith("\n") ? body : `${body}\n`);
+    count += 1;
+  };
   for (const entry of readdirSync(GUIDES_DIR, { withFileTypes: true })) {
     if (!entry.isFile() || !entry.name.endsWith(".mdx")) continue;
-    const body = expandFencePreviews(
-      expandGuideSnippets(readFileSync(join(GUIDES_DIR, entry.name), "utf8")),
-      "../../components/component-preview",
-    );
-    writeFileSync(join(outDir, entry.name), body.endsWith("\n") ? body : `${body}\n`);
-    count += 1;
+    writeOne(entry.name, entry.name, "../../components/component-preview");
   }
+  writeOne(join("ai", "setup.mdx"), join("ai", "setup.mdx"), "../../../components/component-preview");
   return count;
 }
 
@@ -472,6 +481,7 @@ export function generate(outDir) {
     "",
     "- [Getting started](/docs/getting-started) — choose a package and reach a first result",
     "- [Set up your coding agents](/docs/set-up-your-coding-agents) — zedkit-ai init and validate",
+    "- [Set up zedkit AI in Cursor](/docs/ai/setup) — one paste prompt; agent steps at https://zedkit.app/ai/setup.md",
     "- [Maturity and compatibility](/docs/maturity-and-compatibility) — badge legend link and package matrix",
     "- [zedkit and shadcn/ui](/docs/zedkit-and-shadcn) — wraps, registry install, when to use plain shadcn",
     "- [Add SEO to a Next.js app](/docs/add-seo-to-nextjs) — robots, sitemap, metadata, JSON-LD",
@@ -534,7 +544,17 @@ export function generate(outDir) {
     llms.push("");
     writeFileSync(join(dir, "meta.json"), `${JSON.stringify({ title: pkg, pages: slugs }, null, 2)}\n`);
   }
+  writeAiSetupPublicAssets(APP);
   const guidePages = writeGuidePages(outDir);
+  const aiMetaPath = join(outDir, "ai", "meta.json");
+  const aiSetupGuide = join(outDir, "ai", "setup.mdx");
+  if (existsSync(aiSetupGuide) && existsSync(aiMetaPath)) {
+    const meta = JSON.parse(readFileSync(aiMetaPath, "utf8"));
+    if (!meta.pages.includes("setup")) {
+      meta.pages = ["setup", ...meta.pages];
+      writeFileSync(aiMetaPath, `${JSON.stringify(meta, null, 2)}\n`);
+    }
+  }
   if (guidePages === 0) throw new Error("prose/guides: expected getting-started.mdx and index.mdx.");
   for (const slug of GUIDE_NAV_SLUGS) {
     if (!existsSync(join(outDir, `${slug}.mdx`))) {
@@ -562,6 +582,7 @@ export function generate(outDir) {
   ].join("\n");
   const llmsFull = buildLlmsFull([
     { title: "Install or copy", body: installOrCopyBody },
+    { title: "Set up zedkit AI in Cursor", body: readAgentOnboardingMarkdown() },
     { title: "Documentation index", body: llmsBody },
   ]);
   writeFileSync(join(publicDir, "llms-full.txt"), `${llmsFull}\n`);

@@ -9,16 +9,16 @@ A claim is either **verified** (you saw it in this session) or **unverified** (y
 
 ## Before you rely on a thing
 
-| You are about to rely on | Verify by |
-|---|---|
-| A function, type, export, flag | Open its definition. Do not trust the name. |
-| A file or path | List or read it. |
-| A payload, schema, event or DB column | Read the producer and the consumer, or the migration. Never infer a shape from a sibling. |
-| A dependency API | Read the installed version's types or docs, not memory. A new version may have changed it. |
-| A command or script | Read it in the manifest (`package.json`, `Makefile`). Run it. |
-| A model name or config key | List what the tool accepts (its model picker, CLI help, docs). An unknown value often falls back silently. |
-| A function that "does the same" as the one you replace | Read both bodies. Same name is not same behavior. |
-| "It was like that before" | `git show <ref>:<path>` |
+| You are about to rely on                               | Verify by                                                                                                  |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| A function, type, export, flag                         | Open its definition. Do not trust the name.                                                                |
+| A file or path                                         | List or read it.                                                                                           |
+| A payload, schema, event or DB column                  | Read the producer and the consumer, or the migration. Never infer a shape from a sibling.                  |
+| A dependency API                                       | Read the installed version's types or docs, not memory. A new version may have changed it.                 |
+| A command or script                                    | Read it in the manifest (`package.json`, `Makefile`). Run it.                                              |
+| A model name or config key                             | List what the tool accepts (its model picker, CLI help, docs). An unknown value often falls back silently. |
+| A function that "does the same" as the one you replace | Read both bodies. Same name is not same behavior.                                                          |
+| "It was like that before"                              | `git show <ref>:<path>`                                                                                    |
 
 If you cannot verify: say so, name what is missing, ask or choose the reversible option. Never fill the gap with a plausible guess.
 

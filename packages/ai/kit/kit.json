@@ -5,7 +5,27 @@
       "ground-truth",
       "review",
       "definition-of-done",
-      "orchestrate"
+      "orchestrate",
+      "parallel-work",
+      "tdd",
+      "adversarial-tests"
+    ],
+    "setup": [
+      "setup-ai",
+      "ground-truth",
+      "review",
+      "definition-of-done",
+      "orchestrate",
+      "domain-modeling",
+      "persona-review",
+      "code-review",
+      "ponytail-review",
+      "retro",
+      "rules-upkeep",
+      "writing-for-agents",
+      "parallel-work",
+      "tdd",
+      "adversarial-tests"
     ],
     "core": [
       "ponytail",
@@ -70,9 +90,18 @@
     "research"
   ],
   "presetAgents": {
-    "starter": ["explorer", "verifier", "orchestrator"]
+    "starter": ["explorer", "verifier", "orchestrator"],
+    "setup": [
+      "explorer",
+      "verifier",
+      "orchestrator",
+      "product-director",
+      "ui-designer",
+      "copywriter"
+    ]
   },
   "presetCommands": {
-    "starter": ["setup-ai", "review"]
+    "starter": ["setup-ai", "review"],
+    "setup": ["setup-ai", "review"]
   }
 }

@@ -64,6 +64,9 @@ export function checkLlmsFull(text) {
   if (!text.includes("# Documentation index")) {
     errors.push("llms-full.txt: missing # Documentation index section");
   }
+  if (!text.includes("# Set up zedkit AI in Cursor")) {
+    errors.push("llms-full.txt: missing # Set up zedkit AI in Cursor section");
+  }
   return errors;
 }
 
@@ -197,6 +200,11 @@ function main() {
 
   const llmsFullPath = requireFile(outDir, "llms-full.txt", errors);
   if (llmsFullPath) errors.push(...checkLlmsFull(readFileSync(llmsFullPath, "utf8")));
+
+  const aiSetupMd = requireFile(outDir, "ai/setup.md", errors);
+  if (aiSetupMd && !readFileSync(aiSetupMd, "utf8").includes("npx zedkit-ai setup")) {
+    errors.push("ai/setup.md: missing setup command");
+  }
 
   const homePath = requireFile(outDir, "index.html", errors);
   if (homePath) {

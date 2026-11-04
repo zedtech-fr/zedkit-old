@@ -24,9 +24,9 @@ For every file, module, dependency, or script in the plan, add one table
 row with the answers to the 7 ladder questions (`ponytail-review`) and
 the rung chosen. Stop at the first rung that holds.
 
-| Piece | 1 Need to exist? | 2 In this codebase? | 3 Standard library? | 4 Native platform feature or a standard tool? | 5 Installed dependency? | 6 One line? | Rung |
-|---|---|---|---|---|---|---|---|
-| `auth/refresh.ts` | yes | no | no | no | no — a token library is overkill | no | 7 |
+| Piece             | 1 Need to exist? | 2 In this codebase? | 3 Standard library? | 4 Native platform feature or a standard tool? | 5 Installed dependency?          | 6 One line? | Rung |
+| ----------------- | ---------------- | ------------------- | ------------------- | --------------------------------------------- | -------------------------------- | ----------- | ---- |
+| `auth/refresh.ts` | yes              | no                  | no                  | no                                            | no — a token library is overkill | no          | 7    |
 
 A piece hand-made while rung 3–5 could cover it is rewritten, or justified
 in one line. Rung 7 is the minimum code that works. A plan without this

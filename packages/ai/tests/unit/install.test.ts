@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { installKit } from "#install.js";
 import { agentsForPreset, commandsForPreset, readManifest } from "#kit.js";
-import { validateKit } from "#validate.js";
+import { checkDrift, validateKit } from "#validate.js";
 import { firstPartySkills, markdownFiles, put, SKILL, tempDir } from "./helpers.js";
 
 function install(dest: string, options: Parameters<typeof installKit>[0] extends infer O ? Partial<O> : never = {}) {
@@ -39,14 +39,78 @@ describe("installKit", () => {
     expect(readFileSync(join(dest, ".cursor/rules/project.mdc"), "utf8")).toContain("alwaysApply: true");
   });
 
-  it("starter preset stays small: five skills, three subagents, two commands", () => {
+  it("starter preset stays small: eight skills, three subagents, two commands", () => {
     const manifest = readManifest();
     if (!manifest.ok) throw manifest.error;
     const starter = manifest.value.presets.starter;
     if (!Array.isArray(starter)) throw new Error("starter preset must list skills");
-    expect(starter).toHaveLength(5);
+    expect(starter).toHaveLength(8);
     expect(agentsForPreset(manifest.value, "starter")).toHaveLength(3);
     expect(commandsForPreset(manifest.value, "starter")).toHaveLength(2);
+  });
+
+  it("starter lenses.md marks uninstalled runners planned and installed ones exists", () => {
+    const dest = tempDir();
+    install(dest, { providers: [] });
+    const text = readFileSync(join(dest, ".agents/skills/review/lenses.md"), "utf8");
+    expect(text).toMatch(/\| quality gate\s+\| agent `verifier`\s+\|\s*exists\s*\|/);
+    expect(text).toMatch(/\| code\s+\| skill `code-review`[^\n]*\|\s*planned\s*\|/);
+    expect(text).toMatch(/\| ponytail\s+\| skill `ponytail-review`[^\n]*\|\s*planned\s*\|/);
+    expect(text).toMatch(/\| persona\s+\| skill `persona-review`[^\n]*\|\s*planned\s*\|/);
+    expect(validateKit(join(dest, ".agents"))).toEqual([]);
+  });
+
+  it("init --adopt a second time is a no-op: no copy/link and validate stays clean", () => {
+    const dest = tempDir();
+    install(dest, { preset: "starter", providers: ["cursor"], adopt: true });
+    const again = install(dest, { preset: "starter", providers: ["cursor"], adopt: true });
+    expect(again.filter((a) => a.kind === "copy" || a.kind === "link" || a.kind === "write")).toEqual([]);
+    expect(existsSync(join(dest, ".agents/skills/zk-review"))).toBe(false);
+    expect(existsSync(join(dest, ".agents/commands/review.kit.md"))).toBe(false);
+    expect(existsSync(join(dest, ".agents/personas.kit.md"))).toBe(false);
+    expect(validateKit(join(dest, ".agents"))).toEqual([]);
+    expect(checkDrift(dest, join(dest, ".agents"))).toEqual([]);
+  });
+
+  it("init --adopt on an installed tree sidecars only the user-edited kit file", () => {
+    const dest = tempDir();
+    install(dest, { preset: "starter", providers: ["cursor"], adopt: true });
+    writeFileSync(join(dest, ".agents/commands/review.md"), "edited by user\n");
+    const again = install(dest, { preset: "starter", providers: ["cursor"], adopt: true });
+    expect(again.filter((a) => a.kind !== "skip")).toEqual([
+      expect.objectContaining({ kind: "copy", path: join(".agents", "commands", "review.kit.md") }),
+    ]);
+    expect(readFileSync(join(dest, ".agents/commands/review.md"), "utf8")).toBe("edited by user\n");
+    expect(existsSync(join(dest, ".cursor/commands/review.kit.md"))).toBe(false);
+    expect(existsSync(join(dest, ".agents/skills/zk-review"))).toBe(false);
+  });
+
+  it("adopts colliding cursor files: user copy kept, kit sidecar written, validate green", () => {
+    const dest = tempDir();
+    put(dest, ".cursor/skills/team-own/SKILL.md", "team\n");
+    put(dest, ".cursor/agents/explorer.md", "custom explorer\n");
+    put(dest, ".cursor/commands/review.md", "custom review\n");
+    const actions = install(dest, { providers: ["cursor"], adopt: true });
+    expect(readFileSync(join(dest, ".cursor/skills/team-own/SKILL.md"), "utf8")).toBe("team\n");
+    expect(readFileSync(join(dest, ".cursor/agents/explorer.md"), "utf8")).toBe("custom explorer\n");
+    expect(readFileSync(join(dest, ".cursor/commands/review.md"), "utf8")).toBe("custom review\n");
+    expect(existsSync(join(dest, ".cursor/agents/explorer.kit.md"))).toBe(true);
+    expect(existsSync(join(dest, ".cursor/commands/review.kit.md"))).toBe(true);
+    expect(lstatSync(join(dest, ".cursor/skills/ground-truth")).isSymbolicLink()).toBe(true);
+    expect(readlinkSync(join(dest, ".cursor/skills/ground-truth"))).toContain(".agents/skills/ground-truth");
+    expect(actions.some((a) => a.note?.includes("kept user file"))).toBe(true);
+    expect(validateKit(join(dest, ".agents"))).toEqual([]);
+    expect(checkDrift(dest, join(dest, ".agents"))).toEqual([]);
+  });
+
+  it("links kit skills into a pre-existing real .cursor/skills directory", () => {
+    const dest = tempDir();
+    put(dest, ".cursor/skills/team-own/SKILL.md", "team\n");
+    install(dest, { providers: ["cursor"] });
+    expect(lstatSync(join(dest, ".cursor/skills")).isSymbolicLink()).toBe(false);
+    expect(readFileSync(join(dest, ".cursor/skills/team-own/SKILL.md"), "utf8")).toBe("team\n");
+    expect(lstatSync(join(dest, ".cursor/skills/setup-ai")).isSymbolicLink()).toBe(true);
+    expect(checkDrift(dest, join(dest, ".agents")).filter((i) => i.message.includes("unreachable"))).toEqual([]);
   });
 
   it("core preset validates clean: every command resolves to an installed skill", () => {
@@ -199,12 +263,46 @@ describe("installKit", () => {
     expect(readFileSync(join(dest, "AGENTS.md"), "utf8")).toBe("mine\n");
   });
 
-  it("keeps a pre-existing real folder instead of replacing it with a link", () => {
+  it("links kit skills into a pre-existing real .claude/skills directory", () => {
     const dest = tempDir();
     put(dest, ".claude/skills/own/SKILL.md", "own\n");
-    const actions = install(dest);
+    install(dest);
     expect(lstatSync(join(dest, ".claude/skills")).isSymbolicLink()).toBe(false);
-    expect(actions.find((a) => a.path === ".claude/skills")?.kind).toBe("skip");
+    expect(readFileSync(join(dest, ".claude/skills/own/SKILL.md"), "utf8")).toBe("own\n");
+    expect(lstatSync(join(dest, ".claude/skills/setup-ai")).isSymbolicLink()).toBe(true);
+  });
+
+  it("re-setup links a repo-added skill into real cursor and claude skills dirs", () => {
+    const dest = tempDir();
+    put(dest, ".cursor/skills/team-own/SKILL.md", "team\n");
+    put(dest, ".claude/skills/team-own/SKILL.md", "team\n");
+    install(dest, { providers: ["cursor", "claude"], adopt: true });
+    put(dest, ".agents/skills/add-invoice/SKILL.md", SKILL("add-invoice"));
+    const again = install(dest, { providers: ["cursor", "claude"], adopt: true });
+    expect(lstatSync(join(dest, ".cursor/skills/add-invoice")).isSymbolicLink()).toBe(true);
+    expect(readlinkSync(join(dest, ".cursor/skills/add-invoice"))).toContain(".agents/skills/add-invoice");
+    expect(lstatSync(join(dest, ".claude/skills/add-invoice")).isSymbolicLink()).toBe(true);
+    expect(readFileSync(join(dest, ".cursor/skills/team-own/SKILL.md"), "utf8")).toBe("team\n");
+    expect(readFileSync(join(dest, ".claude/skills/team-own/SKILL.md"), "utf8")).toBe("team\n");
+    expect(validateKit(join(dest, ".agents"))).toEqual([]);
+    expect(checkDrift(dest, join(dest, ".agents")).filter((i) => i.message.includes("unreachable"))).toEqual([]);
+    const third = install(dest, { providers: ["cursor", "claude"], adopt: true });
+    expect(third.filter((a) => a.kind === "copy" || a.kind === "link" || a.kind === "write")).toEqual([]);
+    expect(again.some((a) => a.path.includes("add-invoice") && a.kind === "link")).toBe(true);
+  });
+
+  it("whole-dir skill symlink still covers a repo-added skill without per-skill links", () => {
+    const dest = tempDir();
+    install(dest, { providers: ["cursor", "claude"], adopt: true });
+    expect(readlinkSync(join(dest, ".cursor/skills"))).toBe("../.agents/skills");
+    expect(readlinkSync(join(dest, ".claude/skills"))).toBe("../.agents/skills");
+    put(dest, ".agents/skills/add-invoice/SKILL.md", SKILL("add-invoice"));
+    const again = install(dest, { providers: ["cursor", "claude"], adopt: true });
+    expect(lstatSync(join(dest, ".cursor/skills")).isSymbolicLink()).toBe(true);
+    expect(existsSync(join(dest, ".cursor/skills/add-invoice/SKILL.md"))).toBe(true);
+    expect(existsSync(join(dest, ".claude/skills/add-invoice/SKILL.md"))).toBe(true);
+    expect(again.some((a) => a.path.includes("add-invoice"))).toBe(false);
+    expect(validateKit(join(dest, ".agents"))).toEqual([]);
   });
 
   it("writes nothing on a dry run", () => {
@@ -288,6 +386,33 @@ describe("installKit", () => {
     const badResult = installKit({ dest: tempDir(), kit: bad, preset: "core" });
     expect(badResult.ok).toBe(false);
     if (!badResult.ok) expect(badResult.error.message).toContain("must be a string list");
+  });
+
+  it("setup ignores a dirty v1 personas template when v2 is installed", () => {
+    const kit = tempDir();
+    put(kit, "kit.json", JSON.stringify({ presets: { setup: ["alpha"] }, agents: [] }));
+    put(kit, "skills/alpha/SKILL.md", "x");
+    put(kit, "skills/setup-ai/templates/personas-v2.template.md", "clean\n");
+    put(kit, "personas.template.md", 'Call the Skill tool with "ghost".\n');
+    put(kit, "AGENTS.template.md", "t");
+    put(kit, "THIRD_PARTY_NOTICES.md", "n");
+    const result = installKit({ dest: tempDir(), kit, preset: "setup", providers: [] });
+    expect(result.ok).toBe(true);
+  });
+
+  it("setup fails before writing when the installed v2 personas names a missing skill", () => {
+    const kit = tempDir();
+    put(kit, "kit.json", JSON.stringify({ presets: { setup: ["alpha"] }, agents: [] }));
+    put(kit, "skills/alpha/SKILL.md", "x");
+    put(kit, "skills/setup-ai/templates/personas-v2.template.md", 'Call the Skill tool with "ghost".\n');
+    put(kit, "personas.template.md", "clean\n");
+    put(kit, "AGENTS.template.md", "t");
+    put(kit, "THIRD_PARTY_NOTICES.md", "n");
+    const dest = tempDir();
+    const result = installKit({ dest, kit, preset: "setup", providers: [] });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.message).toContain('preset "setup" has dangling references');
+    expect(existsSync(join(dest, ".agents"))).toBe(false);
   });
 
   it("returns an error when the kit manifest lists a missing skill", () => {
@@ -418,6 +543,14 @@ describe("installKit", () => {
     expect(text).toContain("exactly one question");
     for (const source of ["README", "commit"]) {
       expect(text).toContain(source);
+    }
+  });
+
+  it("setup-ai tells the agent what to say when /setup-ai starts", () => {
+    const text = readFileSync(join(kitRoot(), "skills", "setup-ai", "SKILL.md"), "utf8");
+    expect(text).toContain("## Tell the user first");
+    for (const phrase of ["Modes:", "Phases:", "What they get:", "15–45 minutes", "/setup-ai"]) {
+      expect(text).toContain(phrase);
     }
   });
 

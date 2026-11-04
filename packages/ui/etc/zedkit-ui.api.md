@@ -1116,10 +1116,12 @@ export interface OptionCardProps {
     className?: string;
     // (undocumented)
     description?: React_2.ReactNode;
+    name?: string | undefined;
     // (undocumented)
     onChange: () => void;
     // (undocumented)
     title: React_2.ReactNode;
+    type?: "checkbox" | "radio";
 }
 
 // @public (undocumented)
@@ -1131,6 +1133,7 @@ export interface OptionCardsProps {
     className?: string;
     // (undocumented)
     label?: string;
+    multiple?: boolean;
     // (undocumented)
     onChange: (ids: string[]) => void;
     // (undocumented)
@@ -1263,6 +1266,20 @@ export type RouteModalVariant = "drawer" | "dialog";
 
 // @public
 export const SCROLL_SCENES_MAX = 8;
+
+// @public
+export function ScrollReset(input: ScrollResetProps): null;
+
+// @public (undocumented)
+export interface ScrollResetOptions {
+    behavior?: "auto" | "smooth";
+    target?: () => HTMLElement | null;
+}
+
+// @public (undocumented)
+export interface ScrollResetProps extends ScrollResetOptions {
+    routeKey: string;
+}
 
 // @public (undocumented)
 export interface ScrollScene {
@@ -1576,6 +1593,9 @@ export function useOnlineStatus(): boolean;
 // @public
 export function usePortalContainer(): HTMLElement | undefined;
 
+// @public
+export function useScrollReset(routeKey: string, options?: ScrollResetOptions): void;
+
 // @public (undocumented)
 export function useUiMessages(): ZedkitUiMessages;
 
@@ -1660,6 +1680,9 @@ export type ZedkitUiMessages = {
     justNow: string;
     pickDate: string;
     pickDateRange: string;
+    menu: string;
+    mainNavigation: string;
+    language: string;
     locale: "en" | "fr";
 };
 

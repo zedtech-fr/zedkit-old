@@ -15,19 +15,66 @@ Original work by the same author, plus vendored MIT skills (see
 pnpm add -D @zedtech/zedkit-ai
 ```
 
-## Usage
+At a **pnpm workspace root** (`pnpm-workspace.yaml` present), use **`pnpm add -D -w @zedtech/zedkit-ai`** so install does not fail with `ERR_PNPM_ADDING_TO_ROOT`.
+
+Or skip the devDependency for a first try: `npx @zedtech/zedkit-ai setup` downloads the CLI once.
+
+## First 5 minutes
+
+**Pick your scope**
+
+| Situation | What to run |
+|---|---|
+| **One git repo** (an app, library, or service) | Commands below in that repo's root |
+| **Workspace root** (several sibling checkouts, or a meta repo listing members) | `setup` at the root only; `/setup-ai` runs in **workspace mode** and proposes per-repo setup inside each child — do not treat the root as the app |
+
+**Two commands to `/setup-ai`**
 
 ```sh
-npx zedkit-ai init . --provider cursor   # copy the starter kit into this repo
-# then ask your agent: "run the setup-ai skill"
-npx zedkit-ai validate                   # must print: ok
+npx @zedtech/zedkit-ai setup --provider cursor   # preset setup + adopt; wire Cursor
+# in your agent: /setup-ai   (or: "run the setup-ai skill")
 ```
 
-**Starter (default):** `setup-ai`, `ground-truth`, `review`, `definition-of-done`,
-and `orchestrate` (so setup can hand off bigger work), plus subagents
-`explorer`, `verifier`, and `orchestrator`, and commands `/setup-ai` and
-`/review`. Enough to onboard a repo, verify facts, run one review workflow,
-and check done-ness without loading the whole kit.
+Use `cursor`, `claude`, `codex`, `muse`, or comma-separated names; omit `--provider` to wire every supported runtime. **`setup` defaults to the `setup` preset** (discovery skills and agents for `/setup-ai`); override with `--preset starter|setup|core|full`. When you already added the package: `npx zedkit-ai setup . --provider cursor`.
+
+After `/setup-ai` finishes:
+
+```sh
+npx zedkit-ai validate   # must print: ok
+```
+
+### Cursor: one paste
+
+Docs walkthrough: [zedkit.app/docs/ai/setup](https://zedkit.app/docs/ai/setup). Agent steps (raw markdown): [zedkit.app/ai/setup.md](https://zedkit.app/ai/setup.md).
+
+Paste this single message in a new Cursor chat at the repo root:
+
+```text
+Set up zedkit AI on this repo following https://zedkit.app/ai/setup.md
+```
+
+The agent should install the package, run `npx zedkit-ai setup --provider cursor`, execute `/setup-ai`, then run `validate` until stdout is `ok`.
+
+## Usage
+
+Advanced / CI paths:
+
+```sh
+npx zedkit-ai init . --provider cursor --adopt   # same files as setup; explicit init
+npx zedkit-ai validate                           # must print: ok
+```
+
+**Starter (default for `init`):** `setup-ai`, `ground-truth`, `review`, `definition-of-done`,
+`orchestrate` (so setup can hand off bigger work), `parallel-work`, `tdd`, and
+`adversarial-tests`, plus subagents `explorer`, `verifier`, and `orchestrator`,
+and commands `/setup-ai` and `/review`. Enough to onboard a repo, verify facts,
+run one review workflow, and check done-ness without loading the whole kit.
+
+**Setup preset (default for `setup`):** everything in starter, plus
+`domain-modeling`, `persona-review`, `code-review`, `ponytail-review`,
+`retro`, `rules-upkeep`, and `writing-for-agents`, and subagents
+`product-director`, `ui-designer`, and `copywriter`. Use this for the
+first-5-minutes path and `/setup-ai` discovery depth.
 
 **Already on `core`?** Nothing is removed from your tree automatically.
 `zedkit-ai validate` reports drift; add skills with `zedkit-ai init
@@ -54,14 +101,21 @@ Developing the kit itself? From a zedkit checkout, build once and call
 the binary directly: `pnpm --filter @zedtech/zedkit-ai build`, then
 `node packages/ai/dist/bin.js init <dir>`.
 
-`init` options: `--preset starter|core|full`, `--provider cursor,claude,codex,all`
-(`--target` is an alias; `--help` lists every provider id), `--dry-run`. It copies files (you own them
+`init` options: `--preset starter|setup|core|full`, `--provider cursor,claude,codex,all`
+(`--target` is an alias; `--help` lists every provider id), `--adopt`, `--dry-run`.
+**`setup`** runs the same install with **`--preset setup` by default** (override with
+`--preset starter|setup|core|full`), **`--adopt` enabled**, and the same file rules as
+`init`. It copies files (you own them
 afterwards) and never overwrites an existing one; the one exception is an
 existing `AGENTS.md` without the ladder, which gets the ladder section
-appended (reported as `append`). It also skips
+appended (reported as `append`). `--adopt` keeps a colliding user file that
+differs from the kit and writes the kit version beside it (`review.kit.md`
+for files, `zk-review` for skill folders); an already-installed kit copy is
+left as-is. It also skips
 `.cursor/rules/project.mdc` (with a skip line naming the rule) when another
 rule in `.cursor/rules/` is already always on (`alwaysApply: true`), instead
-of adding a second one. Run `zedkit-ai list` to see presets, subagents and
+of adding a second one. A real `.cursor/skills` directory is kept; kit skills
+are linked inside it one by one. Run `zedkit-ai list` to see presets, subagents and
 commands.
 
 ## When to use
@@ -77,15 +131,20 @@ One shared source (`.agents/`), then a thin layer per provider:
 
 | Provider | Layer | Reads |
 |---|---|---|
-| `cursor` | `.cursor/rules/project.mdc`, `.cursor/skills` link, agents and commands as real-file copies | its `.cursor/` layer |
-| `claude` | `CLAUDE.md` link, `.claude/{skills,agents,commands}` links | its `.claude/` layer |
+| `cursor` | `.cursor/rules/project.mdc`, `.cursor/skills` link (or per-skill links if that path is already a real directory), agents and commands as real-file copies | its `.cursor/` layer |
+| `claude` | `CLAUDE.md` link, `.claude/{skills,agents,commands}` links (per-skill links and file copies when those paths are already real directories) | its `.claude/` layer |
 | `codex` | none | `AGENTS.md` and `.agents/skills` directly |
+| `muse` | none | `.agents/` directly |
+
+Every preset × provider cell is install-tested: install green, validate
+clean, re-run a no-op, drift clean.
 
 Other provider ids with no install layer behave like `codex` (see `zedkit-ai init --help`).
 
 Cursor gets copies because a symlinked folder shows up empty there. Copies
 can drift when `.agents/` changes: `zedkit-ai validate` reports each missing
-or drifted copy — fix it by copying the file over (init never overwrites).
+or differing copy and never tells you to overwrite a user file. Re-run
+`init --adopt` to install a kit sidecar next to the user copy.
 `setup-ai` takes provider names (`setup-ai cursor claude`) and asks once
 which providers to wire when it cannot tell.
 
@@ -98,7 +157,7 @@ CLAUDE.md -> AGENTS.md
 .agents/agents/            subagents
 .agents/commands/          one-keystroke commands (thin: each runs a skill)
 .claude/{skills,agents,commands}  symlinks to .agents/
-.cursor/skills             symlink to .agents/skills
+.cursor/skills             symlink to .agents/skills (or per-skill links)
 .cursor/{agents,commands}  real-file copies (a link shows up empty)
 .cursor/rules/project.mdc  one always-on rule pointing at AGENTS.md
 ```
@@ -150,14 +209,16 @@ the Matt Pocock engineering skills (`tdd`, `code-review`, `diagnosing-bugs`,
 director briefs — the full table (role + when to call) lives in
 `docs/agents-catalog.md`, the installed set in `kit.json`.
 
-**Presets:** `starter` (default: onboard, review, done — five skills, three
-subagents, two commands), `core` (planning, implement, and the rest;
+**Presets:** `starter` (default: onboard, review, done — eight skills, three
+subagents, two commands), `setup` (starter plus domain modeling, the review
+lenses, retro, rules-upkeep, and subagents `product-director`, `ui-designer`,
+`copywriter`), `core` (planning, implement, and the rest;
 `zedkit-ai list` shows the skill list), and `full` (every skill). Keep the
 skill count low: every skill's name and description is loaded into context
 up front (Codex caps that list at about 2%
-of the context window and shortens descriptions past it). With `starter` or
-`core`, only that preset's subagents and commands are copied; `full` still
-installs the full agent and command lists from `kit.json`.
+of the context window and shortens descriptions past it). With `starter`,
+`setup` or `core`, only that preset's subagents and commands are copied;
+`full` still installs the full agent and command lists from `kit.json`.
 
 ## Choices worth knowing
 

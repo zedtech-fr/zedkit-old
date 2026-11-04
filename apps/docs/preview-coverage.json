@@ -18,7 +18,8 @@
   "optOut": {
     "Localize kit chrome in English or French::French bundle": "App-root provider wrap; no visual host of its own.",
     "Localize kit chrome in English or French::Override one string": "ConfirmDialog already has live previews on its own need.",
-    "Float an identity assistant on any page::Collapsed pill": "The docs app mounts IdentityDockWidget site-wide; the catalog snippet is composition-only."
+    "Float an identity assistant on any page::Collapsed pill": "The docs app mounts IdentityDockWidget site-wide; the catalog snippet is composition-only.",
+    "Reset scroll on route change::Next.js root": "Renders nothing; the docs site itself runs it on every page change."
   },
   "pending": []
 }

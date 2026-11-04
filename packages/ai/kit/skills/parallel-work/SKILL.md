@@ -27,11 +27,11 @@ Do not fan out for a small task, one file, or a chain where step 2 needs step 1.
 
 Agree and write down the contract first. Then a table, in the plan:
 
-| Track | Does | Starts after | Must not touch | Done when |
-|---|---|---|---|---|
-| A | storage layer + its tests | contract agreed | B, C files | tests T1..T3 green |
-| B | API layer + its tests | contract agreed | A, C files | tests T4..T6 green |
-| C | integration tests | A and B done | production code | T7 green |
+| Track | Does                      | Starts after    | Must not touch  | Done when          |
+| ----- | ------------------------- | --------------- | --------------- | ------------------ |
+| A     | storage layer + its tests | contract agreed | B, C files      | tests T1..T3 green |
+| B     | API layer + its tests     | contract agreed | A, C files      | tests T4..T6 green |
+| C     | integration tests         | A and B done    | production code | T7 green           |
 
 Sequential by nature: the contract, wiring that needs all pieces, integration tests, anything that edits a shared file.
 

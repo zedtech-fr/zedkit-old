@@ -85,9 +85,23 @@ import { ToggleDemo } from "./toggle-demo";
 import { ValidatedFormDemo } from "./validated-form-demo";
 import { TypographyDemo } from "./typography-demo";
 import { UpdatedAgoDemo } from "./updated-ago-demo";
-import { GlassSurfaceDemo } from "./marketing-demo";
+import {
+  CtaBandDemo,
+  FaqDemo,
+  FeatureGridDemo,
+  GlassSurfaceDemo,
+  HeroDemo,
+  HowItWorksDemo,
+  LocaleSwitchDemo,
+  LogoBandDemo,
+  MarketingChromeDemo,
+  MediaSectionDemo,
+  PricingDemo,
+  TestimonialsDemo,
+} from "./marketing-demo";
 import { WizardComposedDemo } from "./wizard-composed-demo";
 import { WizardDemo } from "./wizard-demo";
+import { WizardPickOneDemo } from "./wizard-pick-one-demo";
 import { WizardSoloDemo } from "./wizard-solo-demo";
 import { FourStateEmptyDemo } from "./four-state-empty-demo";
 import { FourStateErrorDemo } from "./four-state-error-demo";
@@ -233,9 +247,21 @@ export const demoRegistry = {
   ValidatedFormDemo: { Demo: ValidatedFormDemo, file: "validated-form-demo.tsx" },
   TypographyDemo: { Demo: TypographyDemo, file: "typography-demo.tsx" },
   UpdatedAgoDemo: { Demo: UpdatedAgoDemo, file: "updated-ago-demo.tsx" },
+  CtaBandDemo: { Demo: CtaBandDemo, file: "marketing-demo.tsx" },
+  FeatureGridDemo: { Demo: FeatureGridDemo, file: "marketing-demo.tsx" },
   GlassSurfaceDemo: { Demo: GlassSurfaceDemo, file: "marketing-demo.tsx" },
+  HeroDemo: { Demo: HeroDemo, file: "marketing-demo.tsx" },
+  HowItWorksDemo: { Demo: HowItWorksDemo, file: "marketing-demo.tsx" },
+  LocaleSwitchDemo: { Demo: LocaleSwitchDemo, file: "marketing-demo.tsx", center: true },
+  FaqDemo: { Demo: FaqDemo, file: "marketing-demo.tsx" },
+  PricingDemo: { Demo: PricingDemo, file: "marketing-demo.tsx" },
+  LogoBandDemo: { Demo: LogoBandDemo, file: "marketing-demo.tsx" },
+  TestimonialsDemo: { Demo: TestimonialsDemo, file: "marketing-demo.tsx" },
+  MediaSectionDemo: { Demo: MediaSectionDemo, file: "marketing-demo.tsx" },
+  MarketingChromeDemo: { Demo: MarketingChromeDemo, file: "marketing-demo.tsx" },
   WizardComposedDemo: { Demo: WizardComposedDemo, file: "wizard-composed-demo.tsx" },
   WizardDemo: { Demo: WizardDemo, file: "wizard-demo.tsx" },
+  WizardPickOneDemo: { Demo: WizardPickOneDemo, file: "wizard-pick-one-demo.tsx" },
   WizardSoloDemo: { Demo: WizardSoloDemo, file: "wizard-solo-demo.tsx" },
 } as const satisfies Record<string, DemoEntry>;
 

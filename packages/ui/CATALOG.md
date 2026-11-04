@@ -1105,6 +1105,36 @@ import { RouteModal, closeRoute } from "@zedtech/zedkit-ui";
 </RouteModal>
 ```
 
+## Reset scroll on route change
+
+- Import: `@zedtech/zedkit-ui` — `ScrollReset`, `ScrollResetProps`, `useScrollReset`, `ScrollResetOptions`
+- Wraps: `(none)`
+- Status: beta
+- Short name: ScrollReset
+- Audience: Developers whose client-side navigation keeps the previous page's scroll position.
+- Purpose: Scrolls to the top (or to the `#hash` anchor) when the route key changes, leaving back/forward restoration to the browser.
+- When to use: Once near the root of the app, fed the router pathname (`usePathname()` in Next.js).
+- When not to use: For in-page anchor links or scroll spies — the browser already handles those.
+- Examples: Next.js root, Inner scroll container
+- A11y: Jumps instantly by default and always under `prefers-reduced-motion: reduce`; `behavior="smooth"` only applies when motion is allowed. Does not move focus. Back/forward (popstate) navigations are skipped so the browser restores the previous position.
+- Composition: Renders nothing; `useScrollReset` is the same behaviour as a hook. Router-agnostic — the app passes the route key.
+- See also: `Render a route as a modal over the list`
+
+```ts
+"use client";
+import { ScrollReset } from "@zedtech/zedkit-ui";
+import { usePathname } from "next/navigation";
+export function RouteScroll() {
+  return <ScrollReset routeKey={usePathname()} />;
+}
+```
+
+```ts
+import { useScrollReset } from "@zedtech/zedkit-ui";
+const getMain = useCallback(() => document.querySelector<HTMLElement>("main"), []);
+useScrollReset(pathname, { target: getMain });
+```
+
 ## Show toast notifications
 
 - Import: `@zedtech/zedkit-ui` — `Toaster`, `ToasterProps`, `toast`
@@ -1237,8 +1267,8 @@ import { AppShell } from "@zedtech/zedkit-ui";
 - When to use: For 2–6 step flows with choices per step.
 - When not to use: For single forms — use Form instead of inventing steps.
 - See also: `Build validated forms with labels, errors, and pending state`
-- Examples: Simple, Composed steps, Solo card
-- A11y: List carries `aria-label="Progress"`; current step gets `aria-current="step"`. Cards are native checkboxes in labels.
+- Examples: Simple, Composed steps, Solo card, Pick one
+- A11y: List carries `aria-label="Progress"`; current step gets `aria-current="step"`. Cards are native checkboxes in labels; with `multiple={false}` they are native radios in a `radiogroup`, one name per group, arrow keys move the choice.
 - Mobile: Below `sm`, `WizardSteps` shows `Step {n} of {count} · {title}` plus a progress bar; the horizontal step list stays visible from `sm` up.
 - Registry: wizard-steps
 - Troubleshooting: Steps stuck done/todo — `current` is a 0-based index; past the last step everything reads done. Missing connector — composed `WizardStep` rows show one only with `showConnector` (automatic in `WizardSteps`).
@@ -1262,6 +1292,12 @@ import { Wizard, WizardStep } from "@zedtech/zedkit-ui";
 import { OptionCard } from "@zedtech/zedkit-ui";
 const [solo, setSolo] = useState(false);
 <OptionCard title="Solo option" checked={solo} onChange={() => setSolo(!solo)} />
+```
+
+```ts
+import { OptionCards } from "@zedtech/zedkit-ui";
+const [delivery, setDelivery] = useState(["standard"]); // always one id
+<OptionCards multiple={false} label="Delivery" options={options} selected={delivery} onChange={setDelivery} />
 ```
 
 ## Show key-value details and a live indicator
@@ -1883,7 +1919,7 @@ applyIdentityTokenSheet(
 
 ## Compose a public marketing page
 
-- Import: `@zedtech/zedkit-ui/marketing` — `GlassSurface`, `glassSurfaceVariants`, `GlassSurfaceProps`
+- Import: `@zedtech/zedkit-ui/marketing` — `GlassSurface`, `glassSurfaceVariants`, `GlassSurfaceProps`, `Hero`, `HeroProps`, `CtaBand`, `CtaBandProps`, `FeatureGrid`, `FeatureGridProps`, `FeatureItem`, `HowItWorks`, `HowItWorksProps`, `HowItWorksStep`, `MarketingHeader`, `MarketingHeaderProps`, `MarketingFooter`, `MarketingFooterProps`, `MarketingFooterColumn`, `LocaleSwitch`, `LocaleSwitchProps`, `LocaleOption`, `MediaSection`, `MediaSectionProps`, `LogoBand`, `LogoBandProps`, `LogoBandItem`, `Testimonials`, `TestimonialsProps`, `Testimonial`, `Pricing`, `PricingProps`, `PricingPlan`, `Faq`, `FaqProps`, `FaqItem`
 - Wraps: none (theme tokens, `class-variance-authority`)
 - Status: alpha
 - Short name: Marketing
@@ -1892,8 +1928,9 @@ applyIdentityTokenSheet(
 - When to use: For a signed-out home, pricing or product page built from the kit's tokens (frosted under the glass identity, plain cards elsewhere).
 - When not to use: For app screens — use `Card`, `PageHeader` and `Section` instead; for full-page bands use `Section` with `bleed`.
 - See also: `Theme an admin app (dark/light included)`
-- A11y: Surfaces render a plain element (`div`, `section`, `article` or `li`); pass `aria-label` or a heading inside when it is a landmark. Text sits on the card colour, so contrast follows the identity tokens; under `prefers-reduced-transparency` the glass identity turns surfaces near-solid.
-- Troubleshooting: Surfaces look flat — the identity in use is not `glass`; set `data-identity="glass"` on `<html>`. Classes missing — the `@source` line must scan the kit's `src/**` (the marketing folder is included).
+- Examples: Simple, Hero, Closing call to action, Feature grid, Steps, Header and footer, Language switch, Use case, Logo band, Testimonials, Pricing, Questions
+- A11y: `Hero` and `CtaBand` are `section` regions named by their own heading (`Hero` renders the page `h1`; pass `headingLevel={2}` when the page already has one); calls to action are links or buttons you pass in, full width on phones. `FeatureGrid` and `HowItWorks` are regions named by a level-2 title with level-3 item titles; feature icons are decorative (`aria-hidden`), steps are an ordered list whose numbers are added for you. `MarketingHeader` is a `banner` with a named main navigation; below `md` its links and actions open from a native `details` disclosure (a 44px `summary` labelled by `menu`). `MarketingFooter` gives each link column its own labelled navigation. `MediaSection` is a region named by its level-2 title: text first in reading order, the framed media after it (`reverse` only changes the visual side from `lg`); pass `alt` text or a caption with the media. `LogoBand` reads each company name instead of its logo (the logo is `aria-hidden`). `Testimonials` renders each quote as a `figure` with a `figcaption`; quotation marks come from the browser for the page `lang`. Only pass quotes you may publish. `Pricing` lists plans as a list of surfaces: each name is a level-3 heading, features are a list, and the highlighted plan carries a visible `badge` (never colour alone). `Faq` uses native `details`/`summary`: keyboard and screen readers work without script, and browser find-in-page opens matches; add `FAQPage` structured data with `@zedtech/zedkit-seo` if the page should carry it. `LocaleSwitch` is a named navigation whose items carry `lang`, with `aria-current` on the active language. Surfaces render a plain element (`div`, `section`, `article` or `li`); pass `aria-label` or a heading inside when it is a landmark. Text sits on the card colour, so contrast follows the identity tokens; under `prefers-reduced-transparency` the glass identity turns surfaces near-solid.
+- Troubleshooting: Menu, navigation and language labels stay English — wrap the tree in `ZedkitUiProvider` with `zedkitUiMessagesFr` (or your own bundle). Router links reload the page — pass your router's link elements in `links`, they are rendered as given. Surfaces look flat — the identity in use is not `glass`; set `data-identity="glass"` on `<html>`. Classes missing — the `@source` line must scan the kit's `src/**` (the marketing folder is included).
 
 ```ts
 import { GlassSurface } from "@zedtech/zedkit-ui/marketing";
@@ -1901,4 +1938,116 @@ import { GlassSurface } from "@zedtech/zedkit-ui/marketing";
 <GlassSurface as="section" aria-label="Plans" tone="raised" padding="lg">
   Plans
 </GlassSurface>;
+```
+
+```ts
+import { Hero } from "@zedtech/zedkit-ui/marketing";
+
+<Hero
+  title="Keep your shop. Add live updates."
+  description="Stock, orders and offers update without a refresh."
+  actions={<a href="/signup">Create an account</a>}
+/>;
+```
+
+```ts
+import { CtaBand } from "@zedtech/zedkit-ui/marketing";
+
+<CtaBand
+  title="Try it on a staging key"
+  actions={<a href="/signup">Create an account</a>}
+/>;
+```
+
+```ts
+import { FeatureGrid } from "@zedtech/zedkit-ui/marketing";
+
+<FeatureGrid
+  title="Built for the shop you already run"
+  features={[
+    { title: "Live stock", description: "Counts follow every sale." },
+    { title: "Personal offers", description: "Each visitor sees what fits." },
+  ]}
+/>;
+```
+
+```ts
+import { HowItWorks } from "@zedtech/zedkit-ui/marketing";
+
+<HowItWorks
+  title="Live in three steps"
+  steps={[{ title: "Create an account" }, { title: "Create a key" }, { title: "See your first event" }]}
+/>;
+```
+
+```ts
+import { MarketingFooter, MarketingHeader } from "@zedtech/zedkit-ui/marketing";
+
+<MarketingHeader
+  brand={<a href="/">Harbor</a>}
+  links={[<a key="docs" href="/docs">Docs</a>]}
+  actions={<a href="/signup">Create an account</a>}
+/>;
+<MarketingFooter brand="Harbor" columns={[{ title: "Product", links: [<a key="docs" href="/docs">Docs</a>] }]} />;
+```
+
+```ts
+import { MediaSection } from "@zedtech/zedkit-ui/marketing";
+
+<MediaSection
+  title="An assistant that knows your catalog"
+  points={["Reads your products", "Never changes an order"]}
+  media={<img src="/assistant.png" alt="The assistant answering a question about stock" />}
+/>;
+```
+
+```ts
+import { LogoBand } from "@zedtech/zedkit-ui/marketing";
+
+<LogoBand
+  title="Works with the shops you know"
+  logos={[{ name: "Harbor Studio", logo: <img src="/harbor.svg" alt="" /> }]}
+/>;
+```
+
+```ts
+import { Testimonials } from "@zedtech/zedkit-ui/marketing";
+
+<Testimonials
+  title="What shops say"
+  items={[{ quote: "We launched a new offer in a day.", name: "Ada Lovelace", role: "Head of e-commerce" }]}
+/>;
+```
+
+```ts
+import { Pricing } from "@zedtech/zedkit-ui/marketing";
+
+<Pricing
+  title="Simple pricing"
+  plans={[
+    { name: "Starter", price: "€0", period: "per month", features: ["1 staging key"], action: <a href="/signup">Start free</a> },
+    { name: "Growth", price: "€29", period: "per month", features: ["5 keys"], highlighted: true, badge: "Most popular" },
+  ]}
+/>;
+```
+
+```ts
+import { Faq } from "@zedtech/zedkit-ui/marketing";
+
+<Faq
+  title="Questions"
+  items={[{ question: "Do I need to change my shop?", answer: "No. It runs next to it." }]}
+/>;
+```
+
+```ts
+import { LocaleSwitch } from "@zedtech/zedkit-ui/marketing";
+
+<LocaleSwitch
+  current="en"
+  locales={[
+    { code: "en", label: "English", href: "/en" },
+    { code: "fr", label: "Français", href: "/fr" },
+  ]}
+/>;
 ```

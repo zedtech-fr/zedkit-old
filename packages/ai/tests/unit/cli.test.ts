@@ -1,4 +1,4 @@
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { main } from "#cli.js";
@@ -44,9 +44,73 @@ describe("cli", () => {
     const { code, text } = run("init", dest, "--target", "claude");
     expect(code).toBe(0);
     expect(text).toContain("AGENTS.md");
+    expect(text).toContain("/setup-ai");
     expect(existsSync(join(dest, ".agents/skills/ground-truth/SKILL.md"))).toBe(true);
     expect(existsSync(join(dest, "CLAUDE.md"))).toBe(true);
     expect(existsSync(join(dest, ".cursor"))).toBe(false);
+  });
+
+  it("setup installs with setup preset and prints the /setup-ai next step", () => {
+    const dest = tempDir();
+    const { code, text } = run("setup", dest, "--provider", "cursor");
+    expect(code).toBe(0);
+    expect(text).toContain("/setup-ai");
+    expect(text).toContain("validate");
+    expect(text).toContain("product.md");
+    expect(existsSync(join(dest, ".cursor/commands/setup-ai.md"))).toBe(true);
+    expect(existsSync(join(dest, ".agents/skills/domain-modeling/SKILL.md"))).toBe(true);
+  });
+
+  it("setup exits 0 with phase C checklist when package.json is malformed", () => {
+    const dest = tempDir();
+    put(dest, "package.json", "{ broken\n");
+    const { code, text } = run("setup", dest, "--provider", "cursor");
+    expect(code).toBe(0);
+    expect(text).toContain("product.md");
+    expect(text).not.toContain("prettier: add to .prettierignore");
+    expect(run("validate", dest).code).toBe(0);
+  });
+
+  it("init prints prettier ignore lines when the host uses Prettier", () => {
+    const dest = tempDir();
+    put(dest, "package.json", JSON.stringify({ devDependencies: { prettier: "3.9.0" } }));
+    put(dest, ".prettierrc.json", "{}\n");
+    const { code, text } = run("init", dest, "--provider", "cursor", "--preset", "starter");
+    expect(code).toBe(0);
+    expect(text).toContain("prettier: add to .prettierignore:");
+    expect(text).toContain(".agents/");
+    expect(text).toContain(".cursor/skills/");
+  });
+
+  it("setup on an empty dir uses the setup preset, validate ok, second run no-op", () => {
+    const dest = tempDir();
+    expect(run("setup", dest, "--provider", "cursor").code).toBe(0);
+    expect(existsSync(join(dest, ".agents/skills/domain-modeling/SKILL.md"))).toBe(true);
+    expect(existsSync(join(dest, ".agents/agents/product-director.md"))).toBe(true);
+    expect(run("validate", dest)).toEqual({ code: 0, text: "ok", errors: "" });
+    const again = run("setup", dest, "--provider", "cursor");
+    expect(again.code).toBe(0);
+    const writes = again.text.split("\n").filter((line) => /^(copy|link|write)\s/u.test(line));
+    expect(writes).toEqual([]);
+  });
+
+  it("setup --preset starter installs starter skills only", () => {
+    const dest = tempDir();
+    expect(run("setup", dest, "--provider", "cursor", "--preset", "starter").code).toBe(0);
+    expect(existsSync(join(dest, ".agents/skills/domain-modeling/SKILL.md"))).toBe(false);
+    expect(existsSync(join(dest, ".agents/skills/ground-truth/SKILL.md"))).toBe(true);
+  });
+
+  it("setup keeps pre-existing .cursor skills, agents, and commands", () => {
+    const dest = tempDir();
+    put(dest, ".cursor/skills/team-own/SKILL.md", "team\n");
+    put(dest, ".cursor/agents/explorer.md", "custom explorer\n");
+    put(dest, ".cursor/commands/review.md", "custom review\n");
+    expect(run("setup", dest, "--provider", "cursor").code).toBe(0);
+    expect(readFileSync(join(dest, ".cursor/skills/team-own/SKILL.md"), "utf8")).toBe("team\n");
+    expect(readFileSync(join(dest, ".cursor/agents/explorer.md"), "utf8")).toBe("custom explorer\n");
+    expect(readFileSync(join(dest, ".cursor/commands/review.md"), "utf8")).toBe("custom review\n");
+    expect(run("validate", dest)).toEqual({ code: 0, text: "ok", errors: "" });
   });
 
   it("init wires cursor when asked", () => {
@@ -72,6 +136,16 @@ describe("cli", () => {
     const result = run("init", tempDir(), "--provider", "pilot");
     expect(result.code).toBe(2);
     expect(result.errors).toContain('unknown provider "pilot"');
+  });
+
+  it("init --adopt keeps a colliding cursor command and writes a kit sidecar", () => {
+    const dest = tempDir();
+    put(dest, ".cursor/commands/review.md", "mine\n");
+    const { code, text } = run("init", dest, "--provider", "cursor", "--adopt");
+    expect(code).toBe(0);
+    expect(text).toContain("kept user file");
+    expect(readFileSync(join(dest, ".cursor/commands/review.md"), "utf8")).toBe("mine\n");
+    expect(existsSync(join(dest, ".cursor/commands/review.kit.md"))).toBe(true);
   });
 
   it("init --dry-run writes nothing", () => {
@@ -155,7 +229,8 @@ describe("cli", () => {
     for (const dir of [root, join(root, ".agents")]) {
       const result = run("validate", dir);
       expect(result.code, dir).toBe(1);
-      expect(result.text, dir).toContain("drifted");
+      expect(result.text, dir).toContain("differs from");
+      expect(result.text, dir).not.toContain("copy it over");
     }
   });
 
