@@ -28,7 +28,10 @@ describe("ScrollGallery", () => {
       /\[data-slot="scroll-gallery"\] \[data-slot="tabs-list"\][\s\S]*gap: var\(--zk-gap-md\)/,
     );
     expect(stylesCss).toMatch(
-      /\[data-slot="tabs-trigger"\]:has\(\[data-tab-label\]\)[\s\S]*width: max-content/,
+      /\[data-scroll-gallery-track\][\s\S]*padding-inline-start: calc\(var\(--zk-table-fade\) \+ var\(--zk-gap-sm\)\)/,
+    );
+    expect(stylesCss).toMatch(
+      /\[data-slot="tabs-trigger"\]:has\(\[data-tab-label\]\)[\s\S]*flex-direction: column/,
     );
     expect(stylesCss).toMatch(
       /\[data-scroll-gallery-track\] > \*[\s\S]*flex-shrink: 0[\s\S]*scroll-snap-align: start/,
