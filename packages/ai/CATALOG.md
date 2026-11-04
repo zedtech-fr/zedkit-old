@@ -9,7 +9,7 @@
 
 - Import: `@zedtech/zedkit-ai` — `installKit`, `InstallOptions`, `Action`, `Provider`, `Target`
 - Wraps: `(none)`
-- Status: beta
+- Status: stable
 - Short name: Agent setup
 - Audience: Teams onboarding a coding agent (Cursor, Claude, Codex) on a shared repo.
 - Purpose: Install one agent-agnostic setup (instructions, skills, subagents, commands) with a single CLI call.
@@ -45,7 +45,7 @@ layer: read the shared source directly; same for other no-layer ids in `--help`)
 
 - Import: `@zedtech/zedkit-ai` — `validateKit`, `checkDrift`, `Issue`
 - Wraps: `yaml`
-- Status: beta
+- Status: stable
 - Short name: Kit validation
 - Audience: Teams keeping an installed agent setup healthy across providers.
 - Purpose: Validate installed skills, subagents and commands, report drift between providers without asking to overwrite user files, and flag kit skills a provider layer does not expose.
