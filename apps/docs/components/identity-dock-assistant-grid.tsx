@@ -59,7 +59,7 @@ export function IdentityDockAssistantGrid(props: {
         />
       </Stack>
       {props.hideComposer ? null : (
-        <div ref={props.composerRef}>
+        <Stack ref={props.composerRef}>
           <ConversationComposer
             session={props.session}
             brief={props.brief}
@@ -70,7 +70,7 @@ export function IdentityDockAssistantGrid(props: {
             onCancel={props.onCancel}
             inputRef={props.inputRef}
           />
-        </div>
+        </Stack>
       )}
     </Stack>
   );
