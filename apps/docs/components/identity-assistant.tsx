@@ -46,7 +46,7 @@ export function IdentityAssistant({ tokens, onUse }: { tokens: IdentityTokens; o
   const busy = session.pending !== null;
   const off = status !== null && !status.available ? status.reason : null;
   const { send, quickRefine } = useAssistantSubmitHandlers(brief, submit, busy, off !== null, () => setBrief(""));
-  const domainBrief = specimenBriefFromThread(session.thread, brief);
+  const domainBrief = specimenBriefFromThread(session.thread, session.proposal?.prompt ?? brief);
 
   return (
     <Stack gap={4} id="create" role="region" aria-labelledby="identity-assistant-title" data-slot="identity-assistant" className="scroll-mt-24">

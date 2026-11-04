@@ -167,6 +167,7 @@ describe("setup-ai v3: scored", () => {
     const depth = raw.slice(raw.indexOf("## Depth axes"), raw.indexOf("## Hard gates"));
     expect(depth.match(/^- [0-3]: /gmu)).toHaveLength(16);
     expect(depth).toMatch(/1-5 small, 6-10 medium, 11-20 large/u);
+    expect(raw).toMatch(/zero fan-out.*no fan-out: lead read inline/u);
   });
 
   it("a v2-style description scores 0-1 on every depth axis", () => {
@@ -181,6 +182,13 @@ describe("setup-ai v3: scored", () => {
     expect(raw).toMatch(/four \*\*depth axes D1–D4\*\*/u);
     const log = read("templates", "setup-log.template.md");
     for (const field of ["**Reading:**", "**Routing:**", "**Nested:**"]) expect(log, field).toContain(field);
+  });
+
+  it("phase E writes the setup-log entry atomically and validates the finished file", () => {
+    const raw = read("SKILL.md");
+    expect(raw).toMatch(/write the entry in \*\*one atomic write\*\*/u);
+    expect(raw).toMatch(/run `validate --setup` only against the finished file/u);
+    expect(read("templates", "setup-log.template.md")).toMatch(/one atomic write after all gates finished/u);
   });
 
   it("the CLI documents scan and the depth checks", () => {

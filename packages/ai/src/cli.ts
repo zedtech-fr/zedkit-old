@@ -4,7 +4,7 @@ import { dirname, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { err, ok, tryCatch, type Result } from "@zedtech/zedkit-core";
 import { ALL_PROVIDERS, installKit, type Provider } from "./install.js";
-import { installNextStepLines } from "./install-next-step.js";
+import { installNextStepLines, prettierHintLines } from "./install-next-step.js";
 import { kitDir, readManifest } from "./kit.js";
 import { scanRepo } from "./scan.js";
 import { checkDepth } from "./setup-depth.js";
@@ -135,6 +135,7 @@ function runScan(args: string[], sinks: Sinks): number {
   sinks.out(`size: ${scan.size} (${scan.files} files)`);
   sinks.out(`readers: ${scan.readers}`);
   scan.slices.forEach((slice, i) => sinks.out(`slice ${i + 1}: ${slice.files} files: ${slice.paths.join(" + ")}`));
+  for (const line of prettierHintLines(dir, undefined)) sinks.out(line);
   return 0;
 }
 

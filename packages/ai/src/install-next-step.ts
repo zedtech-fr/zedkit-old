@@ -72,6 +72,14 @@ export function repoUsesPrettier(root: string): boolean {
   return packageJsonSignalsPrettier(root) || hasPrettierConfigFile(root);
 }
 
+/** `prettier:` hint lines when the repo uses prettier and kit paths are missing from .prettierignore. */
+export function prettierHintLines(root: string, providers: readonly Provider[] | undefined): string[] {
+  if (!repoUsesPrettier(root)) return [];
+  const missing = kitPathsMissingFromPrettierIgnore(root, providers);
+  if (missing.length === 0) return [];
+  return ["prettier: add to .prettierignore:", ...missing];
+}
+
 /** Lines printed after a successful init/setup (not dry-run). */
 export function installNextStepLines(
   root: string,
@@ -87,10 +95,6 @@ export function installNextStepLines(
   if (existsSync(join(root, "pnpm-workspace.yaml")) && !existsSync(join(root, "node_modules"))) {
     lines.push("next: pnpm install (workspace deps missing)");
   }
-  if (!repoUsesPrettier(root)) return lines;
-  const missing = kitPathsMissingFromPrettierIgnore(root, providers);
-  if (missing.length === 0) return lines;
-  lines.push("prettier: add to .prettierignore:");
-  lines.push(...missing);
+  lines.push(...prettierHintLines(root, providers));
   return lines;
 }
