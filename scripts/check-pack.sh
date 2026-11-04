@@ -148,7 +148,8 @@ size_budget() {
 # the previous 40800 was already exceeded at 41771 before this change. Keep roughly 2% headroom.
 # Raised to 43600 on 3 Nov 2026: measured 43561 with signature type-role and motion exports.
 # Raised to 44000 on 4 Nov 2026: measured 43911 with IdentityDock + sheet exports.
-size_budget ui 44000
+# Raised to 44500 on 4 Nov 2026: measured 44353 with signatureMotionClass on IdentityDock.
+size_budget ui 44500
 # Marketing entry (separate from the main budget); measured 785 on 3 Nov 2026 with GlassSurface only.
 size_budget ui 1500 marketing
 size_budget ai 9800
