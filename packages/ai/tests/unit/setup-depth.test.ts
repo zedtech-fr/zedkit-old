@@ -93,6 +93,15 @@ describe("checkDepth", () => {
     expect(checkDepth(root)).toEqual([]);
   });
 
+  it("D2: a current (documented, not enforced) domain rule must be cited in the Unenforced inventory", () => {
+    const root = tempDir();
+    deep(root);
+    put(root, ".agents/domain/billing.md", "| B-01 | current (documented, not enforced) | No web token reuse | `src/auth/token.ts:12` |\n");
+    expect(checkDepth(root).map((i) => i.message)).toEqual([expect.stringContaining("B-01")]);
+    put(root, "AGENTS.md", "# Root\n\n## Model routing\n\nSee `.agents/model-routing.md`.\n\n## Unenforced rules\n\n| B-01 | add token-reuse lint | `src/auth/token.ts:12` |\n");
+    expect(checkDepth(root)).toEqual([]);
+  });
+
   it("D2: sidecars and templates do not count as domain rules", () => {
     const root = tempDir();
     deep(root);
