@@ -62,6 +62,7 @@ Advanced / CI paths:
 ```sh
 npx zedkit-ai init . --provider cursor --adopt   # same files as setup; explicit init
 npx zedkit-ai validate                           # must print: ok
+npx zedkit-ai validate --setup [--plan file]     # opt-in: PLAN covers git changes
 ```
 
 **Starter (default for `init`):** `setup-ai`, `ground-truth`, `review`, `definition-of-done`,

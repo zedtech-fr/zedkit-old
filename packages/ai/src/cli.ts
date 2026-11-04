@@ -6,6 +6,7 @@ import { err, ok, tryCatch, type Result } from "@zedtech/zedkit-core";
 import { ALL_PROVIDERS, installKit, type Provider } from "./install.js";
 import { installNextStepLines } from "./install-next-step.js";
 import { kitDir, readManifest } from "./kit.js";
+import { checkSetup } from "./setup-check.js";
 import { checkDrift, checkKitDocs, validateKit } from "./validate.js";
 
 // Help text lives in kit/usage.txt (shipped data, not code); the one-line
@@ -28,7 +29,16 @@ const OPTIONS = {
   "dry-run": { type: "boolean" },
 } as const;
 
-function parse(args: string[], options: Record<string, never> | typeof OPTIONS, maxPositionals: number): Result<Parsed> {
+const VALIDATE_OPTIONS = {
+  setup: { type: "boolean" },
+  plan: { type: "string" },
+} as const;
+
+function parse(
+  args: string[],
+  options: Record<string, never> | typeof OPTIONS | typeof VALIDATE_OPTIONS,
+  maxPositionals: number,
+): Result<Parsed> {
   const parsed = tryCatch(() => parseArgs({ args, allowPositionals: true, options }));
   if (!parsed.ok) return err(parsed.error);
   if (parsed.value.positionals.length > maxPositionals) {
@@ -84,7 +94,7 @@ function runInstall(args: string[], sinks: Sinks, kind: "init" | "setup"): numbe
 }
 
 function runValidate(args: string[], sinks: Sinks): number {
-  const parsed = parse(args, {}, 1);
+  const parsed = parse(args, VALIDATE_OPTIONS, 1);
   if (!parsed.ok) return fail(parsed.error.message, sinks);
   const dir = resolve(parsed.value.positionals[0] ?? ".agents");
   if (!existsSync(dir)) return fail(`no such directory: ${dir} (run from the project root, or 'zedkit-ai init' to create it)`, sinks);
@@ -94,6 +104,12 @@ function runValidate(args: string[], sinks: Sinks): number {
   const agentsDir = existsSync(nested) ? nested : dir;
   const projectRoot = agentsDir === dir ? dirname(dir) : dir;
   const issues = [...validateKit(agentsDir), ...checkDrift(projectRoot, agentsDir), ...checkKitDocs(projectRoot, agentsDir)];
+  if (parsed.value.values.setup === true) {
+    const plan = parsed.value.values.plan;
+    const extra = checkSetup(projectRoot, typeof plan === "string" ? { plan } : {});
+    issues.push(...extra.issues);
+    for (const note of extra.notes) sinks.out(note);
+  }
   for (const issue of issues) sinks.out(`${issue.path}: ${issue.message}`);
   const summary =
     issues.length === 0
