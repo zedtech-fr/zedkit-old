@@ -294,7 +294,7 @@ Short report first: what you created or changed, what you left alone and why, fi
 
 Then:
 
-1. **Self-score** — open `templates/setup-rubric.md` and score 0–3 on each of the 10 axes. Cite evidence per axis (file path, `file:line`, or transcript quote); no evidence means no score above 1. The rubric sets the pass targets and hard gates.
+1. **Self-score** — open `templates/setup-rubric.md` and score 0–3 on each of the 10 axes. Cite evidence per axis (file path, `file:line`, or transcript quote); no evidence means no score above 1. Compute **mean over the 8 measurable axes (2, 4–10)** only; show **Discovery** and **Domain rules** on a separate **owner-dependent** line (see rubric). The rubric sets pass targets and hard gates.
 2. **Setup log** — append a retro entry to `.agents/setup-log.md` from `templates/setup-log.template.md`: date, what worked, what hurt, **Providers table + Wired**, scores, decisions (`source: owner` where the owner chose), **Sidecar cleanup**, gate outcomes (see template), open kit frictions.
 3. **Kit friction** — for **each** friction you observed (stale sidecar, validate gap, tool detour, bad gate log format, **missing plan row**, plan/git mismatch, intro not first, broken repo-skill links, …), draft **one** public-safe issue from `templates/kit-issue.template.md` with **Kit root cause** filled; map friction → kit file → fix. **Kit file** must be a path that **exists** in the kit tree — run **`test -e`** on `packages/ai/kit/…` in the kit monorepo or on the installed `@zedtech/zedkit-ai/kit/…` path; use **`grep`** / **`rg`** on the kit tree when unsure. Write **`UNVERIFIED: <why>`** only when the path truly cannot be confirmed. **Completion defects count** (log missing `CMD:`/`EXIT:`, prettier appended after `EXIT:`). If there were zero frictions, say so in the log — do not skip the checklist.
 4. **Re-audit cadence** — set the next check: after the next release, or when product, domain rules, or providers change; record the trigger in the log entry.
@@ -307,7 +307,7 @@ Then:
 - [ ] Repo skill links: from each `.agents/skills/*/`, **`test -e`** every relative markdown link target
 - [ ] One kit-issue draft per friction (or explicit "none"); each **Kit file** verified or **`UNVERIFIED`**
 - [ ] Sidecar cleanup recorded if any `*.kit.md` removed
-- [ ] Self-score mean and hard gates noted
+- [ ] Self-score: **mean (8 axes)** >= 2.5 and **owner-dependent axes** (Discovery, Domain rules) reported separately; hard gates noted
 
 For a bigger follow-up task, give your agent the goal in one line<!-- if:skill=orchestrate --> and point it at the **`orchestrate`** skill<!-- /if -->.
 

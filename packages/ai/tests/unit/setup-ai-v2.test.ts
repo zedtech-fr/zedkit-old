@@ -318,6 +318,32 @@ describe("setup-ai v2 kit", () => {
     expect(rubric).not.toMatch(/setup-ai:validate-setup/iu);
   });
 
+  it("documents 8-axis mean and owner-dependent axes in rubric and phase E", () => {
+    const rubric = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "setup-rubric.md"),
+      "utf8",
+    );
+    expect(rubric).toMatch(/8 measurable axes/s);
+    expect(rubric).toMatch(/Owner-dependent axes/s);
+    expect(rubric).toMatch(/simulated owner cap at 2/s);
+    expect(rubric).toMatch(/every axis >= 2/s);
+    const skill = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
+    expect(skill).toMatch(/mean over the 8 measurable axes \(2, 4–10\)/u);
+    expect(skill).toMatch(/owner-dependent.*line/s);
+    expect(skill).toMatch(/mean \(8 axes\)/u);
+    const log = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "setup-log.template.md"),
+      "utf8",
+    );
+    expect(log).toMatch(/mean \(8 axes\)/u);
+    expect(log).toMatch(/owner-dependent:/u);
+    const readme = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "README.md"),
+      "utf8",
+    );
+    expect(readme).toMatch(/8 measurable axes/s);
+  });
+
   it("installs templates beside setup-ai for every preset that ships setup-ai; validate stays clean", () => {
     const manifest = readManifest();
     if (!manifest.ok) throw manifest.error;

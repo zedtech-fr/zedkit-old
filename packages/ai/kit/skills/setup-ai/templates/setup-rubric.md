@@ -4,7 +4,7 @@ Scores a finished `/setup-ai` run. Used twice: by the agent as a **self-score** 
 
 Score each axis 0-3. Cite evidence (file path, `file:line`, or transcript quote) for every score. No evidence, no score above 1.
 
-**Targets:** every axis >= 2, mean >= 2.5. Any 0 or any hard gate failure below fails the run, whatever the mean.
+**Targets:** every one of the **10 axes** must score **>= 2** (no 0 or 1). **Pass mean:** **>= 2.5** computed only over the **8 measurable axes** — **2** Personas, **4** Design, **5** Architecture, **6** Gates, **7** Skills, **8** Providers, **9** UX, **10** Self-improvement — that a reviewer can score from files alone. **Discovery (1)** and **Domain rules (3)** are **owner-dependent**: still score 0–3, **report separately**, and **exclude from the mean**. In an **eval run** with a **simulated owner** (not a live human confirming), cap Discovery and Domain rules at **2** and state that in the review. With a **human owner** confirming (`source: owner`), they may score **3** as each axis text allows. Any hard gate failure fails the run regardless of mean.
 
 | Score | Meaning                                                                                               |
 | ----- | ----------------------------------------------------------------------------------------------------- |
@@ -100,6 +100,7 @@ Score each axis 0-3. Cite evidence (file path, `file:line`, or transcript quote)
 1. Read only: the diff, the transcript, the repo. Do not ask the run's agent anything.
 2. Score each axis independently, evidence first, number second.
 3. Write one line per axis: `axis | score | evidence`.
-4. Compute the mean. Report pass or fail against targets and gates.
-5. For hard gate 2, compare `git diff --name-only` and status to the plan in the transcript, **`PLAN.md`**, or **`.agents/setup-log/plan.md`** — confirm an **`AGENTS.md` ladder** row exists when the ladder changed.
-6. List friction in the form: what happened, which kit file caused it, proposed fix. Each item becomes a fix PR or a kit issue.
+4. Compute the **mean over axes 2, 4, 5, 6, 7, 8, 9, and 10 only**. On a separate line report **Owner-dependent axes:** Discovery (1) and Domain rules (3) with their scores; note **simulated owner cap at 2** on those two when the run did not have a live human owner. Report pass or fail: every axis >= 2, mean >= 2.5 on the eight measurable axes, and hard gates.
+5. **Report format (required):** one line `mean (8 axes) | <value> | pass|fail`; one line `Owner-dependent axes | discovery <n>, domain rules <n> | <optional: simulated owner cap>`.
+6. For hard gate 2, compare `git diff --name-only` and status to the plan in the transcript, **`PLAN.md`**, or **`.agents/setup-log/plan.md`** — confirm an **`AGENTS.md` ladder** row exists when the ladder changed.
+7. List friction in the form: what happened, which kit file caused it, proposed fix. Each item becomes a fix PR or a kit issue.
