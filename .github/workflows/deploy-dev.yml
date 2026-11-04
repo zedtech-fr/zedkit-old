@@ -41,7 +41,7 @@ jobs:
         # and the prices are the dev environment's own, and generation stays off until they are set.
         env:
           IDENTITY_AI_BASE_URL: ${{ secrets.IDENTITY_AI_BASE_URL }}
-          IDENTITY_AI_API_KEY: ${{ secrets.IDENTITY_AI_API_KEY }}
+          IDENTITY_AI_API_KEY: ${{ secrets.IDENTITY_AI_DEV_API_KEY }}
           IDENTITY_AI_MODEL: ${{ secrets.IDENTITY_AI_MODEL }}
           IDENTITY_AI_REASONING_EFFORT: ${{ secrets.IDENTITY_AI_REASONING_EFFORT }}
           IDENTITY_AI_DEV_ENABLED: ${{ secrets.IDENTITY_AI_DEV_ENABLED }}
