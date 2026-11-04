@@ -225,7 +225,9 @@ describe("overlay exit lifecycle", () => {
 
   it("retunes vaul durations to the motion tokens above vaul's own specificity", () => {
     const css = readFileSync(resolve(__dirname, "../../src/styles.css"), "utf8");
-    expect(css).toMatch(/html \[data-vaul-drawer\] \{\s*animation-duration: var\(--motion-slow\) !important;/);
-    expect(css).toMatch(/html \[data-vaul-overlay\] \{\s*animation-duration: var\(--motion-base\) !important;/);
+    expect(css).toContain(':root:not([data-motion="reduce"]) [data-vaul-drawer]');
+    expect(css).toContain(':root:not([data-motion="reduce"]) [data-vaul-overlay]');
+    expect(css).toContain("animation-duration: var(--motion-slow) !important;");
+    expect(css).toContain("animation-duration: var(--motion-base) !important;");
   });
 });

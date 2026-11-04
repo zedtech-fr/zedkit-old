@@ -170,7 +170,7 @@ import { Card } from "@zedtech/zedkit-ui";
 
 ## Reveal and react with motion on any element
 
-- Import: `@zedtech/zedkit-ui` — `Animate`, `AnimateObserver`, `AnimateProps`, `AnimateOn`, `AnimatePreset`, `AnimateTrigger`, `AnimateMotion`, `observeAnimate`, `ANIMATE_PRESETS`, `ANIMATE_TRIGGERS`
+- Import: `@zedtech/zedkit-ui` — `Animate`, `AnimateObserver`, `AnimateProps`, `AnimateOn`, `AnimatePreset`, `AnimateTrigger`, `AnimateMotion`, `observeAnimate`, `ANIMATE_PRESETS`, `ANIMATE_TRIGGERS`, `MotionScript`, `MotionScriptProps`, `useMotionPreference`, `applyMotionPreference`, `isMotionReduced`, `MotionPreference`, `MOTION_STORAGE_KEY`, `MOTION_CHANGE_EVENT`
 - Attributes: `data-animate`, `data-animate-appear`, `data-animate-scroll`, `data-animate-press`, `data-animate-longpress`, `data-animate-hover`, `data-animate-focus`, `data-animate-delay`, `data-animate-stagger`
 - Wraps: `(none)`
 - Status: alpha
@@ -182,7 +182,7 @@ import { Card } from "@zedtech/zedkit-ui";
 - See also: `Animate entrances and hover feedback with CSS utilities`, `Pin a stage and change scene as the page scrolls`, `Stack content and group titled sections`
 - Examples: Attribute on a card, Wrapper with several triggers, Stagger children
 - A11y: `prefers-reduced-motion: reduce` leaves content visible and in place. Hover is gated to hover-capable pointers. Focus uses `:focus-visible`. Press ignores disabled. Longpress is decorative, never the only action. Appear does not set `aria-hidden`.
-- Troubleshooting: Nothing appears to move — mount `<AnimateObserver />` once near the app root (or call `observeAnimate()`), then check reduced motion. Content stays visible without JS by design. Scroll parallax needs `animation-timeline: view()` or the runtime fallback.
+- Troubleshooting: Nothing appears to move — mount `<AnimateObserver />` once near the app root (or call `observeAnimate()`), then check reduced motion and `data-motion` on `<html>`. Content stays visible without JS by design. Scroll parallax needs `animation-timeline: view()` or the runtime fallback. In-app reduce flashes on load — render `<MotionScript />` in `<head>` (same pattern as `IdentityScript`) so `data-motion="reduce"` is set before paint; `useMotionPreference()` is `"reduce"` on the server.
 
 ```ts
 import { AnimateObserver, Card } from "@zedtech/zedkit-ui";

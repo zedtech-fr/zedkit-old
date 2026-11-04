@@ -104,6 +104,8 @@
     "Label",
     "MultiSelect",
     "LivePulse",
+    "MotionPreference",
+    "MotionScript",
     "Logo",
     "OfflineNote",
     "OptionCard",

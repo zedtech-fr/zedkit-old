@@ -126,6 +126,15 @@ export {
   type AnimateProps,
   type AnimateTrigger,
 } from "./animate.js";
+export { MotionScript, type MotionScriptProps } from "./motion-script.js";
+export {
+  MOTION_CHANGE_EVENT,
+  MOTION_STORAGE_KEY,
+  applyMotionPreference,
+  isMotionReduced,
+  type MotionPreference,
+} from "./motion-preference.js";
+export { useMotionPreference } from "./use-motion-preference.js";
 export { LivePulse, type LivePulseProps } from "./live-pulse.js";
 export { StatusDot, type StatusDotProps, type StatusDotTone } from "./status-dot.js";
 export { ProgressBar, type ProgressBarProps } from "./progress-bar.js";

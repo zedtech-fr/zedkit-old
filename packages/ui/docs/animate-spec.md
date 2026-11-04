@@ -201,10 +201,19 @@ makes the runtime a no-op (no pending, no parallax, no longpress).
 
 `observeAnimate(root?: ParentNode): () => void` — appear observer,
 scroll fallback, longpress listeners, MutationObserver for new nodes.
-No-op on the server and under reduced motion.
+One global listener set (several mounts share it). Late nodes and
+`prefers-reduced-motion` / `data-motion` changes are picked up. No-op
+on the server; stays mounted under reduced motion so a later change
+can start it.
 
 `<AnimateObserver />` — client component, calls `observeAnimate(document)`
 once near the app root (same seat as `ScrollReset`).
+
+`<MotionScript />` — static `<head>` tag (no `use client`). Reads
+`localStorage["zk-motion"]` and sets `data-motion="reduce"` before paint.
+
+`useMotionPreference()` — `"reduce"` on the server; follows the OS
+media query and `data-motion` after hydration.
 
 `<Animate>` is a server-safe host: attributes only, `data-slot="animate"`.
 Mount `AnimateObserver` (or call `observeAnimate`) for appear / scroll
