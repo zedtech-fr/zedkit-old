@@ -15,19 +15,64 @@ Original work by the same author, plus vendored MIT skills (see
 pnpm add -D @zedtech/zedkit-ai
 ```
 
-## Usage
+Or skip the devDependency for a first try: `npx @zedtech/zedkit-ai setup` downloads the CLI once.
+
+## First 5 minutes
+
+**Pick your scope**
+
+| Situation | What to run |
+|---|---|
+| **One git repo** (an app, library, or service) | Commands below in that repo's root |
+| **Workspace root** (several sibling checkouts, or a meta repo listing members) | `setup` at the root only; `/setup-ai` runs in **workspace mode** and proposes per-repo setup inside each child — do not treat the root as the app |
+
+**Two commands to `/setup-ai`**
 
 ```sh
-npx zedkit-ai init . --provider cursor   # copy the starter kit into this repo
-# then ask your agent: "run the setup-ai skill"
-npx zedkit-ai validate                   # must print: ok
+npx @zedtech/zedkit-ai setup --provider cursor   # preset setup + adopt; wire Cursor
+# in your agent: /setup-ai   (or: "run the setup-ai skill")
 ```
 
-**Starter (default):** `setup-ai`, `ground-truth`, `review`, `definition-of-done`,
+Use `cursor`, `claude`, `codex`, `muse`, or comma-separated names; omit `--provider` to wire every supported runtime. **`setup` defaults to the `setup` preset** (discovery skills and agents for `/setup-ai`); override with `--preset starter|setup|core|full`. When you already added the package: `npx zedkit-ai setup . --provider cursor`.
+
+After `/setup-ai` finishes:
+
+```sh
+npx zedkit-ai validate   # must print: ok
+```
+
+### Cursor: one paste
+
+Docs walkthrough: [zedkit.app/docs/ai/setup](https://zedkit.app/docs/ai/setup). Agent steps (raw markdown): [zedkit.app/ai/setup.md](https://zedkit.app/ai/setup.md).
+
+Paste this single message in a new Cursor chat at the repo root:
+
+```text
+Set up zedkit AI on this repo following https://zedkit.app/ai/setup.md
+```
+
+The agent should install the package, run `npx zedkit-ai setup --provider cursor`, execute `/setup-ai`, then run `validate` until stdout is `ok`.
+
+## Usage
+
+Advanced / CI paths:
+
+```sh
+npx zedkit-ai init . --provider cursor --adopt   # same files as setup; explicit init
+npx zedkit-ai validate                           # must print: ok
+```
+
+**Starter (default for `init`):** `setup-ai`, `ground-truth`, `review`, `definition-of-done`,
 and `orchestrate` (so setup can hand off bigger work), plus subagents
 `explorer`, `verifier`, and `orchestrator`, and commands `/setup-ai` and
 `/review`. Enough to onboard a repo, verify facts, run one review workflow,
 and check done-ness without loading the whole kit.
+
+**Setup preset (default for `setup`):** everything in starter, plus
+`domain-modeling`, `persona-review`, `code-review`, `ponytail-review`,
+`retro`, `rules-upkeep`, and `writing-for-agents`, and subagents
+`product-director`, `ui-designer`, and `copywriter`. Use this for the
+first-5-minutes path and `/setup-ai` discovery depth.
 
 **Already on `core`?** Nothing is removed from your tree automatically.
 `zedkit-ai validate` reports drift; add skills with `zedkit-ai init
@@ -55,7 +100,10 @@ the binary directly: `pnpm --filter @zedtech/zedkit-ai build`, then
 `node packages/ai/dist/bin.js init <dir>`.
 
 `init` options: `--preset starter|setup|core|full`, `--provider cursor,claude,codex,all`
-(`--target` is an alias; `--help` lists every provider id), `--adopt`, `--dry-run`. It copies files (you own them
+(`--target` is an alias; `--help` lists every provider id), `--adopt`, `--dry-run`.
+**`setup`** runs the same install with **`--preset setup` by default** (override with
+`--preset starter|setup|core|full`), **`--adopt` enabled**, and the same file rules as
+`init`. It copies files (you own them
 afterwards) and never overwrites an existing one; the one exception is an
 existing `AGENTS.md` without the ladder, which gets the ladder section
 appended (reported as `append`). `--adopt` keeps a colliding user file that
