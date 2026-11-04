@@ -167,6 +167,7 @@ describe("setup-ai v3: scored", () => {
     const depth = raw.slice(raw.indexOf("## Depth axes"), raw.indexOf("## Hard gates"));
     expect(depth.match(/^- [0-3]: /gmu)).toHaveLength(16);
     expect(depth).toMatch(/1-5 small, 6-10 medium, 11-20 large/u);
+    expect(raw).toMatch(/zero fan-out.*no fan-out: lead read inline/u);
   });
 
   it("a v2-style description scores 0-1 on every depth axis", () => {

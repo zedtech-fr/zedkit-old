@@ -115,7 +115,7 @@ Four more axes, scored 0-3 like the others, each measurable from files. **Every 
 - 0: Nothing; every spawn inherits the session model.
 - 1: A sentence in chat or in the setup-log, not written into the repo.
 - 2: `.agents/model-routing.md` names the provider the run executed on (from the tool, not the repo folders), the model list it read, and the scout / worker / lead tiers; root `AGENTS.md` points at it; reading spawns passed the scout model.
-- 3: As 2, plus the repo's own subagents are mapped to tiers (**Roles in this repo**), the setup-log records the tier and model of each fan-out, a provider that cannot route per spawn is stated plainly instead of papered over, and kit subagent files still say `model` omitted or `inherit`.
+- 3: As 2, plus the repo's own subagents are mapped to tiers (**Roles in this repo**), the setup-log records the tier and model of each fan-out, a provider that cannot route per spawn is stated plainly instead of papered over, and kit subagent files still say `model` omitted or `inherit`. A small repo with zero fan-out (the lead read inline, no reader spawns) reaches 3 when the setup-log states that plainly (`no fan-out: lead read inline`, which satisfies the fan-out record) and the rest holds.
 
 ## Hard gates (binary, any failure fails the run)
 
