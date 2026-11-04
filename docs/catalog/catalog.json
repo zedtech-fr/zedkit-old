@@ -3230,6 +3230,44 @@
           ]
         },
         {
+          "need": "Compose a chat prompt",
+          "import": "`@zedtech/zedkit-ui` — `PromptInput`, `PromptInputProps`",
+          "wraps": "native `<form>` + `<textarea>` + `IconButton`",
+          "status": "stable",
+          "shortName": "PromptInput",
+          "audience": "Developers building assistant or messaging UIs.",
+          "purpose": "One rounded surface with an auto-growing field and an in-field send control; Enter sends, Shift+Enter adds a line.",
+          "whenToUse": "Chat-style briefs where the send affordance sits inside the composer.",
+          "whenNotToUse": "Plain forms with a separate submit row — use `Field` + `Textarea` + `Button`.",
+          "derivedFrom": null,
+          "example": "import { PromptInput } from \"@zedtech/zedkit-ui\";\n<PromptInput sendLabel=\"Send\" value={text} onValue={setText} onSubmit={send} placeholder=\"Ask anything\" aria-label=\"Message\" />",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "import { PromptInput } from \"@zedtech/zedkit-ui\";\n<PromptInput sendLabel=\"Send\" value={text} onValue={setText} onSubmit={send} placeholder=\"Ask anything\" aria-label=\"Message\" />"
+            }
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "PromptInput",
+                  "PromptInputProps"
+                ]
+              }
+            ]
+          },
+          "registry": "(none)",
+          "a11y": "Pass `sendLabel` (and `cancelLabel` when using cancel); the field keeps a visible label via `aria-label` or associated `FieldLabel`.",
+          "troubleshooting": "Send stays disabled — value is trimmed; whitespace-only counts as empty. Field does not grow — use `field-sizing-content` (Tailwind v4) on the consumer stylesheet.",
+          "seeAlso": [
+            "Collect multi-line text",
+            "Icon-only control with accessible name"
+          ]
+        },
+        {
           "need": "Show determinate progress",
           "import": "`@zedtech/zedkit-ui` — `ProgressBar`, `ProgressBarProps`",
           "wraps": "`(none)`",

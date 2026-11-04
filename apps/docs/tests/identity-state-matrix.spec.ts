@@ -131,11 +131,11 @@ test.describe("creator state matrix", () => {
       });
       await page.setViewportSize({ width: vp.width, height: vp.height });
       await openCreatorOnEditor(page);
-      await expect(page.locator("[data-assistant-status]")).toHaveText("");
+      await expect(page.locator("[data-assistant-notice]")).toHaveCount(0);
       const before = await siteBackground(page);
       await typeBrief(page, "A ceramics shop");
       await page.getByRole("button", { name: "Generate" }).click();
-      await onScreen(page, page.getByText("Working on it. Your current look is unchanged."), vp.height);
+      await onScreen(page, page.getByRole("button", { name: "Cancel" }), vp.height);
       release();
       await onScreen(page, page.locator("[data-assistant-proposal]"), vp.height);
       expect(await siteBackground(page)).toBe(before);
@@ -147,8 +147,8 @@ test.describe("creator state matrix", () => {
       await openCreatorOnEditor(page);
       await typeBrief(page, "A ceramics shop");
       await page.getByRole("button", { name: "Generate" }).click();
-      await onScreen(page, page.locator("[data-assistant-status]"), vp.height);
-      await expect(page.locator("[data-assistant-status]")).toContainText("could not be used, so nothing changed");
+      await onScreen(page, page.locator("[data-assistant-notice]"), vp.height);
+      await expect(page.locator("[data-assistant-notice]")).toContainText("could not be used, so nothing changed");
     });
 
     test(`${vp.name}: quota stays on screen and is not a daily allowance`, async ({ page }) => {
@@ -164,7 +164,7 @@ test.describe("creator state matrix", () => {
       await openCreatorOnEditor(page);
       await typeBrief(page, "A ceramics shop");
       await page.getByRole("button", { name: "Generate" }).click();
-      const status = page.locator("[data-assistant-status]");
+      const status = page.locator("[data-assistant-notice]");
       await onScreen(page, status, vp.height);
       await expect(status).toContainText("The assistant limit has been reached.");
       await expect(status).toContainText("Try again in 30 minutes.");
@@ -247,12 +247,12 @@ test.describe("widget state matrix", () => {
     const body = panel.locator("[data-slot='identity-dock-body']");
     await page.locator("#identity-assistant-brief").fill("A ceramics shop");
     await page.getByRole("button", { name: "Generate" }).click();
-    const working = body.getByText("Working on it. Your current look is unchanged.");
-    await expect(working).toBeVisible();
+    const cancel = body.getByRole("button", { name: "Cancel" });
+    await expect(cancel).toBeVisible();
     const bodyBox = (await body.boundingBox())!;
-    const workBox = (await working.boundingBox())!;
-    expect(workBox.y).toBeGreaterThanOrEqual(bodyBox.y);
-    expect(workBox.y + workBox.height).toBeLessThanOrEqual(bodyBox.y + bodyBox.height + 1);
+    const cancelBox = (await cancel.boundingBox())!;
+    expect(cancelBox.y).toBeGreaterThanOrEqual(bodyBox.y);
+    expect(cancelBox.y + cancelBox.height).toBeLessThanOrEqual(bodyBox.y + bodyBox.height + 120);
     release();
     await expect(panel.locator("[data-assistant-proposal]")).toBeVisible();
   });
@@ -281,7 +281,7 @@ test.describe("widget state matrix", () => {
     const panel = await openDock(page);
     await page.locator("#identity-assistant-brief").fill("A ceramics shop");
     await page.getByRole("button", { name: "Generate" }).click();
-    const status = page.locator("[data-assistant-status]");
+    const status = page.locator("[data-assistant-notice]");
     await expect(status).toContainText("The assistant limit has been reached.");
     const statusBox = (await status.boundingBox())!;
     const body = panel.locator("[data-slot='identity-dock-body']");

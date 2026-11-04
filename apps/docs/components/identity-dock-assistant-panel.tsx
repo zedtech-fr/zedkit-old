@@ -3,11 +3,9 @@
 import { useEffect, useRef, type RefObject } from "react";
 import { Stack } from "@zedtech/zedkit-ui";
 
-import { identityAssistantCopy as copy } from "@/components/i18n/identity-assistant-copy";
-import { ViewSwitch, noticeText, type View } from "@/components/identity-assistant-parts";
+import { ViewSwitch, type View } from "@/components/identity-assistant-parts";
 import { ConversationComposer } from "@/components/identity-assistant-panes";
 import { IdentityDockAssistantGrid } from "@/components/identity-dock-assistant-grid";
-import { DockFeedback } from "@/components/identity-dock-feedback";
 import { IdentityDockPanelToolbar } from "@/components/identity-dock-panel-toolbar";
 import { useAssistantSubmitHandlers } from "@/components/use-assistant-submit";
 import { useAssistantView } from "@/components/use-assistant-view";
@@ -20,13 +18,6 @@ import { IDENTITY_EDITOR_HREF } from "@/lib/site-links.mjs";
 import type { Unavailable } from "@/lib/identity-assistant";
 import type { SessionState } from "@/lib/identity-creator-session";
 import type { IdentityTokens } from "@zedtech/zedkit-ui";
-
-function assistantFeedbackText(session: SessionState, busy: boolean): string | null {
-  if (busy) return copy.working;
-  if (session.notice && session.notice.kind !== "unavailable") return noticeText(session.notice);
-  if (session.proposal) return copy.views.proposalReady;
-  return null;
-}
 
 function acceptProposal(
   backToConversation: (action: () => void) => void,
@@ -149,7 +140,6 @@ export function IdentityDockAssistantPanel({
           onCancel={cancel}
           inputRef={ui.field}
         />
-        <DockFeedback text={assistantFeedbackText(session, busy)} off={off} busy={busy} />
       </Stack>
     </Stack>
   );

@@ -1,12 +1,10 @@
 "use client";
 
 import type { RefObject } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Button, Stack, Text, cn, type IdentityTokens } from "@zedtech/zedkit-ui";
+import { Stack, Text, cn, type IdentityTokens } from "@zedtech/zedkit-ui";
 
 import { identityAssistantCopy as copy } from "@/components/i18n/identity-assistant-copy";
-import { BriefForm, ProposalCard, Thread, type View } from "@/components/identity-assistant-parts";
+import { AssistantNoticeBubble, BriefForm, ProposalCard, Thread, UnavailableBanner, type View } from "@/components/identity-assistant-parts";
 import { IdentityMiniPreview } from "@/components/identity-mini-preview";
 import { IdentityRefinementChips } from "@/components/identity-refinement-chips";
 import { DetectedLinks } from "@/components/identity-references";
@@ -44,13 +42,16 @@ export function ConversationMessages(props: {
   const refining = props.session.thread.length > 0;
   const chipsVisible = refining && props.session.proposal === null && props.session.pending === null;
   const hidden = props.compact ? props.view !== "conversation" : props.view === "preview";
+  const notice = props.session.notice;
   return (
     <Stack
       gap={4}
       className={cn("min-w-0", hidden && (props.compact ? "hidden" : "max-lg:hidden"))}
       data-assistant-pane="conversation"
     >
+      {props.off ? <UnavailableBanner reason={props.off} live={false} /> : null}
       {refining ? <Thread turns={props.session.thread} /> : <AssistantGreeting />}
+      {notice && notice.kind !== "unavailable" ? <AssistantNoticeBubble notice={notice} /> : null}
       <IdentityRefinementChips
         visible={chipsVisible}
         disabled={props.busy || props.off !== null}
@@ -61,7 +62,7 @@ export function ConversationMessages(props: {
   );
 }
 
-/** The chat composer and a discreet link to the full editor page. */
+/** The chat composer only; the detailed editor link lives in the dock header. */
 export function ConversationComposer(props: {
   session: SessionState;
   brief: string;
@@ -73,7 +74,6 @@ export function ConversationComposer(props: {
   inputRef: RefObject<HTMLTextAreaElement | null>;
 }) {
   const refining = props.session.thread.length > 0;
-  const pathname = usePathname();
   return (
     <Stack gap={2} className="min-w-0 shrink-0" data-assistant-composer="">
       <BriefForm
@@ -86,11 +86,6 @@ export function ConversationComposer(props: {
         onCancel={props.onCancel}
         inputRef={props.inputRef}
       />
-      {pathname === IDENTITY_EDITOR_HREF ? null : (
-        <Button asChild variant="link" size="sm" className="w-fit px-0 text-muted-foreground" data-assistant-editor-link="">
-          <Link href={IDENTITY_EDITOR_HREF}>{copy.detailedEditorLink}</Link>
-        </Button>
-      )}
     </Stack>
   );
 }
