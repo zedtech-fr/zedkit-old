@@ -2,7 +2,7 @@
 
 import { ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Stack, Text, type IdentityTokens } from "@zedtech/zedkit-ui";
+import { Stack, Text, cn, signatureMotionClass, type IdentityTokens } from "@zedtech/zedkit-ui";
 
 import { identityAssistantCopy as copy } from "@/components/i18n/identity-assistant-copy";
 import { ConversationPane, PreviewPane } from "@/components/identity-assistant-panes";
@@ -55,10 +55,13 @@ export function IdentityAssistant({ tokens, onUse }: { tokens: IdentityTokens; o
       <details open={ui.open} onToggle={(event) => ui.setOpen(event.currentTarget.open)} className="group min-w-0">
         <summary
           id="identity-assistant-title"
-          className="flex min-h-control-height cursor-pointer list-none items-center justify-between gap-2 rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground shadow-sm focus-ring-control hover:bg-muted [&::-webkit-details-marker]:hidden"
+          className="flex min-h-control-height cursor-pointer list-none items-center justify-between gap-2 rounded-md border border-input bg-background px-3 text-zk-type-body font-medium text-foreground shadow-sm focus-ring-control hover:bg-muted [&::-webkit-details-marker]:hidden"
         >
           {copy.open}
-          <ChevronDown aria-hidden="true" className="size-4 shrink-0 transition-transform group-open:rotate-180 motion-reduce:transition-none" />
+          <ChevronDown
+            aria-hidden="true"
+            className={cn("size-4 shrink-0 group-open:rotate-180", signatureMotionClass.feedback)}
+          />
         </summary>
         <Stack gap={4} className="pt-3">
           <AssistantHeading />
@@ -107,7 +110,7 @@ function AssistantFeedback({ text, off, notice }: { text: string | null; off: Un
     <Stack gap={2} ref={ref} className="-mb-4 has-[:not(:empty)]:mb-0" data-assistant-feedback="">
       {off ? <UnavailableBanner reason={off} /> : null}
       {/* Always mounted, so a screen reader hears what is put in it; when it holds nothing it takes no room. */}
-      <Text role="status" className="text-sm text-muted-foreground empty:-mt-2" data-assistant-status="">
+      <Text role="status" variant="muted" typeRole="label" className="empty:-mt-2" data-assistant-status="">
         {text}
       </Text>
     </Stack>
