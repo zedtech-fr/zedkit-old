@@ -135,7 +135,9 @@ function checkLineEndings(root: string, issues: Issue[]): void {
   }
 }
 
-// Flag relative links that resolve nowhere in kit files (skip web, #anchor, fenced).
+// Flag relative links that resolve nowhere (skip web, mailto, #anchor, fenced).
+// Every skill dir counts, kit or repo-authored: a broken link in an
+// agent-facing skill is a defect whoever wrote it.
 function checkLinks(root: string, kit: string, issues: Issue[]): void {
   const universe = kitUniverse(kit);
   const entries = readdirSync(root, { recursive: true, encoding: "utf8" });
@@ -145,7 +147,7 @@ function checkLinks(root: string, kit: string, issues: Issue[]): void {
     const base = (name ?? "").replace(/\.md$/, "");
     const scoped =
       (entry === "personas.md" && existsSync(join(kit, "personas.template.md"))) ||
-      (top === "skills" && nested !== undefined && universe.skills.has(name ?? "")) ||
+      (top === "skills" && nested !== undefined) ||
       (nested === undefined &&
         ((top === "agents" && universe.agents.has(base)) || (top === "commands" && universe.commands.has(base))));
     if (!scoped) continue;
@@ -161,7 +163,7 @@ function checkLinks(root: string, kit: string, issues: Issue[]): void {
       if (fenced) continue;
       for (const match of line.matchAll(/!?\[[^\]]*\]\(([^)\s]+)(?:\s+[^)]*)?\)/g)) {
         const target = match[1] ?? "";
-        if (/^(#|https?:\/\/)/.test(target) || seen.has(target)) continue;
+        if (/^(#|https?:\/\/|mailto:)/.test(target) || seen.has(target)) continue;
         seen.add(target);
         if (!existsSync(join(dirname(full), target.split(/[?#]/)[0] ?? ""))) {
           issues.push({ path: entry, message: `broken link to "${target}" (no such file)` });
@@ -224,30 +226,20 @@ function namesIn(root: string, dir: string): string[] {
   return mdFiles(full).map((file) => file.replace(/\.md$/, ""));
 }
 
-// Reference closure over the kit universe: a skill, agent or command that
-// names a kit skill/agent must name one installed in this tree (in any
-// kind). Backticked tokens and hyphenated whole words count only in
-// kit-origin files, where a kit name is a reference by convention; in
-// user-authored files the same token is an ordinary word.
-function installedUnion(sets: ReadonlySet<string>[]): Set<string> {
-  const installed = new Set<string>();
-  for (const set of sets) {
-    for (const name of set) installed.add(name);
-  }
-  for (const name of [...installed]) {
-    if (name.startsWith("zk-")) installed.add(name.slice("zk-".length));
-  }
-  return installed;
-}
+// Reference closure: refs must resolve in their demanded kind; bare backticked
+// and hyphenated whole words match any kind in kit-origin files only.
 
 function checkSkillRefs(root: string, skills: Set<string>, kit: string, issues: Issue[]): void {
   const agents = namesIn(root, "agents");
   const commands = namesIn(root, "commands");
   const universe = kitUniverse(kit);
-  const installed = installedUnion([skills, new Set(agents), new Set(commands)]);
+  const installedSkills = new Set(skills);
+  const installed = { skills: installedSkills, agents: new Set(agents), commands: new Set(commands) };
   const shadowed = new Set<string>();
   for (const name of skills) {
-    if (name.startsWith("zk-")) shadowed.add(join("skills", name.slice("zk-".length), "SKILL.md"));
+    if (!name.startsWith("zk-")) continue;
+    installedSkills.add(name.slice("zk-".length));
+    shadowed.add(join("skills", name.slice("zk-".length), "SKILL.md"));
   }
   for (const dir of ["agents", "commands"]) {
     const full = join(root, dir);
@@ -491,9 +483,8 @@ export function checkKitDocs(projectRoot: string, source: string, kit: string = 
       .filter((line) => kitLines.has(line.trim()))
       .join("\n");
     const universe = kitUniverse(kit);
-    const installed = installedUnion([avail.skills, avail.agents, avail.commands]);
     const files = [{ path: "AGENTS.md", text: kitText, kitOrigin: true }];
-    return danglingKitRefs(files, installed, universe);
+    return danglingKitRefs(files, avail, universe);
   });
   return run.ok ? run.value : [];
 }

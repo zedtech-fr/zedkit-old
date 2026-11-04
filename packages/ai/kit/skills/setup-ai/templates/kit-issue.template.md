@@ -22,7 +22,7 @@ Which kit file or behavior caused the friction (for example `setup-ai` SKILL pha
 
 ## Kit file
 
-The kit file that caused the friction, for example `packages/ai/kit/skills/setup-ai/SKILL.md` or `packages/ai/src/validate.ts`.
+Path in the **kit** repo (for example `packages/ai/kit/skills/setup-ai/SKILL.md`). **Verify** it exists (`test -e` or search the installed kit tree) before filing. If you cannot verify, write **`UNVERIFIED: <why>`** instead of guessing.
 
 ## Proposed fix
 
