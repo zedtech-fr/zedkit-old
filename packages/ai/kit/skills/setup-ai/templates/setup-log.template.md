@@ -1,6 +1,6 @@
 # Setup log
 
-Append one entry per `/setup-ai` run, newest first. Each entry records what the run learned so the next run (or the next repo) starts smarter.
+Append one entry per `/setup-ai` run, newest first. Each entry records what the run learned so the next run (or the next repo) starts smarter. Write each entry in one atomic write after all gates finished — never a stub grown by appends; `validate --setup` reads the finished file.
 
 <!-- setup-ai: copy the entry block below into `.agents/setup-log.md`, newest first -->
 
