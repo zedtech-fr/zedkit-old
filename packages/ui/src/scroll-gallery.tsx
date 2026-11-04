@@ -30,7 +30,7 @@ export function ScrollGallery({ className, children, ...props }: ScrollGalleryPr
       <div
         ref={trackRef}
         data-scroll-gallery-track=""
-        className="flex min-w-0 snap-x snap-mandatory [scrollbar-width:thin] gap-1 overflow-x-auto overscroll-x-contain [&::-webkit-scrollbar]:h-1"
+        className="flex min-w-0 snap-x snap-mandatory [scrollbar-width:thin] overflow-x-auto overscroll-x-contain [&::-webkit-scrollbar]:h-1"
       >
         {children}
       </div>

@@ -531,8 +531,23 @@ a[class*="px-badge-inline"] {
     background: linear-gradient(to left, hsl(var(--background)), transparent);
   }
 
+  [data-slot="scroll-gallery"] [data-scroll-gallery-track] {
+    gap: var(--zk-gap-sm);
+    padding-inline: var(--zk-gap-sm);
+  }
+
   [data-slot="scroll-gallery"] [data-scroll-gallery-track] > * {
+    flex-shrink: 0;
     scroll-snap-align: start;
+  }
+
+  [data-slot="scroll-gallery"] [data-slot="tabs-list"] {
+    gap: var(--zk-gap-sm);
+  }
+
+  [data-slot="scroll-gallery"] [data-slot="tabs-trigger"]:has([data-tab-label]) {
+    gap: var(--zk-gap-sm);
+    white-space: normal;
   }
 }
 
