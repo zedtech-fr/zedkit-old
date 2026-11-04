@@ -38,7 +38,25 @@ Append one entry per `/setup-ai` run, newest first. Each entry records what the 
 | ------------ | ---- | -------- | ----------------- | -------------------------------------------------------- |
 | `pnpm test`  | 137  | 45s      | OOM kill          | `pnpm exec turbo run test --concurrency=2` with heap cap |
 
-Example persisted log (`.agents/setup-log/gates/example.log` — **`EXIT:` must be the last line**; run validate/prettier in separate files):
+Example persisted log (`.agents/setup-log/gates/example.log` — **`EXIT:` must be the last line**; run validate/prettier in separate files). Capture with a redirect (not `tee` in a pipeline — subshell drops `$code`):
+
+```sh
+LOG=.agents/setup-log/gates/example.log
+mkdir -p "$(dirname "$LOG")"
+{
+  echo "CMD: pnpm exec turbo run typecheck --concurrency=2"
+  echo "START: $(date -Iseconds)"
+  pnpm exec turbo run typecheck --concurrency=2
+  code=$?
+  echo "END: $(date -Iseconds)"
+  echo "EXIT:$code"
+} > "$LOG" 2>&1
+code=$(tail -1 "$LOG" | sed 's/^EXIT://')
+case "$(tail -1 "$LOG")" in EXIT:[0-9]*) ;; *) echo "bad gate log"; false;; esac
+# tail -n 20 "$LOG" to inspect; then exit "$code" or act on it
+```
+
+Shape on disk:
 
 ```text
 CMD: pnpm exec turbo run typecheck --concurrency=2

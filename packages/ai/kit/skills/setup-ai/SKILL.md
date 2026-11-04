@@ -106,8 +106,10 @@ mkdir -p "$(dirname "$LOG")"
   code=$?
   echo "END: $(date -Iseconds)"
   echo "EXIT:$code"
-} | tee "$LOG"
-test "$(tail -1 "$LOG")" = "EXIT:$code"
+} > "$LOG" 2>&1
+code=$(tail -1 "$LOG" | sed 's/^EXIT://')
+case "$(tail -1 "$LOG")" in EXIT:[0-9]*) ;; *) echo "bad gate log"; false;; esac
+# exit "$code" or act on it; use `tail -n 20 "$LOG"` to inspect output (no live tee stream)
 ```
 
 If a log file you referenced is **empty**, or the last line is not **`EXIT:<n>`**, re-run and replace the file before scoring. Table rows in setup-log are a summary only.

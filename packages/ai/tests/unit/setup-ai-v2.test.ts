@@ -147,6 +147,21 @@ describe("setup-ai v2 kit", () => {
     expect(rubric).toMatch(/after `\/setup-ai` loads/iu);
   });
 
+  it("gate log snippet uses redirect not tee pipeline (subshell-safe exit code)", () => {
+    const raw = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
+    const gateBlock = raw.slice(raw.indexOf("Gate execution log"), raw.indexOf("OOM-safe fallback"));
+    expect(gateBlock).not.toMatch(/\|\s*tee\s/);
+    expect(gateBlock).toContain("sed 's/^EXIT://'");
+    expect(gateBlock).toContain('} > "$LOG" 2>&1');
+    expect(gateBlock).toMatch(/tail -n 20 "\$LOG"/u);
+    const log = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "setup-log.template.md"),
+      "utf8",
+    );
+    expect(log).not.toMatch(/\|\s*tee\s/);
+    expect(log).toContain("sed 's/^EXIT://'");
+  });
+
   it("installs templates beside setup-ai for every preset that ships setup-ai; validate stays clean", () => {
     const manifest = readManifest();
     if (!manifest.ok) throw manifest.error;
