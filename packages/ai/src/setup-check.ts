@@ -29,6 +29,23 @@ function covers(plan: string, path: string): boolean {
   return false;
 }
 
+const SETUP_LOCKFILES = ["pnpm-lock.yaml", "package-lock.json", "yarn.lock", "bun.lock"];
+
+const planRow = (path: string, reason: string): string => `| ${path} | edit | ${reason} |`;
+
+/** Ready-to-paste plan row for a git path the plan does not cover. */
+export function suggestPlanRow(path: string): string {
+  if (path === "package.json") return planRow("package.json", "dependency added by setup");
+  if (SETUP_LOCKFILES.includes(path)) return planRow(path, "lockfile follows package.json");
+  if (path === "AGENTS.md") return planRow("AGENTS.md", "ladder appended by setup");
+  if (path === "CLAUDE.md") return planRow("CLAUDE.md", "Claude entry linked by setup");
+  if (path === ".prettierignore") return planRow(".prettierignore", "exclusions for generated files");
+  const top = path.split("/")[0];
+  if (top === ".cursor") return planRow(".cursor/", "Cursor wiring by setup");
+  if (top === ".claude") return planRow(".claude/", "Claude wiring by setup");
+  return planRow(path, "<reason>");
+}
+
 function gates(root: string): Issue[] {
   const listed = tryCatch(() => readdirSync(join(root, ".agents/setup-log/gates")));
   if (!listed.ok) return [];
@@ -74,7 +91,7 @@ export function checkSetup(root: string, options: { plan?: string } = {}): Setup
       if (i >= 0) rest = rest.slice(i + 4);
       if (rest.startsWith('"') && rest.endsWith('"')) rest = rest.slice(1, -1);
       if (rest === "" || rest.split("/").includes("node_modules") || covers(text, rest)) continue;
-      issues.push({ path: rest, message: `plan misses ${rest}` });
+      issues.push({ path: rest, message: `plan misses ${rest}; add plan row: ${suggestPlanRow(rest)}` });
     }
   }
   issues.push(...gates(root));
