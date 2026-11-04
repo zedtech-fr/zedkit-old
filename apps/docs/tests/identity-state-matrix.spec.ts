@@ -203,7 +203,7 @@ test.describe("widget state matrix", () => {
   test("using a look does not paint the site chrome", async ({ page }) => {
     await service(page, (posted, route) => route.fulfill(ok(posted)));
     await page.setViewportSize({ width: 1440, height: 900 });
-    const panel = await openDock(page);
+    await openDock(page);
     const before = await siteBackground(page);
     await page.locator("#identity-assistant-brief").fill("A ceramics shop");
     await page.getByRole("button", { name: "Generate" }).click();
