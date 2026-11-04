@@ -11,7 +11,7 @@ import {
   Label,
   Stack,
   Text,
-} from "#index.js";
+} from "../specimen-primitives.js";
 import { specimenMessagesEn } from "./specimens-messages.js";
 
 type Product = { id: string; name: string; price: number; stock: number };

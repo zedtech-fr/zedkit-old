@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Heading, Stack, Text } from "#index.js";
+import { Button, Heading, Stack, Text } from "../specimen-primitives.js";
 import { specimenMessagesEn } from "./specimens-messages.js";
 
 export type ServiceBookingSpecimenProps = {

@@ -16,7 +16,7 @@ import {
   ProgressBar,
   Stack,
   Text,
-} from "#index.js";
+} from "../specimen-primitives.js";
 import { specimenMessagesEn } from "./specimens-messages.js";
 
 const isEmail = (value: string) => /^\S+@\S+\.\S+$/.test(value.trim());

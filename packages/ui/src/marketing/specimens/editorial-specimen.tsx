@@ -18,7 +18,7 @@ import {
   TableRow,
   Text,
   Textarea,
-} from "#index.js";
+} from "../specimen-primitives.js";
 import { specimenMessagesEn } from "./specimens-messages.js";
 
 type Story = {

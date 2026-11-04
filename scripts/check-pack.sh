@@ -151,8 +151,9 @@ size_budget() {
 # Raised to 45500 on 4 Nov 2026 after syncing main: signature type-role and motion exports on top of ScrollReset.
 size_budget ui 45500
 # Marketing entry (separate from the main budget); measured 785 with GlassSurface only;
-# 9865 with L2 domain specimens plus goal/reference marketing sections (Hero, Pricing, …).
-size_budget ui 10000 marketing
+# 9865 with L2 domain specimens plus goal/reference marketing sections (Hero, Pricing, …);
+# 10020 after specimen-primitives barrel so dist smoke resolves without `#` → src.
+size_budget ui 10200 marketing
 # 4 Nov 2026: dist-size review. Clean-measured 17148 (USAGE to kit data, drift
 # frontmatter/wiring/universe dedup; no behavior change); budget lowered to
 # 17400 to lock the gain. Note: measured + 3% would be 17662, above the old
