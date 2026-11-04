@@ -10,6 +10,48 @@ crossfades belong to `ScrollScenes`. This API does neither.
 Existing class utilities (`animate-fade-up`, `hover-lift`, `hover-press`,
 `data-reveal`) stay. `data-animate` is the published attribute API.
 
+No runtime dependency on AOS or anime.js (both MIT). Ideas below are
+the bar, not copied source.
+
+## Comparison
+
+**AOS** ([michalsnik/aos](https://github.com/michalsnik/aos) v2.3.4,
+MIT) is the bar for *declarative data-attribute scroll-reveal*.
+`data-aos="fade-up"` plus `data-aos-offset` (default 120px),
+`data-aos-delay`, `data-aos-duration` (50–3000, CSS tables),
+`data-aos-easing`, `data-aos-once` (default `false` — re-hide on
+scroll up), `data-aos-anchor` / `data-aos-anchor-placement`. CSS
+starts hidden (`[data-aos^=fade]{opacity:0}`) until `.aos-animate`.
+Engine: throttled `scroll` + lodash, plus `AOS.init()`.
+
+**anime.js** ([juliangarnier/anime](https://github.com/juliangarnier/anime)
+v4, MIT) is the bar for *quality and composition*. JS API:
+`animate(targets, { duration, delay: stagger(65), ease, loop })`,
+`createTimeline()`, `spring({ bounce, stiffness, damping })`,
+`onScroll({ sync: true })`. WAAPI path ~3KB vs JS `animate` ~10KB;
+full toolbox ~24.5KB. Not an attribute API.
+
+| | AOS | anime.js | This kit |
+| --- | --- | --- | --- |
+| Primary API | `data-aos` | `animate()` / timeline | `data-animate-*` + `<Animate on>` |
+| Appear | scroll hide/show | `onScroll` trigger | IntersectionObserver, once |
+| Scroll progress | no | `onScroll({ sync })` | CSS `view()` + rAF fallback |
+| Press / hover / focus / longpress | no | JS playback | CSS, plus JS longpress |
+| Delay | `data-aos-delay` | `delay` / `stagger()` | `data-animate-delay` + CSS stagger |
+| Duration / ease | per element | per tween / spring | identity `--zk-reveal-*` |
+| Offset / anchor | per element | scroll observer thresholds | one `rootMargin: 0 0 -10% 0` |
+| Once vs mirror | default mirror | playback settings | always once (unobserve) |
+| SSR | CSS hides without JS | n/a | visible until JS sets `pending` |
+| Reduced motion | `disable` option | Scope / media | total CSS + runtime kill |
+| 3D / flip / SVG / spring | flip presets | yes | no (transform/opacity only) |
+
+We take AOS’s attribute ergonomics (preset name + delay + once) and
+anime’s composition (`on` maps several triggers, stagger, named
+easings via tokens), then stop. Duration, distance and easing are
+identity tokens so a look change retunes motion without per-node
+attributes. Mirror, 3D flip, timelines, spring and SVG are out of
+scope (VISUAL-CONTRACT: calm, no layout shift, no extra JS engine).
+
 ## Types
 
 ```ts
