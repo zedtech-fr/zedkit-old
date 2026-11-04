@@ -104,10 +104,12 @@ export {
   Container,
   containerVariants,
   Section,
+  SectionScroll,
   Stack,
   stackVariants,
   type ContainerProps,
   type SectionProps,
+  type SectionScrollProps,
   type StackProps,
 } from "./layout.js";
 export {

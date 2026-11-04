@@ -43,10 +43,10 @@ export function HomeIdentityLooks() {
   return (
     <Stack gap={3} className="min-w-0 scroll-mt-24" data-home-identity-looks="">
       <Stack gap={1} className="min-w-0">
-        <Text as="p" variant="muted" className="text-xs leading-snug">
+        <Text as="p" variant="muted" typeRole="caption" className="text-xs leading-snug">
           {homeIdentityLooksCopy.liveNote}
         </Text>
-        <Text variant="muted" className={HOME_METADATA_TEXT_CLASS}>
+        <Text variant="muted" typeRole="caption" className={HOME_METADATA_TEXT_CLASS}>
           <span data-identity-pinned-hint="">{homeIdentityLooksCopy.scrollHint}</span>
         </Text>
       </Stack>

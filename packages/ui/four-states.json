@@ -124,6 +124,7 @@
     "ScrollScenes",
     "SecretField",
     "Section",
+    "SectionScroll",
     "Select",
     "SelectContent",
     "SelectGroup",

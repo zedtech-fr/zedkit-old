@@ -178,7 +178,7 @@ import { Card } from "@zedtech/zedkit-ui";
 - Audience: Developers adding appear, scroll, press, longpress, hover or focus motion to any kit element.
 - Purpose: One typed attribute and wrapper API for identity-token motion, with a tiny SSR-safe runtime.
 - When to use: When a card, section or control should move on appear, scroll progress, press, longpress, hover or focus.
-- When not to use: For pinned scene crossfades use `ScrollScenes`. For section snap/smooth-scroll wait for `Section`. For first-paint class utilities see `Animate entrances and hover feedback with CSS utilities`.
+- When not to use: For pinned scene crossfades use `ScrollScenes`. For section snap/smooth-scroll use `SectionScroll`. For first-paint class utilities see `Animate entrances and hover feedback with CSS utilities`.
 - See also: `Animate entrances and hover feedback with CSS utilities`, `Pin a stage and change scene as the page scrolls`, `Stack content and group titled sections`
 - Examples: Attribute on a card, Wrapper with several triggers, Stagger children
 - A11y: `prefers-reduced-motion: reduce` leaves content visible and in place. Hover is gated to hover-capable pointers. Focus uses `:focus-visible`. Press ignores disabled. Longpress is decorative, never the only action. Appear does not set `aria-hidden`.
@@ -1421,21 +1421,25 @@ import { Card, CardContent, CardFooter } from "@zedtech/zedkit-ui";
 
 ## Stack content and group titled sections
 
-- Import: `@zedtech/zedkit-ui` — `Stack`, `stackVariants`, `StackProps`, `Section`, `SectionProps`
+- Import: `@zedtech/zedkit-ui` — `Stack`, `stackVariants`, `StackProps`, `Section`, `SectionProps`, `SectionScroll`, `SectionScrollProps`
 - Wraps: none (flex/gap utilities over `Heading`, `Text`)
 - Status: stable
 - Short name: Stack
 - Audience: Developers laying out kit pages without raw divs.
-- Purpose: Gap-based vertical/horizontal stacks plus titled sections.
+- Purpose: Gap-based vertical/horizontal stacks plus titled sections, with optional proximity scroll-snap.
 - When to use: For all kit-page layout instead of hand-written flex.
-- When not to use: For complex grids — use CSS grid directly instead.
+- When not to use: For complex grids — use CSS grid directly instead. For motion/enter animations, use the motion utilities, not `SectionScroll`.
 - See also: `Render headings and body text without raw tags`, `Group content in a card section`, `Constrain page width and run sections edge to edge`
-- A11y: `Stack` renders a plain `div` with no role. `Section` renders a `section` landmark named by its string `title`, with that title as a level-2 heading: use one `title` per region, keep heading levels in order, and do not repeat a title that a nearby landmark already uses.
+- A11y: `Stack` renders a plain `div` with no role. `Section` renders a `section` landmark named by its string `title`, with that title as a level-2 heading: use one `title` per region, keep heading levels in order, and do not repeat a title that a nearby landmark already uses. `SectionScroll` is a plain `div`; snap and smooth scrolling apply only when `prefers-reduced-motion` is `no-preference`.
 
 ```ts
-import { Section, Stack } from "@zedtech/zedkit-ui";
-<Section title="Team" description="Who can access.">
-<Stack direction="horizontal" gap={2}>...</Stack>
+import { Section, SectionScroll, Stack } from "@zedtech/zedkit-ui";
+<SectionScroll>
+  <Section title="Team" description="Who can access.">
+    <Stack direction="horizontal" gap={2}>...</Stack>
+  </Section>
+  <Section snap="none" title="Long band">...</Section>
+</SectionScroll>
 ```
 
 ## Constrain page width and run sections edge to edge
@@ -1485,9 +1489,10 @@ import {
   type SignatureMotion,
 } from "@zedtech/zedkit-ui";
 <Heading level={1} typeRole="display">Page title</Heading>
-<Heading level={2} as="div">Styled as h2, neutral tag</Heading>
+<Heading level={2} typeRole="title">Section title</Heading>
+<Heading level={3} typeRole="heading">Band heading</Heading>
 <Text typeRole="body">Body copy.</Text>
-<Text variant="muted">Secondary copy.</Text>
+<Text typeRole="caption">Caption</Text>
 ```
 
 ```ts
