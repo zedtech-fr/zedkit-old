@@ -15,6 +15,8 @@ Original work by the same author, plus vendored MIT skills (see
 pnpm add -D @zedtech/zedkit-ai
 ```
 
+At a **pnpm workspace root** (`pnpm-workspace.yaml` present), use **`pnpm add -D -w @zedtech/zedkit-ai`** so install does not fail with `ERR_PNPM_ADDING_TO_ROOT`.
+
 Or skip the devDependency for a first try: `npx @zedtech/zedkit-ai setup` downloads the CLI once.
 
 ## First 5 minutes
