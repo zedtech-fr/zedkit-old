@@ -41,7 +41,9 @@ test.describe("glass identity", () => {
     // A blurred child of a blurred header blurs nothing and stacks a second tint.
     expect(bar.innerFilter).toBe("none");
     expect(bar.innerBg).toBe("rgba(0, 0, 0, 0)");
-    expect(bar.shadow).not.toBe("none");
+    // Relief comes from inset highlights; no outer drop shadow on nav chrome (D5).
+    expect(bar.shadow).toContain("inset");
+    expect(bar.shadow.split(/,(?![^(]*\))/).every((part) => part.includes("inset"))).toBe(true);
   });
 
   test("makes cards and popovers translucent with a backdrop blur", async ({ page }) => {

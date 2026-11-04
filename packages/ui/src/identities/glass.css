@@ -97,15 +97,15 @@
   --zk-glass-highlight: inset 0 1px 0 hsl(0 0% 100% / 0.65);
 
   /* Glass bars (sticky headers): thinner tint so scrolling content shows
-     through the blur, a luminous bottom edge and a soft drop shadow. */
+     through the blur, inset highlights for the relief and a luminous bottom
+     edge. No drop shadow: nav chrome keeps an edge only (D5), shadows are for overlays. */
   --zk-glass-bar-alpha: 0.62;
   --zk-glass-bar-filter: blur(var(--zk-glass-blur)) saturate(var(--zk-glass-saturate));
   --zk-glass-bar-edge: 0 0% 100%;
   --zk-glass-bar-edge-alpha: 0.75;
   --zk-glass-bar-shadow:
     inset 0 1px 0 hsl(0 0% 100% / 0.7),
-    inset 0 -1px 0 hsl(var(--zk-glass-bar-edge) / var(--zk-glass-bar-edge-alpha)),
-    0 10px 28px -14px hsl(232 40% 24% / 0.28);
+    inset 0 -1px 0 hsl(var(--zk-glass-bar-edge) / var(--zk-glass-bar-edge-alpha));
 
   /* Glass overlays: panel alpha and blur, tint, and a light scrim. */
   --zk-glass-overlay-alpha: 0.72;
@@ -202,8 +202,7 @@
   --zk-glass-bar-edge-alpha: 0.22;
   --zk-glass-bar-shadow:
     inset 0 1px 0 hsl(0 0% 100% / 0.08),
-    inset 0 -1px 0 hsl(var(--zk-glass-bar-edge) / var(--zk-glass-bar-edge-alpha)),
-    0 10px 28px -12px rgb(0 0 0 / 0.6);
+    inset 0 -1px 0 hsl(var(--zk-glass-bar-edge) / var(--zk-glass-bar-edge-alpha));
   --zk-shadow-color: 232 60% 2%;
   --zk-shadow-xs: 0 8px 24px -12px rgb(0 0 0 / 0.55), var(--zk-glass-highlight);
   --zk-shadow-sm: 0 2px 8px -2px rgb(0 0 0 / 0.5), var(--zk-glass-highlight);
