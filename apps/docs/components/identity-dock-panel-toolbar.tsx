@@ -20,7 +20,7 @@ export function IdentityDockPanelToolbar({ onClose }: { onClose: () => void }) {
       {pathname === IDENTITY_EDITOR_HREF ? null : (
         <Link
           href={IDENTITY_EDITOR_HREF}
-          className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-ring-control"
+          className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground focus-ring-control hover:bg-muted hover:text-foreground"
           data-assistant-editor-link=""
           aria-label={copy.detailedEditorLink}
           title={copy.detailedEditorLink}

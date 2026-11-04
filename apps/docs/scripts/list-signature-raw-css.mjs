@@ -6,7 +6,7 @@
  * animation delays, and Tailwind text-* in dock + /docs/* paths for PR tables.
  */
 import { readFileSync, readdirSync, statSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const appRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
