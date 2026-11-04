@@ -68,7 +68,7 @@ export function HomeGetStartedSection({ npmPackage }: { npmPackage: string }) {
           <AdoptionPanelView plan={plan} summaryClassName={HOME_PERSUASION_TEXT_CLASS} />
           <HomeQuickStartExample />
         </div>
-        <Button asChild variant="link" size="sm" className="h-auto w-fit px-0">
+        <Button asChild variant="ghost" size="sm" className="w-fit" data-home-full-steps="">
           <Link href={homeCopy.getStarted.quickStart.fullStepsHref}>
             <DocsActionLabel>{homeCopy.getStarted.quickStart.fullSteps}</DocsActionLabel>
           </Link>
