@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import type { View } from "@/components/identity-assistant-parts";
 import { useCreatorHandoff } from "@/components/use-creator-handoff";
 
 type FocusRequest = { n: number; scroll: boolean };
+
+/** Focus may jump to the preview switch when a proposal lands; not while editing token fields below. */
+function focusMayMoveToProposalPreview(active: Element | null): boolean {
+  if (!active || active === document.body) return true;
+  if (active.closest("[data-slot='identity-assistant']")) return true;
+  if (active.closest("[data-testid='identity-dock']")) return true;
+  return false;
+}
 
 /**
  * Brings the assistant to the top of the page, just under whatever is pinned there. On a phone the draft card is
@@ -52,16 +60,21 @@ export function useAssistantView({ proposalId, onBrief }: { proposalId: string |
     }
     const arrived = proposalId !== seenProposal.current;
     seenProposal.current = proposalId;
-    if (arrived) {
-      setView("preview");
-      return;
-    }
-    if (view !== "preview") return;
-    // A visitor typing in an editor field keeps it; otherwise the phone follows the proposal.
+    if (arrived) setView("preview");
+  }, [proposalId]);
+
+  useLayoutEffect(() => {
+    if (!proposalId) return;
     const active = document.activeElement;
     if (active?.closest("[data-slot='identity-editor-preview'], #identity-editor-name")) return;
-    const id = requestAnimationFrame(() => previewButton.current?.focus({ preventScroll: true }));
-    return () => cancelAnimationFrame(id);
+    const focusPreview = () => {
+      if (!focusMayMoveToProposalPreview(document.activeElement)) return;
+      const btn = previewButton.current;
+      if (btn && btn.offsetParent !== null) btn.focus({ preventScroll: true });
+    };
+    focusPreview();
+    const frame = requestAnimationFrame(focusPreview);
+    return () => cancelAnimationFrame(frame);
   }, [proposalId, view]);
 
   return {
