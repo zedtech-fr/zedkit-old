@@ -15,6 +15,69 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # When a PR touches only workflow YAML or .github/*.md, heavy jobs skip and
+  # ci-required accepts that only if this job sets workflow_only=true.
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      workflow_only: ${{ steps.detect.outputs.workflow_only }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Detect workflow-only diff
+        id: detect
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch origin "${{ github.base_ref }}"
+            base="origin/${{ github.base_ref }}"
+          elif [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            base="${{ github.event.before }}"
+          else
+            base="HEAD~1"
+          fi
+          mapfile -t files < <(git diff --name-only "$base"...HEAD)
+          workflow_only=true
+          for f in "${files[@]}"; do
+            case "$f" in
+              .github/workflows/*|.github/*.md) ;;
+              *) workflow_only=false; break ;;
+            esac
+          done
+          echo "workflow_only=$workflow_only" >> "$GITHUB_OUTPUT"
+
+  workflow-lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: changes
+    if: needs.changes.outputs.workflow_only == 'true'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: actionlint and yamllint on changed workflow files
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch origin "${{ github.base_ref }}"
+            base="origin/${{ github.base_ref }}"
+          elif [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            base="${{ github.event.before }}"
+          else
+            base="HEAD~1"
+          fi
+          mapfile -t files < <(git diff --name-only "$base"...HEAD -- '.github/workflows/')
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No workflow files in diff; skipping actionlint/yamllint."
+            exit 0
+          fi
+          curl -sSfL https://github.com/rhysd/actionlint/releases/download/v1.7.10/actionlint_1.7.10_linux_amd64.tar.gz | tar xz
+          ./actionlint "${files[@]}"
+          python3 -m pip install --disable-pip-version-check yamllint==1.35.1
+          yamllint -d "{extends: default, rules: {line-length: disable, truthy: disable}}" "${files[@]}"
+
   hygiene:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -40,6 +103,8 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    needs: changes
+    if: needs.changes.outputs.workflow_only != 'true'
     steps:
       - uses: actions/checkout@v7
         with:
@@ -115,6 +180,8 @@ jobs:
   registry-smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    needs: changes
+    if: needs.changes.outputs.workflow_only != 'true'
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
@@ -129,6 +196,8 @@ jobs:
   quickstart-smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    needs: changes
+    if: needs.changes.outputs.workflow_only != 'true'
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
@@ -148,6 +217,8 @@ jobs:
   adoption-smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    needs: changes
+    if: needs.changes.outputs.workflow_only != 'true'
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
@@ -168,6 +239,8 @@ jobs:
     name: docs-e2e-shard (${{ matrix.shard }}/3)
     runs-on: ubuntu-latest
     timeout-minutes: 35
+    needs: changes
+    if: needs.changes.outputs.workflow_only != 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -206,6 +279,8 @@ jobs:
   docs-e2e-routes:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    needs: changes
+    if: needs.changes.outputs.workflow_only != 'true'
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
@@ -237,8 +312,8 @@ jobs:
   docs-e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [docs-e2e-shard, docs-e2e-routes]
-    if: always()
+    needs: [changes, docs-e2e-shard, docs-e2e-routes]
+    if: always() && needs.changes.outputs.workflow_only != 'true'
     steps:
       - name: All shards passed
         run: |
@@ -248,6 +323,8 @@ jobs:
   docs-smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    needs: changes
+    if: needs.changes.outputs.workflow_only != 'true'
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
@@ -292,13 +369,32 @@ jobs:
   ci-required:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [hygiene, checks, registry-smoke, docs-e2e, docs-smoke]
+    needs: [changes, hygiene, workflow-lint, checks, registry-smoke, docs-e2e, docs-smoke]
     if: always()
     steps:
       - name: All required jobs passed
+        env:
+          CHANGES: ${{ needs.changes.result }}
+          WORKFLOW_ONLY: ${{ needs.changes.outputs.workflow_only }}
+          HYGIENE: ${{ needs.hygiene.result }}
+          WORKFLOW_LINT: ${{ needs.workflow-lint.result }}
+          CHECKS: ${{ needs.checks.result }}
+          REGISTRY: ${{ needs.registry-smoke.result }}
+          DOCS_E2E: ${{ needs.docs-e2e.result }}
+          DOCS_SMOKE: ${{ needs.docs-smoke.result }}
         run: |
-          test "${{ needs.hygiene.result }}" = "success"
-          test "${{ needs.checks.result }}" = "success"
-          test "${{ needs.registry-smoke.result }}" = "success"
-          test "${{ needs.docs-e2e.result }}" = "success"
-          test "${{ needs.docs-smoke.result }}" = "success"
+          test "$CHANGES" = "success"
+          test "$HYGIENE" = "success"
+          if [ "$WORKFLOW_ONLY" = "true" ]; then
+            test "$WORKFLOW_LINT" = "success"
+            test "$CHECKS" = "skipped"
+            test "$REGISTRY" = "skipped"
+            test "$DOCS_E2E" = "skipped"
+            test "$DOCS_SMOKE" = "skipped"
+          else
+            test "$WORKFLOW_LINT" = "skipped"
+            test "$CHECKS" = "success"
+            test "$REGISTRY" = "success"
+            test "$DOCS_E2E" = "success"
+            test "$DOCS_SMOKE" = "success"
+          fi
