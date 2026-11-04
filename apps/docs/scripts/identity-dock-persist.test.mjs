@@ -43,6 +43,18 @@ test("encodeIdentityDockPersist stays under the byte cap by dropping oldest turn
   assert.ok(parsed.session.thread.length <= IDENTITY_DOCK_MAX_THREAD_TURNS);
 });
 
+test("previewTokens round-trip through encode and parse", () => {
+  const previewTokens = { ...identityPresets.mist, radius: "0.875rem" };
+  const session = {
+    ...initialSession,
+    thread: [{ role: "user", text: "A calm shop" }, { role: "assistant", text: "Softer corners." }],
+  };
+  const encoded = encodeIdentityDockPersist({ session, brief: "refine", previewTokens });
+  const parsed = JSON.parse(encoded);
+  assert.equal(parsed.previewTokens.radius, "0.875rem");
+  assert.equal(parsed.brief, "refine");
+});
+
 test("clearIdentityDockPersist removes the v2 storage key", () => {
   const store = new Map();
   const localStorage = {

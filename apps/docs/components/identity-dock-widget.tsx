@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { tryCatch } from "@zedtech/zedkit-core";
 import {
   Stack,
@@ -23,6 +23,7 @@ import {
 } from "@/components/identity-dock-chrome";
 import { identityDockCopy } from "@/components/i18n/identity-dock-copy";
 import { IdentityDockAssistantPanel } from "@/components/identity-dock-assistant-panel";
+import { useIdentityDockPreview } from "@/components/use-identity-dock-preview";
 import { useCreatorHandoff } from "@/components/use-creator-handoff";
 import { useIdentityDockKeyboard } from "@/components/use-identity-dock-keyboard";
 import { DEFAULT_IDENTITY } from "@/lib/default-identity";
@@ -92,20 +93,16 @@ function IdentityDockWidget() {
   const onEditor = pathname === IDENTITY_EDITOR_HREF;
   const identityId = useIdentity(DEFAULT_IDENTITY);
   const baseTokens = useMemo(() => readSiteTokens(identityId), [identityId]);
-  const [previewTokens, setPreviewTokens] = useState(baseTokens);
   const { expanded, setExpanded, setBrief } = useIdentityAssistantStore();
+  const { workingTokens, setPreviewTokens } = useIdentityDockPreview(baseTokens, identityId);
   const narrow = useNarrowViewport();
   const triggerRef = useIdentityDockKeyboard(expanded, setExpanded);
 
   useEditorDockAutoOpen(onEditor, setBrief, setExpanded);
   useIdentityDockOpenRequest(setBrief, setExpanded);
 
-  useEffect(() => {
-    setPreviewTokens(baseTokens);
-  }, [baseTokens]);
-
   const panel = (
-    <IdentityDockAssistantPanel previewTokens={previewTokens} onPreviewTokens={setPreviewTokens} />
+    <IdentityDockAssistantPanel previewTokens={workingTokens} onPreviewTokens={setPreviewTokens} />
   );
 
   return (

@@ -27,6 +27,8 @@ type IdentityAssistantStore = {
   cancel: () => void;
   brief: string;
   setBrief: (value: string) => void;
+  previewTokens: IdentityTokens | null;
+  setPreviewTokens: (tokens: IdentityTokens | null) => void;
   expanded: boolean;
   setExpanded: (open: boolean) => void;
   toggleExpanded: () => void;
@@ -39,6 +41,7 @@ function IdentityAssistantStoreProvider({ children }: { children: ReactNode }) {
   const boot = useMemo(() => readIdentityDockPersist(), []);
   const [session, dispatch] = useReducer(sessionReducer, boot.session ?? initialSession);
   const [brief, setBrief] = useState(boot.brief ?? "");
+  const [previewTokens, setPreviewTokens] = useState<IdentityTokens | null>(boot.previewTokens ?? null);
   const [expanded, setExpanded] = useState(false);
   const [status, setStatus] = useState<AssistantStatus | null>(null);
   const live = useRef({ thread: session.thread });
@@ -55,13 +58,14 @@ function IdentityAssistantStoreProvider({ children }: { children: ReactNode }) {
       session.proposal === null &&
       session.pending === null &&
       session.notice === null &&
-      session.references.length === 0;
+      session.references.length === 0 &&
+      previewTokens === null;
     if (empty) {
       clearIdentityDockPersist();
       return;
     }
-    writeIdentityDockPersist({ session, brief });
-  }, [session, brief]);
+    writeIdentityDockPersist({ session, brief, ...(previewTokens ? { previewTokens } : {}) });
+  }, [session, brief, previewTokens]);
 
   const ensureAssistantStatus = useCallback(() => {
     const stop = new AbortController();
@@ -85,12 +89,14 @@ function IdentityAssistantStoreProvider({ children }: { children: ReactNode }) {
       cancel,
       brief,
       setBrief,
+      previewTokens,
+      setPreviewTokens,
       expanded,
       setExpanded,
       toggleExpanded,
       ensureAssistantStatus,
     }),
-    [session, status, submit, cancel, brief, expanded, toggleExpanded, ensureAssistantStatus],
+    [session, status, submit, cancel, brief, previewTokens, expanded, toggleExpanded, ensureAssistantStatus],
   );
 
   return <IdentityAssistantStoreContext.Provider value={value}>{children}</IdentityAssistantStoreContext.Provider>;

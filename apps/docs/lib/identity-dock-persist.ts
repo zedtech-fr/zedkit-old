@@ -1,4 +1,5 @@
 import { tryCatch } from "@zedtech/zedkit-core";
+import { parseIdentityTokens, type IdentityTokens } from "@zedtech/zedkit-ui";
 
 import { initialSession, type SessionState } from "./identity-creator-session.ts";
 
@@ -20,6 +21,8 @@ function encodedByteLength(json: string): number {
 export type IdentityDockPersist = {
   session: SessionState;
   brief: string;
+  /** Last identity the visitor accepted in the dock; restored on reload for the next tweak. */
+  previewTokens?: IdentityTokens;
 };
 
 function parsePersistBlob(raw: string | null): Partial<IdentityDockPersist> {
@@ -32,6 +35,10 @@ function parsePersistBlob(raw: string | null): Partial<IdentityDockPersist> {
     out.session = { ...session, pending: null };
   }
   if (typeof brief === "string") out.brief = brief;
+  if (parsed.value.previewTokens !== undefined && parsed.value.previewTokens !== null) {
+    const tokens = parseIdentityTokens(parsed.value.previewTokens);
+    if (tokens.success) out.previewTokens = tokens.data;
+  }
   return out;
 }
 
@@ -65,8 +72,14 @@ export function trimSessionForPersist(session: SessionState): SessionState {
 export function encodeIdentityDockPersist(data: IdentityDockPersist): string {
   let session = trimSessionForPersist(data.session);
   let brief = data.brief;
+  let previewTokens = data.previewTokens;
 
-  const pack = () => JSON.stringify({ session, brief });
+  const pack = () =>
+    JSON.stringify({
+      session,
+      brief,
+      ...(previewTokens ? { previewTokens } : {}),
+    });
 
   let json = pack();
   while (encodedByteLength(json) > IDENTITY_DOCK_MAX_BYTES && session.thread.length > 0) {
@@ -75,6 +88,10 @@ export function encodeIdentityDockPersist(data: IdentityDockPersist): string {
   }
   if (encodedByteLength(json) > IDENTITY_DOCK_MAX_BYTES) {
     session = { ...session, proposal: null, references: [] };
+    json = pack();
+  }
+  if (encodedByteLength(json) > IDENTITY_DOCK_MAX_BYTES && previewTokens) {
+    previewTokens = undefined;
     json = pack();
   }
   while (encodedByteLength(json) > IDENTITY_DOCK_MAX_BYTES && brief.length > 0) {
