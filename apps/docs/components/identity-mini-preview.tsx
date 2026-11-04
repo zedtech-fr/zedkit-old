@@ -22,10 +22,13 @@ export function IdentityMiniPreview({
   tokens,
   id,
   domain = "commerce",
+  compact = false,
 }: {
   tokens: IdentityTokens;
   id: string;
   domain?: SpecimenDomain;
+  /** One theme card — keeps phone proposal guards inside the viewport. */
+  compact?: boolean;
 }) {
   const copy = identitySpecimenCompositions[domain];
   return (
@@ -34,10 +37,14 @@ export function IdentityMiniPreview({
       <Text as="span" className="text-sm font-medium text-foreground">
         {identityAssistantCopy.proposal.preview}
       </Text>
-      <Stack gap={3} className="sm:grid sm:grid-cols-2">
+      {compact ? (
         <IdentitySpecimenCard dark={false} label={identityAssistantCopy.proposal.lightLabel} id={`${id}-light`} copy={copy} />
-        <IdentitySpecimenCard dark label={identityAssistantCopy.proposal.darkLabel} id={`${id}-dark`} copy={copy} />
-      </Stack>
+      ) : (
+        <Stack gap={3} className="sm:grid sm:grid-cols-2">
+          <IdentitySpecimenCard dark={false} label={identityAssistantCopy.proposal.lightLabel} id={`${id}-light`} copy={copy} />
+          <IdentitySpecimenCard dark label={identityAssistantCopy.proposal.darkLabel} id={`${id}-dark`} copy={copy} />
+        </Stack>
+      )}
     </Stack>
   );
 }

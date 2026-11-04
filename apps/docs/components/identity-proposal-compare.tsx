@@ -6,6 +6,29 @@ import { identityAssistantCopy as copy } from "@/components/i18n/identity-assist
 import { IdentityMiniPreview } from "@/components/identity-mini-preview";
 import type { SpecimenDomain } from "@/lib/brief-specimen-domain";
 
+function CompareBlock({
+  label,
+  tokens,
+  id,
+  domain,
+  compact,
+}: {
+  label: string;
+  tokens: IdentityTokens;
+  id: string;
+  domain: SpecimenDomain;
+  compact?: boolean;
+}) {
+  return (
+    <Stack gap={2}>
+      <Text typeRole="label" className="text-foreground">
+        {label}
+      </Text>
+      <IdentityMiniPreview tokens={tokens} id={id} domain={domain} compact={compact} />
+    </Stack>
+  );
+}
+
 export function ProposalBeforeAfter({
   current,
   proposed,
@@ -22,17 +45,16 @@ export function ProposalBeforeAfter({
       <Text variant="muted" className="text-sm">
         {copy.proposal.compare}
       </Text>
-      <Stack gap={2}>
-        <Text typeRole="label" className="text-foreground">
-          {copy.proposal.beforeLabel}
-        </Text>
-        <IdentityMiniPreview tokens={current} id={`before-${requestId}`} domain={domain} />
+      <Stack gap={3} className="max-lg:hidden">
+        <CompareBlock label={copy.proposal.beforeLabel} tokens={current} id={`before-${requestId}`} domain={domain} />
+        <CompareBlock label={copy.proposal.afterLabel} tokens={proposed} id={`proposal-${requestId}`} domain={domain} />
       </Stack>
-      <Stack gap={2}>
-        <Text typeRole="label" className="text-foreground">
-          {copy.proposal.afterLabel}
-        </Text>
-        <IdentityMiniPreview tokens={proposed} id={`proposal-${requestId}`} domain={domain} />
+      <Stack gap={3} className="lg:hidden">
+        <CompareBlock label={copy.proposal.afterLabel} tokens={proposed} id={`proposal-${requestId}`} domain={domain} compact />
+        <details className="text-sm">
+          <summary className="flex min-h-11 cursor-pointer items-center focus-ring">{copy.proposal.beforeLabel}</summary>
+          <CompareBlock label={copy.proposal.beforeLabel} tokens={current} id={`before-${requestId}`} domain={domain} compact />
+        </details>
       </Stack>
     </Stack>
   );

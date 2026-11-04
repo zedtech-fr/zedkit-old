@@ -293,10 +293,7 @@ test.describe("widget state matrix", () => {
 
     await page.reload({ waitUntil: "networkidle" });
     await expect(page.getByTestId("identity-dock")).toBeVisible();
-    if ((await page.locator("#identity-assistant-brief").count()) === 0) {
-      await page.keyboard.press("Control+I");
-    }
-    await expect(page.locator("#identity-assistant-brief")).toHaveValue("A ceramics shop");
+    await expect(await reopenDock(page)).toHaveValue("A ceramics shop");
   });
 });
 

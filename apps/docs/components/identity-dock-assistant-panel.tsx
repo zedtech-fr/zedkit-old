@@ -85,8 +85,6 @@ export function IdentityDockAssistantPanel({
           onUse={(next) => acceptProposal(ui.backToConversation, onPreviewTokens, dispatch, setBrief, next)}
           onDiscard={() => ui.backToConversation(() => dispatch({ type: "discard" }))}
         />
-      </Stack>
-      <Stack className="shrink-0 px-3 pb-3">
         <DockFeedback text={assistantFeedbackText(session, busy)} off={off} busy={busy} />
       </Stack>
     </Stack>

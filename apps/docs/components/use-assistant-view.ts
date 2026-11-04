@@ -47,6 +47,7 @@ export function useAssistantView({ proposalId, onBrief }: { proposalId: string |
   useEffect(() => {
     if (!proposalId) return;
     setView("preview");
+    scrollToAssistant();
     // Only when focus is nowhere or already in the assistant: a visitor typing in a field of the editor keeps it.
     const active = document.activeElement;
     const free = !active || active === document.body || active.closest("[data-slot='identity-assistant']") !== null;
