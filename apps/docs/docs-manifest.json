@@ -13,6 +13,18 @@
         "Staggered children": "MotionStaggerDemo"
       }
     },
+    "Reveal and react with motion on any element": {
+      "package": "@zedtech/zedkit-ui",
+      "component": "Animate",
+      "props": "AnimateProps",
+      "source": "animate.tsx",
+      "demo": "AnimateDemo",
+      "examples": {
+        "Wrapper with several triggers": "AnimateTriggersDemo",
+        "Stagger children": "AnimateStaggerDemo"
+      },
+      "propsPriority": ["on", "delay", "stagger"]
+    },
     "Trigger actions with buttons": {
       "package": "@zedtech/zedkit-ui",
       "component": "Button",
@@ -386,6 +398,16 @@
       "demo": "TabsDemo",
       "examples": {
         "Controlled": "TabsControlledDemo"
+      }
+    },
+    "Horizontal scroll gallery row": {
+      "package": "@zedtech/zedkit-ui",
+      "component": "ScrollGallery",
+      "props": "ScrollGalleryProps",
+      "source": "scroll-gallery.tsx",
+      "demo": "ScrollGalleryIdentityDemo",
+      "examples": {
+        "Filter chips": "ScrollGalleryChipsDemo"
       }
     },
     "Show toast notifications": {

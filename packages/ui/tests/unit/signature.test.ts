@@ -37,3 +37,16 @@ describe("type role utilities", () => {
     expect(css).toContain("--zk-type-h3-size");
   });
 });
+
+describe("section scroll", () => {
+  const css = read("section-scroll.css");
+
+  it("uses proximity snap, never mandatory, behind reduced-motion", () => {
+    expect(css).toContain("@media (prefers-reduced-motion: no-preference)");
+    expect(css).toContain("scroll-behavior: smooth");
+    expect(css).toContain("scroll-padding-top: var(--zk-header-height)");
+    expect(css).toContain("scroll-snap-type: y proximity");
+    expect(css).not.toContain("mandatory");
+    expect(css).toContain('data-snap="none"');
+  });
+});

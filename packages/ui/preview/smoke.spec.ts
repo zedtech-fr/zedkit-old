@@ -20,6 +20,21 @@ async function expectNoOverflow(page: Page): Promise<void> {
   expect(offenders).toEqual([]);
 }
 
+test("data-animate pending hides with opacity only, and reduced motion keeps content visible", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => {
+    const el = document.createElement("p");
+    el.id = "zk-animate-probe";
+    el.setAttribute("data-animate", "fade-up");
+    el.setAttribute("data-animate-state", "pending");
+    el.textContent = "probe";
+    document.body.append(el);
+  });
+  await expect(page.locator("#zk-animate-probe")).toHaveCSS("opacity", "0");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(page.locator("#zk-animate-probe")).toHaveCSS("opacity", "1");
+});
+
 test("gallery renders every section with no errors (light)", async ({ page }) => {
   const problems: string[] = [];
   page.on("pageerror", (error) => problems.push(String(error)));

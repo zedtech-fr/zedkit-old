@@ -104,12 +104,26 @@ export {
   Container,
   containerVariants,
   Section,
+  SectionScroll,
   Stack,
   stackVariants,
   type ContainerProps,
   type SectionProps,
+  type SectionScrollProps,
   type StackProps,
 } from "./layout.js";
+export {
+  Animate,
+  AnimateObserver,
+  observeAnimate,
+  ANIMATE_PRESETS,
+  ANIMATE_TRIGGERS,
+  type AnimateMotion,
+  type AnimateOn,
+  type AnimatePreset,
+  type AnimateProps,
+  type AnimateTrigger,
+} from "./animate.js";
 export { LivePulse, type LivePulseProps } from "./live-pulse.js";
 export { StatusDot, type StatusDotProps, type StatusDotTone } from "./status-dot.js";
 export { ProgressBar, type ProgressBarProps } from "./progress-bar.js";
@@ -148,6 +162,7 @@ export {
 } from "./select.js";
 export { Separator, type SeparatorProps } from "./separator.js";
 export { SCROLL_SCENES_MAX, ScrollScenes, type ScrollScene, type ScrollScenesProps } from "./scroll-scenes.js";
+export { ScrollGallery, type ScrollGalleryProps } from "./scroll-gallery.js";
 export { Skeleton, type SkeletonProps } from "./skeleton.js";
 export {
   Table,

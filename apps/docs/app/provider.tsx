@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useEffect, useLayoutEffect } from "react";
 import dynamic from "next/dynamic";
 import { RootProvider } from "fumadocs-ui/provider/next";
+import { AnimateObserver } from "@zedtech/zedkit-ui";
 import { CustomIdentityBar } from "@/components/custom-identity-bar";
 import { IdentityDockGate } from "@/components/identity-dock-gate";
 import { purgeLegacyIdentityStorage } from "@/lib/site-identity-storage";
@@ -28,6 +29,7 @@ export function Provider({ children }: { children: ReactNode }) {
       <SiteChromeA11yPatch />
       <ThemeColorMeta />
       <RouteScrollReset />
+      <AnimateObserver />
       <CustomIdentityBar />
       <IdentityDockGate />
       {children}

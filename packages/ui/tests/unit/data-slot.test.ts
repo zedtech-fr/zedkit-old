@@ -7,6 +7,8 @@ const SKIP = new Set([
   "closeRoute",
   "useScrollReset",
   "ScrollReset",
+  "observeAnimate",
+  "AnimateObserver",
   "applyIdentity",
   "discardCustomIdentity",
   "applyCustomIdentity",

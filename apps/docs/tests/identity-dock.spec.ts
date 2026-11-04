@@ -37,9 +37,11 @@ test.describe("IdentityDock", () => {
 
   test("brief persists across reload in zk-identity-dock-v2", async ({ page }) => {
     await page.goto(BASE, { waitUntil: "networkidle" });
+    await expect(dock(page)).toBeVisible();
     await page.keyboard.press("Control+I");
     await brief(page).fill("Persist after reload");
     await page.reload({ waitUntil: "networkidle" });
+    await expect(dock(page)).toBeVisible();
     await page.keyboard.press("Control+I");
     await expect(brief(page)).toHaveValue("Persist after reload");
     const stored = await page.evaluate(() => window.localStorage.getItem("zk-identity-dock-v2"));

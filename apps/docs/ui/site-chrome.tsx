@@ -1,10 +1,7 @@
 "use client";
 
 import type { ComponentProps } from "react";
-import { Search, Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
-import { useSyncExternalStore } from "react";
-import { flushSync } from "react-dom";
+import { Search } from "lucide-react";
 import { useSearchContext } from "fumadocs-ui/contexts/search";
 import {
   FullSearchTrigger,
@@ -19,8 +16,6 @@ import {
   useSidebar,
 } from "fumadocs-ui/layouts/docs/slots/sidebar";
 import { IconButton, cn } from "@zedtech/zedkit-ui";
-
-const noop = () => () => {};
 
 export function SiteSearchTrigger({ hideIfDisabled, className }: SearchTriggerProps) {
   const { setOpenSearch, enabled } = useSearchContext();
@@ -42,34 +37,17 @@ export function SiteSearchTrigger({ hideIfDisabled, className }: SearchTriggerPr
 
 export function SiteFullSearchTrigger(props: FullSearchTriggerProps) {
   const label = "Search documentation";
-  return <FullSearchTrigger {...props} title={label} aria-label={label} />;
+  return <FullSearchTrigger {...props} title={label} aria-label={label} data-search="" />;
 }
 
 export function SiteThemeSwitch({ className, mode = "light-dark" }: ThemeSwitchProps) {
-  const label = "Toggle light and dark theme";
-  const { setTheme, resolvedTheme } = useTheme();
-  const mounted = useSyncExternalStore(noop, () => true, () => false);
-  if (mode !== "light-dark") {
-    return <ThemeSwitch className={className} mode={mode} />;
-  }
-  const value = mounted ? resolvedTheme : null;
-  const handleThemeChange = (newTheme: string) => {
-    if (document?.startViewTransition) {
-      document.startViewTransition(() => flushSync(() => setTheme(newTheme)));
-    } else {
-      setTheme(newTheme);
-    }
-  };
   return (
-    <IconButton
-      label={label}
-      variant="outline"
-      className={cn("rounded-full border p-1", className)}
-      onClick={() => handleThemeChange(value === "light" ? "dark" : "light")}
-      data-theme-toggle=""
-    >
-      {value === "dark" ? <Moon className="size-4" /> : <Sun className="size-4" />}
-    </IconButton>
+    <div data-theme-toggle="" className="inline-flex shrink-0">
+      <ThemeSwitch
+        mode={mode}
+        className={cn("h-control-height-sm shrink-0 gap-0.5 border-border/35 p-0.5", className)}
+      />
+    </div>
   );
 }
 

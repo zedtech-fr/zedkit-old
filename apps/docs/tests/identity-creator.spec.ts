@@ -143,6 +143,7 @@ test.describe("the assistant lives in IdentityDock on the demo editor", () => {
     const posts = await service(page, (posted, route) => route.fulfill(ok(posted, WARM, { references: [used] })));
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(OPEN, { waitUntil: "networkidle" });
+    await expect(page.locator("#identity-assistant-brief")).toBeVisible();
     const views = page.getByRole("group", { name: "Conversation or preview" });
     const conversation = views.getByRole("button", { name: "Conversation" });
     const preview = views.getByRole("button", { name: "Preview" });
@@ -265,9 +266,8 @@ test.describe("the assistant in the editor", () => {
     await brief(page, "Film restoration, https://atelier-nord.example.org/ and https://missing.example.org/");
     await page.getByRole("button", { name: "Generate" }).click();
     const proposal = page.locator("[data-assistant-proposal]");
-    // The proposal shows before and after specimens, each with a Light and a Dark group; pin the first of each.
-    await expect(proposal.getByRole("group", { name: "Light" }).first()).toBeVisible();
-    await expect(proposal.getByRole("group", { name: "Dark" }).first()).toBeVisible();
+    await expect(proposal.getByRole("group", { name: "Light" })).toHaveCount(2);
+    await expect(proposal.getByRole("group", { name: "Dark" })).toHaveCount(2);
     expect(posts[0].references).toEqual(["https://atelier-nord.example.org/", "https://missing.example.org/"]);
     // Honest about the links: text only for the one that was read, a reason for the one that was not.
     const report = page.locator("[data-assistant-reference-report]");

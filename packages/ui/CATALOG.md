@@ -142,7 +142,7 @@ cn("px-4", "px-2"); // "px-2" — last conflicting utility wins
 - Purpose: Token-driven entrance, stagger, hover and marquee utilities that switch off under reduced motion.
 - When to use: For first-paint entrances, staggered lists, card lift and button press feedback.
 - When not to use: For gesture or layout animation (drag, shared-element transitions) — use a motion library instead.
-- See also: `Theme an admin app (dark/light included)`, `Group content in a card section`
+- See also: `Theme an admin app (dark/light included)`, `Group content in a card section`, `Reveal and react with motion on any element`
 - Examples: Entrance with stagger, Hover feedback, Staggered children
 - A11y: Every utility and attribute is switched off under `prefers-reduced-motion: reduce`, with content left visible and in place. Hover lift only applies on devices that hover, so it never sticks after a tap.
 - Troubleshooting: Nothing animates — check the OS reduced-motion setting first. Content stays hidden — `data-reveal="pending"` and `data-stagger="pending"` hide content until your code sets them to `"in"`. Stagger has no delay — `stagger-*` delays an animation class (`animate-fade-up stagger-2`), not a transition.
@@ -166,6 +166,50 @@ import { Card } from "@zedtech/zedkit-ui";
   <Text>One</Text>
   <Text>Two</Text>
 </Stack>
+```
+
+## Reveal and react with motion on any element
+
+- Import: `@zedtech/zedkit-ui` — `Animate`, `AnimateObserver`, `AnimateProps`, `AnimateOn`, `AnimatePreset`, `AnimateTrigger`, `AnimateMotion`, `observeAnimate`, `ANIMATE_PRESETS`, `ANIMATE_TRIGGERS`
+- Attributes: `data-animate`, `data-animate-appear`, `data-animate-scroll`, `data-animate-press`, `data-animate-longpress`, `data-animate-hover`, `data-animate-focus`, `data-animate-delay`, `data-animate-stagger`
+- Wraps: `(none)`
+- Status: alpha
+- Short name: Animate
+- Audience: Developers adding appear, scroll, press, longpress, hover or focus motion to any kit element.
+- Purpose: One typed attribute and wrapper API for identity-token motion, with a tiny SSR-safe runtime.
+- When to use: When a card, section or control should move on appear, scroll progress, press, longpress, hover or focus.
+- When not to use: For pinned scene crossfades use `ScrollScenes`. For section snap/smooth-scroll use `SectionScroll`. For first-paint class utilities see `Animate entrances and hover feedback with CSS utilities`.
+- See also: `Animate entrances and hover feedback with CSS utilities`, `Pin a stage and change scene as the page scrolls`, `Stack content and group titled sections`
+- Examples: Attribute on a card, Wrapper with several triggers, Stagger children
+- A11y: `prefers-reduced-motion: reduce` leaves content visible and in place. Hover is gated to hover-capable pointers. Focus uses `:focus-visible`. Press ignores disabled. Longpress is decorative, never the only action. Appear does not set `aria-hidden`.
+- Troubleshooting: Nothing appears to move — mount `<AnimateObserver />` once near the app root (or call `observeAnimate()`), then check reduced motion. Content stays visible without JS by design. Scroll parallax needs `animation-timeline: view()` or the runtime fallback.
+
+```ts
+import { AnimateObserver, Card } from "@zedtech/zedkit-ui";
+
+<AnimateObserver />
+<Card data-animate="fade-up" data-animate-delay="100" data-animate-press="scale-down">
+  Invoice
+</Card>
+```
+
+```ts
+import { Animate } from "@zedtech/zedkit-ui";
+
+<Animate on={{ appear: "fade-up", press: "scale-down", longpress: "pulse", scroll: "parallax" }}>
+  Band
+</Animate>
+```
+
+```ts
+import { Animate, Stack, Text } from "@zedtech/zedkit-ui";
+
+<Animate on={{ appear: "fade-up" }} stagger>
+  <Stack>
+    <Text>One</Text>
+    <Text>Two</Text>
+  </Stack>
+</Animate>
 ```
 
 ## Trigger actions with buttons
@@ -1377,21 +1421,25 @@ import { Card, CardContent, CardFooter } from "@zedtech/zedkit-ui";
 
 ## Stack content and group titled sections
 
-- Import: `@zedtech/zedkit-ui` — `Stack`, `stackVariants`, `StackProps`, `Section`, `SectionProps`
+- Import: `@zedtech/zedkit-ui` — `Stack`, `stackVariants`, `StackProps`, `Section`, `SectionProps`, `SectionScroll`, `SectionScrollProps`
 - Wraps: none (flex/gap utilities over `Heading`, `Text`)
 - Status: stable
 - Short name: Stack
 - Audience: Developers laying out kit pages without raw divs.
-- Purpose: Gap-based vertical/horizontal stacks plus titled sections.
+- Purpose: Gap-based vertical/horizontal stacks plus titled sections, with optional proximity scroll-snap.
 - When to use: For all kit-page layout instead of hand-written flex.
-- When not to use: For complex grids — use CSS grid directly instead.
+- When not to use: For complex grids — use CSS grid directly instead. For motion/enter animations, use the motion utilities, not `SectionScroll`.
 - See also: `Render headings and body text without raw tags`, `Group content in a card section`, `Constrain page width and run sections edge to edge`
-- A11y: `Stack` renders a plain `div` with no role. `Section` renders a `section` landmark named by its string `title`, with that title as a level-2 heading: use one `title` per region, keep heading levels in order, and do not repeat a title that a nearby landmark already uses.
+- A11y: `Stack` renders a plain `div` with no role. `Section` renders a `section` landmark named by its string `title`, with that title as a level-2 heading: use one `title` per region, keep heading levels in order, and do not repeat a title that a nearby landmark already uses. `SectionScroll` is a plain `div`; snap and smooth scrolling apply only when `prefers-reduced-motion` is `no-preference`.
 
 ```ts
-import { Section, Stack } from "@zedtech/zedkit-ui";
-<Section title="Team" description="Who can access.">
-<Stack direction="horizontal" gap={2}>...</Stack>
+import { Section, SectionScroll, Stack } from "@zedtech/zedkit-ui";
+<SectionScroll>
+  <Section title="Team" description="Who can access.">
+    <Stack direction="horizontal" gap={2}>...</Stack>
+  </Section>
+  <Section snap="none" title="Long band">...</Section>
+</SectionScroll>
 ```
 
 ## Constrain page width and run sections edge to edge
@@ -1441,9 +1489,10 @@ import {
   type SignatureMotion,
 } from "@zedtech/zedkit-ui";
 <Heading level={1} typeRole="display">Page title</Heading>
-<Heading level={2} as="div">Styled as h2, neutral tag</Heading>
+<Heading level={2} typeRole="title">Section title</Heading>
+<Heading level={3} typeRole="heading">Band heading</Heading>
 <Text typeRole="body">Body copy.</Text>
-<Text variant="muted">Secondary copy.</Text>
+<Text typeRole="caption">Caption</Text>
 ```
 
 ```ts
@@ -1649,6 +1698,49 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@zedtech/zedkit-ui";
 ```ts
 import { Tabs } from "@zedtech/zedkit-ui";
 <Tabs value={tab} onValueChange={setTab}> // controlled: you own the state
+```
+
+## Horizontal scroll gallery row
+
+- Import: `@zedtech/zedkit-ui` — `ScrollGallery`, `ScrollGalleryProps`
+- Wraps: none (layout + focus scroll)
+- Status: alpha
+- Short name: ScrollGallery
+- Audience: Developers showing a row of peers (identity chips, filter pills, thumbnail strips) that must stay on one line on phones.
+- Purpose: One snap-aligned horizontal scroll row with thin scrollbar, edge fade, and focused items scrolled into view.
+- When to use: More items than fit at once; keyboard tabs or links inside the row.
+- When not to use: Primary navigation that should wrap — use a vertical stack.
+- See also: `Pin a stage and change scene as the page scrolls`, `Switch between tabbed panels`
+- Examples: Identity picker row, Filter chips, Toolbar peers
+- A11y: Keep real controls inside the track (tabs, links, buttons); focused items scroll into view. Edge fades are decorative only.
+- Troubleshooting: Items wrap to two lines — the track child should be `inline-flex flex-nowrap` (for example `TabsList`). Nothing scrolls — confirm the row is wider than the viewport and `overflow-x-auto` is not blocked by a parent `overflow: hidden`.
+
+```ts
+import { ScrollGallery, Tabs, TabsList, TabsTrigger } from "@zedtech/zedkit-ui";
+
+<Tabs value="a">
+  <ScrollGallery className="w-full">
+    <TabsList className="inline-flex w-max flex-nowrap">
+      <TabsTrigger value="a">One</TabsTrigger>
+      <TabsTrigger value="b">Two</TabsTrigger>
+    </TabsList>
+  </ScrollGallery>
+</Tabs>
+```
+
+```ts
+import { ScrollGallery } from "@zedtech/zedkit-ui";
+
+<ScrollGallery className="max-w-sm">
+  <div className="flex w-max gap-2">
+    <a className="shrink-0 snap-start rounded-md border px-3 py-2" href="#a">
+      Alpha
+    </a>
+    <a className="shrink-0 snap-start rounded-md border px-3 py-2" href="#b">
+      Beta
+    </a>
+  </div>
+</ScrollGallery>
 ```
 
 ## Pin a stage and change scene as the page scrolls

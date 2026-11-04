@@ -8,6 +8,7 @@
 @import "./motion.css";
 @import "./signature-motion.css";
 @import "./type-roles.css";
+@import "./section-scroll.css";
 @import "./scroll-scenes.css";
 @import "./identities/volt.css";
 @import "./shared-type-scale.css";
@@ -137,10 +138,17 @@
   --zk-section-md: calc(var(--spacing) * 12);
   --zk-section-lg: calc(var(--spacing) * 24);
   --zk-section-xl: calc(var(--spacing) * 28);
+  /* Sticky header offset for section scroll-padding / snap. */
+  --zk-header-height: 3.5rem;
 }
 @media (pointer: coarse), (max-width: 40rem) {
   :root {
     --zk-tap-min: 2.75rem;
+    /* Marketing bands stay 64px+ apart on phones even if --spacing is dense. */
+    --zk-section-sm: max(1.5rem, calc(var(--spacing) * 8));
+    --zk-section-md: max(2rem, calc(var(--spacing) * 12));
+    --zk-section-lg: max(2.5rem, calc(var(--spacing) * 24));
+    --zk-section-xl: max(3.5rem, calc(var(--spacing) * 28));
   }
 }
 
@@ -286,7 +294,7 @@
   --spacing-field-error-indent: 1rem;
   --spacing-field-error-gap: 0.25rem;
   --spacing-card-padding: 1.5rem;
-  --spacing-card-stack: 0.375rem;
+  --spacing-card-stack: 0.5rem;
   --spacing-card-section: 1rem;
   --spacing-card-lines: 0.5rem;
   --spacing-separator-thickness: 0.0625rem;
@@ -506,6 +514,90 @@ a[class*="px-badge-inline"] {
     height: 100%;
     min-width: var(--spacing-tap);
     min-height: var(--spacing-tap);
+  }
+}
+
+@layer components {
+  [data-slot="scroll-gallery"]::before,
+  [data-slot="scroll-gallery"]::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: var(--zk-table-fade);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  [data-slot="scroll-gallery"]::before {
+    left: 0;
+    background: linear-gradient(to right, hsl(var(--background)), transparent);
+  }
+
+  [data-slot="scroll-gallery"]::after {
+    right: 0;
+    background: linear-gradient(to left, hsl(var(--background)), transparent);
+  }
+
+  [data-slot="scroll-gallery"] [data-scroll-gallery-track] {
+    gap: var(--zk-gap-md);
+    padding-inline: var(--zk-gap-md);
+  }
+
+  [data-slot="scroll-gallery"] [data-scroll-gallery-track] > * {
+    flex-shrink: 0;
+    scroll-snap-align: start;
+  }
+
+  [data-slot="scroll-gallery"] [data-slot="tabs-list"] {
+    gap: var(--zk-gap-md);
+    max-width: none;
+    overflow-x: visible;
+  }
+
+  [data-slot="scroll-gallery"] [data-slot="tabs-trigger"]:has([data-tab-label]) {
+    box-sizing: border-box;
+    gap: var(--zk-gap-sm);
+    width: max-content;
+    max-width: none;
+    overflow: visible;
+    padding-inline: var(--zk-gap-md);
+    padding-block: var(--zk-gap-sm);
+    white-space: normal;
+  }
+}
+
+/*
+ * Button `asChild` merges onto `<a>`. Keep the same horizontal padding and
+ * height tokens as `<button>` roots when utilities are stripped or overridden.
+ */
+@layer components {
+  :where(a[data-slot="button"]:not([data-variant="link"])) {
+    box-sizing: border-box;
+    text-decoration-line: none;
+  }
+
+  :where(a[data-slot="button"][data-size="sm"]:not([data-variant="link"])) {
+    min-height: var(--spacing-control-height-sm);
+    padding-inline: calc(var(--spacing) * 3);
+  }
+
+  :where(a[data-slot="button"][data-size="default"]:not([data-variant="link"])) {
+    min-height: var(--spacing-control-height);
+    padding-inline: calc(var(--spacing) * 4);
+    padding-block: calc(var(--spacing) * 2);
+  }
+
+  :where(a[data-slot="button"][data-size="lg"]:not([data-variant="link"])) {
+    min-height: var(--spacing-control-height-lg);
+    padding-inline: calc(var(--spacing) * 8);
+  }
+
+  :where(a[data-slot="button"][data-size="icon"]:not([data-variant="link"])) {
+    min-height: var(--spacing-control-height);
+    min-width: var(--spacing-control-height);
+    padding-inline: 0;
+    padding-block: 0;
   }
 }
 

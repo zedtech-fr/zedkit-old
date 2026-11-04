@@ -32,10 +32,10 @@ test.describe("guide previews", () => {
       .locator("[data-component-preview]")
       .filter({ hasText: "Publish the sale banner" })
       .first()
-      .locator("[data-stagger]")
+      .locator("[data-animate-stagger]")
       .first();
     await stage.scrollIntoViewIfNeeded();
-    await expect(stage).toHaveAttribute("data-stagger", "in");
+    await expect(stage).toHaveAttribute("data-animate-state", "in");
     await expect(stage.getByText("Publish the sale banner")).toBeVisible();
   });
 

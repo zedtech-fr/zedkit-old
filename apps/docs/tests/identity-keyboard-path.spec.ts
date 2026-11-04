@@ -82,6 +82,7 @@ test.describe("creator keyboard path", () => {
 
       const brief = page.locator("#identity-assistant-brief");
       const generate = page.getByRole("button", { name: "Generate" });
+      await expect(brief).toBeVisible();
       await expect(brief).toBeFocused();
       await focusWithKeyboard(brief);
       await stop(brief);
@@ -103,6 +104,11 @@ test.describe("creator keyboard path", () => {
       await page.keyboard.press("Tab");
       await stop(refine);
 
+      if (vp.width <= 390) {
+        await page.keyboard.press("Escape");
+        await expect(brief).toHaveCount(0);
+      }
+
       const name = page.getByLabel("Name", { exact: true });
       await tabUntilFocused(page, name);
       await page.keyboard.type("Keyboard look");
@@ -113,7 +119,7 @@ test.describe("creator keyboard path", () => {
       await stop(page.getByRole("button", { name: "Copy CSS" }));
     });
 
-    test(`${vp.name}: Escape does not close the assistant; the summary does, and keeps a focus ring`, async ({
+    test(`${vp.name}: Escape closes the dock and returns a focus ring to the trigger`, async ({
       page,
     }) => {
       await service(page, (_posted, route) => route.abort());
@@ -121,19 +127,15 @@ test.describe("creator keyboard path", () => {
       await page.goto(EDITOR, { waitUntil: "networkidle" });
 
       const brief = page.locator("#identity-assistant-brief");
-      const summary = page.locator("#identity-assistant-title");
+      const trigger = page.getByRole("button", { name: "And yours?" });
+      await expect(page.getByTestId("identity-dock")).toBeVisible();
       await expect(brief).toBeVisible();
       await expect(brief).toBeFocused();
       await page.keyboard.press("Escape");
-      await expect(brief).toBeVisible();
+      await expect(brief).toHaveCount(0);
       await expect(page.getByRole("dialog")).toHaveCount(0);
-
-      await focusWithKeyboard(summary);
-      await stop(summary);
-      await page.keyboard.press("Enter");
-      await expect(brief).toBeHidden();
-      await expect(summary).toBeFocused();
-      await stop(summary);
+      await expect(trigger).toBeFocused();
+      await stop(trigger);
     });
   }
 });

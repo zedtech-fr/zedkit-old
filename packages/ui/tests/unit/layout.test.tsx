@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { Badge, Button, Container, Section, Stack } from "#index.js";
+import { Badge, Button, Container, Section, SectionScroll, Stack } from "#index.js";
 
 describe("layout", () => {
   it("stacks children vertically or horizontally with gaps", () => {
@@ -226,5 +226,29 @@ describe("layout", () => {
     expect(el?.className).toContain("py-section-lg");
     expect(el?.querySelector('[data-slot="container"]')?.className).toContain("max-w-wide");
     expect(screen.queryByRole("heading")).toBeNull();
+  });
+
+  it("defaults sections to start snap and can opt out", () => {
+    const { container, rerender } = render(
+      <Section data-testid="s" title="Team">
+        <span>a</span>
+      </Section>,
+    );
+    expect(container.querySelector('[data-testid="s"]')?.getAttribute("data-snap")).toBe("start");
+    rerender(
+      <Section data-testid="s" snap="none" title="Team">
+        <span>a</span>
+      </Section>,
+    );
+    expect(container.querySelector('[data-testid="s"]')?.getAttribute("data-snap")).toBe("none");
+  });
+
+  it("marks a scroll root for section snap", () => {
+    const { container } = render(
+      <SectionScroll data-testid="root">
+        <Section title="Team" />
+      </SectionScroll>,
+    );
+    expect(container.querySelector('[data-testid="root"]')?.getAttribute("data-slot")).toBe("section-scroll");
   });
 });

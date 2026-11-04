@@ -6,22 +6,13 @@
  */
 :root[data-identity] {
   --zk-site-header-height: 3.5rem;
+  --zk-header-height: var(--zk-site-header-height);
 }
 :root[data-identity="glass"] {
   --spacing: 0.26rem;
   /* Bands: the identity's 24-unit section padding overflows a docs page. */
   --zk-section-lg: calc(var(--spacing) * 18);
-  --zk-section-md: calc(var(--spacing) * 8);
-}
-@media (max-width: 40rem) {
-  /* Phones: same fit as the compact identities, so the first screen holds the content. */
-  :root[data-identity="glass"] {
-    --spacing: 0.22rem;
-    --zk-section-lg: 0.75rem;
-    --zk-section-md: 0.5rem;
-    --zk-body-leading: 1.3;
-    --zk-heading-leading: 1;
-  }
+  --zk-section-md: max(2rem, calc(var(--spacing) * 8));
 }
 
 /* One glass layer: the header frost is on #nd-nav::before (globals.css); fumadocs'
@@ -59,22 +50,33 @@
   border: var(--zk-border-width, 1px) solid hsl(var(--border) / 0.35);
   background: hsl(var(--card) / 0.6);
 }
+#nd-nav nav [data-theme-toggle] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--spacing-control-height-sm);
+  min-height: var(--spacing-control-height-sm);
+  width: auto;
+  min-width: calc(var(--spacing-control-height-sm) * 1.75);
+  padding: 0.125rem 0.25rem;
+  gap: 0.125rem;
+}
+#nd-nav nav [data-theme-toggle] svg {
+  width: 1rem;
+  height: 1rem;
+  padding: 0.125rem;
+  box-sizing: content-box;
+}
+#nd-nav nav [data-slot="icon-button"] {
+  height: var(--spacing-control-height-sm);
+  width: var(--spacing-control-height-sm);
+  min-height: var(--spacing-control-height-sm);
+  min-width: var(--spacing-control-height-sm);
+}
 
-/* Marketing type: a step down from the identity's display sizes. */
-:root {
-  --zk-type-home-h1-size: clamp(1.875rem, 1.2rem + 1.6vw, 2.5rem);
-  --zk-type-home-h2-size: clamp(1.25rem, 1rem + 0.6vw, 1.5rem);
-}
-#nd-home-layout h1:not([data-identity-scope] *, #demo *) {
-  font-size: var(--zk-type-home-h1-size);
-  line-height: 1.1;
-}
-#nd-home-layout h2:not([data-identity-scope] *, #demo *) {
-  font-size: var(--zk-type-home-h2-size);
-}
 /* Scroll targets clear the compact header. */
 #nd-home-layout section[id] {
-  scroll-margin-top: calc(var(--zk-site-header-height) + 1rem);
+  scroll-margin-top: calc(var(--zk-header-height) + 1rem);
 }
 
 /*
@@ -160,10 +162,6 @@
   background-color: hsl(var(--card) / var(--zk-glass-alpha));
   border-color: hsl(var(--zk-glass-edge) / var(--zk-glass-edge-alpha));
   box-shadow: var(--zk-shadow-sm);
-}
-
-#nd-home-layout .type-site-h1 {
-  font-size: var(--zk-type-home-h1-size);
 }
 
 /* The hero example in Glass: the same calmer unit as the site, so its pages share one frame height. */

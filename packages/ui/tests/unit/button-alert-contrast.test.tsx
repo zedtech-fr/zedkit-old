@@ -43,6 +43,23 @@ describe("button and alert contrast (ZK-02)", () => {
     expect(retry.className).toContain("bg-background");
     expect(retry.className).not.toContain("text-destructive-foreground");
   });
+
+  it("exposes the variant on the button root for identity-specific chrome", () => {
+    render(
+      <Button type="button" variant="link">
+        Docs
+      </Button>,
+    );
+    const docs = screen.getByRole("button", { name: "Docs" });
+    expect(docs.getAttribute("data-variant")).toBe("link");
+    expect(docs.getAttribute("data-size")).toBe("default");
+  });
+
+  it("keeps horizontal padding on link size sm (no px-0 reset)", () => {
+    const classes = buttonVariants({ variant: "link", size: "sm" });
+    expect(classes).toMatch(/\bpx-2\b/);
+    expect(classes).not.toMatch(/(?:^|\s)px-0(?:\s|$)/);
+  });
 });
 
 describe("switch geometry (ZK-11)", () => {
