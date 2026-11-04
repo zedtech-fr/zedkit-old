@@ -1,6 +1,7 @@
 // Original work by the same author.
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { tryCatch } from "@zedtech/zedkit-core";
 import type { Provider } from "./install.js";
 
 const PRETTIER_CONFIG = [
@@ -48,19 +49,27 @@ export function kitPathsMissingFromPrettierIgnore(
   return kitPrettierIgnoreCandidates(providers).filter((path) => !ignore.some((line) => covered(line, path)));
 }
 
-export function repoUsesPrettier(root: string): boolean {
-  const pkg = join(root, "package.json");
-  if (existsSync(pkg)) {
-    const j = JSON.parse(readFileSync(pkg, "utf8")) as {
-      devDependencies?: Record<string, string>;
-      dependencies?: Record<string, string>;
-      scripts?: Record<string, string>;
-    };
-    const deps = { ...j.dependencies, ...j.devDependencies };
-    if (Object.keys(deps).some((k) => k === "prettier" || k.startsWith("prettier-"))) return true;
-    if (Object.values(j.scripts ?? {}).some((s) => /\bprettier\b/u.test(s))) return true;
-  }
+function hasPrettierConfigFile(root: string): boolean {
   return PRETTIER_CONFIG.some((name) => existsSync(join(root, name)));
+}
+
+function packageJsonSignalsPrettier(root: string): boolean {
+  const pkg = join(root, "package.json");
+  if (!existsSync(pkg)) return false;
+  const parsed = tryCatch(() => JSON.parse(readFileSync(pkg, "utf8")) as {
+    devDependencies?: Record<string, string>;
+    dependencies?: Record<string, string>;
+    scripts?: Record<string, string>;
+  });
+  if (!parsed.ok) return false;
+  const j = parsed.value;
+  const deps = { ...j.dependencies, ...j.devDependencies };
+  if (Object.keys(deps).some((k) => k === "prettier" || k.startsWith("prettier-"))) return true;
+  return Object.values(j.scripts ?? {}).some((s) => /\bprettier\b/u.test(s));
+}
+
+export function repoUsesPrettier(root: string): boolean {
+  return packageJsonSignalsPrettier(root) || hasPrettierConfigFile(root);
 }
 
 /** Lines printed after a successful init/setup (not dry-run). */

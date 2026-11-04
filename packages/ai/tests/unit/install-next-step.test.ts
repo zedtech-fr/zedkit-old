@@ -7,6 +7,14 @@ import {
 import { put, tempDir } from "./helpers.js";
 
 describe("install next step hints", () => {
+  it("treats malformed package.json as non-prettier for deps but still detects config files", () => {
+    const root = tempDir();
+    put(root, "package.json", "{ not valid json\n");
+    expect(repoUsesPrettier(root)).toBe(false);
+    put(root, ".prettierrc", "{}\n");
+    expect(repoUsesPrettier(root)).toBe(true);
+  });
+
   it("includes phase C checklist and no prettier lines when Prettier is not used", () => {
     const root = tempDir();
     const lines = installNextStepLines(root, ["cursor"]);

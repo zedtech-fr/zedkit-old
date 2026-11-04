@@ -61,6 +61,16 @@ describe("cli", () => {
     expect(existsSync(join(dest, ".agents/skills/domain-modeling/SKILL.md"))).toBe(true);
   });
 
+  it("setup exits 0 with phase C checklist when package.json is malformed", () => {
+    const dest = tempDir();
+    put(dest, "package.json", "{ broken\n");
+    const { code, text } = run("setup", dest, "--provider", "cursor");
+    expect(code).toBe(0);
+    expect(text).toContain("product.md");
+    expect(text).not.toContain("prettier: add to .prettierignore");
+    expect(run("validate", dest).code).toBe(0);
+  });
+
   it("init prints prettier ignore lines when the host uses Prettier", () => {
     const dest = tempDir();
     put(dest, "package.json", JSON.stringify({ devDependencies: { prettier: "3.9.0" } }));
