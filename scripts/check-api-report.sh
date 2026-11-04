@@ -126,12 +126,6 @@ from pathlib import Path
 
 root = Path(".")
 head = os.environ.get("GITHUB_HEAD_REF", "")
-event = os.environ.get("GITHUB_EVENT_NAME", "")
-if event and event != "pull_request":
-    # After merge, origin/main already holds the consumed changesets, so the
-    # gate can only false-fail (e.g. on the version-packages commit).
-    print(f"api-report: skip changeset gate on {event}")
-    sys.exit(0)
 if head == "changeset-release/main":
     print("api-report: skip changeset gate on version PR")
     sys.exit(0)
