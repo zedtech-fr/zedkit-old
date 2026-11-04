@@ -119,7 +119,10 @@ scripts inside `pnpm catalog:check`.
 ## ZedKit art direction (Product Atelier)
 
 Read [VISUAL-CONTRACT.md](./VISUAL-CONTRACT.md) before changing home,
-chrome, previews or specimens (traps included).
+chrome, previews or specimens (traps included). Type, motion,
+composition and elevation: [docs/design/signature.md](../../docs/design/signature.md)
+(named type roles and motions, not raw `font-size` or duration). Identity
+states: the matrix above. Skill `use-signature`.
 
 Scope: this docs site and its specimens. Exception: a specimen that
 must match a kit primitive's own look.
@@ -143,6 +146,7 @@ must match a kit primitive's own look.
 
 - Root [AGENTS.md](../../AGENTS.md), kit [CATALOG.md](../../packages/ui/CATALOG.md).
 - Visual contract: [VISUAL-CONTRACT.md](./VISUAL-CONTRACT.md).
+- Signature: [docs/design/signature.md](../../docs/design/signature.md).
 - Lens registry: `packages/ai/kit/skills/review/lenses.md`
   (Frontend rules: the authoritative demo rules).
 - Page layouts: [PAGE-TEMPLATE.md](./PAGE-TEMPLATE.md),
