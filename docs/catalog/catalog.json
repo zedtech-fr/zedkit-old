@@ -3263,8 +3263,8 @@
           "a11y": "Pass `sendLabel` (and `cancelLabel` when using cancel); the field keeps a visible label via `aria-label` or associated `FieldLabel`.",
           "troubleshooting": "Send stays disabled — value is trimmed; whitespace-only counts as empty. Field does not grow — use `field-sizing-content` (Tailwind v4) on the consumer stylesheet.",
           "seeAlso": [
-            "Collect multi-line text",
-            "Icon-only control with accessible name"
+            "Collect multi-line text input",
+            "Icon-only actions with a visible name"
           ]
         },
         {

@@ -474,7 +474,7 @@ import { StatusDot } from "@zedtech/zedkit-ui";
 - Purpose: One rounded surface with an auto-growing field and an in-field send control; Enter sends, Shift+Enter adds a line.
 - When to use: Chat-style briefs where the send affordance sits inside the composer.
 - When not to use: Plain forms with a separate submit row — use `Field` + `Textarea` + `Button`.
-- See also: `Collect multi-line text`, `Icon-only control with accessible name`
+- See also: `Collect multi-line text input`, `Icon-only actions with a visible name`
 - Examples: Simple, Complete
 - A11y: Pass `sendLabel` (and `cancelLabel` when using cancel); the field keeps a visible label via `aria-label` or associated `FieldLabel`.
 - Registry: (none)
