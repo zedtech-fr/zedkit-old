@@ -110,6 +110,32 @@ describe("setup-ai v2 kit", () => {
     expect(rubric).toContain("Gate outcomes");
   });
 
+  it("routes /setup-ai command text before the skill and a First message paste template in SKILL.md", () => {
+    const cmd = readFileSync(join(kitDir(), "commands", "setup-ai.md"), "utf8");
+    expect(cmd).toContain("Before anything else, tell the user");
+    expect(cmd).toContain("Tell the user first");
+    expect(cmd).toContain("before any tool call");
+    expect(cmd).toContain("Then run the `setup-ai` skill on `$ARGUMENTS`");
+    const skill = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
+    expect(skill).toMatch(/^> \*\*First message\*\*/m);
+    expect(skill).toMatch(/^> \*\*Modes:\*\*/m);
+    expect(skill).toMatch(/^> \*\*Phases:\*\*/m);
+    expect(skill).toMatch(/^> \*\*What you get \/ time:\*\*/m);
+    const root = tempDir();
+    install(root, { preset: "setup", providers: ["cursor", "claude"] });
+    const agentsCmd = readFileSync(
+      join(root, ".agents", "commands", "setup-ai.md"),
+      "utf8",
+    );
+    const cursorCmd = readFileSync(
+      join(root, ".cursor", "commands", "setup-ai.md"),
+      "utf8",
+    );
+    expect(cursorCmd).toBe(agentsCmd);
+    expect(validateKit(join(root, ".agents"))).toEqual([]);
+    expect(checkDrift(root, join(root, ".agents"))).toEqual([]);
+  });
+
   it("documents run-3 scorer fixes S1–S5 in setup-ai SKILL and templates", () => {
     const raw = readFileSync(
       join(kitDir(), "skills", "setup-ai", "SKILL.md"),

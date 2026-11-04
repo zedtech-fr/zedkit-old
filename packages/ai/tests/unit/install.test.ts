@@ -564,10 +564,15 @@ describe("installKit", () => {
     for (const name of listed) {
       const text = readFileSync(join(kitRoot(), "commands", `${name}.md`), "utf8");
       const lines = text.trimEnd().split("\n").length;
+      const maxLines = name === "setup-ai" ? 12 : 6;
       expect(lines, `${name} is ${lines} lines`).toBeGreaterThanOrEqual(3);
-      expect(lines, `${name} is ${lines} lines`).toBeLessThanOrEqual(6);
+      expect(lines, `${name} is ${lines} lines`).toBeLessThanOrEqual(maxLines);
       expect(text).toContain(`\`${name}\``);
       expect(text).toContain("$ARGUMENTS");
+      if (name === "setup-ai") {
+        expect(text).toContain("Before anything else, tell the user");
+        expect(text).toContain("before any tool call");
+      }
     }
   });
 
