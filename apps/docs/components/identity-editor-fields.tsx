@@ -146,19 +146,19 @@ function SpecimenBody() {
       <Text variant="muted" typeRole="body" className="max-lg:hidden">
         {identityEditorCopy.fields.draftBody}
       </Text>
-      <Stack direction="horizontal" gap={2} className="flex-wrap">
+      <Stack direction="horizontal" gap={2} className="flex-wrap max-lg:gap-1.5">
         <Button size="sm">{identityEditorCopy.fields.draftSave}</Button>
         <Button size="sm" variant="secondary">
           {copy.secondary}
         </Button>
-        <Button size="sm" variant="outline">
+        <Button size="sm" variant="outline" className="max-lg:hidden">
           {copy.outline}
         </Button>
-        <Button size="sm" variant="outline" className="text-destructive">
+        <Button size="sm" variant="outline" className="max-lg:hidden text-destructive">
           {copy.destructive}
         </Button>
       </Stack>
-      <Field>
+      <Field className="max-lg:[&_input]:min-h-10">
         <FieldLabel htmlFor="identity-editor-sample">{copy.inputLabel}</FieldLabel>
         <Input id="identity-editor-sample" defaultValue={copy.inputValue} />
       </Field>
@@ -193,14 +193,14 @@ function DraftCard({ darkPreview }: { darkPreview: boolean }) {
       data-slot="identity-editor-preview"
       role="group"
       aria-label={identityEditorCopy.fields.specimenLabel}
-      className="z-20 min-w-0 rounded-xl border border-border bg-background p-4 font-sans text-foreground shadow-md max-lg:order-3 lg:sticky lg:top-20 lg:col-start-2 lg:row-start-1 lg:self-start lg:p-6 max-lg:[@media(min-height:48rem)]:sticky max-lg:[@media(min-height:48rem)]:top-14"
+      className="z-20 min-w-0 rounded-xl border border-border bg-background p-4 font-sans text-foreground shadow-md max-lg:order-3 max-lg:gap-2 max-lg:p-3 lg:sticky lg:top-20 lg:col-start-2 lg:row-start-1 lg:self-start lg:p-6 max-lg:[@media(min-height:48rem)]:sticky max-lg:[@media(min-height:48rem)]:top-14"
       gap={3}
     >
       {/* `inert`: the specimen is for looking at. It must not read as, or act as, an editor command. */}
-      <Stack gap={3} inert>
+      <Stack gap={3} inert className="max-lg:gap-2">
         <SpecimenBody />
       </Stack>
-      <Text variant="muted" typeRole="label">
+      <Text variant="muted" typeRole="label" className="max-lg:hidden">
         {identityEditorCopy.fields.specimenNote}
       </Text>
     </Stack>

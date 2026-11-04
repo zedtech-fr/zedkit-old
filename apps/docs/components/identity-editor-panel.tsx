@@ -158,7 +158,7 @@ function IdentityEditorBody(props: EditorBodyProps) {
           {props.appliedSite ? <Text role="status">{identityEditorCopy.panel.applied}</Text> : null}
         </Stack>
         {/* A folded row on a phone: pulled up to the card above it so the first adjustment stays on the first screen. */}
-        <Stack className="max-lg:order-4 max-lg:-mt-5">
+        <Stack className="max-lg:order-4 max-lg:-mt-8">
           <IdentityAssistant tokens={props.tokens} onUse={props.onUse} />
         </Stack>
         <Stack className="empty:hidden max-lg:order-5">
