@@ -209,6 +209,7 @@ describe("setup-ai v2 kit", () => {
       "utf8",
     );
     expect(personas).toContain("Journey tests");
+    expect(personas).toContain("Key journeys (routes or code paths)");
     expect(personas).toContain("Partial coverage");
     const design = readFileSync(
       join(kitDir(), "skills", "setup-ai", "templates", "design.template.md"),
