@@ -1315,6 +1315,7 @@ export type PromptInputProps = Omit<React_2.ComponentProps<"textarea">, "onSubmi
     onCancel?: () => void;
     cancelLabel?: string;
     busy?: boolean;
+    sendDisabled?: boolean;
 };
 
 // @public

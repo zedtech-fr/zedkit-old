@@ -63,14 +63,10 @@ function Drawer({
   direction,
   modal = true,
   autoFocus,
-  handleOnly,
   ...props
 }: DrawerRootProps) {
   const isMobile = useNarrowViewport();
   const resolvedDirection = resolveDrawerDirection(direction, mobile, isMobile) ?? "bottom";
-  // A side panel is a reading and typing surface: a press-and-drag in it selects text, it does not drag the
-  // panel shut. Only the handle drags. Bottom and top sheets keep the swipe anywhere unless told otherwise.
-  const side = resolvedDirection === "left" || resolvedDirection === "right";
   const mountAutoFocus = resolveModalMountAutoFocus(autoFocus, modal);
   return (
     <DrawerPrimitive.Root
@@ -78,7 +74,6 @@ function Drawer({
       key={`${resolvedDirection}-${isMobile ? "narrow" : "wide"}`}
       direction={resolvedDirection}
       modal={modal}
-      handleOnly={handleOnly ?? side}
       // eslint-disable-next-line jsx-a11y/no-autofocus -- Vaul prop; modal drawers must mount-focus inside so the trap engages.
       autoFocus={mountAutoFocus}
       {...props}
