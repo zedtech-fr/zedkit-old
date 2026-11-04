@@ -154,7 +154,7 @@ function SpecimenBody() {
         <Button size="sm" variant="outline" className="max-lg:hidden">
           {copy.outline}
         </Button>
-        <Button size="sm" variant="outline" className="max-lg:hidden text-destructive">
+        <Button size="sm" variant="outline" className="text-destructive max-lg:hidden">
           {copy.destructive}
         </Button>
       </Stack>
