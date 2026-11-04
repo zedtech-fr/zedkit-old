@@ -56,8 +56,30 @@ describe("cli", () => {
     expect(code).toBe(0);
     expect(text).toContain("/setup-ai");
     expect(text).toContain("validate");
+    expect(text).toContain("product.md");
     expect(existsSync(join(dest, ".cursor/commands/setup-ai.md"))).toBe(true);
     expect(existsSync(join(dest, ".agents/skills/domain-modeling/SKILL.md"))).toBe(true);
+  });
+
+  it("setup exits 0 with phase C checklist when package.json is malformed", () => {
+    const dest = tempDir();
+    put(dest, "package.json", "{ broken\n");
+    const { code, text } = run("setup", dest, "--provider", "cursor");
+    expect(code).toBe(0);
+    expect(text).toContain("product.md");
+    expect(text).not.toContain("prettier: add to .prettierignore");
+    expect(run("validate", dest).code).toBe(0);
+  });
+
+  it("init prints prettier ignore lines when the host uses Prettier", () => {
+    const dest = tempDir();
+    put(dest, "package.json", JSON.stringify({ devDependencies: { prettier: "3.9.0" } }));
+    put(dest, ".prettierrc.json", "{}\n");
+    const { code, text } = run("init", dest, "--provider", "cursor", "--preset", "starter");
+    expect(code).toBe(0);
+    expect(text).toContain("prettier: add to .prettierignore:");
+    expect(text).toContain(".agents/");
+    expect(text).toContain(".cursor/skills/");
   });
 
   it("setup on an empty dir uses the setup preset, validate ok, second run no-op", () => {

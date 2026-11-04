@@ -142,11 +142,17 @@ Every row states **one-line value** for the owner.
 
 ## Plan table (before write)
 
-Present one table covering phase A gaps, phase C artifacts, phase D skills, and hygiene edits:
+Present one table covering phase A gaps, phase C artifacts, phase D skills, hygiene edits, and **every pre-existing file the run will touch** (nothing may change outside this table):
 
 | Tier | Artifact / skill | Path | Why (evidence) | Action                         | Value (one line) | OK              |
 | ---- | ---------------- | ---- | -------------- | ------------------------------ | ---------------- | --------------- |
 | must | …                | …    | …              | create / edit / dedupe / leave | …                | safe / needs OK |
+
+**Required rows when they apply (do not omit):**
+
+- **`package.json`** (and the lockfile that changes with it: `pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`, or `bun.lock`) when adding `@zedtech/zedkit-ai` or changing scripts — action `edit`, tier `must` or `safe`.
+- **Root `AGENTS.md`** when appending the ladder, replacing placeholders, or linking product/domain docs — action `edit` or `append`, not silent.
+- Any **`.prettierignore`**, **provider folder**, or **user-owned** path the install or your writes will touch (including adopt sidecars).
 
 **Wait for the user's go before writing.** If nobody can answer (non-interactive run), output the table and stop.
 
@@ -171,20 +177,24 @@ Present one table covering phase A gaps, phase C artifacts, phase D skills, and 
 ## Verify
 
 - Every command in the written files was run, or is marked `UNVERIFIED` with the reason.
-- Every path and link exists: check each one (`test -e`).
+- **Re-open every `file:line` citation** you wrote (product, domain, design, AGENTS.md): read that line range and confirm the text **supports the claim**; fix or delete citations that do not.
+- **Paths and tests:** every path you name must exist (`test -e`). Domain **Test** cells use a **real test file path** or the exact phrase **`no test — flag`** — never prose like "booking flow tests" or other invented paths.
+- Every link exists: check each one (`test -e`).
 - No placeholder like `<Project>` is left.
 - `zedkit-ai validate` is clean, the tool folders (`.claude/`, `.cursor/`) resolve, and the `.cursor` copies match `.agents/` (no drift).
-- The repo's own lint ignores the installed kit dirs (`.agents/`, provider folders): skills ship helper scripts, and a bare lint run must stay green — run it once to prove it.
+- The repo's own lint ignores the installed kit dirs (`.agents/`, provider folders): skills ship helper scripts, and a bare lint run must stay green — run it once to prove it. When Prettier is in use, add the kit paths to `.prettierignore` (approve as a plan row if the CLI printed a `prettier:` hint).
 - A fresh reader, or a subagent given only the new files, can answer: what does this product do, what are the refund rules, how do I run the tests, where does X live, what must I never do here?
 
 ## Phase E — Score and learn
+
+If the run may be **cut short** (time, OOM, or a long main gate): still attempt Phase E **first as a minimal closing report** — append the **setup-log entry** (scores stub + gate table below) **before** starting the heaviest gate; run the **main gate last** (or in the background) and update the log when it finishes.
 
 Short report first: what you created or changed, what you left alone and why, findings not fixed, everything marked `UNVERIFIED`.
 
 Then:
 
 1. **Self-score** — open `templates/setup-rubric.md` and score 0–3 on each of the 10 axes. Cite evidence per axis (file path, `file:line`, or transcript quote); no evidence means no score above 1. The rubric sets the pass targets and hard gates.
-2. **Setup log** — append a retro entry to `.agents/setup-log.md` from `templates/setup-log.template.md`: date, what worked, what hurt, scores, decisions (`source: owner` where the owner chose), open kit frictions.
+2. **Setup log** — append a retro entry to `.agents/setup-log.md` from `templates/setup-log.template.md`: date, what worked, what hurt, scores, decisions (`source: owner` where the owner chose), open kit frictions, and a **gate outcomes** table (see template).
 3. **Kit friction** — for each setup friction caused by the kit, draft a short public-safe issue (title + body) from `templates/kit-issue.template.md`; give the owner the drafts to paste.
 4. **Re-audit cadence** — set the next check: after the next release, or when product, domain rules, or providers change; record the trigger in the log entry.
 
