@@ -16,7 +16,7 @@ import {
   resolveModalMountAutoFocus,
 } from "@/components/ui/overlay-modal";
 import { cn } from "@/lib/utils";
-import { OverlayMountContext, ScopeMirror } from "@/components/ui/theme-scope";
+import { OverlayMountContext, ScopePortal } from "@/components/ui/theme-scope";
 import { useNarrowViewport } from "@/components/ui/use-narrow-viewport";
 import { useUiMessages } from "@/components/ui/ui-provider";
 
@@ -80,7 +80,12 @@ function DrawerPortal({
   // Default mount is document.body: a scoped mount inherits whatever stacking context traps the trigger
   // (a transform, filter, or isolation) and the site header then paints above the overlay. An explicit
   // `container` still wins for consumers that need a subtree mount.
-  return <DrawerPrimitive.Portal data-slot="drawer-portal" {...props} container={container} />;
+  // Plain `createPortal`, not the vaul/Radix portal: Radix wraps each portal child in a Presence that
+  // unmounts instantly when the child has no exit animation, and the child here is the ScopeMirror (a
+  // plain look-carrying div), which would swallow the overlay/panel exit. The overlay and panel keep their
+  // own inner Presences, which own the exit lifecycle (closed state, animationend/cancel, instant when
+  // reduced motion removes the animations).
+  return <ScopePortal container={container}>{props.children}</ScopePortal>;
 }
 
 function DrawerOverlay({ className, ...props }: React.ComponentProps<typeof DrawerPrimitive.Overlay>) {
@@ -131,9 +136,8 @@ function DrawerContent({
   );
   return (
     <DrawerPortal>
-      <ScopeMirror>
-        {modal ? <DrawerOverlay /> : null}
-        <DrawerPrimitive.Content
+      {modal ? <DrawerOverlay /> : null}
+      <DrawerPrimitive.Content
           data-slot="drawer-content"
           ref={setRef}
           tabIndex={-1}
@@ -158,7 +162,6 @@ function DrawerContent({
       >
         <OverlayMountContext.Provider value={mount}>{children}</OverlayMountContext.Provider>
       </DrawerPrimitive.Content>
-      </ScopeMirror>
     </DrawerPortal>
   );
 }
