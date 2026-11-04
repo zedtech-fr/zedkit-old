@@ -10,7 +10,7 @@ import {
   overlayDialogFooterClass,
   overlayDialogHeaderClass,
 } from "./overlay-modal.js";
-import { usePortalContainer } from "./theme-scope.js";
+import { OverlayMountContext, ScopeMirror } from "./theme-scope.js";
 import { useUiMessages } from "./ui-provider.js";
 
 /** Air between the panel and the visual viewport edge (same 16px as the docs search sheet). */
@@ -72,10 +72,10 @@ function DialogPortal({
   container,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Portal>) {
-  const scoped = usePortalContainer();
-  return (
-    <DialogPrimitive.Portal data-slot="dialog-portal" {...props} container={container ?? scoped} />
-  );
+  // Default mount is document.body: a scoped mount inherits whatever stacking context traps the trigger
+  // (a transform, filter, or isolation) and the site header then paints above the overlay. An explicit
+  // `container` still wins for consumers that need a subtree mount.
+  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} container={container} />;
 }
 
 function DialogOverlay({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
@@ -103,37 +103,44 @@ function DialogContent({
   const messages = useUiMessages();
   const fitRef = useDialogViewportFit<HTMLDivElement>();
   const contentRef = React.useRef<HTMLDivElement | null>(null);
-  const setRef = (node: HTMLDivElement | null) => {
-    contentRef.current = node;
-    fitRef(node);
-    if (typeof ref === "function") ref(node);
-    else if (ref) ref.current = node;
-  };
+  const [mount, setMount] = React.useState<HTMLDivElement | null>(null);
+  const setRef = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      contentRef.current = node;
+      setMount(node);
+      fitRef(node);
+      if (typeof ref === "function") ref(node);
+      else if (ref) ref.current = node;
+    },
+    [fitRef, ref],
+  );
   return (
     <DialogPortal>
-      <DialogOverlay />
-      <DialogPrimitive.Content
-        data-slot="dialog-content"
-        ref={setRef}
-        tabIndex={-1}
-        onOpenAutoFocus={(event) => {
-          event.preventDefault();
-          contentRef.current?.focus({ preventScroll: true });
-        }}
-        className={cn(
-          "fixed dialog-center z-overlay grid max-h-dialog-max-height w-full max-w-dialog-mobile gap-4 overflow-y-auto overscroll-y-contain rounded-lg border bg-card p-dialog-padding text-card-foreground shadow-overlay outline-none focus:outline-none sm:max-w-lg",
-          "motion-safe:data-[state=open]:animate-[zk-zoom-in_var(--motion-base)_var(--ease-enter)]",
-          "motion-safe:data-[state=closed]:animate-[zk-zoom-out_var(--motion-base)_var(--ease-exit)]",
-          className,
-        )}
-        {...props}
-      >
-        {children}
-        <DialogPrimitive.Close className={overlayDialogCloseClass}>
-          <X className="size-4" />
-          <span className="sr-only">{closeLabel ?? messages.close}</span>
-        </DialogPrimitive.Close>
-      </DialogPrimitive.Content>
+      <ScopeMirror>
+        <DialogOverlay />
+        <DialogPrimitive.Content
+          data-slot="dialog-content"
+          ref={setRef}
+          tabIndex={-1}
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            contentRef.current?.focus({ preventScroll: true });
+          }}
+          className={cn(
+            "fixed dialog-center z-dialog grid max-h-dialog-max-height w-full max-w-dialog-mobile gap-4 overflow-y-auto overscroll-y-contain rounded-lg border bg-card p-dialog-padding text-card-foreground shadow-overlay outline-none focus:outline-none sm:max-w-lg",
+            "motion-safe:data-[state=open]:animate-[zk-zoom-in_var(--motion-base)_var(--ease-enter)]",
+            "motion-safe:data-[state=closed]:animate-[zk-zoom-out_var(--motion-base)_var(--ease-exit)]",
+            className,
+          )}
+          {...props}
+        >
+          <OverlayMountContext.Provider value={mount}>{children}</OverlayMountContext.Provider>
+          <DialogPrimitive.Close className={overlayDialogCloseClass}>
+            <X className="size-4" />
+            <span className="sr-only">{closeLabel ?? messages.close}</span>
+          </DialogPrimitive.Close>
+        </DialogPrimitive.Content>
+      </ScopeMirror>
     </DialogPortal>
   );
 }

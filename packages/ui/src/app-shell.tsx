@@ -17,7 +17,7 @@ export function AppShell({ sidebar, topbar, children, className }: AppShellProps
       </aside>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {topbar ? (
-          <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">{topbar}</header>
+          <header className="sticky top-0 z-header border-b bg-background/95 backdrop-blur">{topbar}</header>
         ) : null}
         <main className="min-h-0 flex-1 overflow-y-auto p-4 md:p-app-shell-padding-md">{children}</main>
       </div>
