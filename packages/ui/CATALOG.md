@@ -477,15 +477,14 @@ import { StatusDot } from "@zedtech/zedkit-ui";
 - See also: `Collect multi-line text input`, `Icon-only actions with a visible name`
 - Examples: Simple, Complete
 - A11y: Pass `sendLabel` (and `cancelLabel` when using cancel); the field keeps a visible label via `aria-label` or associated `FieldLabel`.
-- Registry: (none)
 - Troubleshooting: Send stays disabled — value is trimmed; whitespace-only counts as empty. Field does not grow — use `field-sizing-content` (Tailwind v4) on the consumer stylesheet.
 
 ```ts
 import { PromptInput } from "@zedtech/zedkit-ui";
-<PromptInput sendLabel="Send" value={text} onValue={setText} onSubmit={send} placeholder="Ask anything" aria-label="Message" />
+<PromptInput sendLabel="Send" value={text} onChange={(e) => setText(e.target.value)} onSubmit={send} placeholder="Ask anything" aria-label="Message" />
 ```
 
-```tsx
+```ts
 import { PromptInput } from "@zedtech/zedkit-ui";
 <PromptInput
   id="chat"
@@ -950,8 +949,8 @@ import { Button, ConfirmDialog } from "@zedtech/zedkit-ui";
 - Registry: drawer
 - Short name: Drawer
 - Audience: Developers showing detail views beside a list without navigation.
-- Purpose: Slide-in panels from any edge (right-side detail on desktop, bottom sheet on mobile, left, right, or top on demand). Panel chrome (border, fill, edge shadow) comes from `Surface` elevation 3 (`shadow-overlay`). Pass `size="sm" | "md" | "lg"` on `DrawerContent` for desktop side width (`md` is the default 28rem; `lg` is about min(600px, 92vw)).
-- When to use: For list-detail previews and short side forms.
+- Purpose: Slide-in panels from any edge: right-side detail on desktop, bottom sheet on mobile; size sm, md or lg.
+- When to use: For list-detail previews and short side forms. Panel chrome (border, fill, edge shadow) comes from `Surface` elevation 3 (`shadow-overlay`); `size="sm" | "md" | "lg"` on `DrawerContent` sets desktop side width (`md` is the default 28rem; `lg` is about min(600px, 92vw)).
 - When not to use: For multi-step flows — use a full page or wizard instead.
 - See also: `Open modal dialogs`, `Show key-value details and a live indicator`
 - Examples: Right detail panel, Bottom sheet, Side panel on every screen
@@ -1435,7 +1434,7 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldSet }
 - Status: alpha
 - Short name: Surface
 - Audience: Developers building floating panels or composing kit overlays.
-- Purpose: One place for panel background (solid card, popover, or glass), elevation (`0`–`3`, token shadows including `shadow-overlay`), border, radius, and optional padding.
+- Purpose: One panel surface: solid card, popover or glass, elevation `0`–`3` with token shadows, border, radius and optional padding.
 - When to use: Custom panels that should match Dialog, Drawer, Card, and Popover chrome; floating assistant triggers via `WidgetButton`.
 - When not to use: Marketing page sections — use `@zedtech/zedkit-ui/marketing` `GlassSurface` instead.
 - See also: `Group content in a card section`, `Slide in a drawer panel`, `Open modal dialogs`

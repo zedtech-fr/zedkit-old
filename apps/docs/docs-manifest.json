@@ -545,6 +545,17 @@
         "Pricing walkthrough": "ScrollScenesPricingDemo"
       }
     },
+    "Compose a chat prompt": {
+      "package": "@zedtech/zedkit-ui",
+      "component": "PromptInput",
+      "props": "PromptInputProps",
+      "source": "prompt-input.tsx",
+      "demo": "PromptInputDemo",
+      "examples": {
+        "Simple": "PromptInputDemo",
+        "Complete": "PromptInputCompleteDemo"
+      }
+    },
     "Keep a side panel in view": {
       "package": "@zedtech/zedkit-ui",
       "component": "StickyAside",
@@ -552,7 +563,7 @@
       "source": "sticky-aside.tsx",
       "demo": "StickyAsideDemo",
       "examples": {
-        "Doc steps with preview": "StickyAsideDocStepsDemo"
+        "Doc page with summary card": "StickyAsideDocStepsDemo"
       }
     },
     "Compose a public marketing page": {

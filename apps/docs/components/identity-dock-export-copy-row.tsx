@@ -91,9 +91,9 @@ export function IdentityDockExportCopyRow({
           iconButton
         )}
       </Stack>
-      <span id={liveId} role="status" aria-live="polite" className="sr-only">
+      <Text as="span" id={liveId} role="status" aria-live="polite" className="sr-only">
         {state === "copied" ? rowCopy.copied(label) : state === "failed" ? rowCopy.copyFailed : ""}
-      </span>
+      </Text>
     </Stack>
   );
 }
