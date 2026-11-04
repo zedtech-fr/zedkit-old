@@ -1,0 +1,33 @@
+# Domain — booking and slots
+
+Fictional **Acme Bookings** example. Copy to `.agents/domain/<area>.md` (rename `<area>` to match this repo: booking, billing, auth, …).
+
+## Scope
+
+Rules for **slot lifecycle**, **cancellation**, **refunds**, and **studio payout timing**. Money-bearing: every rule cites code or `source: owner`.
+
+## Rules
+
+| ID   | Rule                                                                                        | Source                            | Test                                  |
+| ---- | ------------------------------------------------------------------------------------------- | --------------------------------- | ------------------------------------- |
+| B-01 | A slot is **held** for 10 minutes during checkout; after that it returns to inventory.      | `src/booking/hold.ts:42`          | `tests/booking/hold.test.ts`          |
+| B-02 | **Cancel free** until 24h before start; inside 24h, cancel fee applies per studio policy.   | `source: owner`                   | `tests/booking/cancel-policy.test.ts` |
+| B-03 | **Partial refund** only when the studio policy allows; platform fee is non-refundable.      | `src/billing/refund.ts:88`        | no test — flag                        |
+| B-04 | **Double booking** is impossible: one confirmed booking per slot id (DB unique constraint). | `migrations/014_slots_unique.sql` | integration test                      |
+
+## Invariants
+
+- A confirmed booking always has `paid_at` set before `confirmed_at`.
+- Studio timezone is the source of truth for "start time" shown to customers.
+
+## Edge cases
+
+| Scenario                        | Expected behavior                            |
+| ------------------------------- | -------------------------------------------- |
+| Customer closes tab during hold | Hold expires; slot released without charge   |
+| Studio deletes service mid-hold | Checkout fails with a clear, localized error |
+| Refund after no-show dispute    | Operator workflow; not automatic in v1       |
+
+## Related glossary terms
+
+See `.agents/glossary.md` — **Slot**, **Hold**, **Cancellation window**, **Platform fee**.
