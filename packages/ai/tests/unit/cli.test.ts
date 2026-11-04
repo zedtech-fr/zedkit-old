@@ -44,9 +44,51 @@ describe("cli", () => {
     const { code, text } = run("init", dest, "--target", "claude");
     expect(code).toBe(0);
     expect(text).toContain("AGENTS.md");
+    expect(text).toContain("/setup-ai");
     expect(existsSync(join(dest, ".agents/skills/ground-truth/SKILL.md"))).toBe(true);
     expect(existsSync(join(dest, "CLAUDE.md"))).toBe(true);
     expect(existsSync(join(dest, ".cursor"))).toBe(false);
+  });
+
+  it("setup installs with setup preset and prints the /setup-ai next step", () => {
+    const dest = tempDir();
+    const { code, text } = run("setup", dest, "--provider", "cursor");
+    expect(code).toBe(0);
+    expect(text).toContain("/setup-ai");
+    expect(text).toContain("validate");
+    expect(existsSync(join(dest, ".cursor/commands/setup-ai.md"))).toBe(true);
+    expect(existsSync(join(dest, ".agents/skills/domain-modeling/SKILL.md"))).toBe(true);
+  });
+
+  it("setup on an empty dir uses the setup preset, validate ok, second run no-op", () => {
+    const dest = tempDir();
+    expect(run("setup", dest, "--provider", "cursor").code).toBe(0);
+    expect(existsSync(join(dest, ".agents/skills/domain-modeling/SKILL.md"))).toBe(true);
+    expect(existsSync(join(dest, ".agents/agents/product-director.md"))).toBe(true);
+    expect(run("validate", dest)).toEqual({ code: 0, text: "ok", errors: "" });
+    const again = run("setup", dest, "--provider", "cursor");
+    expect(again.code).toBe(0);
+    const writes = again.text.split("\n").filter((line) => /^(copy|link|write)\s/u.test(line));
+    expect(writes).toEqual([]);
+  });
+
+  it("setup --preset starter installs starter skills only", () => {
+    const dest = tempDir();
+    expect(run("setup", dest, "--provider", "cursor", "--preset", "starter").code).toBe(0);
+    expect(existsSync(join(dest, ".agents/skills/domain-modeling/SKILL.md"))).toBe(false);
+    expect(existsSync(join(dest, ".agents/skills/ground-truth/SKILL.md"))).toBe(true);
+  });
+
+  it("setup keeps pre-existing .cursor skills, agents, and commands", () => {
+    const dest = tempDir();
+    put(dest, ".cursor/skills/team-own/SKILL.md", "team\n");
+    put(dest, ".cursor/agents/explorer.md", "custom explorer\n");
+    put(dest, ".cursor/commands/review.md", "custom review\n");
+    expect(run("setup", dest, "--provider", "cursor").code).toBe(0);
+    expect(readFileSync(join(dest, ".cursor/skills/team-own/SKILL.md"), "utf8")).toBe("team\n");
+    expect(readFileSync(join(dest, ".cursor/agents/explorer.md"), "utf8")).toBe("custom explorer\n");
+    expect(readFileSync(join(dest, ".cursor/commands/review.md"), "utf8")).toBe("custom review\n");
+    expect(run("validate", dest)).toEqual({ code: 0, text: "ok", errors: "" });
   });
 
   it("init wires cursor when asked", () => {

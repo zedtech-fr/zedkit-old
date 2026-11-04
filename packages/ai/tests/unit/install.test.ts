@@ -485,6 +485,14 @@ describe("installKit", () => {
     }
   });
 
+  it("setup-ai tells the agent what to say when /setup-ai starts", () => {
+    const text = readFileSync(join(kitRoot(), "skills", "setup-ai", "SKILL.md"), "utf8");
+    expect(text).toContain("## Tell the user first");
+    for (const phrase of ["Modes:", "Phases:", "What they get:", "15–45 minutes", "/setup-ai"]) {
+      expect(text).toContain(phrase);
+    }
+  });
+
   it("keeps one thin command file per manifest command, each running its skill", () => {
     const manifest = readManifest();
     if (!manifest.ok) throw manifest.error;

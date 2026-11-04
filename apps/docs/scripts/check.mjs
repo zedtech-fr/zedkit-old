@@ -102,8 +102,10 @@ for (const entry of Object.values(catalog.packages)) {
 
 // Every need page carries install tabs (memorized package-manager
 // choice) and a titled TSX example — never bare pill blocks.
+const guidePageRels = new Set([...GUIDE_NAV_SLUGS.map((slug) => `${slug}.mdx`), "ai/setup.mdx"]);
 for (const file of mdxFiles(tmp)) {
   const rel = file.slice(tmp.length + 1);
+  if (guidePageRels.has(rel)) continue;
   const text = readFileSync(file, "utf8");
   checkGeneratedPage(rel, text, { seoMax: SEO_DESCRIPTION_MAX, descriptionsSeen, a11yByTitle }, errors);
 }
@@ -230,6 +232,9 @@ if (existsSync(snippetsDir)) {
 if (guidePages < 2) errors.push(`guides: expected at least getting-started.mdx and index.mdx (got ${guidePages}).`);
 for (const slug of GUIDE_NAV_SLUGS) {
   if (!existsSync(join(tmp, `${slug}.mdx`))) errors.push(`guides: generated /docs/${slug} missing.`);
+}
+if (!existsSync(join(tmp, "ai", "setup.mdx"))) {
+  errors.push("guides: generated /docs/ai/setup missing.");
 }
 const indexGuidePath = join(guidesDir, "index.mdx");
 if (existsSync(indexGuidePath)) {

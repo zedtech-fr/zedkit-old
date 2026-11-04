@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import process from "node:process";
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,9 +11,9 @@ const CLI = join(ROOT, "packages", "ai", "dist", "bin.js");
 const HOME_INIT_SNIPPET = join(ROOT, "apps", "docs", "home-quickstart", "snippets", "ai-init.sh");
 const HOME_INIT_COMMAND = "npx @zedtech/zedkit-ai init";
 
-function capture(argv) {
+function capture(argv, cwd = ROOT) {
   const result = spawnSync(process.execPath, [CLI, ...argv], {
-    cwd: ROOT,
+    cwd,
     encoding: "utf8",
     env: process.env,
   });
@@ -41,6 +41,57 @@ export function runEmptyRepoTutorial(dir) {
     throw new Error(`validate failed: code=${validate.code} out=${validate.out} err=${validate.err}`);
   }
   return { initLines: init.out, validateOut: validate.out.trim() };
+}
+
+/** Cursor easy path (/docs/ai/setup): setup + validate in a scratch repo cwd. */
+export function runCursorSetupTutorial(dir) {
+  const setup = capture(["setup", ".", "--provider", "cursor"], dir);
+  if (setup.code !== 0) {
+    throw new Error(`setup failed: ${setup.err || setup.out}`);
+  }
+  if (!setup.out.includes("/setup-ai")) {
+    throw new Error("setup should print the /setup-ai next step");
+  }
+  for (const rel of [".agents/skills/setup-ai/SKILL.md", ".cursor/commands/setup-ai.md", ".cursor/rules/project.mdc"]) {
+    if (!existsSync(join(dir, rel))) throw new Error(`setup missing ${rel}`);
+  }
+  for (const rel of [".agents/skills/domain-modeling/SKILL.md", ".agents/agents/product-director.md"]) {
+    if (!existsSync(join(dir, rel))) throw new Error(`setup should install setup preset (missing ${rel})`);
+  }
+  const validate = capture(["validate", "."], dir);
+  if (validate.code !== 0 || validate.out.trim() !== "ok") {
+    throw new Error(`validate after setup failed: ${validate.out} ${validate.err}`);
+  }
+  const again = capture(["setup", ".", "--provider", "cursor"], dir);
+  if (again.code !== 0) throw new Error(`setup re-run failed: ${again.err || again.out}`);
+  const writes = again.out.split("\n").filter((line) => /^(copy|link|write)\s/u.test(line));
+  if (writes.length > 0) {
+    throw new Error(`setup re-run should not copy/link/write again: ${writes.join("; ")}`);
+  }
+  const validateAgain = capture(["validate", "."], dir);
+  if (validateAgain.code !== 0 || validateAgain.out.trim() !== "ok") {
+    throw new Error(`validate after setup re-run failed: ${validateAgain.out}`);
+  }
+}
+
+/** setup --adopt with team-owned .cursor paths before install. */
+export function runCursorSetupAdoptTutorial(dir) {
+  mkdirSync(join(dir, ".cursor/skills/team-own"), { recursive: true });
+  mkdirSync(join(dir, ".cursor/agents"), { recursive: true });
+  mkdirSync(join(dir, ".cursor/commands"), { recursive: true });
+  writeFileSync(join(dir, ".cursor/skills/team-own/SKILL.md"), "team\n", "utf8");
+  writeFileSync(join(dir, ".cursor/agents/explorer.md"), "custom explorer\n", "utf8");
+  writeFileSync(join(dir, ".cursor/commands/review.md"), "custom review\n", "utf8");
+  runCursorSetupTutorial(dir);
+  if (readFileSync(join(dir, ".cursor/skills/team-own/SKILL.md"), "utf8") !== "team\n") {
+    throw new Error("setup should keep the user's .cursor/skills file");
+  }
+  if (readFileSync(join(dir, ".cursor/agents/explorer.md"), "utf8") !== "custom explorer\n") {
+    throw new Error("setup should keep the user's .cursor/agents file");
+  }
+  if (readFileSync(join(dir, ".cursor/commands/review.md"), "utf8") !== "custom review\n") {
+    throw new Error("setup should keep the user's .cursor/commands file");
+  }
 }
 
 /** Repo that already has AGENTS.md without the ladder section (tutorial scenario). */
