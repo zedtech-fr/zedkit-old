@@ -3720,7 +3720,7 @@
         },
         {
           "need": "Open modal dialogs",
-          "import": "`@zedtech/zedkit-ui` — `Dialog`, `DialogProps`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `DialogClose`, `DialogOverlay`, `DialogPortal`",
+          "import": "`@zedtech/zedkit-ui` — `Dialog`, `DialogProps`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `DialogClose`, `DialogOverlay`, `DialogPortal`, `OverlayInitialFocus`",
           "wraps": "`@radix-ui/react-dialog`",
           "status": "stable",
           "shortName": "Dialog",
@@ -3756,7 +3756,8 @@
                   "DialogFooter",
                   "DialogClose",
                   "DialogOverlay",
-                  "DialogPortal"
+                  "DialogPortal",
+                  "OverlayInitialFocus"
                 ]
               }
             ]
