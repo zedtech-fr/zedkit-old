@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 
+import { readComputedContrast } from "./a11y-helpers";
 import { DEFAULT_IDENTITY } from "../lib/default-identity";
 import { homeCopy } from "../ui/home/i18n/home-copy";
 import { persistDocsSiteLook, waitForAppliedLook } from "./identity-helpers";
@@ -78,3 +79,33 @@ test("shell version label is caption text, not a link", async ({ page }) => {
   expect(parseFloat(style.fontSize)).toBeLessThanOrEqual(13);
   expect(style.cursor).not.toBe("pointer");
 });
+
+for (const theme of ["light", "dark"] as const) {
+  test(`guides menu glass panel at 1440 ${theme}`, async ({ page }) => {
+    await persistDocsSiteLook(page, DEFAULT_IDENTITY, theme);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    await waitForAppliedLook(page, DEFAULT_IDENTITY, theme);
+    const header = page.locator("#nd-nav");
+    await header.getByRole("button", { name: "Guides" }).hover();
+    const panel = header.locator(".flex.w-full.justify-center > *");
+    await expect(panel).toBeVisible();
+    const link = header.getByRole("link", { name: "Getting started", exact: true });
+    await expect(link).toBeVisible();
+    const panelStyle = await panel.evaluate((el) => {
+      const s = getComputedStyle(el);
+      const bg = s.backgroundColor;
+      const alpha = Number(/rgba\([^)]*,\s*([\d.]+)\)/.exec(bg)?.[1] ?? 1);
+      return {
+        alpha,
+        filter: s.backdropFilter || s.getPropertyValue("-webkit-backdrop-filter"),
+      };
+    });
+    expect(panelStyle.alpha).toBeGreaterThanOrEqual(0.4);
+    expect(panelStyle.alpha).toBeLessThanOrEqual(0.5);
+    expect(panelStyle.filter).toContain("blur(12px");
+    const contrast = await readComputedContrast(page, link);
+    expect(contrast).toBeGreaterThanOrEqual(4.5);
+    await panel.screenshot({ path: `${SHOTS}/guides-menu-after-1440-${theme}.png` });
+  });
+}

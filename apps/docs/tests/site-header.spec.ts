@@ -73,7 +73,8 @@ test.describe("site header navigation (#1034)", () => {
       };
     });
     expect(glass.bg === "transparent" || glass.bg === "rgba(0, 0, 0, 0)").toBe(false);
-    expect(glass.alpha).toBeGreaterThanOrEqual(0.75);
+    expect(glass.alpha).toBeGreaterThanOrEqual(0.4);
+    expect(glass.alpha).toBeLessThanOrEqual(0.5);
     expect(glass.filter).toContain("blur(");
     expect(glass.headerFilter === "none" || glass.headerFilter === "").toBe(true);
     const glassContrast = await readComputedContrast(
