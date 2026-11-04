@@ -24,8 +24,26 @@ export type Proposal = {
 /** A refusal or failure to word, or a cancellation. Never `ok`. */
 export type Notice = Exclude<AssistantResult, { kind: "ok" }> | { kind: "cancelled" };
 
+/** One line of the visible conversation: what was asked, what came back, or a failure worded as an assistant turn. */
+export type ChatMessage =
+  | { role: "user"; text: string }
+  | { role: "assistant"; text: string }
+  | { role: "notice"; notice: Notice };
+
+const MAX_MESSAGES = 40;
+
+function withMessage(state: SessionState, message: ChatMessage): ChatMessage[] {
+  return [...(state.messages ?? []), message].slice(-MAX_MESSAGES);
+}
+
 export type SessionState = {
   thread: Turn[];
+  /**
+   * Everything said in this session, in order, for display only. Unlike `thread` (the accepted exchanges the
+   * service is given as history), it keeps every request and every reply or failure. Optional so a session
+   * persisted before it existed still loads.
+   */
+  messages?: ChatMessage[];
   pending: { requestId: string; prompt: string } | null;
   proposal: Proposal | null;
   notice: Notice | null;
@@ -41,14 +59,19 @@ export type SessionAction =
   | { type: "discard" }
   | { type: "reset" };
 
-export const initialSession: SessionState = { thread: [], pending: null, proposal: null, notice: null, references: [] };
+export const initialSession: SessionState = { thread: [], messages: [], pending: null, proposal: null, notice: null, references: [] };
 
 export function sessionReducer(state: SessionState, action: SessionAction): SessionState {
   switch (action.type) {
     case "submit":
       // A double click, a second tab key, a retry before the answer: one paid request at a time.
       if (state.pending) return state;
-      return { ...state, pending: { requestId: action.requestId, prompt: action.prompt.trim() }, notice: null };
+      return {
+        ...state,
+        pending: { requestId: action.requestId, prompt: action.prompt.trim() },
+        notice: null,
+        messages: withMessage(state, { role: "user", text: action.prompt.trim() }),
+      };
     case "result": {
       if (!state.pending || state.pending.requestId !== action.requestId) return state;
       const { result } = action;
@@ -57,15 +80,18 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
         return {
           ...base,
           notice: null,
+          messages: withMessage(state, { role: "assistant", text: result.summary || "Here is a proposal to review." }),
           references: result.references,
           proposal: { requestId: state.pending.requestId, prompt: state.pending.prompt, tokens: result.tokens, summary: result.summary, changed: result.changed },
         };
       }
       const references = "references" in result ? result.references : state.references;
-      return { ...base, notice: result, references };
+      return { ...base, notice: result, references, messages: withMessage(state, { role: "notice", notice: result }) };
     }
     case "cancel":
-      return state.pending ? { ...state, pending: null, notice: { kind: "cancelled" } } : state;
+      return state.pending
+        ? { ...state, pending: null, notice: { kind: "cancelled" }, messages: withMessage(state, { role: "notice", notice: { kind: "cancelled" } }) }
+        : state;
     case "accept":
       if (!state.proposal) return state;
       return {
