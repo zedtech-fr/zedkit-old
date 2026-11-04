@@ -129,7 +129,6 @@ export function IdentityDockAssistantPanel({
   const off = status !== null && !status.available ? status.reason : null;
   const { send: sendBrief, quickRefine } = useAssistantSubmitHandlers(brief, submit, busy, off !== null, () => setBrief(""));
   const send = useKeepSentBrief(brief, session, setBrief, sendBrief);
-  const domainBrief = specimenBriefFromThread(session.thread, session.proposal?.prompt ?? brief);
 
   useEffect(() => {
     const field = panelRef.current?.querySelector<HTMLTextAreaElement>("#identity-assistant-brief:not([disabled])");
@@ -150,7 +149,7 @@ export function IdentityDockAssistantPanel({
         brief={brief}
         busy={busy}
         previewTokens={previewTokens}
-        domainBrief={domainBrief}
+        domainBrief={specimenBriefFromThread(session.thread, session.proposal?.prompt ?? brief)}
         inputRef={ui.field}
         setBrief={setBrief}
         send={send}
