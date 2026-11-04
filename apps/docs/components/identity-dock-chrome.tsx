@@ -8,7 +8,7 @@ import {
   type ButtonProps,
 } from "@zedtech/zedkit-ui";
 
-/** Docs-site chrome for the floating identity dock (not published in @zedtech/zedkit-ui). */
+/** Docs-site chrome for the floating identity dock trigger (not published in @zedtech/zedkit-ui). */
 
 type IdentityDockProps = React.ComponentProps<"div">;
 
@@ -17,7 +17,7 @@ function IdentityDock({ className, ...props }: IdentityDockProps) {
     <div
       data-slot="identity-dock"
       className={cn(
-        "fixed inset-x-0 bottom-0 z-40 flex flex-col items-stretch gap-2 p-3 sm:px-4 sm:pb-4",
+        "pointer-events-none fixed right-3 bottom-3 z-40 flex max-w-[calc(100vw-1.5rem)] flex-col items-end gap-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:right-4 sm:bottom-4",
         className,
       )}
       {...props}
@@ -34,37 +34,12 @@ function IdentityDockTrigger({ className, ...props }: IdentityDockTriggerProps) 
       data-slot="identity-dock-trigger"
       variant="outline"
       className={cn(
-        "w-full justify-between shadow-md motion-safe:transition-transform motion-reduce:transition-none sm:ml-auto sm:w-auto sm:rounded-full sm:px-4",
+        "pointer-events-auto w-auto max-w-full justify-between gap-2 rounded-full px-4 shadow-md motion-safe:transition-transform motion-reduce:transition-none",
         signatureMotionClass.feedback,
         className,
       )}
       {...props}
     />
-  );
-}
-
-type IdentityDockPanelProps = React.ComponentProps<"aside"> & {
-  open: boolean;
-};
-
-function IdentityDockPanel({ open, className, children, ...props }: IdentityDockPanelProps) {
-  return (
-    <aside
-      data-slot="identity-dock-panel"
-      data-state={open ? "open" : "closed"}
-      aria-hidden={!open}
-      className={cn(
-        "flex max-h-drawer-sheet-max-height w-full flex-col overflow-hidden rounded-t-lg border border-border bg-background shadow-lg motion-safe:transition-[transform,opacity] motion-reduce:transition-none sm:rounded-lg",
-        signatureMotionClass.glide,
-        open
-          ? "pointer-events-auto opacity-100 motion-safe:translate-y-0 motion-reduce:translate-y-0"
-          : "pointer-events-none opacity-0 motion-safe:translate-y-full motion-reduce:translate-y-0 motion-safe:sm:translate-y-2",
-        className,
-      )}
-      {...props}
-    >
-      {children}
-    </aside>
   );
 }
 
@@ -81,4 +56,4 @@ function IdentityDockSwatch({ className, ...props }: IdentityDockSwatchProps) {
   );
 }
 
-export { IdentityDock, IdentityDockPanel, IdentityDockSwatch, IdentityDockTrigger };
+export { IdentityDock, IdentityDockSwatch, IdentityDockTrigger };

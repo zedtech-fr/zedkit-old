@@ -1,10 +1,12 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo } from "react";
 import { tryCatch } from "@zedtech/zedkit-core";
 import {
+  Drawer,
+  DrawerContent,
+  DrawerHandle,
   Stack,
   Text,
   cn,
@@ -15,12 +17,7 @@ import {
   type IdentityTokens,
 } from "@zedtech/zedkit-ui";
 
-import {
-  IdentityDock,
-  IdentityDockPanel,
-  IdentityDockSwatch,
-  IdentityDockTrigger,
-} from "@/components/identity-dock-chrome";
+import { IdentityDock, IdentityDockSwatch, IdentityDockTrigger } from "@/components/identity-dock-chrome";
 import { identityDockCopy } from "@/components/i18n/identity-dock-copy";
 import { IdentityDockAssistantPanel } from "@/components/identity-dock-assistant-panel";
 import { useIdentityDockPreview } from "@/components/use-identity-dock-preview";
@@ -32,23 +29,6 @@ import { useIdentityAssistantStore } from "@/lib/identity-assistant-store";
 import { consumeCreateArrival } from "@/lib/identity-create-arrival";
 import { IDENTITY_DOCK_OPEN } from "@/lib/identity-dock-open";
 import { docsSiteCustomStorageKey } from "@/lib/site-identity-storage";
-
-const IdentityDockSheet = dynamic(
-  () => import("@/components/identity-dock-sheet").then((mod) => ({ default: mod.IdentityDockSheet })),
-  { ssr: false },
-);
-
-function useNarrowViewport(): boolean {
-  return useSyncExternalStore(
-    (onStoreChange) => {
-      const mql = window.matchMedia("(max-width: 639px)");
-      mql.addEventListener("change", onStoreChange);
-      return () => mql.removeEventListener("change", onStoreChange);
-    },
-    () => window.matchMedia("(max-width: 639px)").matches,
-    () => false,
-  );
-}
 
 function readSiteTokens(identityId: string): IdentityTokens {
   if (isPresetId(identityId)) return identityPresets[identityId];
@@ -97,49 +77,45 @@ function IdentityDockWidget() {
   const baseTokens = useMemo(() => readSiteTokens(identityId), [identityId]);
   const { expanded, setExpanded, setBrief } = useIdentityAssistantStore();
   const { workingTokens, setPreviewTokens } = useIdentityDockPreview(baseTokens, identityId);
-  const narrow = useNarrowViewport();
   const triggerRef = useIdentityDockKeyboard(expanded, setExpanded);
 
   useEditorDockAutoOpen(onEditor, setBrief, setExpanded);
   useIdentityDockOpenRequest(setBrief, setExpanded);
 
-  const panel = (
-    <IdentityDockAssistantPanel previewTokens={workingTokens} onPreviewTokens={setPreviewTokens} />
-  );
-
   return (
-    <IdentityDock data-testid="identity-dock" className="pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-0">
-      <IdentityDockTrigger
-        ref={triggerRef}
-        aria-expanded={expanded}
-        aria-label={identityDockCopy.pillLabel}
-        aria-keyshortcuts="Control+I Meta+I"
-        title={identityDockCopy.shortcutHint}
-        tabIndex={expanded ? -1 : undefined}
-        className={cn(expanded && "pointer-events-none fixed size-px overflow-hidden opacity-0")}
-        onClick={() => setExpanded(true)}
-      >
-        <IdentityDockSwatch />
-        <Text typeRole="label" className="truncate">{identityDockCopy.pillLabel}</Text>
-      </IdentityDockTrigger>
-      {expanded ? (
-        narrow ? (
-          <IdentityDockSheet open={expanded} onOpenChange={setExpanded} aria-label={identityDockCopy.panelTitle}>
-            <Stack
-              data-slot="identity-dock-panel"
-              data-state="open"
-              className="min-h-0 flex-1 gap-0 overflow-hidden"
-            >
-              {panel}
-            </Stack>
-          </IdentityDockSheet>
-        ) : (
-          <IdentityDockPanel open={expanded} aria-label={identityDockCopy.panelTitle} className="sm:min-h-[min(28rem,85dvh)]">
-            {panel}
-          </IdentityDockPanel>
-        )
-      ) : null}
-    </IdentityDock>
+    <>
+      <IdentityDock data-testid="identity-dock">
+        <IdentityDockTrigger
+          ref={triggerRef}
+          aria-expanded={expanded}
+          aria-label={identityDockCopy.pillLabel}
+          aria-keyshortcuts="Control+I Meta+I"
+          title={identityDockCopy.shortcutHint}
+          tabIndex={expanded ? -1 : undefined}
+          className={cn(expanded && "pointer-events-none fixed size-px overflow-hidden opacity-0")}
+          onClick={() => setExpanded(true)}
+        >
+          <IdentityDockSwatch />
+          <Text typeRole="label" className="truncate">
+            {identityDockCopy.pillLabel}
+          </Text>
+        </IdentityDockTrigger>
+      </IdentityDock>
+      <Drawer open={expanded} onOpenChange={setExpanded} direction="right" mobile="sheet" modal={false}>
+        <DrawerContent
+          modal={false}
+          aria-label={identityDockCopy.panelTitle}
+          data-slot="identity-dock-panel"
+          data-state={expanded ? "open" : "closed"}
+          className="flex min-h-0 flex-col gap-0 p-0 [&>:not([data-slot^=drawer-],[data-vaul-handle],button)]:px-0"
+        >
+          <DrawerHandle className="mt-2 mb-0 h-1 w-10 shrink-0 bg-border/45" aria-label="Drag to resize" />
+          <Stack data-state="open" className="min-h-0 flex-1 gap-0 overflow-hidden">
+            <IdentityDockAssistantPanel previewTokens={workingTokens} onPreviewTokens={setPreviewTokens} />
+          </Stack>
+        </DrawerContent>
+      </Drawer>
+    </>
   );
 }
 

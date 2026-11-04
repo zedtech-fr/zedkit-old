@@ -488,7 +488,7 @@ test.describe("fit and access", () => {
       await page.getByRole("button", { name: "Generate" }).click();
       await expect(page.locator("[data-assistant-proposal]")).toBeVisible();
       await assertA11yGate(page, "[data-assistant-proposal]");
-      await page.locator("[data-slot='identity-dock-panel'], [data-slot='identity-dock-sheet']").first().screenshot({ path: `test-results/identity-creator-${mode}.png` });
+      await page.locator("[data-slot='identity-dock-panel']").first().screenshot({ path: `test-results/identity-creator-${mode}.png` });
     });
   }
 });

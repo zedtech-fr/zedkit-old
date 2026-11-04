@@ -70,7 +70,7 @@ export function ConversationComposer(props: {
   onBrief: (brief: string) => void;
   onSubmit: () => void;
   onCancel: () => void;
-  inputRef: RefObject<HTMLInputElement | null>;
+  inputRef: RefObject<HTMLTextAreaElement | null>;
 }) {
   const refining = props.session.thread.length > 0;
   const pathname = usePathname();
@@ -107,7 +107,7 @@ export function ConversationPane(props: {
   onSubmit: () => void;
   onQuickRefine: (prompt: string) => void;
   onCancel: () => void;
-  inputRef: RefObject<HTMLInputElement | null>;
+  inputRef: RefObject<HTMLTextAreaElement | null>;
 }) {
   return (
     <Stack gap={4} className="min-w-0">
