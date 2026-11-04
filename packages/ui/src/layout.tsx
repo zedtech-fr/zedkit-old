@@ -93,7 +93,19 @@ export type SectionProps = React.ComponentProps<"section"> & {
   spacing?: "sm" | "md" | "lg" | "xl" | undefined;
   /** Width of the inner container in bleed mode. */
   containerWidth?: ContainerProps["width"];
+  /**
+   * Scroll-snap align when a `SectionScroll` ancestor is present.
+   * Use `none` for bands taller than the viewport or sticky/pin scenes.
+   */
+  snap?: "start" | "none" | undefined;
 };
+
+export type SectionScrollProps = React.ComponentProps<"div">;
+
+/** Marks the document for smooth section scrolling and proximity snap. */
+function SectionScroll({ className, ...props }: SectionScrollProps) {
+  return <div data-slot="section-scroll" className={className} {...props} />;
+}
 
 const sectionSpacing = {
   sm: "py-section-sm",
@@ -110,6 +122,7 @@ function Section({
   tone = "plain",
   spacing = "md",
   containerWidth,
+  snap = "start",
   children,
   className,
   ...props
@@ -117,8 +130,16 @@ function Section({
   const header = (title || description || actions) && (
     <div className="flex items-start justify-between gap-4">
       <div>
-        {title && <Heading level={2}>{title}</Heading>}
-        {description && <Text variant="muted">{description}</Text>}
+        {title && (
+          <Heading level={2} typeRole="title">
+            {title}
+          </Heading>
+        )}
+        {description && (
+          <Text variant="muted" typeRole="body">
+            {description}
+          </Text>
+        )}
       </div>
       {actions}
     </div>
@@ -126,7 +147,7 @@ function Section({
   const labelled = typeof title === "string" ? { "aria-label": title } : undefined;
   if (!bleed) {
     return (
-      <section data-slot="section" className={cn("space-y-4", className)} {...labelled} {...props}>
+      <section data-slot="section" data-snap={snap} className={cn("space-y-4", className)} {...labelled} {...props}>
         {header}
         {children}
       </section>
@@ -135,6 +156,7 @@ function Section({
   return (
     <section
       data-slot="section"
+      data-snap={snap}
       className={cn("w-full", sectionSpacing[spacing], tone === "muted" && "bg-muted", className)}
       {...labelled}
       {...props}
@@ -147,4 +169,4 @@ function Section({
   );
 }
 
-export { Container, containerVariants, Stack, stackVariants, Section };
+export { Container, containerVariants, Stack, stackVariants, Section, SectionScroll };

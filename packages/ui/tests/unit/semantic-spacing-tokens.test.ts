@@ -28,6 +28,11 @@ describe("semantic spacing tokens (#798)", () => {
     expect(identities).toMatch(/--spacing:\s*0\.25rem;/);
   });
 
+  it("floors section rhythm on phones so dense identities cannot collapse bands", () => {
+    expect(css).toMatch(/--zk-section-md:\s*max\(2rem,\s*calc\(var\(--spacing\)\s*\*\s*12\)\)/);
+    expect(css).toMatch(/--spacing-card-stack:\s*0\.5rem;/);
+  });
+
   it("derives each token from --spacing with the mist-matching factor", () => {
     for (const [name, { factor, mistRem }] of Object.entries(TOKENS)) {
       const pattern = new RegExp(`${name}:\\s*calc\\(var\\(--spacing\\)\\s*\\*\\s*${factor}\\)`);

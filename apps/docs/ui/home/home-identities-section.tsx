@@ -18,6 +18,7 @@ export function HomeIdentitiesSection() {
       containerWidth="wide"
       id="identities"
       title={homeIdentityLooksCopy.title}
+      snap="none"
       {...HOME_MARKETING_ROOT_PROPS}
     >
       <Stack id="use-cases" gap={HOME_SECTION_CONTENT_GAP} className="scroll-mt-24">

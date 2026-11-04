@@ -57,6 +57,7 @@ export function HomeGetStartedSection({ npmPackage }: { npmPackage: string }) {
       id="get-started"
       title={homeCopy.getStarted.section.title}
       description={homeCopy.getStarted.section.description}
+      snap="none"
       className={HOME_SECTION_REVEAL_CLASS}
       {...HOME_MARKETING_ROOT_PROPS}
     >

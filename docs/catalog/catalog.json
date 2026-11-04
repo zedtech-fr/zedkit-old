@@ -4560,20 +4560,20 @@
         },
         {
           "need": "Stack content and group titled sections",
-          "import": "`@zedtech/zedkit-ui` — `Stack`, `stackVariants`, `StackProps`, `Section`, `SectionProps`",
+          "import": "`@zedtech/zedkit-ui` — `Stack`, `stackVariants`, `StackProps`, `Section`, `SectionProps`, `SectionScroll`, `SectionScrollProps`",
           "wraps": "none (flex/gap utilities over `Heading`, `Text`)",
           "status": "stable",
           "shortName": "Stack",
           "audience": "Developers laying out kit pages without raw divs.",
-          "purpose": "Gap-based vertical/horizontal stacks plus titled sections.",
+          "purpose": "Gap-based vertical/horizontal stacks plus titled sections, with optional proximity scroll-snap.",
           "whenToUse": "For all kit-page layout instead of hand-written flex.",
-          "whenNotToUse": "For complex grids — use CSS grid directly instead.",
+          "whenNotToUse": "For complex grids — use CSS grid directly instead. For motion/enter animations, use the motion utilities, not `SectionScroll`.",
           "derivedFrom": null,
-          "example": "import { Section, Stack } from \"@zedtech/zedkit-ui\";\n<Section title=\"Team\" description=\"Who can access.\">\n<Stack direction=\"horizontal\" gap={2}>...</Stack>",
+          "example": "import { Section, SectionScroll, Stack } from \"@zedtech/zedkit-ui\";\n<SectionScroll>\n  <Section title=\"Team\" description=\"Who can access.\">\n    <Stack direction=\"horizontal\" gap={2}>...</Stack>\n  </Section>\n  <Section snap=\"none\" title=\"Long band\">...</Section>\n</SectionScroll>",
           "examples": [
             {
               "title": "Simple",
-              "code": "import { Section, Stack } from \"@zedtech/zedkit-ui\";\n<Section title=\"Team\" description=\"Who can access.\">\n<Stack direction=\"horizontal\" gap={2}>...</Stack>"
+              "code": "import { Section, SectionScroll, Stack } from \"@zedtech/zedkit-ui\";\n<SectionScroll>\n  <Section title=\"Team\" description=\"Who can access.\">\n    <Stack direction=\"horizontal\" gap={2}>...</Stack>\n  </Section>\n  <Section snap=\"none\" title=\"Long band\">...</Section>\n</SectionScroll>"
             }
           ],
           "adoption": {
@@ -4586,12 +4586,14 @@
                   "stackVariants",
                   "StackProps",
                   "Section",
-                  "SectionProps"
+                  "SectionProps",
+                  "SectionScroll",
+                  "SectionScrollProps"
                 ]
               }
             ]
           },
-          "a11y": "`Stack` renders a plain `div` with no role. `Section` renders a `section` landmark named by its string `title`, with that title as a level-2 heading: use one `title` per region, keep heading levels in order, and do not repeat a title that a nearby landmark already uses.",
+          "a11y": "`Stack` renders a plain `div` with no role. `Section` renders a `section` landmark named by its string `title`, with that title as a level-2 heading: use one `title` per region, keep heading levels in order, and do not repeat a title that a nearby landmark already uses. `SectionScroll` is a plain `div`; snap and smooth scrolling apply only when `prefers-reduced-motion` is `no-preference`.",
           "seeAlso": [
             "Render headings and body text without raw tags",
             "Group content in a card section",
@@ -4647,11 +4649,11 @@
           "whenToUse": "For every heading and paragraph in kit UI.",
           "whenNotToUse": "For raw HTML emails or markdown — style those separately.",
           "derivedFrom": null,
-          "example": "import {\n  Heading,\n  Text,\n  typeRoleClass,\n  signatureMotionClass,\n  headingLevelDefaultRole,\n  type TypeRole,\n  type SignatureMotion,\n} from \"@zedtech/zedkit-ui\";\n<Heading level={1} typeRole=\"display\">Page title</Heading>\n<Heading level={2} as=\"div\">Styled as h2, neutral tag</Heading>\n<Text typeRole=\"body\">Body copy.</Text>\n<Text variant=\"muted\">Secondary copy.</Text>",
+          "example": "import {\n  Heading,\n  Text,\n  typeRoleClass,\n  signatureMotionClass,\n  headingLevelDefaultRole,\n  type TypeRole,\n  type SignatureMotion,\n} from \"@zedtech/zedkit-ui\";\n<Heading level={1} typeRole=\"display\">Page title</Heading>\n<Heading level={2} typeRole=\"title\">Section title</Heading>\n<Heading level={3} typeRole=\"heading\">Band heading</Heading>\n<Text typeRole=\"body\">Body copy.</Text>\n<Text typeRole=\"caption\">Caption</Text>",
           "examples": [
             {
               "title": "Simple",
-              "code": "import {\n  Heading,\n  Text,\n  typeRoleClass,\n  signatureMotionClass,\n  headingLevelDefaultRole,\n  type TypeRole,\n  type SignatureMotion,\n} from \"@zedtech/zedkit-ui\";\n<Heading level={1} typeRole=\"display\">Page title</Heading>\n<Heading level={2} as=\"div\">Styled as h2, neutral tag</Heading>\n<Text typeRole=\"body\">Body copy.</Text>\n<Text variant=\"muted\">Secondary copy.</Text>"
+              "code": "import {\n  Heading,\n  Text,\n  typeRoleClass,\n  signatureMotionClass,\n  headingLevelDefaultRole,\n  type TypeRole,\n  type SignatureMotion,\n} from \"@zedtech/zedkit-ui\";\n<Heading level={1} typeRole=\"display\">Page title</Heading>\n<Heading level={2} typeRole=\"title\">Section title</Heading>\n<Heading level={3} typeRole=\"heading\">Band heading</Heading>\n<Text typeRole=\"body\">Body copy.</Text>\n<Text typeRole=\"caption\">Caption</Text>"
             },
             {
               "title": "Heading styles on a link (asChild)",

@@ -100,7 +100,7 @@ export interface BadgeProps extends React_2.ComponentProps<"div">, VariantProps<
 
 // @public (undocumented)
 export const badgeVariants: (props?: ({
-    variant?: "default" | "secondary" | "destructive" | "success" | "warning" | "outline" | "meta" | null | undefined;
+    variant?: "default" | "destructive" | "meta" | "secondary" | "success" | "warning" | "outline" | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -662,7 +662,7 @@ export type HeadingProps = React_2.ComponentProps<"h1"> & VariantProps<typeof he
 
 // @public (undocumented)
 export const headingVariants: (props?: ({
-    typeRole?: "display" | "section" | "band" | "cardTitle" | "lead" | "body" | "prose" | "small" | "label" | "nav" | null | undefined;
+    typeRole?: "display" | "title" | "heading" | "section" | "band" | "cardTitle" | "lead" | "body" | "prose" | "small" | "caption" | "label" | "nav" | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -1321,7 +1321,14 @@ export type SectionProps = React_2.ComponentProps<"section"> & {
     tone?: "plain" | "muted" | undefined;
     spacing?: "sm" | "md" | "lg" | "xl" | undefined;
     containerWidth?: ContainerProps["width"];
+    snap?: "start" | "none" | undefined;
 };
+
+// @public
+export function SectionScroll(input: SectionScrollProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type SectionScrollProps = React_2.ComponentProps<"div">;
 
 // @public (undocumented)
 export function Select(input: SelectProps): React_2.JSX.Element;
@@ -1402,7 +1409,7 @@ export type StackProps = React_2.ComponentProps<"div"> & VariantProps<typeof sta
 // @public (undocumented)
 export const stackVariants: (props?: ({
     direction?: "vertical" | "horizontal" | null | undefined;
-    gap?: 4 | 1 | 2 | 3 | 5 | 6 | 7 | 8 | null | undefined;
+    gap?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -1502,7 +1509,7 @@ export type TextProps = React_2.ComponentProps<"p"> & VariantProps<typeof textVa
 // @public (undocumented)
 export const textVariants: (props?: ({
     variant?: "body" | "muted" | null | undefined;
-    typeRole?: "lead" | "body" | "prose" | "small" | "label" | null | undefined;
+    typeRole?: "lead" | "body" | "prose" | "small" | "caption" | "label" | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -1548,6 +1555,8 @@ export type TypeRole = keyof typeof typeRoleClass;
 // @public
 export const typeRoleClass: {
     readonly display: "text-zk-type-display";
+    readonly title: "text-zk-type-section";
+    readonly heading: "text-zk-type-band";
     readonly section: "text-zk-type-section";
     readonly band: "text-zk-type-band";
     readonly cardTitle: "text-zk-type-card-title";
@@ -1555,6 +1564,7 @@ export const typeRoleClass: {
     readonly body: "text-zk-type-body";
     readonly prose: "text-zk-type-prose";
     readonly small: "text-zk-type-small";
+    readonly caption: "text-zk-type-label";
     readonly label: "text-zk-type-label";
     readonly nav: "text-zk-type-nav";
 };

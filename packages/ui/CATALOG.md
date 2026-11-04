@@ -1377,21 +1377,25 @@ import { Card, CardContent, CardFooter } from "@zedtech/zedkit-ui";
 
 ## Stack content and group titled sections
 
-- Import: `@zedtech/zedkit-ui` — `Stack`, `stackVariants`, `StackProps`, `Section`, `SectionProps`
+- Import: `@zedtech/zedkit-ui` — `Stack`, `stackVariants`, `StackProps`, `Section`, `SectionProps`, `SectionScroll`, `SectionScrollProps`
 - Wraps: none (flex/gap utilities over `Heading`, `Text`)
 - Status: stable
 - Short name: Stack
 - Audience: Developers laying out kit pages without raw divs.
-- Purpose: Gap-based vertical/horizontal stacks plus titled sections.
+- Purpose: Gap-based vertical/horizontal stacks plus titled sections, with optional proximity scroll-snap.
 - When to use: For all kit-page layout instead of hand-written flex.
-- When not to use: For complex grids — use CSS grid directly instead.
+- When not to use: For complex grids — use CSS grid directly instead. For motion/enter animations, use the motion utilities, not `SectionScroll`.
 - See also: `Render headings and body text without raw tags`, `Group content in a card section`, `Constrain page width and run sections edge to edge`
-- A11y: `Stack` renders a plain `div` with no role. `Section` renders a `section` landmark named by its string `title`, with that title as a level-2 heading: use one `title` per region, keep heading levels in order, and do not repeat a title that a nearby landmark already uses.
+- A11y: `Stack` renders a plain `div` with no role. `Section` renders a `section` landmark named by its string `title`, with that title as a level-2 heading: use one `title` per region, keep heading levels in order, and do not repeat a title that a nearby landmark already uses. `SectionScroll` is a plain `div`; snap and smooth scrolling apply only when `prefers-reduced-motion` is `no-preference`.
 
 ```ts
-import { Section, Stack } from "@zedtech/zedkit-ui";
-<Section title="Team" description="Who can access.">
-<Stack direction="horizontal" gap={2}>...</Stack>
+import { Section, SectionScroll, Stack } from "@zedtech/zedkit-ui";
+<SectionScroll>
+  <Section title="Team" description="Who can access.">
+    <Stack direction="horizontal" gap={2}>...</Stack>
+  </Section>
+  <Section snap="none" title="Long band">...</Section>
+</SectionScroll>
 ```
 
 ## Constrain page width and run sections edge to edge
@@ -1441,9 +1445,10 @@ import {
   type SignatureMotion,
 } from "@zedtech/zedkit-ui";
 <Heading level={1} typeRole="display">Page title</Heading>
-<Heading level={2} as="div">Styled as h2, neutral tag</Heading>
+<Heading level={2} typeRole="title">Section title</Heading>
+<Heading level={3} typeRole="heading">Band heading</Heading>
 <Text typeRole="body">Body copy.</Text>
-<Text variant="muted">Secondary copy.</Text>
+<Text typeRole="caption">Caption</Text>
 ```
 
 ```ts
