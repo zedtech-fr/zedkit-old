@@ -83,9 +83,16 @@ test.describe("site header navigation (#1034)", () => {
     expect(glassContrast).toBeGreaterThanOrEqual(4.5);
 
     await page.keyboard.press("Escape");
+    const guideLink = header.getByRole("link", { name: "Getting started", exact: true });
+    await expect(guideLink).toBeHidden();
     await useIdentity(page, "mist", "light");
-    await header.getByRole("button", { name: "Guides" }).hover();
-    await expect(header.getByRole("link", { name: "Getting started", exact: true })).toBeVisible();
+    // Click, not hover: the mouse is already over Guides, so a second hover
+    // dispatches no pointerenter and the menu stays shut.
+    const guides = header.getByRole("button", { name: "Guides" });
+    await guides.click();
+    await expect(guides).toHaveAttribute("aria-expanded", "true");
+    await expect(guideLink).toBeVisible();
+    await guideLink.hover();
     await expect(panel).toBeVisible();
     const mist = await panel.evaluate((el) => {
       const s = getComputedStyle(el);
