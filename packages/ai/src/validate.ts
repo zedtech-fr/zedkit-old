@@ -135,7 +135,9 @@ function checkLineEndings(root: string, issues: Issue[]): void {
   }
 }
 
-// Flag relative links that resolve nowhere in kit files (skip web, #anchor, fenced).
+// Flag relative links that resolve nowhere (skip web, mailto, #anchor, fenced).
+// Every skill dir counts, kit or repo-authored: a broken link in an
+// agent-facing skill is a defect whoever wrote it.
 function checkLinks(root: string, kit: string, issues: Issue[]): void {
   const universe = kitUniverse(kit);
   const entries = readdirSync(root, { recursive: true, encoding: "utf8" });
@@ -145,7 +147,7 @@ function checkLinks(root: string, kit: string, issues: Issue[]): void {
     const base = (name ?? "").replace(/\.md$/, "");
     const scoped =
       (entry === "personas.md" && existsSync(join(kit, "personas.template.md"))) ||
-      (top === "skills" && nested !== undefined && universe.skills.has(name ?? "")) ||
+      (top === "skills" && nested !== undefined) ||
       (nested === undefined &&
         ((top === "agents" && universe.agents.has(base)) || (top === "commands" && universe.commands.has(base))));
     if (!scoped) continue;
@@ -161,7 +163,7 @@ function checkLinks(root: string, kit: string, issues: Issue[]): void {
       if (fenced) continue;
       for (const match of line.matchAll(/!?\[[^\]]*\]\(([^)\s]+)(?:\s+[^)]*)?\)/g)) {
         const target = match[1] ?? "";
-        if (/^(#|https?:\/\/)/.test(target) || seen.has(target)) continue;
+        if (/^(#|https?:\/\/|mailto:)/.test(target) || seen.has(target)) continue;
         seen.add(target);
         if (!existsSync(join(dirname(full), target.split(/[?#]/)[0] ?? ""))) {
           issues.push({ path: entry, message: `broken link to "${target}" (no such file)` });
