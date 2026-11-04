@@ -11,6 +11,8 @@ import { headingLevelDefaultRole, type TypeRole } from "@/components/ui/type-rol
 
 const roleClasses: Record<TypeRole, string> = {
   display: "text-zk-type-display tracking-tight",
+  title: "text-zk-type-section tracking-tight",
+  heading: "text-zk-type-band tracking-tight",
   section: "text-zk-type-section tracking-tight",
   band: "text-zk-type-band tracking-tight",
   cardTitle: "text-zk-type-card-title tracking-tight",
@@ -18,6 +20,7 @@ const roleClasses: Record<TypeRole, string> = {
   body: "text-zk-type-body",
   prose: "text-zk-type-prose",
   small: "text-zk-type-small",
+  caption: "text-zk-type-label",
   label: "text-zk-type-label",
   nav: "text-zk-type-nav",
 };
@@ -61,6 +64,7 @@ const textVariants = cva("leading-body", {
       body: "text-zk-type-body",
       prose: "text-zk-type-prose",
       small: "text-zk-type-small",
+      caption: "text-zk-type-label",
       label: "text-zk-type-label",
     },
   },

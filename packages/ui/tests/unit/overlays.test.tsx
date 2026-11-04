@@ -189,7 +189,8 @@ describe("overlays", () => {
     );
     await user.click(screen.getByRole("button", { name: "Open" }));
     const dialog = screen.getByRole("dialog");
-    expect(dialog.className).toContain("z-overlay");
+    expect(dialog.className).toContain("z-dialog");
+    expect(dialog.className).not.toContain("z-overlay");
     expect(dialog.className).toContain("gap-4");
     expect(dialog.className).toContain("p-dialog-padding");
     expect(dialog.className).toContain("max-h-dialog-max-height");
@@ -346,7 +347,8 @@ describe("overlays", () => {
     await user.click(screen.getByRole("button", { name: "Filters" }));
     const panel = screen.getByRole("dialog", { name: "Filters" });
     expect(panel).not.toBeNull();
-    expect(panel.className).toContain("z-overlay");
+    expect(panel.className).toContain("z-dropdown");
+    expect(panel.className).not.toContain("z-overlay");
     expect(panel.className).toContain("bg-popover");
     assertNoValueArbitraries(panel.className);
     await user.keyboard("{Escape}");
@@ -367,7 +369,8 @@ describe("overlays", () => {
     await user.hover(screen.getByRole("button", { name: "Save" }));
     const tip = await screen.findByRole("tooltip");
     expect(tip.textContent).toContain("Saves the invoice");
-    expect(tip.className).toContain("z-overlay");
+    expect(tip.className).toContain("z-dropdown");
+    expect(tip.className).not.toContain("z-overlay");
     expect(tip.className).toContain("px-3");
     expect(tip.className).not.toContain("px-control-inline");
     assertNoValueArbitraries(tip.className);
@@ -391,7 +394,8 @@ describe("overlays", () => {
     expect(screen.queryByRole("menu")).toBeNull();
     await user.click(screen.getByRole("button", { name: "Actions" }));
     const menu = await screen.findByRole("menu");
-    expect(menu.className).toContain("z-overlay");
+    expect(menu.className).toContain("z-dropdown");
+    expect(menu.className).not.toContain("z-overlay");
     assertNoValueArbitraries(menu.className);
     const item = screen.getByRole("menuitem", { name: "Duplicate invoice" });
     expect(item.className).toContain("px-2");

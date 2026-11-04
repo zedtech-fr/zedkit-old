@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import type { View } from "@/components/identity-assistant-parts";
 import { useCreatorHandoff } from "@/components/use-creator-handoff";
 
 type FocusRequest = { n: number; scroll: boolean };
+
+/** Focus may jump to the preview switch when a proposal lands; not while editing token fields below. */
+function focusMayMoveToProposalPreview(active: Element | null): boolean {
+  if (!active || active === document.body) return true;
+  if (active.closest("[data-slot='identity-assistant']")) return true;
+  if (active.closest("[data-testid='identity-dock']")) return true;
+  return false;
+}
 
 /**
  * Brings the assistant to the top of the page, just under whatever is pinned there. On a phone the draft card is
@@ -29,7 +37,7 @@ export function useAssistantView({ proposalId, onBrief }: { proposalId: string |
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<View>("conversation");
   const [focus, setFocus] = useState<FocusRequest | null>(null);
-  const textarea = useRef<HTMLTextAreaElement>(null);
+  const field = useRef<HTMLInputElement>(null);
   const previewButton = useRef<HTMLButtonElement>(null);
   const seenProposal = useRef<string | undefined>(undefined);
 
@@ -42,26 +50,26 @@ export function useAssistantView({ proposalId, onBrief }: { proposalId: string |
   useEffect(() => {
     if (!focus) return;
     if (focus.scroll) scrollToAssistant();
-    textarea.current?.focus({ preventScroll: focus.scroll });
+    field.current?.focus({ preventScroll: focus.scroll });
   }, [focus]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!proposalId) {
       seenProposal.current = undefined;
       return;
     }
     const arrived = proposalId !== seenProposal.current;
     seenProposal.current = proposalId;
-    if (arrived) {
-      setView("preview");
-      return;
-    }
-    if (view !== "preview") return;
-    // A visitor typing in an editor field keeps it; otherwise the phone follows the proposal.
-    const active = document.activeElement;
-    if (active?.closest("[data-slot='identity-editor-preview'], #identity-editor-name")) return;
-    const id = requestAnimationFrame(() => previewButton.current?.focus({ preventScroll: true }));
-    return () => cancelAnimationFrame(id);
+    if (arrived) setView("preview");
+    if (!arrived && view !== "preview") return;
+    const focusPreview = () => {
+      if (!focusMayMoveToProposalPreview(document.activeElement)) return;
+      const btn = previewButton.current;
+      if (btn && btn.offsetParent !== null) btn.focus({ preventScroll: true });
+    };
+    focusPreview();
+    const frame = requestAnimationFrame(focusPreview);
+    return () => cancelAnimationFrame(frame);
   }, [proposalId, view]);
 
   return {
@@ -69,7 +77,7 @@ export function useAssistantView({ proposalId, onBrief }: { proposalId: string |
     setOpen,
     view,
     setView,
-    textarea,
+    field,
     previewButton,
     /** Runs an action that ends the proposal, then returns to the form with focus in it. */
     backToConversation(action: () => void) {

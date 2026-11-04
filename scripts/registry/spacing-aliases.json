@@ -25,7 +25,6 @@
     "canonical": "1.5",
     "value": "0.375rem",
     "tokens": [
-      "--spacing-card-stack",
       "--spacing-dialog-header-stack",
       "--spacing-drawer-handle-height",
       "--spacing-drawer-header-gap",
@@ -41,6 +40,7 @@
     "value": "0.5rem",
     "tokens": [
       "--spacing-button-gap",
+      "--spacing-card-stack",
       "--spacing-card-lines",
       "--spacing-data-table-pagination-gap",
       "--spacing-dialog-footer-gap",

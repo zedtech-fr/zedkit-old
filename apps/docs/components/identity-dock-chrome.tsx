@@ -17,7 +17,7 @@ function IdentityDock({ className, ...props }: IdentityDockProps) {
     <div
       data-slot="identity-dock"
       className={cn(
-        "fixed inset-x-0 bottom-0 z-40 flex flex-col items-stretch gap-2 p-3 sm:inset-x-auto sm:right-4 sm:bottom-4 sm:max-w-sm sm:items-end sm:p-0",
+        "fixed inset-x-0 bottom-0 z-40 flex flex-col items-stretch gap-2 p-3 sm:px-4 sm:pb-4",
         className,
       )}
       {...props}
@@ -34,7 +34,7 @@ function IdentityDockTrigger({ className, ...props }: IdentityDockTriggerProps) 
       data-slot="identity-dock-trigger"
       variant="outline"
       className={cn(
-        "w-full justify-between shadow-md motion-safe:transition-transform motion-reduce:transition-none sm:w-auto sm:rounded-full sm:px-4",
+        "w-full justify-between shadow-md motion-safe:transition-transform motion-reduce:transition-none sm:ml-auto sm:w-auto sm:rounded-full sm:px-4",
         signatureMotionClass.feedback,
         className,
       )}
@@ -54,7 +54,7 @@ function IdentityDockPanel({ open, className, children, ...props }: IdentityDock
       data-state={open ? "open" : "closed"}
       aria-hidden={!open}
       className={cn(
-        "flex max-h-drawer-sheet-max-height w-full flex-col overflow-hidden rounded-t-lg border border-border bg-background shadow-lg motion-safe:transition-[transform,opacity] motion-reduce:transition-none sm:w-full sm:max-w-sm sm:rounded-lg",
+        "flex max-h-drawer-sheet-max-height w-full flex-col overflow-hidden rounded-t-lg border border-border bg-background shadow-lg motion-safe:transition-[transform,opacity] motion-reduce:transition-none sm:rounded-lg",
         signatureMotionClass.glide,
         open
           ? "pointer-events-auto opacity-100 motion-safe:translate-y-0 motion-reduce:translate-y-0"

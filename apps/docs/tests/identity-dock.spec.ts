@@ -73,34 +73,65 @@ test.describe("IdentityDock", () => {
     await expect(trigger).toBeFocused();
   });
 
-  test("Nouvelle conversation clears brief, thread, and persisted dock state", async ({ page }) => {
-    await page.addInitScript((key) => {
-      window.localStorage.setItem(
-        key,
-        JSON.stringify({
-          brief: "Saved brief",
-          session: {
-            thread: [{ role: "user", text: "Hello" }],
-            pending: null,
-            proposal: null,
-            notice: null,
-            references: [],
-          },
-        }),
-      );
-    }, "zk-identity-dock-v2");
+  test("the widget is a chat: greeting first, one input with send, and no New conversation control", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(BASE, { waitUntil: "networkidle" });
     await page.keyboard.press("Control+I");
-    await expect(brief(page)).toHaveValue("Saved brief");
-    await expect(page.getByText("Hello")).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "Start a new identity assistant conversation" }),
-    ).toBeVisible();
-    await page.getByTestId("identity-dock-new-conversation").click();
-    await expect(brief(page)).toHaveValue("");
-    await expect(page.getByText("Hello")).toHaveCount(0);
-    const stored = await page.evaluate(() => window.localStorage.getItem("zk-identity-dock-v2"));
-    expect(stored).toBeNull();
+    await expect(page.locator("[data-assistant-greeting]")).toContainText("Describe your product in a few plain sentences");
+    const field = brief(page);
+    await expect(field).toBeVisible();
+    expect(await field.evaluate((node) => node.tagName)).toBe("INPUT");
+    const send = page.getByRole("button", { name: "Generate", exact: true });
+    await expect(send).toBeVisible();
+    await expect(page.getByRole("button", { name: /new conversation/i })).toHaveCount(0);
+    await expect(page.getByTestId("identity-dock-new-conversation")).toHaveCount(0);
+    // Input and send share one row: the input spans the conversation column.
+    const inputBox = (await field.boundingBox())!;
+    const sendBox = (await send.boundingBox())!;
+    expect(Math.abs(inputBox.y + inputBox.height / 2 - (sendBox.y + sendBox.height / 2))).toBeLessThan(8);
+    const paneBox = (await page.locator("[data-assistant-pane='conversation']").boundingBox())!;
+    expect(inputBox.width).toBeGreaterThan(paneBox.width * 0.6);
+  });
+
+  test("the composer placeholder rotates through examples, and Enter sends", async ({ page }) => {
+    const WARM = {
+      spacing: "0.2rem",
+      borderWidth: "1px",
+      radius: "0.25rem",
+      bodyLeading: "1.6",
+      headingLeading: "1.05",
+      headingTracking: "-0.01em",
+      labelTracking: "0.12em",
+      fontSans: '"Jost Variable", Jost, ui-sans-serif, system-ui, sans-serif',
+      fontDisplay: "Georgia, serif",
+      light: { background: "30 40% 96%", foreground: "20 20% 12%", primary: "14 55% 34%", primaryForeground: "30 40% 96%", accent: "14 45% 42%", border: "25 20% 52%", mutedForeground: "20 12% 32%" },
+      dark: { background: "20 18% 8%", foreground: "30 35% 92%", primary: "20 70% 68%", primaryForeground: "20 18% 8%", accent: "20 30% 45%", border: "20 15% 40%", mutedForeground: "30 15% 70%" },
+      shadowSm: "0 1px 2px hsl(20 20% 12% / 0.08)",
+      shadowMd: "0 6px 16px -8px hsl(20 20% 12% / 0.2)",
+    };
+    const posts = await service(page, (posted, route) =>
+      route.fulfill({ status: 200, contentType: "application/json", json: { requestId: posted.requestId, summary: "Warmer.", changed: ["radius"], references: [], tokens: WARM } }),
+    );
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.keyboard.press("Control+I");
+    const field = brief(page);
+    await expect(field).toBeVisible();
+    const first = await field.getAttribute("placeholder");
+    await expect.poll(async () => field.getAttribute("placeholder"), { timeout: 10_000 }).not.toBe(first);
+    await field.fill("A ceramics shop");
+    await field.press("Enter");
+    await expect(page.locator("[data-assistant-proposal]")).toBeVisible();
+    expect(posts).toHaveLength(1);
+  });
+
+  test("a garbled open request still opens the widget without touching the brief", async ({ page }) => {
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.keyboard.press("Control+I");
+    await brief(page).fill("kept");
+    await page.evaluate(() => window.dispatchEvent(new CustomEvent("zk-identity-dock-open", { detail: 42 })));
+    await expect(brief(page)).toHaveValue("kept");
+    await expect(page.getByTestId("identity-dock")).toBeVisible();
   });
 
   test("390px: quota feedback stays visible inside the dock panel", async ({ page }) => {
@@ -183,5 +214,19 @@ test.describe("IdentityDock", () => {
     await expect(page.locator("[data-assistant-proposal-compare]")).toContainText("After");
     expect(posts).toHaveLength(2);
     expect(posts[1].prompt).toMatch(/calmer/i);
+  });
+});
+
+test.describe("IdentityDock reduced motion", () => {
+  test.use({ reducedMotion: "reduce" });
+
+  test("the composer placeholder stays still", async ({ page }) => {
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.keyboard.press("Control+I");
+    const field = page.locator("#identity-assistant-brief");
+    await expect(field).toBeVisible();
+    const first = await field.getAttribute("placeholder");
+    await page.waitForTimeout(4500);
+    expect(await field.getAttribute("placeholder")).toBe(first);
   });
 });
