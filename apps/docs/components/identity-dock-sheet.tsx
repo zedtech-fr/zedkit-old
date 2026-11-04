@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useState, type ReactNode } from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
 import {
   Button,
@@ -23,7 +24,7 @@ export type IdentityDockSheetDetentLabels = {
 type IdentityDockSheetProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
   "aria-label": string;
   detentGroupLabel: string;
@@ -93,8 +94,9 @@ function IdentityDockSheet({
   detentLabels,
 }: IdentityDockSheetProps) {
   const short = useShortViewport();
-  const [snap, setSnap] = React.useState<number | string | null>(SNAP_HALF);
-  const activeSnap = (snap === SNAP_HALF || snap === null) && short ? SNAP_FULL : (snap ?? SNAP_HALF);
+  const [snap, setSnap] = useState<number | string | null>(null);
+  const base = snap ?? SNAP_FULL;
+  const activeSnap = short && (base === SNAP_HALF || base === SNAP_FULL) ? SNAP_FULL : base;
   return (
     <DrawerPrimitive.Root
       data-slot="identity-dock-sheet-root"
