@@ -21,7 +21,7 @@ export function ScrollGalleryIdentityDemo() {
 export function ScrollGalleryChipsDemo() {
   return (
     <ScrollGallery className="max-w-sm">
-      <Stack direction="row" gap={2} className="w-max">
+      <Stack direction="horizontal" gap={2} className="w-max">
         <a className="shrink-0 snap-start rounded-md border px-3 py-2" href="#alpha">
           Alpha
         </a>
