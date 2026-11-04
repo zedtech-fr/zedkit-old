@@ -76,7 +76,7 @@ test.describe("home closing scene", () => {
     await scene.getByLabel("Your product and brand").fill("Film restoration. Like https://atelier-nord.example.org/ please.");
     await expect(scene.getByRole("list", { name: "Links found in your text" })).toContainText("atelier-nord.example.org");
     await scene.getByRole("button", { name: "Start creating" }).click();
-    await page.waitForURL("**/features/identity-editor");
+    await page.waitForURL("**/features/identity-editor#create");
     const field = page.getByLabel("Your product and brand");
     await expect(field).toHaveValue("Film restoration. Like https://atelier-nord.example.org/ please.");
     await expect(field).toBeFocused();

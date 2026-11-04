@@ -24,6 +24,28 @@ test.describe("IdentityDock", () => {
   const dock = (page: Page) => page.getByTestId("identity-dock");
   const brief = (page: Page) => page.locator("#identity-assistant-brief");
 
+  test("Try the demo editor opens the dock on the editor with no inline assistant", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.locator("#identities").scrollIntoViewIfNeeded();
+    await page.getByRole("link", { name: "Try the demo editor" }).click();
+    await page.waitForURL("**/features/identity-editor#create");
+    await expect(page.locator("[data-slot='identity-assistant']")).toHaveCount(0);
+    await expect(brief(page)).toBeVisible();
+    await expect(page.getByTestId("identity-dock")).toBeVisible();
+  });
+
+  test("brief persists across reload in zk-identity-dock-v2", async ({ page }) => {
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.keyboard.press("Control+I");
+    await brief(page).fill("Persist after reload");
+    await page.reload({ waitUntil: "networkidle" });
+    await page.keyboard.press("Control+I");
+    await expect(brief(page)).toHaveValue("Persist after reload");
+    const stored = await page.evaluate(() => window.localStorage.getItem("zk-identity-dock-v2"));
+    expect(stored).toContain("Persist after reload");
+  });
+
   test("brief persists when moving to another route", async ({ page }) => {
     await page.goto(BASE, { waitUntil: "networkidle" });
     await dock(page).locator("[data-slot='identity-dock-trigger']").click();
@@ -69,6 +91,7 @@ test.describe("IdentityDock", () => {
     await page.keyboard.press("Control+I");
     await expect(brief(page)).toHaveValue("Saved brief");
     await expect(page.getByText("Hello")).toBeVisible();
+    await expect(page.getByRole("button", { name: "New conversation" })).toBeVisible();
     await page.getByTestId("identity-dock-new-conversation").click();
     await expect(brief(page)).toHaveValue("");
     await expect(page.getByText("Hello")).toHaveCount(0);

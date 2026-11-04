@@ -38,6 +38,7 @@ const WARM = {
 const VIEWPORTS = [
   { name: "320", width: 320, height: 568 },
   { name: "390", width: 390, height: 844 },
+  { name: "1024", width: 1024, height: 768 },
   { name: "1440", width: 1440, height: 900 },
 ] as const;
 
