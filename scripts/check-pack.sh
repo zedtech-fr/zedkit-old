@@ -168,7 +168,10 @@ size_budget ui 10200 marketing
 # Raised to 23600 on 4 Nov 2026: setup-ai v3 adds `scan` (repo sizing and
 # slicing) and the D1-D4 depth checks for validate --setup (scan.ts,
 # setup-depth.ts); baseline 19381, measured 23102. Budget = measured + ~2%.
-size_budget ai 23600
+# Raised to 23850 on 5 Nov 2026: D2 unenforced-ID check (validate --setup
+# flags uninventoried IDs); base tip measured 23486, PR measured 23637
+# after a 70B shave. Budget = measured + ~1%.
+size_budget ai 23850
 
 if [ -f apps/docs/out/index.html ]; then
   if ! node apps/docs/scripts/check-first-load-budget.mjs; then
