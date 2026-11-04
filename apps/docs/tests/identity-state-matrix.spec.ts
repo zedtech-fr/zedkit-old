@@ -146,6 +146,28 @@ test.describe("creator state matrix", () => {
     await page.reload({ waitUntil: "networkidle" });
     await expect(page.getByLabel("Look")).toContainText("Matrix look");
   });
+
+  for (const vp of VIEWPORTS) {
+    test(`${vp.name}: an unfinished brief is still there after reload`, async ({ page }) => {
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await page.goto(EDITOR, { waitUntil: "networkidle" });
+      await typeBrief(page, "A ceramics shop");
+      await expect.poll(() => page.evaluate(() => sessionStorage.getItem("zk-creator-session-brief"))).toBe("A ceramics shop");
+      await page.reload({ waitUntil: "networkidle" });
+      await expect(page.locator("#identity-assistant-brief")).toHaveValue("A ceramics shop");
+    });
+  }
+
+  test("390: clearing the brief stays cleared after reload", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(EDITOR, { waitUntil: "networkidle" });
+    await typeBrief(page, "A ceramics shop");
+    await expect.poll(() => page.evaluate(() => sessionStorage.getItem("zk-creator-session-brief"))).toBe("A ceramics shop");
+    await page.locator("#identity-assistant-brief").fill("");
+    await expect.poll(() => page.evaluate(() => sessionStorage.getItem("zk-creator-session-brief"))).toBeNull();
+    await page.reload({ waitUntil: "networkidle" });
+    await expect(page.locator("#identity-assistant-brief")).toHaveValue("");
+  });
 });
 
 test.describe("widget state matrix", () => {
