@@ -5,9 +5,11 @@ description: "Set up or improve this repo's AI setup from what the repo actually
 
 # Setup AI
 
-**Before ANY tool call** after reading this skill, output the **Tell the user first** block below as your **next** assistant message — no phase A inventory, no subagent spawns, no repo reads, no file writes until after that message is sent.
+**Before ANY tool call** after reading this skill, print the **Tell the user first** block below as the opening text of your reply — no phase A inventory, no subagent spawns, no repo reads, no file writes before it.
 
-> **First message** (paste as your first assistant reply; replace `{…}` only with what you already know, or keep it generic):
+**The intro is not a turn boundary.** After printing it, **continue in the same turn without waiting**: go straight into phase A (inventory, explore, gaps) and keep going until you show the plan and the phase B batched interview. Do not end your turn, ask "shall I continue?", or wait for a reply after the intro. The **only** stop points in the whole run are: (1) the **phase B batched interview**, (2) **plan approval before writes**, and (3) the **final report**.
+
+> **Intro text** (print as the opening of your first reply, then keep working in the same turn; replace `{…}` only with what you already know, or keep it generic):
 >
 > **Modes:** We'll run **fresh** or **improve** for this repo — {one sentence from what you already know or will confirm in phase A}.
 > **Phases:** **A** audit → **B** one batched interview (≤ 8 questions) → **C–D** artifacts and repo skills → write, verify, report → **E** score and learn.
@@ -17,9 +19,9 @@ Make the AI setup of **this** repo true and specific. Generic advice is already 
 
 ## Tell the user first
 
-**Output order:** This block is the **first output after `/setup-ai` starts** (your first assistant message once the skill is loaded) — before phase A inventory, subagent spawns, or file writes — including **headless**, **CI**, and **non-interactive** runs. Paste it as plain text; never skip it because nobody is chatting live. **Do not** open with "Running phase A…", inventory lists, or tool calls — the intro **is** phase A's start from the user's perspective until this message is sent. **Exclude** mechanical install output that ran **before** the skill loaded (for example `npx zedkit-ai setup` or package manager lines); those stay above this block in the transcript.
+**Output order:** This block is the **first output after `/setup-ai` starts** (the opening text of your first reply once the skill is loaded) — before phase A inventory, subagent spawns, or file writes — including **headless**, **CI**, and **non-interactive** runs. Paste it as plain text; never skip it because nobody is chatting live. **Do not** open with "Running phase A…", inventory lists, or tool calls — the intro **is** phase A's start from the user's perspective. Once it is printed, **immediately continue with phase A in the same turn** — do not stop or wait for the user after the intro. **Exclude** mechanical install output that ran **before** the skill loaded (for example `npx zedkit-ai setup` or package manager lines); those stay above this block in the transcript.
 
-When `/setup-ai` starts (or the user asks to set up AI), say this in plain language before phase A — no interview yet:
+When `/setup-ai` starts (or the user asks to set up AI), say this in plain language before phase A — no interview yet, and no pause after it:
 
 - **Modes:** **fresh** (little or no agent setup yet) or **improve** (you already have `AGENTS.md`, rules, or provider folders — audit and extend, do not replace blindly).
 - **Phases:** **A** audit (inventory + parallel explore + gaps) → **B** discovery (mine docs and code, then **one batched interview of at most 8 questions**) → **C** build deep artifacts from kit templates → **D** propose repo skills from the catalog → write provider layers, verify, report → **E** score and learn.

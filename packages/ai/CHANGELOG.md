@@ -1,5 +1,13 @@
 # @zedtech/zedkit-ai
 
+## 0.20.1
+
+### Patch Changes
+
+- bb50f00: Docs parity for the 0.20 setup flow: agent onboarding names adopt sidecars and the setup-ai intro-first step; guides list the full preset enum and all five setup-ai phases.
+- 48347ff: Adopt installs no longer write a `personas.kit.md` sidecar when `.agents/personas.md` already carries the v2 schema headers; the file is kept as already customized, so repeat `setup` runs stay no-ops. Files without v2 headers (v1, hand-written) still get the kit sidecar.
+- 8be0c56: `validate` flags leftover placeholder links (`](<...>)`) in installed AGENTS.md, CLAUDE.md and `.agents/**`; the AGENTS map template shows the example path as code instead of a link.
+
 ## 0.20.0
 
 ### Minor Changes
