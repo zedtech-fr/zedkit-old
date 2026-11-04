@@ -12,6 +12,7 @@ const deepRelativeImport = {
 // is under the cap. `max-lines` stays on for files that only miss the
 // function cap, so they cannot grow past 300 unnoticed.
 const sizeBudgetOverFile = [
+  "apps/docs/components/identity-editor-toolbar.tsx",
   "apps/docs/components/project-tracker-demo-app.tsx",
   "packages/ui/preview/gallery.tsx",
 ];

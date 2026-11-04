@@ -166,7 +166,7 @@ export function PreviewPane(props: {
         />
       ) : (
         <Stack gap={3}>
-          <Text variant="muted" className="text-sm">
+          <Text variant="muted" typeRole="label">
             {copy.views.draftNow}
           </Text>
           <IdentityMiniPreview tokens={props.tokens} id="draft-now" />

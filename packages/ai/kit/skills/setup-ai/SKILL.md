@@ -266,7 +266,7 @@ After the owner approves the table, **persist** it as **`PLAN.md`** at the repo 
 
 - **Root `AGENTS.md`**: start from the kit template if there is none; when one exists, keep it and add the missing ladder section (the same 7 questions as the template). Replace every `<placeholder>` with a verified fact or delete the line. Non-negotiables name how each is enforced. Link `.agents/product.md` and domain docs from the map section.
 - **Role and style**: fill it from evidence and owner answers, not taste. Tag owner choices `source: owner`.
-- **Nested `AGENTS.md`**: only what differs from the root. Link, do not copy.
+- **Nested `AGENTS.md`**: only what differs from the root. Link, do not copy. When identity UI exists, close a **missing signature pointer** by linking the signature spec and state-matrix proof; **do not copy the spec** into always-loaded files.
 - **Repo skills**: folder `.agents/skills/<name>/SKILL.md`. The `description` says when to use it. Steps use this repo's real paths and commands, end with the command that proves the result, and point at an existing example file as the model.<!-- if:skill=rules-upkeep --> Follow `rules-upkeep` for format.<!-- /if -->
 - **Subagents**: `.agents/agents/<name>.md`, one-line description, `model` omitted or `inherit`. Read-only unless the job needs writes.
 - **Improve mode**: edit in place, smallest change, keep the author's wording where it is correct. Log what changed.

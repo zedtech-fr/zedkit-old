@@ -177,11 +177,11 @@ function SaveFeedback({
   onSaveAsNew: () => void;
 }) {
   const copy = identityEditorCopy.library;
-  if (!status) return <Text role="status" className="min-h-5 text-sm" />;
+  if (!status) return <Text role="status" typeRole="label" className="min-h-5" />;
   if (status.kind === "exists") {
     return (
       <Stack gap={2} role="alert" data-slot="identity-editor-clash">
-        <Text className="text-sm">{copy.exists(status.label)}</Text>
+        <Text typeRole="label">{copy.exists(status.label)}</Text>
         <Row>
           <Button type="button" variant="outline" onClick={() => onSave(true)}>
             {copy.replace}
@@ -195,12 +195,12 @@ function SaveFeedback({
   }
   if (status.kind === "failed")
     return (
-      <Text role="alert" className="text-sm text-destructive">
+      <Text role="alert" typeRole="label" className="text-destructive">
         {copy.failed[status.reason]}
       </Text>
     );
   return (
-    <Text role="status" className="text-sm">
+    <Text role="status" typeRole="label">
       {status.kind === "saved"
         ? copy.saved(status.label)
         : copy.renamed(status.label)}
@@ -218,14 +218,14 @@ function LibraryHeading({
   const library = identityEditorCopy.library;
   return (
     <>
-      <Text as="span" id={id} className="text-sm font-semibold text-foreground">
+      <Text as="span" id={id} typeRole="label" className="font-semibold text-foreground">
         {library.heading}
       </Text>
-      <Text variant="muted" className="text-sm">
+      <Text variant="muted" typeRole="label">
         {library.hint}
       </Text>
       {problem ? (
-        <Text role="status" className="text-sm text-destructive">
+        <Text role="status" typeRole="label" className="text-destructive">
           {library.problem[problem]}
         </Text>
       ) : null}
@@ -316,7 +316,8 @@ function IdentityEditorKeepBar({
       <Text
         id="identity-editor-name-hint"
         variant="muted"
-        className="min-h-5 text-sm"
+        typeRole="label"
+        className="min-h-5"
       >
         {name.trim() === "" ? copy.nameHint : null}
       </Text>
@@ -326,7 +327,7 @@ function IdentityEditorKeepBar({
         onApplySite={onApplySite}
         onRemoveFromSite={onRemoveFromSite}
       />
-      <Text variant="muted" className="text-sm">
+      <Text variant="muted" typeRole="label">
         {copy.applyHint}
       </Text>
     </Stack>

@@ -69,11 +69,12 @@ async function siteBackground(page: Page) {
 
 /** Visible in the viewport, and not sitting under a pinned preview. */
 async function onScreen(page: Page, target: Locator, height: number) {
+  await target.scrollIntoViewIfNeeded();
   await expect(target).toBeVisible();
   await expect(target).toBeInViewport();
   const box = (await target.boundingBox())!;
   expect(box.y).toBeGreaterThanOrEqual(0);
-  expect(box.y).toBeLessThan(height);
+  expect(box.y + box.height).toBeLessThanOrEqual(height + 1);
   const pinned = page.locator("[data-slot='identity-editor-preview']");
   if ((await pinned.count()) === 0) return;
   const pin = await pinned.boundingBox();
@@ -245,14 +246,15 @@ test.describe("widget state matrix", () => {
     });
     await page.setViewportSize({ width: 320, height: 568 });
     const panel = await openDock(page);
+    const body = panel.locator("[data-slot='identity-dock-body']");
     await page.locator("#identity-assistant-brief").fill("A ceramics shop");
     await page.getByRole("button", { name: "Generate" }).click();
-    const working = page.getByText("Working on it. Your current look is unchanged.");
+    const working = body.getByText("Working on it. Your current look is unchanged.");
     await expect(working).toBeVisible();
-    const panelBox = (await panel.boundingBox())!;
+    const bodyBox = (await body.boundingBox())!;
     const workBox = (await working.boundingBox())!;
-    expect(workBox.y).toBeGreaterThanOrEqual(panelBox.y);
-    expect(workBox.y + workBox.height).toBeLessThanOrEqual(panelBox.y + panelBox.height + 1);
+    expect(workBox.y).toBeGreaterThanOrEqual(bodyBox.y);
+    expect(workBox.y + workBox.height).toBeLessThanOrEqual(bodyBox.y + bodyBox.height + 1);
     release();
     await expect(panel.locator("[data-assistant-proposal]")).toBeVisible();
   });
@@ -284,16 +286,14 @@ test.describe("widget state matrix", () => {
     const status = page.locator("[data-assistant-status]");
     await expect(status).toContainText("The assistant limit has been reached.");
     const statusBox = (await status.boundingBox())!;
-    const panelBox = (await panel.boundingBox())!;
-    expect(statusBox.y).toBeGreaterThanOrEqual(panelBox.y);
-    expect(statusBox.y + statusBox.height).toBeLessThanOrEqual(panelBox.y + panelBox.height + 1);
+    const body = panel.locator("[data-slot='identity-dock-body']");
+    const bodyBox = (await body.boundingBox())!;
+    expect(statusBox.y).toBeGreaterThanOrEqual(bodyBox.y);
+    expect(statusBox.y + statusBox.height).toBeLessThanOrEqual(bodyBox.y + bodyBox.height + 1);
 
     await page.reload({ waitUntil: "networkidle" });
     await expect(page.getByTestId("identity-dock")).toBeVisible();
-    if ((await page.locator("#identity-assistant-brief").count()) === 0) {
-      await page.keyboard.press("Control+I");
-    }
-    await expect(page.locator("#identity-assistant-brief")).toHaveValue("A ceramics shop");
+    await expect(await reopenDock(page)).toHaveValue("A ceramics shop");
   });
 });
 

@@ -60,7 +60,10 @@ export function useAssistantView({ proposalId, onBrief }: { proposalId: string |
     }
     const arrived = proposalId !== seenProposal.current;
     seenProposal.current = proposalId;
-    if (arrived) setView("preview");
+    if (arrived) {
+      setView("preview");
+      scrollToAssistant();
+    }
     if (!arrived && view !== "preview") return;
     const focusPreview = () => {
       if (!focusMayMoveToProposalPreview(document.activeElement)) return;
