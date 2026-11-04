@@ -343,14 +343,30 @@ function writeCursorRule(ctx: Ctx): void {
   place(ctx, "write", rel, (destRel) => writeFileSync(join(ctx.dest, destRel), CURSOR_RULE));
 }
 
+function linkPresentSkills(
+  ctx: Ctx,
+  skillsRel: string,
+  preset: readonly string[],
+  skillDest: Map<string, string>,
+): void {
+  const names = new Set(preset);
+  const listed = tryCatch(() => readdirSync(join(ctx.dest, ".agents", "skills"), { withFileTypes: true }));
+  if (listed.ok) {
+    for (const e of listed.value) {
+      if (e.isDirectory()) names.add(e.name);
+    }
+  }
+  for (const name of names) {
+    const source = skillDest.get(name) ?? join(".agents", "skills", name);
+    link(ctx, join(skillsRel, name), join("..", "..", source));
+  }
+}
+
 function wireClaude(ctx: Ctx, content: ReturnType<typeof plan>, skillDest: Map<string, string>): void {
   const skillsRel = join(".claude", "skills");
   const existing = lstatOf(join(ctx.dest, skillsRel));
   if (existing?.isDirectory() && !existing.isSymbolicLink()) {
-    for (const name of content.skills) {
-      const source = skillDest.get(name) ?? join(".agents", "skills", name);
-      link(ctx, join(skillsRel, name), join("..", "..", source));
-    }
+    linkPresentSkills(ctx, skillsRel, content.skills, skillDest);
   } else {
     link(ctx, skillsRel, "../.agents/skills");
   }
@@ -374,10 +390,7 @@ function wireCursor(ctx: Ctx, content: ReturnType<typeof plan>, skillDest: Map<s
   const skillsRel = join(".cursor", "skills");
   const existing = lstatOf(join(ctx.dest, skillsRel));
   if (existing?.isDirectory() && !existing.isSymbolicLink()) {
-    for (const name of content.skills) {
-      const source = skillDest.get(name) ?? join(".agents", "skills", name);
-      link(ctx, join(skillsRel, name), join("..", "..", source));
-    }
+    linkPresentSkills(ctx, skillsRel, content.skills, skillDest);
   } else {
     link(ctx, skillsRel, "../.agents/skills");
   }
