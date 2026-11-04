@@ -5,7 +5,6 @@
 - Purpose: Install one agent-agnostic setup (AGENTS.md, skills, subagents, commands) with a single CLI, instead of maintaining per-tool config.
 - Attribution: Original work by the same author.
 
-
 ## Set up AI agent instructions, skills, subagents and commands in a repo
 
 - Import: `@zedtech/zedkit-ai` — `installKit`, `InstallOptions`, `Action`, `Provider`, `Target`
@@ -20,7 +19,11 @@
 
 ```ts
 import { installKit } from "@zedtech/zedkit-ai";
-const result = installKit({ dest: ".", preset: "core", providers: ["claude", "cursor"] });
+const result = installKit({
+  dest: ".",
+  preset: "core",
+  providers: ["claude", "cursor"],
+});
 if (!result.ok) throw result.error;
 for (const action of result.value) console.log(action.kind, action.path);
 ```
@@ -29,7 +32,8 @@ CLI equivalent: `zedkit-ai setup . --provider cursor` (onboarding: **`--preset s
 
 Presets: `starter` (onboard + review; default), `setup` (starter plus domain,
 review lenses, retro, rules-upkeep, product/UI/copy subagents, and setup-ai
-`templates/` under `.agents/skills/setup-ai/`), `core`
+`templates/` under `.agents/skills/setup-ai/`, including the setup rubric and
+score-and-learn templates), `core`
 (planning and implement entry points), `full` (every skill).
 
 Providers: `cursor` (rules file, skills link or per-skill links inside a
