@@ -1,5 +1,13 @@
 # @zedtech/zedkit-ui
 
+## 1.4.0
+
+### Minor Changes
+
+- 5e5fd31: `@zedtech/zedkit-ui/marketing` gains `LogoBand` (a quiet row of logos; each company name is read out instead of the logo) and `Testimonials` (customer quotes as figures with captions on glass surfaces; quotation marks follow the page language).
+- 69e6028: `@zedtech/zedkit-ui/marketing` gains `MediaSection`: a use case told as text (title, description, check-marked points, calls to action) beside a framed picture, recording, demo or code sample. `reverse` flips the sides from `lg` up while the text stays first in reading order.
+- 8e2e4df: `@zedtech/zedkit-ui/marketing` gains `Pricing` (plans side by side: name, price, period, included features, one call to action each; the highlighted plan carries a visible badge) and `Faq` (questions that open in place, native `details`, no script). The marketing entry now covers a whole public page: header, hero, logos, features, steps, use case, testimonials, pricing, FAQ, closing call to action, footer.
+
 ## 1.3.0
 
 ### Minor Changes
