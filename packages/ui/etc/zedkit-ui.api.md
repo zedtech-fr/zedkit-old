@@ -26,6 +26,7 @@ import type { LucideIcon } from 'lucide-react';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import * as React_2 from 'react';
 import type { ReactNode } from 'react';
+import type { RefObject } from 'react';
 import { RowData } from '@tanstack/react-table';
 import { RowModel } from '@tanstack/react-table';
 import * as SelectPrimitive from '@radix-ui/react-select';
@@ -479,6 +480,7 @@ export function DialogClose(input: React_2.ComponentProps<typeof DialogPrimitive
 // @public (undocumented)
 export function DialogContent(input: React_2.ComponentProps<typeof DialogPrimitive.Content> & {
     closeLabel?: string;
+    initialFocus?: OverlayInitialFocus;
 }): React_2.JSX.Element;
 
 // @public (undocumented)
@@ -525,6 +527,7 @@ export function DrawerCloseButton(input: React_2.ComponentProps<typeof DrawerClo
 // @public (undocumented)
 export function DrawerContent(input: React_2.ComponentProps<typeof Drawer_2.Content> & {
     modal?: boolean;
+    initialFocus?: OverlayInitialFocus;
 }): React_2.JSX.Element;
 
 // @public (undocumented)
@@ -1175,6 +1178,9 @@ export interface OptionCardsProps {
     // (undocumented)
     selected: string[];
 }
+
+// @public
+export type OverlayInitialFocus = RefObject<HTMLElement | null> | string;
 
 // @public (undocumented)
 export function PageHeader(input: PageHeaderProps): React_2.JSX.Element;

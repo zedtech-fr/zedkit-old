@@ -482,6 +482,47 @@ describe("drawer", () => {
     expect(document.activeElement).toBe(trigger);
   });
 
+  it("focuses the panel itself on open, never a field", async () => {
+    const user = userEvent.setup();
+    render(
+      <Drawer direction="right">
+        <DrawerTrigger asChild>
+          <Button>Open drawer</Button>
+        </DrawerTrigger>
+        <DrawerContent>
+          <DrawerTitle>Delivery details</DrawerTitle>
+          <input aria-label="Name" defaultValue="Ada" />
+        </DrawerContent>
+      </Drawer>,
+    );
+    await user.click(screen.getByRole("button", { name: "Open drawer" }));
+    const dialog = screen.getByRole("dialog", { name: "Delivery details" });
+    expect(document.activeElement).toBe(dialog);
+    const field = screen.getByRole("textbox", { name: "Name" }) as HTMLInputElement;
+    expect(field.selectionStart).toBe(field.selectionEnd);
+  });
+
+  it("initialFocus moves to the field with the caret at the end", async () => {
+    const user = userEvent.setup();
+    render(
+      <Drawer direction="right">
+        <DrawerTrigger asChild>
+          <Button>Open drawer</Button>
+        </DrawerTrigger>
+        <DrawerContent initialFocus="#drawer-name">
+          <DrawerTitle>Delivery details</DrawerTitle>
+          <input id="drawer-name" aria-label="Name" defaultValue="Ada" />
+        </DrawerContent>
+      </Drawer>,
+    );
+    await user.click(screen.getByRole("button", { name: "Open drawer" }));
+    screen.getByRole("dialog", { name: "Delivery details" });
+    const field = screen.getByRole("textbox", { name: "Name" }) as HTMLInputElement;
+    expect(document.activeElement).toBe(field);
+    expect(field.selectionStart).toBe(3);
+    expect(field.selectionEnd).toBe(3);
+  });
+
   it("does not mount-autofocus when modal is false", async () => {
     const user = userEvent.setup();
     render(

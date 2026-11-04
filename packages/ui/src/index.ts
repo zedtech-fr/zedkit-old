@@ -71,6 +71,7 @@ export {
   DrawerTitle,
   DrawerTrigger,
 } from "./drawer.js";
+export { type OverlayInitialFocus } from "./overlay-modal.js";
 export {
   Field,
   FieldContent,

@@ -8,7 +8,13 @@ import * as React from "react";
 import { X } from "lucide-react";
 import { Drawer as DrawerPrimitive } from "vaul";
 import { buttonVariants } from "./button.js";
-import { resolveModalMountAutoFocus, overlayDrawerFooterClass, overlayDrawerHeaderClass } from "./overlay-modal.js";
+import {
+  focusOverlayInitial,
+  type OverlayInitialFocus,
+  overlayDrawerFooterClass,
+  overlayDrawerHeaderClass,
+  resolveModalMountAutoFocus,
+} from "./overlay-modal.js";
 import { cn } from "./utils.js";
 import { usePortalContainer } from "./theme-scope.js";
 import { useNarrowViewport } from "./use-narrow-viewport.js";
@@ -96,6 +102,8 @@ function DrawerContent({
   className,
   children,
   modal = true,
+  initialFocus,
+  ref,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Content> & {
   /**
@@ -103,12 +111,31 @@ function DrawerContent({
    * overlay so the background stays interactive. Defaults to `true`.
    */
   modal?: boolean;
+  /**
+   * Opt-in field to focus on open (a ref, or a selector resolved inside the
+   * panel). Without it focus lands on the panel itself, never inside a
+   * field; a focused field gets the caret at the end, never a selection.
+   */
+  initialFocus?: OverlayInitialFocus;
 }) {
+  const contentRef = React.useRef<HTMLDivElement | null>(null);
+  const setRef = (node: HTMLDivElement | null) => {
+    contentRef.current = node;
+    if (typeof ref === "function") ref(node);
+    else if (ref) ref.current = node;
+  };
   return (
     <DrawerPortal>
       {modal ? <DrawerOverlay /> : null}
       <DrawerPrimitive.Content
         data-slot="drawer-content"
+        ref={setRef}
+        tabIndex={-1}
+        onOpenAutoFocus={(event) => {
+          if (!modal) return;
+          event.preventDefault();
+          focusOverlayInitial(contentRef.current, initialFocus);
+        }}
         className={cn(
           "fixed z-overlay flex flex-col border bg-card text-card-foreground outline-none",
           // Safety net for content composed without DrawerHeader/Body/Footer (a bare form, text, a list): it still
