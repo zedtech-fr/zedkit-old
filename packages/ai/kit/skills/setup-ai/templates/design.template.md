@@ -12,6 +12,15 @@ Fictional **Acme Bookings** starter — replace with tokens and components from 
 - Plain, reassuring, no blame on cancel/refund flows.
 - Prices and deadlines visible before pay (integrator and end-customer personas).
 
+## Identity rules (brand invariants)
+
+Rules the code already follows about how the product looks, sounds and names things. Take them from the readers' `identity` lane (`.agents/setup-log/reading.md`), not from taste. Same **Status** column as the domain files.
+
+| ID   | Status  | Rule                                                                     | Source                   | Test / check                  |
+| ---- | ------- | ------------------------------------------------------------------------ | ------------------------ | ----------------------------- |
+| I-01 | current | Prices always show the currency and the tax mention next to the amount.  | `src/ui/PriceRow.tsx:18` | `tests/ui/price-row.test.tsx` |
+| I-02 | current | Customer-facing errors name what failed and the next step, never a code. | `src/i18n/en.json:12`    | no test — flag                |
+
 ## Tokens (from code)
 
 | Token / variable  | Role            | Where defined           |

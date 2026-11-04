@@ -2,6 +2,8 @@
 
 Fictional **Acme Bookings** example. Copy to `.agents/domain/<area>.md` (rename `<area>` to match this repo: booking, billing, auth, …).
 
+Rules come from the readers' `domain` and `business` lanes (`.agents/setup-log/reading.md`) after the lead spot-checked their citations, plus owner answers. One file per state-bearing area; a rule nobody can cite does not belong here.
+
 ## Scope
 
 Rules for **slot lifecycle**, **cancellation**, **refunds**, and **studio payout timing**. Money-bearing: every rule cites code or `source: owner`.
