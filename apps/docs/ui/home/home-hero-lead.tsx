@@ -17,7 +17,9 @@ export function HomeHeroLead({ className }: { className?: string }) {
       data-home-hero-lead=""
     >
       <Heading level={1} typeRole="display" className="max-w-lg text-balance">
-        {homeCopy.hero.title}
+        {homeCopy.hero.title.split(homeCopy.hero.titleNoBreak)[0]}
+        <span className="whitespace-nowrap">{homeCopy.hero.titleNoBreak}</span>
+        {homeCopy.hero.title.split(homeCopy.hero.titleNoBreak)[1]}
       </Heading>
       <Stack gap={2} className="items-start">
         <Text variant="muted" className={HOME_PERSUASION_TEXT_CLASS} data-home-hero-sub="">

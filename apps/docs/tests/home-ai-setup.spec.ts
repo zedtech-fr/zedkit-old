@@ -58,4 +58,54 @@ test.describe("home AI setup section", () => {
     expect(prompt && tree).toBeTruthy();
     expect(tree!.x).toBeGreaterThan(prompt!.x + prompt!.width);
   });
+
+  test("no skill or subagent counters; the benefits name what the setup does", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    const text = await page.locator("#ai-setup").innerText();
+    expect(text).not.toMatch(/\b\d+\s+(skills?|subagents?|agents?|commands?)\b/i);
+    for (const title of ["Thin orchestration", "Clear roles", "Business rules from your code", "Skills tailored to your repo"]) {
+      await expect(page.locator("#ai-setup").getByRole("heading", { level: 4, name: title })).toBeVisible();
+    }
+  });
+
+  test("the shorter column stays in view while the longer one scrolls (StickyAside)", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    const aside = page.locator("#ai-setup [data-sticky-aside-aside]");
+    const main = page.locator("#ai-setup [data-sticky-aside-main]");
+    const heights = await Promise.all([aside.boundingBox(), main.boundingBox()]);
+    expect(heights[0]!.height).toBeLessThan(heights[1]!.height);
+    await expect(aside).toHaveCSS("position", "sticky");
+    await main.evaluate((node) => window.scrollTo({ top: node.getBoundingClientRect().top + window.scrollY + 100, behavior: "instant" }));
+    await page.waitForTimeout(700);
+    const first = (await aside.boundingBox())!.y;
+    await page.evaluate(() => window.scrollBy({ top: 150, behavior: "instant" }));
+    await page.waitForTimeout(300);
+    const second = (await aside.boundingBox())!.y;
+    expect(Math.abs(second - first)).toBeLessThan(2);
+    expect(first).toBeLessThan(120);
+  });
+
+  test("the entrance uses the kit animate layer and the hero keeps top-notch on one line at 390px", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    await expect(page.locator("#ai-setup [data-animate-stagger]")).toHaveAttribute("data-animate", "fade-up");
+    await expect(page.locator("#ai-setup [data-slot='animate']")).toHaveAttribute("data-animate", "fade-in");
+    const lines = await page.evaluate(() => {
+      const span = document.querySelector("h1 span.whitespace-nowrap")!;
+      return span.getClientRects().length;
+    });
+    expect(lines).toBe(1);
+  });
+
+  test("under reduced motion nothing waits for an entrance", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.locator("#ai-setup").scrollIntoViewIfNeeded();
+    const pending = await page.locator("#ai-setup [data-animate-state='pending']").count();
+    expect(pending).toBe(0);
+    await expect(page.locator("#ai-setup [data-slot='animate']")).toHaveCSS("opacity", "1");
+  });
 });
