@@ -116,7 +116,7 @@ export function ConversationPane(props: {
         session={props.session}
         brief={props.brief}
         busy={props.busy}
-        compact={props.compact}
+        {...(props.compact ? { compact: true } : {})}
         onBrief={props.onBrief}
         onQuickRefine={props.onQuickRefine}
         off={props.off}
