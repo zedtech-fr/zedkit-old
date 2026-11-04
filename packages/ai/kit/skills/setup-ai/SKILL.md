@@ -133,7 +133,6 @@ In **improve** mode, audit each existing file and report before you edit:
 | Unenforced                 | prose rules a tool could check. Before calling a rule unenforced, open the lint, type and CI configs and search them for it.                                                                                                                       |
 | Missing ladder             | root `AGENTS.md`, or the <!-- if:skill=plan -->`plan` / `implement` / <!-- /if -->`review` skills, does not state the 7-question ladder. Search for the ladder section or the 7 rungs; an existing `AGENTS.md` without it is a gap like any other. |
 | Missing product/domain     | no `.agents/product.md`, no `.agents/domain/*.md`, personas still generic, no design voice doc when the repo has UI                                                                                                                                |
-| Missing signature pointer  | a visual signature spec or identity state-matrix test exists, and no nested AGENTS.md points at them. Link the files; do not copy the spec into always-loaded files.                                                                               |
 
 In both modes, list **gaps**: repo facts an agent would otherwise get wrong.
 
@@ -276,6 +275,8 @@ git diff --name-only
 
 Compare to plan rows in **`PLAN.md`** or **`.agents/setup-log/plan.md`**. **Every changed path needs a matching row.** Any gap goes into the closing report, setup-log **Plan gaps** section, and (if kit-caused) a kit-issue draft — do not treat silent edits as success.
 
+Run **`npx zedkit-ai validate --setup`** (add **`--plan <file>`** if the plan is not **`PLAN.md`** at the repo root or **`.agents/setup-log/plan.md`**) and fix every issue before the closing report; it checks that every **`git status --porcelain -uall`** path is covered by the plan text (a parent folder with a trailing slash counts) and that each **`.agents/setup-log/gates/*.log`** starts with **`CMD:`** and ends with **`EXIT:<code>`**.
+
 ## Verify
 
 - Every command in the written files was run, or is marked `UNVERIFIED` with the reason.
@@ -304,6 +305,7 @@ Then:
 
 - [ ] Providers value table + **Wired:** in setup-log
 - [ ] Plan rows cover **`git status` / `git diff --name-only`** after Write (or **Plan gaps** documented)
+- [ ] **`npx zedkit-ai validate --setup`** is clean before the closing report (add **`--plan <file>`** when the plan is not **`PLAN.md`** at the repo root or **`.agents/setup-log/plan.md`**)
 - [ ] Gate log files: **`CMD:`** first line, **`EXIT:<code>`** last line (separate files per command)
 - [ ] Repo skill links: from each `.agents/skills/*/`, **`test -e`** every relative markdown link target
 - [ ] One kit-issue draft per friction (or explicit "none"); each **Kit file** verified or **`UNVERIFIED`**

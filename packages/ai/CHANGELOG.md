@@ -1,5 +1,17 @@
 # @zedtech/zedkit-ai
 
+## 0.19.0
+
+### Minor Changes
+
+- 67b3ded: Opt-in `zedkit-ai validate --setup [--plan file]`: the PLAN must name every git-changed path, and setup-log gate logs must be well-formed. Plain `validate` is unchanged.
+
+### Patch Changes
+
+- 6c43f69: Document `validate --setup` in setup-ai plan reconciliation, rubric reviewer notes, phase E checklist, and templates.
+- b2a9e3e: Sample-2 setup-ai: repo-skill links, intro-before-tools, T3a capabilities, PLAN.md ladder rows, kit file verification steps, 8-axis pass mean with owner-dependent axes reported apart.
+- 09e7fa9: Validate now checks relative markdown links in every skill directory, including repo-authored skills the kit does not ship (previously only kit skills were scanned, so broken links in agent-written skills passed silently). Also skips `mailto:` links, and the post-setup hint points past phase C once `.agents/product.md` exists instead of repeating the phase C note.
+
 ## 0.18.0
 
 ### Minor Changes

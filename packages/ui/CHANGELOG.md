@@ -1,5 +1,17 @@
 # @zedtech/zedkit-ui
 
+## 1.6.1
+
+### Patch Changes
+
+- 6e81a46: Glass identity: sticky headers are translucent frosted glass. New `--zk-glass-bar-*` tokens (alpha, filter, luminous bottom edge, inset relief highlights; no drop shadow) style `MarketingHeader`, with a near-solid fallback when backdrop-filter is unsupported or less transparency is requested.
+
+  `PageHeader` takes a `back` slot above the title, spaced by the new `--spacing-page-header-back-gap` token.
+
+  `Badge` gains a `meta` variant: caption-size muted mono label with tabular numerals and no surface, for versions and counts.
+
+- a0eb7c4: Restore pointer, text, and not-allowed cursors on interactive controls via base CSS and component classes.
+
 ## 1.6.0
 
 ### Minor Changes
