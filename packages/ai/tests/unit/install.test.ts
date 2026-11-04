@@ -95,10 +95,22 @@ describe("installKit", () => {
     expect(again).toContainEqual({ kind: "skip", path: join(".agents", "personas.md"), note: "kept (already customized)" });
   });
 
-  it("adopt keeps a rewritten personas.md with no sidecar on second and third runs", () => {
+  it("adopt still sidecars a hand-written personas.md without v2 headers", () => {
     const dest = tempDir();
     install(dest, { preset: "setup", providers: ["cursor"], adopt: true });
     writeFileSync(join(dest, ".agents", "personas.md"), "# Our audiences\n\nKept as prose by the team.\n");
+    const again = install(dest, { preset: "setup", providers: ["cursor"], adopt: true });
+    expect(existsSync(join(dest, ".agents", "personas.kit.md"))).toBe(true);
+    expect(again).toContainEqual(
+      expect.objectContaining({ kind: "copy", path: join(".agents", "personas.kit.md") }),
+    );
+  });
+
+  it("adopt keeps v2-customized personas.md a no-op on second and third runs", () => {
+    const dest = tempDir();
+    install(dest, { preset: "setup", providers: ["cursor"], adopt: true });
+    const personas = join(dest, ".agents", "personas.md");
+    writeFileSync(personas, readFileSync(personas, "utf8").replaceAll("Acme Bookings", "Real Corp"));
     const second = install(dest, { preset: "setup", providers: ["cursor"], adopt: true });
     expect(second.filter((a) => a.kind !== "skip")).toEqual([]);
     expect(existsSync(join(dest, ".agents", "personas.kit.md"))).toBe(false);
@@ -126,10 +138,11 @@ describe("installKit", () => {
     expect(existsSync(join(dest, ".agents", "personas.kit.md"))).toBe(true);
   });
 
-  it("adopt sidecars edited non-template files but not customized personas", () => {
+  it("adopt sidecars edited non-template files but not v2 personas", () => {
     const dest = tempDir();
     install(dest, { preset: "setup", providers: ["cursor"], adopt: true });
-    writeFileSync(join(dest, ".agents", "personas.md"), "# Our audiences\n\nKept as prose by the team.\n");
+    const personas = join(dest, ".agents", "personas.md");
+    writeFileSync(personas, readFileSync(personas, "utf8").replaceAll("Acme Bookings", "Real Corp"));
     writeFileSync(join(dest, ".agents/commands/review.md"), "edited by user\n");
     const again = install(dest, { preset: "setup", providers: ["cursor"], adopt: true });
     expect(existsSync(join(dest, ".agents", "personas.kit.md"))).toBe(false);

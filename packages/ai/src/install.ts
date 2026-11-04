@@ -191,15 +191,12 @@ function place(
 
 const PERSONAS_V2_COLUMNS = "| Persona | Goals |";
 
-// Phase C rewrites .agents/personas.md from the template: v2 schema headers,
-// or prose/a reshaped table that no longer matches the template header row.
-// Sidecarring the kit template next to it as personas.kit.md is noise, so a
-// customized file is kept with no sidecar.
-function personasCustomized(current: string, template: string): boolean {
-  if (current.replace(/\s+/g, " ").includes(PERSONAS_V2_COLUMNS)) return true;
-  const header = (text: string): string | undefined =>
-    text.split("\n").map((line) => line.trim()).find((line) => line.startsWith("|"));
-  return header(current) !== header(template);
+// Phase C rewrites .agents/personas.md in the v2 schema. Sidecarring the kit
+// template next to a v2 file as personas.kit.md is noise, so it is kept with
+// no sidecar. Anything without v2 headers (v1, hand-written) still gets the
+// kit sidecar so the v2 schema stays visible.
+function personasCustomized(current: string): boolean {
+  return current.replace(/\s+/g, " ").includes(PERSONAS_V2_COLUMNS);
 }
 
 function copyFile(ctx: Ctx, from: string, rel: string): void {
@@ -215,7 +212,7 @@ function copyFile(ctx: Ctx, from: string, rel: string): void {
       ctx.actions.push({ kind: "skip", path: rel, note: "already installed" });
       return;
     }
-    if (current.ok && rel === join(".agents", "personas.md") && personasCustomized(current.value, text)) {
+    if (current.ok && rel === join(".agents", "personas.md") && personasCustomized(current.value)) {
       ctx.actions.push({ kind: "skip", path: rel, note: "kept (already customized)" });
       return;
     }
