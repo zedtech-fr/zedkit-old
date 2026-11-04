@@ -37,7 +37,7 @@ export function HomeIdentityLooksTabs({
             <TabsTrigger
               key={id}
               value={id}
-              className="min-h-11 w-36 shrink-0 snap-start flex-col gap-1 px-2 py-2 sm:flex-row sm:gap-2 sm:px-3 sm:py-1"
+              className="min-h-11 w-max max-w-none shrink-0 snap-start flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-2"
             >
             <HomeIdentityPaletteDots identity={id} mode={mode} tokens={TAB_DOTS} />
             <span data-tab-label="">{homeIdentityLooksCopy.products[id]}</span>
