@@ -1,0 +1,55 @@
+/*
+ * Criterion 1 (/docs/* + identity dock): signature type tokens and selective
+ * header elevation. Specimens stay on ThemeScope; no raw font-size here.
+ */
+
+/* Docs routes: raised site header (signature selective elevation on glass). */
+:root[data-identity="glass"] body:has(#nd-docs-layout) #nd-nav {
+  box-shadow:
+    var(--zk-glass-bar-shadow, none),
+    0 1px 2px hsl(var(--zk-shadow-color, 230 30% 20%) / 0.06),
+    0 8px 24px -10px hsl(var(--zk-shadow-color, 230 30% 20%) / 0.14);
+}
+
+:root[data-identity="glass"] body:has(#nd-docs-layout) #nd-nav nav :is(button, a[aria-label], [data-search]):not([data-slot="badge"]) {
+  background-image: var(--zk-site-sheen, linear-gradient(180deg, hsl(0 0% 100% / 0.55), hsl(0 0% 100% / 0) 55%));
+  background-color: hsl(var(--card) / var(--zk-glass-alpha, 0.72));
+  border-color: hsl(var(--zk-glass-edge, var(--border)) / var(--zk-glass-edge-alpha, 0.35));
+  box-shadow: var(--zk-shadow-sm);
+}
+
+:root.dark[data-identity="glass"] body:has(#nd-docs-layout) #nd-nav nav :is(button, a[aria-label], [data-search]):not([data-slot="badge"]) {
+  background-image: var(--zk-site-sheen, linear-gradient(180deg, hsl(0 0% 100% / 0.07), hsl(0 0% 100% / 0) 55%));
+}
+
+/* Identity dock + inline assistant: type roles via tokens (not Tailwind text-*). */
+[data-testid="identity-dock"] [data-assistant-status],
+[data-testid="identity-dock"] [data-assistant-feedback],
+[data-slot="identity-assistant"] [data-assistant-status] {
+  font-size: var(--zk-type-label-size);
+  font-weight: var(--zk-type-label-weight);
+  line-height: var(--zk-type-label-leading);
+}
+
+[data-testid="identity-dock"] [data-assistant-pane="conversation"] li,
+[data-testid="identity-dock"] [data-assistant-reference-report],
+[data-testid="identity-dock"] [data-assistant-link-report],
+[data-slot="identity-assistant"] [data-assistant-pane="conversation"] li {
+  font-size: var(--zk-type-body-size);
+  font-weight: var(--zk-type-body-weight);
+  line-height: var(--zk-type-body-leading);
+}
+
+[data-testid="identity-dock"] [data-slot="brief-specimen"] > span:first-child,
+[data-testid="identity-dock"] [data-assistant-proposal-compare] .text-sm,
+[data-testid="identity-dock"] [data-assistant-proposal-compare] .text-xs {
+  font-size: var(--zk-type-label-size);
+  font-weight: var(--zk-type-label-weight);
+  line-height: var(--zk-type-label-leading);
+}
+
+[data-testid="identity-dock"] [data-assistant-preview] {
+  font-size: var(--zk-type-body-size);
+  font-weight: var(--zk-type-body-weight);
+  line-height: var(--zk-type-body-leading);
+}

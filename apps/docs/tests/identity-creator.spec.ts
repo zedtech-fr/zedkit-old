@@ -159,7 +159,6 @@ test.describe("the assistant lives in IdentityDock on the demo editor", () => {
     await expect(page.locator("[data-assistant-pane='conversation']")).toBeHidden();
     // What happened to the links qualifies the proposal, so it stays on screen when the conversation is hidden.
     await expect(page.locator("[data-assistant-reference-report]")).toContainText("Atelier Nord Read as text only");
-    await expect(page.locator("[data-assistant-status]")).toContainText("A proposed look is ready.");
     // The switch is on screen after the change: nothing to scroll back for.
     const box = (await views.boundingBox())!;
     expect(box.y).toBeGreaterThanOrEqual(0);
@@ -185,7 +184,7 @@ test.describe("the assistant lives in IdentityDock on the demo editor", () => {
     await service(page, (posted, route) => route.fulfill(ok(posted)));
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(OPEN, { waitUntil: "networkidle" });
-    await expect(page.locator("[data-assistant-status]")).toHaveText("");
+    await expect(page.locator("[data-assistant-notice]")).toHaveCount(0);
     await expect(page.locator("[data-assistant-greeting]")).toContainText("Describe your product in a few plain sentences");
     const greeting = (await page.locator("[data-assistant-greeting]").boundingBox())!;
     const input = (await page.locator("#identity-assistant-brief").boundingBox())!;
@@ -194,7 +193,7 @@ test.describe("the assistant lives in IdentityDock on the demo editor", () => {
 
   for (const [name, reply, text] of [
     ["the service is down", { status: 503, json: { error: "unavailable", reason: "unavailable" } }, "[data-assistant-unavailable]"],
-    ["a quota refusal", { status: 429, headers: { "retry-after": "1800" }, json: { error: "quota", retryAfterSec: 1800 } }, "[data-assistant-status]"],
+    ["a quota refusal", { status: 429, headers: { "retry-after": "1800" }, json: { error: "quota", retryAfterSec: 1800 } }, "[data-assistant-notice]"],
   ] as const) {
     test(`390px: when ${name}, the message is on screen and not behind the pinned preview`, async ({ page }) => {
       await service(page, (_posted, route) => route.fulfill({ contentType: "application/json", ...reply }));
@@ -314,9 +313,9 @@ test.describe("the assistant in the editor", () => {
     await page.goto(OPEN, { waitUntil: "networkidle" });
     await brief(page, "A ceramics shop");
     await page.getByRole("button", { name: "Generate" }).click();
-    await expect(page.getByText("Working on it. Your current look is unchanged.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Cancel" })).toBeVisible();
     await page.getByRole("button", { name: "Cancel" }).click();
-    await expect(page.getByText("Cancelled. Nothing changed.")).toBeVisible();
+    await expect(page.locator("[data-assistant-notice]")).toContainText("Cancelled. Nothing changed.");
     release();
     await page.waitForTimeout(600);
     await expect(page.locator("[data-assistant-proposal]")).toHaveCount(0);
@@ -333,7 +332,7 @@ test.describe("the assistant in the editor", () => {
     await page.getByRole("button", { name: "Generate" }).click();
     await expect(page.locator("[data-assistant-proposal]")).toBeVisible();
     await page.getByRole("button", { name: "Generate" }).click();
-    await expect(page.locator("[data-assistant-status]")).toContainText("The assistant limit has been reached. Try again in 30 minutes.");
+    await expect(page.locator("[data-assistant-notice]")).toContainText("The assistant limit has been reached. Try again in 30 minutes.");
     await expect(page.locator("[data-assistant-proposal]")).toBeVisible();
     await expect(page.locator("main")).not.toContainText(/remaining|left today|requests left/i);
   });
@@ -343,7 +342,7 @@ test.describe("the assistant in the editor", () => {
     await page.goto(OPEN, { waitUntil: "networkidle" });
     await brief(page, "A ceramics shop");
     await page.getByRole("button", { name: "Generate" }).click();
-    await expect(page.locator("[data-assistant-status]")).toContainText("could not be used, so nothing changed");
+    await expect(page.locator("[data-assistant-notice]")).toContainText("could not be used, so nothing changed");
     await expect(page.locator("[data-assistant-proposal]")).toHaveCount(0);
     await expect(page.getByLabel("Radius", { exact: true })).toHaveValue("0.5rem");
   });

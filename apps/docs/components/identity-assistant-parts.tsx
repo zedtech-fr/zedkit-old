@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent, type Ref, type RefObject } from "react";
-import { Button, Stack, Text, Textarea, type IdentityTokens } from "@zedtech/zedkit-ui";
+import { useEffect, useMemo, useState, type Ref, type RefObject } from "react";
+import { Button, PromptInput, Stack, Text, type IdentityTokens } from "@zedtech/zedkit-ui";
 
 import { identityAssistantCopy as copy } from "@/components/i18n/identity-assistant-copy";
 import { ProposalBeforeAfter } from "@/components/identity-proposal-compare";
@@ -43,40 +43,6 @@ export function noticeText(notice: Notice): string {
   }
 }
 
-function BriefFormActions({
-  refining,
-  busy,
-  blocked,
-  value,
-  onSubmit,
-  onCancel,
-}: {
-  refining: boolean;
-  busy: boolean;
-  blocked: boolean;
-  value: string;
-  onSubmit: () => void;
-  onCancel: () => void;
-}) {
-  return (
-    <Stack direction="horizontal" gap={2} className="flex-wrap">
-      <Button
-        type="button"
-        onClick={onSubmit}
-        disabled={busy || blocked || value.trim() === ""}
-        aria-busy={busy || undefined}
-      >
-        {refining ? copy.refine : copy.generate}
-      </Button>
-      {busy ? (
-        <Button type="button" variant="outline" onClick={onCancel}>
-          {copy.cancel}
-        </Button>
-      ) : null}
-    </Stack>
-  );
-}
-
 const PLACEHOLDER_ROTATE_MS = 4000;
 
 /** Cycles the example prompts while the composer is empty, unless the visitor asked for reduced motion. */
@@ -91,10 +57,24 @@ function useRotatingPlaceholder(active: boolean): string {
   return current === undefined ? copy.placeholder : current;
 }
 
-/** Enter in the composer sends through the same path as the send button, without reloading the page. */
-function submitForm(event: FormEvent, onSubmit: () => void): void {
-  event.preventDefault();
-  onSubmit();
+/** Failures and refusals read as an assistant turn, not a status strip under the composer. */
+export function AssistantNoticeBubble({ notice }: { notice: Notice }) {
+  if (notice.kind === "unavailable") return null;
+  return (
+    <Stack
+      gap={1}
+      className="max-w-[95%] rounded-2xl rounded-tl-sm border border-border bg-muted px-3 py-2 text-sm"
+      data-assistant-notice=""
+      role="status"
+    >
+      <Text as="span" className="font-medium text-foreground">
+        {copy.assistant}
+      </Text>
+      <Text as="span" className="text-muted-foreground">
+        {noticeText(notice)}
+      </Text>
+    </Stack>
+  );
 }
 
 /** The one place a brief is written and sent: a chat composer. Typing here costs nothing; only sending asks the assistant. */
@@ -121,32 +101,27 @@ export function BriefForm({
   const placeholder = useRotatingPlaceholder(!refining);
   return (
     <Stack gap={2}>
-      <form onSubmit={(event) => submitForm(event, onSubmit)}>
-        <Stack gap={2}>
-          <Textarea
-            id="identity-assistant-brief"
-            ref={inputRef}
-            rows={1}
-            autoComplete="off"
-            placeholder={refining ? copy.refinePlaceholder : placeholder}
-            maxLength={LIMITS.prompt}
-            value={value}
-            readOnly={busy}
-            className="field-sizing-content max-h-40 min-h-textarea-min-height min-w-0 resize-none"
-            aria-label={refining ? copy.followUpLabel : copy.briefLabel}
-            aria-describedby={left < 100 ? "identity-assistant-brief-count" : undefined}
-            onChange={(event) => onValue(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key !== "Enter" || event.shiftKey) return;
-              event.preventDefault();
-              onSubmit();
-            }}
-          />
-          <BriefFormActions refining={refining} busy={busy} blocked={blocked} value={value} onSubmit={onSubmit} onCancel={onCancel} />
-        </Stack>
-      </form>
+      <PromptInput
+        id="identity-assistant-brief"
+        ref={inputRef}
+        rows={1}
+        autoComplete="off"
+        placeholder={refining ? copy.refinePlaceholder : placeholder}
+        maxLength={LIMITS.prompt}
+        value={value}
+        busy={busy}
+        disabled={blocked}
+        sendLabel={refining ? copy.refine : copy.generate}
+        {...(busy ? { onCancel, cancelLabel: copy.cancel } : {})}
+        aria-label={refining ? copy.followUpLabel : copy.briefLabel}
+        aria-describedby={left < 100 ? "identity-assistant-brief-count" : undefined}
+        onChange={(event) => onValue(event.target.value)}
+        onSubmit={() => {
+          if (!busy && !blocked && value.trim() !== "") onSubmit();
+        }}
+      />
       {left < 100 ? (
-        <Text variant="muted" id="identity-assistant-brief-count" className="text-sm">
+        <Text variant="muted" id="identity-assistant-brief-count" typeRole="label">
           {copy.charsLeft(left)}
         </Text>
       ) : null}
@@ -156,7 +131,7 @@ export function BriefForm({
 
 export function AssistantHeading() {
   return (
-    <Text variant="muted" className="text-sm">
+    <Text variant="muted" typeRole="body">
       {copy.intro}
     </Text>
   );
@@ -213,7 +188,7 @@ export function Thread({ turns }: { turns: readonly Turn[] }) {
   return (
     <ol aria-label={copy.thread} className="m-0 flex list-none flex-col gap-2 p-0" data-assistant-thread="">
       {turns.map((turn, index) => (
-        <li key={`${index}-${turn.role}`} className="text-sm">
+        <li key={`${index}-${turn.role}`} className="text-zk-type-body">
           <Text as="span" className="font-medium text-foreground">
             {turn.role === "user" ? copy.you : copy.assistant}
           </Text>{" "}
@@ -230,7 +205,7 @@ export function UnavailableBanner({ reason, live = true }: { reason: Unavailable
   return (
     <Text
       role={live ? "status" : undefined}
-      className="rounded-md border border-border bg-muted px-3 py-2 text-sm"
+      className="rounded-md border border-border bg-muted px-3 py-2 text-zk-type-body"
       data-assistant-unavailable=""
     >
       {copy.unavailable(reason)}
@@ -289,25 +264,25 @@ export function ProposalCard({
   const domain = useMemo(() => specimenDomainFromBrief(domainBrief), [domainBrief]);
   return (
     <Stack gap={3} role="region" aria-label={copy.proposal.title} aria-busy={busy || undefined} data-assistant-proposal="" className={busy ? "opacity-60" : undefined}>
-      <Text as="span" className="text-base font-semibold text-foreground">
+      <Text as="span" typeRole="label" className="font-semibold text-foreground">
         {copy.proposal.title}
       </Text>
       {proposal.summary ? (
-        <Text className="m-0 text-sm">
+        <Text typeRole="body" className="m-0">
           <Text as="span" className="font-medium">
             {copy.proposal.summaryLabel}:
           </Text>{" "}
           {proposal.summary}
         </Text>
       ) : null}
-      <Text variant="muted" className="text-sm">
+      <Text variant="muted" typeRole="body">
         {copy.proposal.changes(rows.length)}. {contrastNote(repaired)}
       </Text>
       <ProposalBeforeAfter current={current} proposed={repaired.tokens} requestId={proposal.requestId} domain={domain} />
       {rows.length > 0 ? (
-        <details className="text-sm">
+        <details className="text-zk-type-body">
           <summary className="flex min-h-11 cursor-pointer items-center focus-ring">{copy.proposal.showChanges}</summary>
-          <ul className="m-0 flex list-none flex-col gap-1 p-0 font-mono text-sm">
+          <ul className="m-0 flex list-none flex-col gap-1 p-0 font-mono text-zk-type-small">
             {rows.map((row) => (
               <li key={row.path} className="break-words">
                 {row.path}: {row.from} → {row.to}
@@ -317,7 +292,7 @@ export function ProposalCard({
         </details>
       ) : null}
       <ProposalApplyRow busy={busy} tokens={repaired.tokens} onUse={onUse} onDiscard={onDiscard} />
-      <Text variant="muted" className="text-sm">
+      <Text variant="muted" typeRole="body">
         {copy.proposal.note}
       </Text>
     </Stack>

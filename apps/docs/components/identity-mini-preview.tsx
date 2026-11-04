@@ -34,7 +34,7 @@ export function IdentityMiniPreview({
   return (
     <Stack gap={2} data-assistant-preview="" data-slot="brief-specimen" data-specimen-domain={SPECIMEN_DOMAIN_ATTR[domain]}>
       <style>{`${tokensToCss(tokens, scope)}\n${headings}`}</style>
-      <Text as="span" className="text-sm font-medium text-foreground">
+      <Text as="span" typeRole="body" className="font-medium text-foreground">
         {identityAssistantCopy.proposal.preview}
       </Text>
       {compact ? (
