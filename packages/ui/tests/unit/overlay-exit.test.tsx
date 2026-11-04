@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
@@ -186,6 +186,41 @@ describe("overlay exit lifecycle", () => {
     await user.click(screen.getByRole("button", { name: "Open drawer" }));
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("dialog", { name: "Delivery details" })).toBeNull();
+  });
+
+  it("unmounts a stuck closing dialog when animationend never fires", async () => {
+    const user = userEvent.setup();
+    const exit = stubExitAnimation();
+    render(<OpenDialog />);
+    await user.click(screen.getByRole("button", { name: "Open dialog" }));
+    exit.cell.name = "exit-fake";
+    await user.keyboard("{Escape}");
+    expect(screen.getByRole("dialog").getAttribute("data-state")).toBe("closed");
+    // No end event: the fallback synthesizes one after the exit duration plus grace.
+    await waitFor(
+      () => {
+        expect(screen.queryByRole("dialog")).toBeNull();
+        expect(document.querySelector("[data-slot='dialog-overlay']")).toBeNull();
+      },
+      { timeout: 5000 },
+    );
+  });
+
+  it("unmounts a stuck closing drawer when animationend never fires", async () => {
+    const user = userEvent.setup();
+    const exit = stubExitAnimation();
+    render(<OpenDrawer />);
+    await user.click(screen.getByRole("button", { name: "Open drawer" }));
+    exit.cell.name = "exit-fake";
+    await user.keyboard("{Escape}");
+    expect(screen.getByRole("dialog", { name: "Delivery details" }).getAttribute("data-state")).toBe("closed");
+    await waitFor(
+      () => {
+        expect(screen.queryByRole("dialog", { name: "Delivery details" })).toBeNull();
+        expect(document.querySelector("[data-slot='drawer-overlay']")).toBeNull();
+      },
+      { timeout: 5000 },
+    );
   });
 
   it("retunes vaul durations to the motion tokens above vaul's own specificity", () => {
