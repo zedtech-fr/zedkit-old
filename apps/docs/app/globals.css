@@ -142,23 +142,8 @@ body:has([role="dialog"][data-state="open"]) [data-search-pill] {
     position: relative;
     z-index: 1;
   }
-  /* Open Guides menu: a real popover panel. Glass frosts the page; other looks stay solid.
-     Fumadocs' viewport is the child of the `flex w-full justify-center` wrapper (no data attr). */
-  #nd-nav:has(button[aria-expanded="true"]) > div > .flex.w-full.justify-center > * {
-    background-color: hsl(var(--popover));
-    color: hsl(var(--popover-foreground));
-    border: var(--zk-border-width, 1px) solid hsl(var(--border));
-    border-radius: var(--radius-xl, 0.75rem);
-    box-shadow: var(--zk-shadow-md, 0 2px 6px hsl(0 0% 0% / 0.08));
-    overflow: hidden;
-  }
-  &[data-identity="glass"] #nd-nav:has(button[aria-expanded="true"]) > div > .flex.w-full.justify-center > * {
-    background-color: hsl(var(--popover) / 0.45);
-    border-color: hsl(var(--zk-glass-bar-edge, var(--zk-glass-edge, var(--border))) / var(--zk-glass-bar-edge-alpha, var(--zk-glass-edge-alpha, 1)));
-    box-shadow: var(--zk-shadow-md);
-    -webkit-backdrop-filter: blur(12px) saturate(var(--zk-glass-saturate, 1));
-    backdrop-filter: blur(12px) saturate(var(--zk-glass-saturate, 1));
-  }
+  /* Open Guides menu: tagged `data-surface="glass"` by SiteHeaderSurfacePatch;
+     the kit owns the panel surface (frosted under glass, solid elsewhere). */
   #nd-sidebar {
     background-color: hsl(var(--sidebar) / var(--zk-glass-alpha, 1));
     border-inline-end: var(--zk-border-width) solid hsl(var(--sidebar-border));
@@ -193,14 +178,6 @@ body:has([role="dialog"][data-state="open"]) [data-search-pill] {
     border: 0;
     border-radius: 0;
     box-shadow: none;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
-}
-
-@media (prefers-reduced-transparency: reduce) {
-  :root[data-identity="glass"] #nd-nav:has(button[aria-expanded="true"]) > div > .flex.w-full.justify-center > * {
-    background-color: hsl(var(--popover));
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }

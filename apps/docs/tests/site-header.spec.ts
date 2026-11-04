@@ -59,6 +59,7 @@ test.describe("site header navigation (#1034)", () => {
     await expect(header.getByRole("link", { name: "Getting started", exact: true })).toBeVisible();
     const panel = header.locator(".flex.w-full.justify-center > *");
     await expect(panel).toBeVisible();
+    await expect(panel).toHaveAttribute("data-surface", "glass");
     await header.getByRole("link", { name: "Getting started", exact: true }).hover();
 
     const glass = await panel.evaluate((el) => {
@@ -73,9 +74,9 @@ test.describe("site header navigation (#1034)", () => {
       };
     });
     expect(glass.bg === "transparent" || glass.bg === "rgba(0, 0, 0, 0)").toBe(false);
-    expect(glass.alpha).toBeGreaterThanOrEqual(0.4);
-    expect(glass.alpha).toBeLessThanOrEqual(0.5);
-    expect(glass.filter).toContain("blur(");
+    expect(glass.alpha).toBeGreaterThanOrEqual(0.68);
+    expect(glass.alpha).toBeLessThanOrEqual(0.78);
+    expect(glass.filter).toContain("blur(24px");
     expect(glass.headerFilter === "none" || glass.headerFilter === "").toBe(true);
     const glassContrast = await readComputedContrast(
       page,
