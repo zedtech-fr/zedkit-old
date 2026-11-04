@@ -183,6 +183,42 @@ function LibraryHeading({ id, problem }: { id: string; problem: "unavailable" | 
   );
 }
 
+/** Same clearance as token fields: pinned preview + header above, dock below. */
+function ApplySiteButtons({
+  appliedSite,
+  onApplySite,
+  onRemoveFromSite,
+}: {
+  appliedSite: boolean;
+  onApplySite: () => void;
+  onRemoveFromSite: () => void;
+}) {
+  const copy = identityEditorCopy.toolbar;
+  const library = identityEditorCopy.library;
+  return (
+    <>
+      <Row>
+        <Button
+          type="button"
+          variant="outline"
+          className="scroll-mt-28 scroll-mb-24 max-lg:[@media(min-height:48rem)]:scroll-mt-80"
+          onClick={onApplySite}
+        >
+          {copy.applySite}
+        </Button>
+        {appliedSite ? (
+          <Button type="button" variant="outline" onClick={onRemoveFromSite}>
+            {library.removeFromSite}
+          </Button>
+        ) : null}
+      </Row>
+      <Text variant="muted" className="text-sm">
+        {copy.applyHint}
+      </Text>
+    </>
+  );
+}
+
 /** Name, save, rename or delete a look, and apply it to this site: what you do once you like the card. */
 function IdentityEditorKeepBar({
   name,
@@ -200,7 +236,6 @@ function IdentityEditorKeepBar({
   className,
 }: KeepBarProps) {
   const copy = identityEditorCopy.toolbar;
-  const library = identityEditorCopy.library;
   const titleId = useId();
   return (
     <Stack gap={2} role="group" aria-labelledby={titleId} className={cn("min-w-0", className)} data-slot="identity-editor-keep">
@@ -227,25 +262,7 @@ function IdentityEditorKeepBar({
         {name.trim() === "" ? copy.nameHint : null}
       </Text>
       <SaveFeedback status={status} onSave={onSave} onSaveAsNew={onSaveAsNew} />
-      <Row>
-        {/* Same clearance as token fields: pinned preview + header above, dock below. */}
-        <Button
-          type="button"
-          variant="outline"
-          className="scroll-mt-28 max-lg:[@media(min-height:48rem)]:scroll-mt-80 scroll-mb-24"
-          onClick={onApplySite}
-        >
-          {copy.applySite}
-        </Button>
-        {appliedSite ? (
-          <Button type="button" variant="outline" onClick={onRemoveFromSite}>
-            {library.removeFromSite}
-          </Button>
-        ) : null}
-      </Row>
-      <Text variant="muted" className="text-sm">
-        {copy.applyHint}
-      </Text>
+      <ApplySiteButtons appliedSite={appliedSite} onApplySite={onApplySite} onRemoveFromSite={onRemoveFromSite} />
     </Stack>
   );
 }
