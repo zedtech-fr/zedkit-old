@@ -2,4 +2,4 @@
 "@zedtech/zedkit-ai": patch
 ---
 
-Document missing signature pointer gaps in the setup-ai skill audit table.
+Clarify nested AGENTS.md signature links in setup-ai (audit table stays on goal).
