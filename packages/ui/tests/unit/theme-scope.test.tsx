@@ -3,7 +3,17 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 
-import { Button, Dialog, DialogContent, DialogTitle, DialogTrigger, ThemeScope } from "#index.js";
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  ThemeScope,
+} from "#index.js";
 
 describe("ThemeScope", () => {
   it("exposes a host with identity and mode on the same node", () => {
@@ -39,9 +49,9 @@ describe("ThemeScope", () => {
     expect(document.body.contains(dialog)).toBe(true);
   });
 
-  it("mounts a dialog inside the nearest scope", async () => {
+  it("mounts a dialog to the body with the nearest scope look mirrored", async () => {
     const user = userEvent.setup();
-    render(
+    const { container } = render(
       <ThemeScope identity="maison">
         <Dialog>
           <DialogTrigger asChild>
@@ -55,8 +65,11 @@ describe("ThemeScope", () => {
     );
     await user.click(screen.getByRole("button", { name: "Open" }));
     const dialog = screen.getByRole("dialog");
-    const scope = dialog.closest("[data-slot='theme-scope']");
-    expect(scope?.getAttribute("data-identity")).toBe("maison");
+    // Outside the scope subtree (no trapping stacking context), but the mirror keeps the look.
+    expect(container.contains(dialog)).toBe(false);
+    const mirror = dialog.closest("[data-slot='theme-scope']");
+    expect(mirror?.getAttribute("data-identity")).toBe("maison");
+    expect(mirror?.parentElement).toBe(document.body);
   });
 });
 
@@ -73,21 +86,33 @@ function OpenDialog() {
   );
 }
 
+/** Dropdown panels still portal into the scope itself, unlike dialogs. */
+function OpenPopover() {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button>Open</Button>
+      </PopoverTrigger>
+      <PopoverContent>Frozen peas</PopoverContent>
+    </Popover>
+  );
+}
+
 describe("ThemeScope consumer refs", () => {
-  it("fills an object ref and keeps portals inside the scope", async () => {
+  it("fills an object ref and keeps dropdown portals inside the scope", async () => {
     const user = userEvent.setup();
     const ref = createRef<HTMLDivElement>();
     render(
       <ThemeScope identity="press" ref={ref}>
-        <OpenDialog />
+        <OpenPopover />
       </ThemeScope>,
     );
     expect(ref.current?.getAttribute("data-slot")).toBe("theme-scope");
     await user.click(screen.getByRole("button", { name: "Open" }));
-    expect(ref.current?.contains(screen.getByRole("dialog"))).toBe(true);
+    expect(ref.current?.contains(screen.getByText("Frozen peas"))).toBe(true);
   });
 
-  it("calls a callback ref with the node, keeps portals inside the scope, and releases it on unmount", async () => {
+  it("calls a callback ref with the node, keeps dropdown portals inside the scope, and releases it on unmount", async () => {
     const user = userEvent.setup();
     const seen: Array<HTMLElement | null> = [];
     const { unmount } = render(
@@ -97,13 +122,13 @@ describe("ThemeScope consumer refs", () => {
           seen.push(node);
         }}
       >
-        <OpenDialog />
+        <OpenPopover />
       </ThemeScope>,
     );
     const node = seen[0];
     expect(node?.getAttribute("data-identity")).toBe("maison");
     await user.click(screen.getByRole("button", { name: "Open" }));
-    expect(node?.contains(screen.getByRole("dialog"))).toBe(true);
+    expect(node?.contains(screen.getByText("Frozen peas"))).toBe(true);
     unmount();
     expect(seen.at(-1)).toBeNull();
   });
@@ -132,23 +157,23 @@ describe("ThemeScope consumer refs", () => {
     const second = createRef<HTMLDivElement>();
     const { rerender } = render(
       <ThemeScope ref={first}>
-        <OpenDialog />
+        <OpenPopover />
       </ThemeScope>,
     );
     rerender(
       <ThemeScope ref={second}>
-        <OpenDialog />
+        <OpenPopover />
       </ThemeScope>,
     );
     expect(first.current).toBeNull();
     expect(second.current).not.toBeNull();
     await user.click(screen.getByRole("button", { name: "Open" }));
-    expect(second.current?.contains(screen.getByRole("dialog"))).toBe(true);
+    expect(second.current?.contains(screen.getByText("Frozen peas"))).toBe(true);
   });
 });
 
 describe("ThemeScope nested scopes, opposite modes and portals", () => {
-  it("opens an overlay in the nearest scope: the nested look, its own mode, refs intact", async () => {
+  it("mirrors the nearest scope look on a body-mounted overlay: the nested look, its own mode, refs intact", async () => {
     const user = userEvent.setup();
     const outerRef = createRef<HTMLDivElement>();
     const seen: Array<HTMLElement | null> = [];
@@ -170,11 +195,14 @@ describe("ThemeScope nested scopes, opposite modes and portals", () => {
       </ThemeScope>,
     );
     await user.click(screen.getByRole("button", { name: "Open" }));
-    const host = screen.getByRole("dialog").closest("[data-slot='theme-scope']");
-    // Nearest scope: Press again in light, although Tide dark encloses everything.
-    expect(host?.getAttribute("data-label")).toBe("press-light-again");
+    const dialog = screen.getByRole("dialog");
+    // Outside every scope subtree, so no trapping stacking context applies.
+    expect(outerRef.current?.contains(dialog)).toBe(false);
+    const host = dialog.closest("[data-slot='theme-scope']");
+    // Nearest scope look: Press again in light, although Tide dark encloses everything.
     expect(host?.getAttribute("data-identity")).toBe("press");
     expect(host?.classList.contains("dark")).toBe(false);
+    expect(host?.parentElement).toBe(document.body);
     expect(outerRef.current?.getAttribute("data-identity")).toBe("tide");
     expect(outerRef.current?.classList.contains("dark")).toBe(true);
     expect(seen[0]?.getAttribute("data-identity")).toBe("press");
@@ -193,10 +221,11 @@ describe("ThemeScope nested scopes, opposite modes and portals", () => {
       </ThemeScope>,
     );
     await user.click(screen.getByRole("button", { name: "Open" }));
-    const host = screen.getByRole("dialog").closest("[data-slot='theme-scope']");
-    expect(host?.getAttribute("data-label")).toBe("maison-dark");
+    const dialog = screen.getByRole("dialog");
+    const host = dialog.closest("[data-slot='theme-scope']");
     expect(host?.getAttribute("data-identity")).toBe("maison");
     expect(host?.classList.contains("dark")).toBe(true);
+    expect(host?.parentElement).toBe(document.body);
   });
 });
 
