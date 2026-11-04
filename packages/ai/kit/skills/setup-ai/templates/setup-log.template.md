@@ -66,7 +66,7 @@ END: 2026-11-04T10:08:00+00:00
 EXIT:0
 ```
 
-- **Scores:** discovery 2, personas 2, domain rules 2, design 2, architecture 2, gates 1, skills 2, providers 2, friction 2, self-improvement 2 — mean 1.9. Evidence: `.agents/product.md`, `.agents/domain/booking.md`, transcript §3.
+- **Scores:** mean (8 axes) 2.6 — pass; owner-dependent: discovery 2, domain rules 2 (simulated owner cap). Measurable: personas 3, design 2, architecture 2, gates 2, skills 2, providers 2, UX 2, self-improvement 2. Evidence: `.agents/product.md`, `.agents/domain/booking.md`, transcript §3.
 - **Decisions:** wire cursor + claude now, codex later (`source: owner`); keep the team's `.cursor/skills` folder, link kit skills inside it.
 - **Kit frictions:** one draft per friction below (or: none this run)
 - **Re-audit:** after the next release, or when product, domain rules, or providers change.

@@ -200,7 +200,7 @@ describe("setup-ai v2 kit", () => {
       join(kitDir(), "skills", "setup-ai", "templates", "setup-rubric.md"),
       "utf8",
     );
-    expect(rubric).toMatch(/git diff --name-only.*against plan/iu);
+    expect(rubric).toMatch(/git diff --name-only.*against the plan/iu);
     expect(rubric).toMatch(/after `\/setup-ai` loads/iu);
   });
 
@@ -270,6 +270,78 @@ describe("setup-ai v2 kit", () => {
         /presetCommands|When that skill is not installed|Slash commands|line\.When/u,
       );
     }
+  });
+
+  it("documents sample-2 scorer fixes T1–T3 in setup-ai SKILL and catalog templates", () => {
+    const raw = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
+    expect(raw).toMatch(/Before ANY tool call/iu);
+    expect(raw.indexOf("Before ANY tool call")).toBeLessThan(raw.indexOf("## Phase A"));
+    expect(raw).toMatch(/Do not.*Running phase A/iu);
+    expect(raw).toMatch(/Domain vs docs reconciliation/iu);
+    expect(raw).toMatch(/enforced by/iu);
+    expect(raw).toMatch(/Links in repo skills/iu);
+    expect(raw).toContain("../../domain/booking.md");
+    expect(raw).toMatch(/test -e.*every relative link target/iu);
+    expect(raw).toMatch(/UNVERIFIED:/u);
+    for (const name of ["domain-change", "add-capability", "add-migration"] as const) {
+      const tmpl = readFileSync(
+        join(kitDir(), "skills", "setup-ai", "templates", "catalog", name, "SKILL.md.tmpl"),
+        "utf8",
+      );
+      expect(tmpl, name).toContain("[domain rules](../../domain/booking.md)");
+      expect(tmpl, name).toMatch(/\[product\]\(\.\.\/\.\.\/product\.md\)/u);
+      expect(tmpl, name).not.toMatch(/\(\.\.\/domain\//u);
+    }
+    const issue = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "kit-issue.template.md"),
+      "utf8",
+    );
+    expect(issue).toMatch(/UNVERIFIED.*why/iu);
+  });
+
+  it("documents run-4 scorer add-ons T3a and persisted plan file", () => {
+    const raw = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
+    expect(raw).toMatch(/State-bearing capabilities/iu);
+    expect(raw).toMatch(/ingestion\/sync/iu);
+    expect(raw).toMatch(/AGENTS ladder/s);
+    expect(raw).toMatch(/PLAN\.md/);
+    expect(raw).toMatch(/setup-log\/plan\.md/);
+    expect(raw).toMatch(/pnpm check.*unless/s);
+    expect(raw).not.toMatch(/setup-ai:validate-setup/iu);
+    expect(raw).not.toMatch(/\bL1\b/iu);
+    const rubric = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "setup-rubric.md"),
+      "utf8",
+    );
+    expect(rubric).toMatch(/AGENTS\.md.*ladder append/s);
+    expect(rubric).toMatch(/git status --porcelain -uall/s);
+    expect(rubric).not.toMatch(/setup-ai:validate-setup/iu);
+  });
+
+  it("documents 8-axis mean and owner-dependent axes in rubric and phase E", () => {
+    const rubric = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "setup-rubric.md"),
+      "utf8",
+    );
+    expect(rubric).toMatch(/8 measurable axes/s);
+    expect(rubric).toMatch(/Owner-dependent axes/s);
+    expect(rubric).toMatch(/simulated owner cap at 2/s);
+    expect(rubric).toMatch(/every axis >= 2/s);
+    const skill = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
+    expect(skill).toMatch(/mean over the 8 measurable axes \(2, 4–10\)/u);
+    expect(skill).toMatch(/owner-dependent.*line/s);
+    expect(skill).toMatch(/mean \(8 axes\)/u);
+    const log = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "setup-log.template.md"),
+      "utf8",
+    );
+    expect(log).toMatch(/mean \(8 axes\)/u);
+    expect(log).toMatch(/owner-dependent:/u);
+    const readme = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "README.md"),
+      "utf8",
+    );
+    expect(readme).toMatch(/8 measurable axes/s);
   });
 
   it("installs templates beside setup-ai for every preset that ships setup-ai; validate stays clean", () => {

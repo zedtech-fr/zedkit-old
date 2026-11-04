@@ -4,7 +4,7 @@ Scores a finished `/setup-ai` run. Used twice: by the agent as a **self-score** 
 
 Score each axis 0-3. Cite evidence (file path, `file:line`, or transcript quote) for every score. No evidence, no score above 1.
 
-**Targets:** every axis >= 2, mean >= 2.5. Any 0 or any hard gate failure below fails the run, whatever the mean.
+**Targets:** every one of the **10 axes** must score **>= 2** (no 0 or 1). **Pass mean:** **>= 2.5** computed only over the **8 measurable axes** — **2** Personas, **4** Design, **5** Architecture, **6** Gates, **7** Skills, **8** Providers, **9** UX, **10** Self-improvement — that a reviewer can score from files alone. **Discovery (1)** and **Domain rules (3)** are **owner-dependent**: still score 0–3, **report separately**, and **exclude from the mean**. In an **eval run** with a **simulated owner** (not a live human confirming), cap Discovery and Domain rules at **2** and state that in the review. With a **human owner** confirming (`source: owner`), they may score **3** as each axis text allows. Any hard gate failure fails the run regardless of mean.
 
 | Score | Meaning                                                                                               |
 | ----- | ----------------------------------------------------------------------------------------------------- |
@@ -76,29 +76,31 @@ Score each axis 0-3. Cite evidence (file path, `file:line`, or transcript quote)
 - 0: The user had to leave the flow to fix the tool (copy files by hand, edit config).
 - 1: Several detours or surprise questions.
 - 2: Zero manual file copies; at most the batched interview; a clear next step at each phase.
-- 3: As 2, with **Tell the user first** as the first assistant output **after `/setup-ai` loads** (install output before the skill is excluded), and an end summary the owner could act on in a minute.
+- 3: As 2, with **Tell the user first** as the first assistant output **after `/setup-ai` loads** (install output before the skill is excluded) — **before** any "Running phase A…" or tool call — and an end summary the owner could act on in a minute.
 
 ### 10. Self-improvement
 
 - 0: Nothing recorded.
 - 1: A summary in chat only.
 - 2: `.agents/setup-log.md` retro entry (what worked, what hurt, scores) and a drafted kit issue for each friction found.
-- 3: As 2, plus re-audit cadence, owner decision log, **one kit-issue draft per friction including completion defects** (plan/git mismatch, bad gate log), each with kit root cause.
+- 3: As 2, plus re-audit cadence, owner decision log, **one kit-issue draft per friction including completion defects** (plan/git mismatch, bad gate log, intro not first, broken repo-skill links), each with kit root cause and a **verified Kit file** path (or **`UNVERIFIED`**).
 
 ## Hard gates (binary, any failure fails the run)
 
 1. **Zero dangling references.** `zedkit-ai validate` is green and no installed file references a skill or agent that is not installed.
-2. **Zero lost user files.** Every file that existed before setup is byte-identical or was changed on purpose and **listed in the plan table**. Reviewer: re-run `git diff --name-only` against plan rows — **`package.json`**, **lockfile**, and **root `AGENTS.md`** ladder edits must appear. Paths derived from **`git status --porcelain`** before the plan, not from memory.
+2. **Zero lost user files.** Every file that existed before setup is byte-identical or was changed on purpose and **listed in the plan table** (`PLAN.md` or `.agents/setup-log/plan.md`). Reviewer: re-run `git diff --name-only` (and `git status --porcelain -uall`) against the plan — **`package.json`**, **lockfile**, and **root `AGENTS.md`** (including **ladder append**) must each have a **dedicated plan row**. Paths derived from git before the plan, not from memory.
 3. **Zero manual file copies** between `.agents/` and a provider folder.
 4. **Gates ran.** The repo's main check ran or its absence is justified in the log.
 5. **No secrets** written to any file or transcript.
 6. **Public-safe kit.** Nothing from the target repo (names, customers, content) was written into the kit itself.
+7. **Repo skill links resolve.** From each `.agents/skills/<name>/` directory, **`test -e`** succeeds on every relative link target in that skill's `SKILL.md` (use **`../../domain/…`**, not `../domain/…`, for `.agents/domain/`).
 
 ## Reviewer protocol
 
 1. Read only: the diff, the transcript, the repo. Do not ask the run's agent anything.
 2. Score each axis independently, evidence first, number second.
 3. Write one line per axis: `axis | score | evidence`.
-4. Compute the mean. Report pass or fail against targets and gates.
-5. For hard gate 2, compare `git diff --name-only` (and status) to the plan table in the transcript or `PLAN.md`.
-6. List friction in the form: what happened, which kit file caused it, proposed fix. Each item becomes a fix PR or a kit issue.
+4. Compute the **mean over axes 2, 4, 5, 6, 7, 8, 9, and 10 only**. On a separate line report **Owner-dependent axes:** Discovery (1) and Domain rules (3) with their scores; note **simulated owner cap at 2** on those two when the run did not have a live human owner. Report pass or fail: every axis >= 2, mean >= 2.5 on the eight measurable axes, and hard gates.
+5. **Report format (required):** one line `mean (8 axes) | <value> | pass|fail`; one line `Owner-dependent axes | discovery <n>, domain rules <n> | <optional: simulated owner cap>`.
+6. For hard gate 2, compare `git diff --name-only` and status to the plan in the transcript, **`PLAN.md`**, or **`.agents/setup-log/plan.md`** — confirm an **`AGENTS.md` ladder** row exists when the ladder changed.
+7. List friction in the form: what happened, which kit file caused it, proposed fix. Each item becomes a fix PR or a kit issue.

@@ -85,14 +85,24 @@ describe("validateKit", () => {
     expect(found).toEqual(['skills/alpha/extra.md: broken link to "./missing.md" (no such file)']);
   });
 
-  it("ignores broken links in skills the kit does not ship", () => {
+  it("checks links in repo skills the kit does not ship but still exempts kit names there", () => {
     const kit = tempDir();
     put(kit, "skills/alpha/SKILL.md", SKILL("alpha"));
+    put(kit, "skills/tdd/SKILL.md", SKILL("tdd"));
     const root = tempDir();
     put(root, "skills/alpha/SKILL.md", SKILL("alpha"));
-    put(root, "skills/mine/SKILL.md", SKILL("mine"));
+    put(root, "domain/x.md", "# X\n");
+    put(
+      root,
+      "skills/mine/SKILL.md",
+      `${SKILL("mine")}\nSee [broken](../domain/x.md) but [ok](../../domain/x.md), [mail](mailto:x@y.zz), and \`tdd\`.\n`,
+    );
     put(root, "skills/mine/notes.md", "See [broken](./missing.md).\n");
-    expect(validateKit(root, kit)).toEqual([]);
+    const found = validateKit(root, kit).map((issue) => `${issue.path}: ${issue.message}`);
+    expect(found.sort()).toEqual([
+      'skills/mine/SKILL.md: broken link to "../domain/x.md" (no such file)',
+      'skills/mine/notes.md: broken link to "./missing.md" (no such file)',
+    ]);
   });
 
   it("checks links in personas.md when the kit ships the template", () => {
