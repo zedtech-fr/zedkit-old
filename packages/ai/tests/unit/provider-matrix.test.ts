@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ALL_PROVIDERS, installKit } from "#install.js";
 import { agentsForPreset, commandsForPreset, kitDir, readManifest } from "#kit.js";
-import { checkDrift, checkKitDocs, validateKit } from "#validate.js";
+import { checkDrift, checkKitDocs, checkPlaceholders, validateKit } from "#validate.js";
 import { put, tempDir } from "./helpers.js";
 
 const MATRIX = ["cursor", "claude", "codex", "muse"] as const;
@@ -41,6 +41,7 @@ function parityCell(dest: string, preset: string, providers: readonly string[] |
   install(dest, preset, providers, adopt);
   expect(validateKit(join(dest, ".agents")), "validate").toEqual([]);
   expect(checkKitDocs(dest, join(dest, ".agents")), "docs").toEqual([]);
+  expect(checkPlaceholders(dest, join(dest, ".agents")), "placeholders").toEqual([]);
   const again = install(dest, preset, providers, adopt);
   expect(again.filter((action) => action.kind !== "skip"), "rerun").toEqual([]);
   expect(checkDrift(dest, join(dest, ".agents")), "drift").toEqual([]);
