@@ -1078,6 +1078,36 @@ import { RouteModal, closeRoute } from "@zedtech/zedkit-ui";
 </RouteModal>
 ```
 
+## Reset scroll on route change
+
+- Import: `@zedtech/zedkit-ui` — `ScrollReset`, `ScrollResetProps`, `useScrollReset`, `ScrollResetOptions`
+- Wraps: `(none)`
+- Status: beta
+- Short name: ScrollReset
+- Audience: Developers whose client-side navigation keeps the previous page's scroll position.
+- Purpose: Scrolls to the top (or to the `#hash` anchor) when the route key changes, leaving back/forward restoration to the browser.
+- When to use: Once near the root of the app, fed the router pathname (`usePathname()` in Next.js).
+- When not to use: For in-page anchor links or scroll spies — the browser already handles those.
+- Examples: Next.js root, Inner scroll container
+- A11y: Jumps instantly by default and always under `prefers-reduced-motion: reduce`; `behavior="smooth"` only applies when motion is allowed. Does not move focus. Back/forward (popstate) navigations are skipped so the browser restores the previous position.
+- Composition: Renders nothing; `useScrollReset` is the same behaviour as a hook. Router-agnostic — the app passes the route key.
+- See also: `Render a route as a modal over the list`
+
+```ts
+"use client";
+import { ScrollReset } from "@zedtech/zedkit-ui";
+import { usePathname } from "next/navigation";
+export function RouteScroll() {
+  return <ScrollReset routeKey={usePathname()} />;
+}
+```
+
+```ts
+import { useScrollReset } from "@zedtech/zedkit-ui";
+const getMain = useCallback(() => document.querySelector<HTMLElement>("main"), []);
+useScrollReset(pathname, { target: getMain });
+```
+
 ## Show toast notifications
 
 - Import: `@zedtech/zedkit-ui` — `Toaster`, `ToasterProps`, `toast`

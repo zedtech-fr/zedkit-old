@@ -8,12 +8,12 @@ Rules for **slot lifecycle**, **cancellation**, **refunds**, and **studio payout
 
 ## Rules
 
-| ID   | Rule                                                                                        | Source                            | Test                                  |
-| ---- | ------------------------------------------------------------------------------------------- | --------------------------------- | ------------------------------------- |
-| B-01 | A slot is **held** for 10 minutes during checkout; after that it returns to inventory.      | `src/booking/hold.ts:42`          | `tests/booking/hold.test.ts`          |
-| B-02 | **Cancel free** until 24h before start; inside 24h, cancel fee applies per studio policy.   | `source: owner`                   | `tests/booking/cancel-policy.test.ts` |
-| B-03 | **Partial refund** only when the studio policy allows; platform fee is non-refundable.      | `src/billing/refund.ts:88`        | no test — flag                        |
-| B-04 | **Double booking** is impossible: one confirmed booking per slot id (DB unique constraint). | `migrations/014_slots_unique.sql` | integration test                      |
+| ID   | Status  | Rule                                                                                        | Source                            | Test                                  |
+| ---- | ------- | ------------------------------------------------------------------------------------------- | --------------------------------- | ------------------------------------- |
+| B-01 | current | A slot is **held** for 10 minutes during checkout; after that it returns to inventory.      | `src/booking/hold.ts:42`          | `tests/booking/hold.test.ts`          |
+| B-02 | current | **Cancel free** until 24h before start; inside 24h, cancel fee applies per studio policy.   | `source: owner`                   | `tests/booking/cancel-policy.test.ts` |
+| B-03 | target  | **Partial refund** only when the studio policy allows; platform fee is non-refundable.      | `src/billing/refund.ts:88`        | no test — flag                        |
+| B-04 | current | **Double booking** is impossible: one confirmed booking per slot id (DB unique constraint). | `migrations/014_slots_unique.sql` | `tests/booking/unique-slot.test.ts`   |
 
 ## Invariants
 

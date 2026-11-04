@@ -8,6 +8,7 @@ import { CustomIdentityBar } from "@/components/custom-identity-bar";
 import { purgeLegacyIdentityStorage } from "@/lib/site-identity-storage";
 import { SiteChromeA11yPatch } from "@/ui/site-chrome-a11y";
 import { ThemeColorMeta } from "@/ui/theme-color-meta";
+import { RouteScrollReset } from "@/ui/route-scroll-reset";
 
 const StaticSearchDialog = dynamic(() => import("../components/search"));
 
@@ -25,6 +26,7 @@ export function Provider({ children }: { children: ReactNode }) {
     <RootProvider search={{ SearchDialog: StaticSearchDialog, preload: false }}>
       <SiteChromeA11yPatch />
       <ThemeColorMeta />
+      <RouteScrollReset />
       <CustomIdentityBar />
       {children}
     </RootProvider>
