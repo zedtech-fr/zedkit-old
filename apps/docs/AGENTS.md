@@ -110,7 +110,10 @@ scripts inside `pnpm catalog:check`.
   works around them.
 - Secondary states (idle, loading, success, error, quota, resume) stay on
   screen at 320, 390 and 1440. Quota copy names a real retry time, never a
-  daily allowance. The floating dock (when present) opens with Control or
+  daily allowance. An unfinished brief is kept in this tab
+  (`lib/creator-session-brief.ts`) so a reload restores it — the editor
+  replaces `#create` with a look query, so restore does not use the hash.
+  The floating dock (when present) opens with Control or
   Meta+I, closes with Escape, and on a phone is a bottom sheet. Using a look
   from the dock paints demo specimens only, never the site chrome. Brief-routed
   specimens are commerce, saas-dashboard, editorial and service-booking.
