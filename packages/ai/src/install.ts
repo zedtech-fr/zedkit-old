@@ -241,8 +241,7 @@ function plan(kit: string, manifest: KitManifest, preset: string) {
     ...file,
     text: resolveConditionals(file.text, avail, universe),
   }));
-  const installed = new Set([...skills, ...agents, ...commands]);
-  const issues = danglingKitRefs(files, installed, universe);
+  const issues = danglingKitRefs(files, avail, universe);
   // Root docs resolve at copy time; check their resolved text now so a
   // preset whose template names an uninstalled skill fails before writing.
   // (The attribution notice names every vendored skill by design and is
@@ -253,7 +252,7 @@ function plan(kit: string, manifest: KitManifest, preset: string) {
   for (const [full, installedPath] of rootDocs) {
     if (!existsSync(full)) continue;
     const text = resolveConditionals(readFileSync(full, "utf8"), avail, universe);
-    issues.push(...danglingKitRefs([{ path: installedPath, text, kitOrigin: true }], installed, universe));
+    issues.push(...danglingKitRefs([{ path: installedPath, text, kitOrigin: true }], avail, universe));
   }
   if (issues.length > 0) {
     const detail = issues.map((issue) => `${issue.path}: ${issue.message}`).join("; ");
