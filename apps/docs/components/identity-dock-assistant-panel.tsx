@@ -105,6 +105,23 @@ function useKeepSentBrief(brief: string, session: SessionState, setBrief: (value
   return send;
 }
 
+/** Focus the brief field when the panel opens, unless it is disabled or hidden. */
+function useFocusBriefOnOpen(panelRef: RefObject<HTMLDivElement | null>) {
+  useEffect(() => {
+    const field = panelRef.current?.querySelector<HTMLTextAreaElement>("#identity-assistant-brief:not([disabled])");
+    if (field && field.offsetParent !== null) field.focus({ preventScroll: true });
+  }, [panelRef]);
+}
+
+/** Bring a new proposal into view inside the scroll area. */
+function useScrollToProposal(scrollRef: RefObject<HTMLDivElement | null>, requestId: string | undefined, view: string) {
+  useLayoutEffect(() => {
+    if (!requestId) return;
+    const proposal = scrollRef.current?.querySelector("[data-assistant-proposal]");
+    proposal?.scrollIntoView({ block: "nearest", behavior: "instant" });
+  }, [scrollRef, requestId, view]);
+}
+
 export function IdentityDockAssistantPanel({
   previewTokens,
   onPreviewTokens,
@@ -123,18 +140,8 @@ export function IdentityDockAssistantPanel({
   const send = useKeepSentBrief(brief, session, setBrief, sendBrief);
   const domainBrief = specimenBriefFromThread(session.thread, session.proposal?.prompt ?? brief);
 
-  useEffect(() => {
-    const field = panelRef.current?.querySelector<HTMLTextAreaElement>("#identity-assistant-brief:not([disabled])");
-    if (field && field.offsetParent !== null) field.focus({ preventScroll: true });
-  }, []);
-
-  useLayoutEffect(() => {
-    const id = session.proposal?.requestId;
-    if (!id) return;
-    const root = scrollRef.current;
-    const proposal = root?.querySelector("[data-assistant-proposal]");
-    proposal?.scrollIntoView({ block: "nearest", behavior: "instant" });
-  }, [session.proposal?.requestId, ui.view]);
+  useFocusBriefOnOpen(panelRef);
+  useScrollToProposal(scrollRef, session.proposal?.requestId, ui.view);
 
   return (
     <Stack ref={panelRef} className="min-h-0 flex-1 gap-0 overflow-hidden" data-slot="identity-dock-body">
