@@ -3,6 +3,8 @@
 [![npm version](https://img.shields.io/npm/v/@zedtech/zedkit-ui.svg)](https://www.npmjs.com/package/@zedtech/zedkit-ui)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/zedtech-fr/zedkit/blob/main/LICENSE)
 
+The UI half of zedkit, a UI/AI kit (the AI half is
+[`@zedtech/zedkit-ai`](../ai/README.md): one prompt sets up your coding agents).
 Ship a calm React UI fast: dark/light design tokens plus accessible
 React building blocks (data tables, forms, dialogs, toasts),
 shadcn/ui-based (MIT, see

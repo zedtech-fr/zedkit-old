@@ -3,7 +3,8 @@
 [![npm version](https://img.shields.io/npm/v/@zedtech/zedkit-ai.svg)](https://www.npmjs.com/package/@zedtech/zedkit-ai)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/zedtech-fr/zedkit/blob/main/LICENSE)
 
-Give every coding agent the same setup: an `AGENTS.md` template, skills,
+The AI half of zedkit, a UI/AI kit: one prompt gets your repo a top-notch AI
+setup (see [First 5 minutes](#first-5-minutes)). Give every coding agent the same setup: an `AGENTS.md` template, skills,
 subagents, and a small installer and validator. Works with Claude Code,
 Cursor, Codex, Muse and any tool that reads `AGENTS.md` or Agent Skills.
 Original work by the same author, plus vendored MIT skills (see
