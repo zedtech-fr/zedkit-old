@@ -4,7 +4,7 @@
 import type * as React from "react";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 
-import { usePortalContainer } from "./theme-scope.js";
+import { useOverlayMount, usePortalContainer } from "./theme-scope.js";
 import { cn } from "./utils.js";
 
 export type DropdownMenuProps = React.ComponentProps<typeof DropdownMenuPrimitive.Root>;
@@ -23,13 +23,14 @@ function DropdownMenuContent({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Content>) {
   const container = usePortalContainer();
+  const overlayMount = useOverlayMount();
   return (
-    <DropdownMenuPrimitive.Portal container={container}>
+    <DropdownMenuPrimitive.Portal container={overlayMount ?? container}>
       <DropdownMenuPrimitive.Content
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
         className={cn(
-          "z-overlay min-w-select-content-min origin-[--radix-dropdown-menu-content-transform-origin] overflow-hidden rounded-md border bg-popover p-select-separator text-popover-foreground shadow-md",
+          "z-dropdown min-w-select-content-min origin-[--radix-dropdown-menu-content-transform-origin] overflow-hidden rounded-md border bg-popover p-select-separator text-popover-foreground shadow-md",
           className,
         )}
         {...props}

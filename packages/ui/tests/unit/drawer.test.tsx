@@ -360,7 +360,8 @@ describe("drawer", () => {
     render(<OpenDrawer direction="bottom" />);
     await user.click(screen.getByRole("button", { name: "Open drawer" }));
     const sheet = screen.getByRole("dialog", { name: "Delivery details" });
-    expect(sheet.className).toContain("z-overlay");
+    expect(sheet.className).toContain("z-drawer");
+    expect(sheet.className).not.toContain("z-overlay");
     expect(sheet.className).toContain("max-h-drawer-sheet-max-height");
     expect(sheet.className).not.toContain("96dvh");
     expect(document.querySelector("[data-vaul-overlay]")?.className).toContain("z-overlay");
