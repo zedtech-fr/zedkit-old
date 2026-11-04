@@ -358,8 +358,9 @@ function kitSlashCommandMentions(
   let m: RegExpExecArray | null;
   while ((m = re.exec(text)) !== null) {
     const cmd = m[2];
-    if (cmd && cmdSet.has(cmd)) {
-      out.push({ cmd, index: m.index + m[1].length });
+    const prefix = m[1];
+    if (cmd && prefix !== undefined && cmdSet.has(cmd)) {
+      out.push({ cmd, index: m.index + prefix.length });
     }
   }
   return out;
