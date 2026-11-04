@@ -28,7 +28,12 @@ Opt-in `zedkit-ai validate --setup` (and `--plan <file>` when the plan is
 not `PLAN.md` or `.agents/setup-log/plan.md`) also checks that the plan
 text covers every git-changed path and that each
 `.agents/setup-log/gates/*.log` starts with `CMD:` and ends with
-`EXIT:<code>`. Plain `validate` does not run those checks.
+`EXIT:<code>`. It also checks the setup went deep: a reading log with
+enough reader rows for the repo size and `file:line` evidence (D1), domain
+rules with evidence (D2), a nested `AGENTS.md` linking the setup rules, or a stated reason (D3), and
+`.agents/model-routing.md` linked from `AGENTS.md` (D4). Plain `validate` does
+not run those checks. `zedkit-ai scan [dir]` prints the repo size, the reader
+count and one slice per reader.
 
 ## Troubleshooting
 

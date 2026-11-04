@@ -73,9 +73,15 @@ What changed since 0.12 (all already in the package; this re-run picks them up):
 - **`setup` preset** — starter plus `domain-modeling`, `persona-review`, `code-review`, `ponytail-review`, `retro`, `rules-upkeep`, `writing-for-agents`, and subagents `product-director`, `ui-designer`, `copywriter`. `starter` stays the small closed preset.
 - **`*.kit.md` sidecars** — adopt keeps a colliding user file and writes the kit copy next to it. Validate ignores `*.kit.md`. If you already had `.agents/personas.md` (v1 Task/Bar columns), a re-run keeps it and may add `personas.kit.md` (v2 schema). Merge or replace when you want the v2 columns (goals, jobs, frustrations, journeys, evidence, routes). The `setup` preset installs v2 on a blank tree; `starter`, `core`, and `full` still install v1.
 - **`.agents/setup-log.md`** — `/setup-ai` phase E appends a retro entry here. The plan file is `PLAN.md` at the repo root or `.agents/setup-log/plan.md`. Gate command logs go in `.agents/setup-log/gates/*.log`.
-- **`validate --setup`** — opt-in; plain `validate` is unchanged. With `--setup`, every path from `git status --porcelain -uall` must appear in the plan text (a parent folder with a trailing slash counts), and each gate log must start with `CMD:` and end with `EXIT:<code>`. Pass `--plan <file>` if the plan is not at those default paths.
+- **`validate --setup`** — opt-in; plain `validate` is unchanged. With `--setup`, every path from `git status --porcelain -uall` must appear in the plan text (a parent folder with a trailing slash counts), and each gate log must start with `CMD:` and end with `EXIT:<code>`. Pass `--plan <file>` if the plan is not at those default paths. It also runs the four depth checks below (tags `D1`–`D4`).
+- **Read the code first** — `/setup-ai` phase B spawns read-only subagents, one per slice of the repo, before it asks anything: 1–5 on a small repo, 6–10 medium, 11–20 large. `npx zedkit-ai scan` sizes the repo and prints the slices. Each reader reports the business, domain, identity, architecture and convention rules already in the code with `file:line` evidence; the lead merges them into `.agents/setup-log/reading.md`. The interview then asks only what the code could not answer (at most 8 questions, plus "found in code, confirm" lines). Check **D1**: the reading log exists, has enough reader rows for the repo size, and cites evidence.
+- **Domain and identity rules** — the merged rules land in `.agents/domain/<area>.md` and the **Identity rules** table of `.agents/design.md`. Check **D2**: every domain file cites `file:line` or `source: owner`, and a repo with UI files has an **Identity rules** section with evidence.
+- **Nested `AGENTS.md`** — one per folder whose rules differ (features, ui, design, api, db), only what differs, linking to the domain and design files. Existing nested files are extended in place, not left as stubs. Check **D3**: at least one nested file links `.agents/domain` or `.agents/design`, or the setup-log says `nested-agents: none|kept — <reason>`.
+- **Model routing** — the run knows its provider (`cursor`, `claude`, `codex`, `muse`), lists the models the tool accepts, and sends reading and inventory to a cheap fast model (**scout**), drafting to a mid one (**worker**) and synthesis and decisions to the strong one (**lead**), passing the model on every spawn. The result is written to `.agents/model-routing.md` and pointed at from `AGENTS.md`, so the repo's later agent work follows it. Check **D4**: the file names the provider and the scout and lead tiers, and `AGENTS.md` links it.
 - **Preset closure** — `validate` fails when an installed kit file names a skill, agent, or command the preset does not install.
 - **Providers** — `cursor`, `claude`, `codex`, `muse` share one `.agents` source. Re-run `setup` after adding a repo skill so provider layers pick it up; do not `ln` or `cp` by hand.
+
+The rubric adds four depth axes (D1 code reading, D2 domain and identity rules, D3 nested rules, D4 model routing); each must reach 2, and they are not part of the 8-axis mean below, which was measured before they existed.
 
 Measured `/setup-ai` quality: mean **2.25/3** on the eight measurable rubric axes, every axis at least 2, hard gates pass. Measured with composer-2.5 and a simulated owner, on one private repo and one fictional sample repo.
 
@@ -86,7 +92,8 @@ Advanced / CI paths:
 ```sh
 npx zedkit-ai init . --provider cursor --adopt   # same files as setup; explicit init
 npx zedkit-ai validate                           # must print: ok
-npx zedkit-ai validate --setup [--plan file]     # opt-in: PLAN covers git changes
+npx zedkit-ai validate --setup [--plan file]     # opt-in: PLAN covers git changes, setup went deep (D1-D4)
+npx zedkit-ai scan [dir]                         # repo size and one slice per read-only reader
 ```
 
 **Starter (default for `init`):** `setup-ai`, `ground-truth`, `review`, `definition-of-done`,

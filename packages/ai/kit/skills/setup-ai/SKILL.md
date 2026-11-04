@@ -1,6 +1,6 @@
 ---
 name: setup-ai
-description: "Set up or improve this repo's AI setup from what the repo actually contains: explores code, docs and CI, runs a short discovery interview, then writes or upgrades AGENTS.md, product/domain/design artifacts, nested rules, and repo-specific skills. Use when asked to set up AI, onboard agents, audit or improve existing agent instructions, or after installing the kit. Takes provider names (setup-ai cursor claude); with none, asks once which providers to wire."
+description: "Set up or improve this repo's AI setup from what the repo actually contains: reads the code first with parallel read-only subagents, mines docs and CI, runs a short interview on what the code could not answer, then writes or upgrades AGENTS.md, product/domain/design artifacts, nested rules, and repo-specific skills. Use when asked to set up AI, onboard agents, audit or improve existing agent instructions, or after installing the kit. Takes provider names (setup-ai cursor claude); with none, asks once which providers to wire."
 ---
 
 # Setup AI
@@ -12,8 +12,8 @@ description: "Set up or improve this repo's AI setup from what the repo actually
 > **Intro text** (print as the opening of your first reply, then keep working in the same turn; replace `{…}` only with what you already know, or keep it generic):
 >
 > **Modes:** We'll run **fresh** or **improve** for this repo — {one sentence from what you already know or will confirm in phase A}.
-> **Phases:** **A** audit → **B** one batched interview (≤ 8 questions) → **C–D** artifacts and repo skills → write, verify, report → **E** score and learn.
-> **What you get / time:** Verified `AGENTS.md`, `.agents/` product, domain, personas, design when UI exists, and thin provider layers — about **15–45 minutes** typical; you approve the plan before writes and answer the batched interview in phase B.
+> **Phases:** **A** audit → **B** read the code with parallel read-only subagents, then one batched interview (≤ 8 questions, only what the code cannot answer) → **C–D** artifacts and repo skills → write, verify, report → **E** score and learn.
+> **What you get / time:** Verified `AGENTS.md`, `.agents/` product, domain rules read from the code, personas, design when UI exists, nested `AGENTS.md` where folders differ, model routing for your provider, and thin provider layers — about **15–45 minutes** typical; you approve the plan before writes and answer the batched interview in phase B.
 
 Make the AI setup of **this** repo true and specific. Generic advice is already in the kit; your job is what only this repo can say: its product, domain rules, commands, layout, traps, and repeated workflows.
 
@@ -24,20 +24,20 @@ Make the AI setup of **this** repo true and specific. Generic advice is already 
 When `/setup-ai` starts (or the user asks to set up AI), say this in plain language before phase A — no interview yet, and no pause after it:
 
 - **Modes:** **fresh** (little or no agent setup yet) or **improve** (you already have `AGENTS.md`, rules, or provider folders — audit and extend, do not replace blindly).
-- **Phases:** **A** audit (inventory + parallel explore + gaps) → **B** discovery (mine docs and code, then **one batched interview of at most 8 questions**) → **C** build deep artifacts from kit templates → **D** propose repo skills from the catalog → write provider layers, verify, report → **E** score and learn.
-- **What they get:** verified root `AGENTS.md`, `.agents/product.md`, domain rules under `.agents/domain/`, `.agents/personas.md`, `.agents/design.md` when the repo has UI, nested rules where folders differ, optional repo-specific skills and subagents, and thin Cursor/Claude layers that match `.agents/`.
+- **Phases:** **A** audit (inventory + parallel explore + gaps) → **B** discovery (parallel read-only subagents read the code and report the rules already in place with file evidence; mine docs; then **one batched interview of at most 8 questions**, only on what the code did not answer) → **C** build deep artifacts from kit templates → **D** propose repo skills from the catalog → write provider layers, verify, report → **E** score and learn.
+- **What they get:** verified root `AGENTS.md`, `.agents/product.md`, domain rules under `.agents/domain/` read from the code, `.agents/personas.md`, `.agents/design.md` with identity rules when the repo has UI, nested `AGENTS.md` where folders differ, `.agents/model-routing.md` (cheap models read, the strong model decides), optional repo-specific skills and subagents, and thin Cursor/Claude layers that match `.agents/`.
 - **Time:** about **15–45 minutes** for a typical app repo; large monorepos or workspace roots can take longer. They approve the plan before writes; in phase B they **answer or delegate the batched interview** (do not skip it). Asking **which** providers to wire is optional when names are already known; **recording all four provider values** (see Providers) in the plan and setup-log is **not** optional.
 
 ## Phases (whole run)
 
-| Phase | Name            | What happens                                                                              |
-| ----- | --------------- | ----------------------------------------------------------------------------------------- |
-| **A** | Audit           | Inventory, parallel explore, gap list (provider-neutral)                                  |
-| **B** | Discovery       | Mine README, docs, vision, routes, schema; then **one batched interview** (≤ 8 questions) |
-| **C** | Build           | Deep artifacts under `.agents/` from kit templates (evidence + owner answers)             |
-| **D** | Skills          | Propose repo skills from the kit **catalog**; tier the plan (must / should / could)       |
-| **—** | Write           | Shared source, provider layers, verify, report                                            |
-| **E** | Score and learn | Self-score against the rubric, setup-log retro, kit-issue drafts, re-audit cadence        |
+| Phase | Name            | What happens                                                                                                        |
+| ----- | --------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **A** | Audit           | Inventory, parallel explore, gap list (provider-neutral)                                                            |
+| **B** | Discovery       | **Read the code** with parallel read-only readers; mine docs; **one batched interview** (≤ 8 questions) on the gaps |
+| **C** | Build           | Domain, identity, nested `AGENTS.md`, model routing from kit templates (evidence + owner answers)                   |
+| **D** | Skills          | Propose repo skills from the kit **catalog**; tier the plan (must / should / could)                                 |
+| **—** | Write           | Shared source, provider layers, verify, report                                                                      |
+| **E** | Score and learn | Self-score against the rubric, setup-log retro, kit-issue drafts, re-audit cadence                                  |
 
 Two modes, decided in phase A step 1: **fresh** (little or nothing exists) and **improve** (a setup exists: keep it, fix it, extend it).
 
@@ -46,6 +46,7 @@ One shared source, then thin provider layers. Phases **A–D** are provider-neut
 ## Rules for the whole run
 
 - **Evidence only.** Every command, path, version and convention you write comes from a file you opened or a command you ran (see `ground-truth`). Mark the rest `UNVERIFIED` or leave it out.
+- **Read before asking.** Rules come from the code first (phase B1 readers, `file:line` evidence); the owner is asked only what the code cannot say, and confirms the rest.
 - **Owner answers.** Text that comes from the interview or explicit owner reply is tagged **`source: owner`** on the same line or table row (discovery axis in the setup scorecard).
 - **Additive.** Never delete or rewrite the user's existing text without asking. Propose, then apply what they accept.
 - **Setup depth.** When the repo uses preset **`setup`** or the owner asked for product/domain depth, fill the artifact table in phase C and propose catalog skills in phase D even if a workflow appeared only once so far. Outside that, keep <!-- if:skill=ponytail -->**`ponytail`** <!-- /if -->minimalism (no skill for a one-off).
@@ -65,6 +66,19 @@ One shared source, then thin provider layers. Phases **A–D** are provider-neut
 
 Add a **Wired:** line listing the providers you actually installed for this repo.
 
+## Model routing (whole run)
+
+Without routing, every subagent inherits the session's model: start under the strongest model and the whole run, readers included, is billed at that price. Route by **tier**, on the provider this run executes on.
+
+1. **Detect the running provider** from your own tool list and the spawn tool's schema (not from which provider folders the repo wires): `cursor`, `claude`, `codex` or `muse`. Not sure: say so and treat it as no routing available.
+2. **List the models the tool accepts** (the spawn tool's model parameter or the tool's own listing). Never pin an id you did not see listed.
+3. **Assign tiers.** **scout** (cheapest fast model): phase A explorers, phase B readers, link and path checks, read-only gate runs. **worker** (mid): drafting from settled evidence. **lead** (the session's strong model): synthesis, conflicts, interview, plan, money and policy decisions, consistency pass, scoring, final report.
+4. **Pass the model on every spawn**; leaving it out means inherit, and inherit means the strong model. If the tool cannot pick per spawn, say so, keep `inherit`, and use fewer, narrower readers.
+5. **Record it:** provider, model list source, tier to model mapping and the tier of each fan-out go in the plan appendix and the setup-log entry (fields `Routing`, `Reading`).
+6. **Write it into the repo** (phase C): `.agents/model-routing.md` from `templates/model-routing.template.md`, and a short **Model routing** section in root `AGENTS.md` pointing at it, so later agent work in this repo follows the same tiers.
+
+A scout reports evidence and never decides; the lead never reads a whole slice when a scout can.
+
 ## Phase A — Audit
 
 ### A1. Inventory what exists
@@ -80,7 +94,7 @@ List, with paths: `AGENTS.md` (root and nested), `CLAUDE.md`, `GEMINI.md`, `.cur
 
 ### A2. Explore in parallel
 
-Launch read-only `explorer` subagents in one batch, one question each, with the brief format of `parallel-work`. Ask each to return `file:line` evidence and nothing else. If you cannot spawn subagents, ask the same questions yourself, one after the other.
+Launch read-only `explorer` subagents on the **scout** tier (see Model routing) in one batch, one question each, with the brief format of `parallel-work`. Ask each to return `file:line` evidence and nothing else. If you cannot spawn subagents, ask the same questions yourself, one after the other.
 
 | Question                                                               | Where it looks                                                                                             |
 | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
@@ -141,14 +155,40 @@ In **improve** mode, audit each existing file and report before you edit:
 | Unenforced                 | prose rules a tool could check. Before calling a rule unenforced, open the lint, type and CI configs and search them for it.                                                                                                                       |
 | Missing ladder             | root `AGENTS.md`, or the <!-- if:skill=plan -->`plan` / `implement` / <!-- /if -->`review` skills, does not state the 7-question ladder. Search for the ladder section or the 7 rungs; an existing `AGENTS.md` without it is a gap like any other. |
 | Missing product/domain     | no `.agents/product.md`, no `.agents/domain/*.md`, personas still generic, no design voice doc when the repo has UI                                                                                                                                |
+| Missing nested rules       | folders with their own rules or traps (features, ui, design, api, db) and no nested `AGENTS.md`, or nested files that are stubs and never point at `.agents/domain` or `.agents/design`                                                            |
+| Missing model routing      | no `.agents/model-routing.md`, or root `AGENTS.md` does not say which tier does reading and which does decisions                                                                                                                                   |
 | Missing signature pointer  | a visual signature spec or identity state-matrix test exists, and no nested AGENTS.md points at them. Link the files; do not copy the spec into always-loaded files.                                                                               |
 
 In both modes, list **gaps**: repo facts an agent would otherwise get wrong.
 
 ## Phase B — Discovery
 
-1. **Mine first.** Summarize business model, customers, journeys, policies, brand, and design signals from README, docs, routes, schema, and content — each claim with `file:line` or mark `UNVERIFIED`.
-2. **One batched interview.** Ask **at most eight questions in one message**, only for gaps mining could not close. Suggested set (skip any already answered):
+Order: **B1 read the code**, **B2 mine the docs**, **B3 interview on the gaps**. Phases A and B1–B2 run in the same turn with no stop; the only stop is the B3 interview.
+
+### B1. Read the code (parallel read-only readers)
+
+The owner should not be asked what the code already says. Before any interview question, spawn readers that find the rules already in place.
+
+1. **Size and slice.** Run `npx zedkit-ai scan` (list, then cut, tracked and untracked files). It prints the size class, the reader count and one slice per reader. Without the CLI, count `git ls-files` and use the table, cutting by top-level folder or workspace package:
+
+| Repo size                | Readers        |
+| ------------------------ | -------------- |
+| small (under ~300 files) | 1–5            |
+| medium (~300–2000 files) | 6–10           |
+| large (over ~2000 files) | 11–20 (cap 20) |
+
+2. **Spawn one reader per slice, in one batch** (waves of the tool's parallel limit if it has one), on the **scout** tier, each with the brief from `templates/reader-brief.template.md` filled in. Readers are read-only: no writes, no installs. Each returns rules with `path:line` evidence across six lanes: **domain**, **business**, **identity**, **architecture**, **convention**, **enforcement**; plus conflicts, owner-only gaps and folder notes. If you cannot spawn subagents, read the slices yourself one after the other with the same brief and the same log.
+3. **Synthesize on the lead tier.** Merge and dedupe; open at least three cited lines per reader and drop any rule the line does not support (and re-read a reader whose spot-checks fail); mark each rule `current`, `target` or `UNVERIFIED`; list code vs docs conflicts; collect the folder notes that need a nested `AGENTS.md`.
+4. **Persist** the result as `.agents/setup-log/reading.md` from `templates/reading-log.template.md`: one numbered row per reader, the merged rules, the interview gaps, and the "found in code, confirm" list. `npx zedkit-ai validate --setup` checks that the log exists, that the reader count fits the repo size, and that it cites `file:line`.
+
+### B2. Mine the docs
+
+Summarize business model, customers, journeys, policies, brand, and design signals from README, docs, routes, schema, and content — each claim with `file:line` or mark `UNVERIFIED`. Reconcile with the readers' rules: a doc claim the code does not follow is a conflict, not a rule.
+
+### B3. One batched interview, only on the gaps
+
+1. **Ask only what the code could not answer.** Start from the interview gaps in the reading log: intent behind a rule (rule or accident?), policy that lives in nobody's code, code vs docs conflicts, `target` rules, non-goals. Cite the gap id with each question.
+2. **One batched interview.** Ask **at most eight questions in one message**, only for gaps the readers and mining could not close. Show what the code already answered as **"found in code — confirm?"** lines in the same message (not counted as questions); the owner confirms or corrects them. Suggested set (skip any the readers answered with evidence and use the slot for the highest-value open gap):
 
    1. Business model — who pays, for what, and what is out of scope?
    2. Primary customers and integrators?
@@ -165,15 +205,27 @@ In both modes, list **gaps**: repo facts an agent would otherwise get wrong.
 
 Open **`templates/README.md`** in this skill folder (after install: `.agents/skills/setup-ai/templates/README.md`). Copy from the **`templates/`** files below; replace fiction with repo facts. **Personas:** the `setup` preset already installed `.agents/personas.md` from `templates/personas-v2.template.md` — **edit the installed v2 file in place** (do not recopy the template over it).
 
-| Artifact          | Path                                   | Template                                             |
-| ----------------- | -------------------------------------- | ---------------------------------------------------- |
-| Product summary   | `.agents/product.md`                   | `templates/product.template.md`                      |
-| Domain rules      | `.agents/domain/<area>.md`             | `templates/domain/booking.template.md` (rename area) |
-| Personas v2       | `.agents/personas.md`                  | edit the installed v2 file in place                  |
-| Design / identity | `.agents/design.md`                    | `templates/design.template.md`                       |
-| Glossary          | `GLOSSARY.md` or `.agents/glossary.md` | `templates/glossary.template.md`                     |
+| Artifact          | Path                                          | Template                                             |
+| ----------------- | --------------------------------------------- | ---------------------------------------------------- |
+| Product summary   | `.agents/product.md`                          | `templates/product.template.md`                      |
+| Domain rules      | `.agents/domain/<area>.md`                    | `templates/domain/booking.template.md` (rename area) |
+| Nested rules      | `<folder>/AGENTS.md` per folder that differs  | `templates/nested-agents.template.md`                |
+| Model routing     | `.agents/model-routing.md`                    | `templates/model-routing.template.md`                |
+| Personas v2       | `.agents/personas.md`                         | edit the installed v2 file in place                  |
+| Design / identity | `.agents/design.md` (with **Identity rules**) | `templates/design.template.md`                       |
+| Glossary          | `GLOSSARY.md` or `.agents/glossary.md`        | `templates/glossary.template.md`                     |
+
+**Rules come from the reading log** (`.agents/setup-log/reading.md`), not from the templates: every merged rule lands in exactly one home (domain file for `domain` and `business` lanes, `design.md` **Identity rules** for `identity`, a nested `AGENTS.md` for folder-specific `architecture` and `convention`, root `AGENTS.md` for repo-wide ones) and keeps its `file:line` and `source: owner` answers. A repo with money, state or policy in its code and no domain file is an incomplete setup.
 
 Each domain file includes **rules, invariants, edge cases**, sources (`file:line` or `source: owner`), a **Status** column (**`current`** = enforced in code today, **`target`** = planned policy), and a **Test** column. For **Test** paths: **open the test file**, confirm it asserts the rule's behavior (not merely a nearby module); use **`no test — flag`** when nothing applies. **`current`** rules must be verified in code; **`target`** rules must not be written as if already enforced.<!-- if:agent=ui-designer --> Use **`ui-designer`** and **`copywriter`** for `design.md` when UI exists.<!-- /if -->
+
+### Nested AGENTS.md (after domain files)
+
+Use the readers' **folder notes**. Write one `<folder>/AGENTS.md` (`templates/nested-agents.template.md`) for each folder whose rules, boundaries or traps differ from the root: features, ui, design, api, db, jobs, tests. Only what differs, link to the domain and design files, under about 60 lines, every rule with `file:line`. With Cursor wired, add a `.cursor/rules/<folder>.mdc` (globs on the folder) that only points at the nested file. **Improve mode:** nested files the repo already has are audited in A3, then **extended in place**: add the folder's rules the readers found, a link to the matching `.agents/domain/` and `.agents/design.md` files, and `file:line` evidence; keep the author's wording and never replace the file. Thin stubs (a few lines, no rules, no pointer to `.agents/`) are the usual gap. A repo with no folder that differs, or whose files you deliberately keep, records `nested-agents: none — <reason>` or `nested-agents: kept — <reason>` in the setup-log instead.
+
+### Model routing (after nested files)
+
+Write `.agents/model-routing.md` from `templates/model-routing.template.md` with the provider, the model list and the tiers you actually used in this run (see **Model routing** above), then add a short **Model routing** section to root `AGENTS.md`: three lines (reading and inventory go to the scout tier, synthesis and decisions to the lead, the file to read). Plan rows for both.
 
 ### Domain vs docs reconciliation (after domain files)
 
@@ -251,7 +303,7 @@ Present one table covering phase A gaps, phase C artifacts, phase D skills, hygi
 
 After the owner approves the table, **persist** it as **`PLAN.md`** at the repo root **or** **`.agents/setup-log/plan.md`** (one path; record which in setup-log).
 
-**Appendix (always include):** paste the full **Providers** value table and **Wired:** line from the Providers section.
+**Appendix (always include):** paste the full **Providers** value table and **Wired:** line from the Providers section, the **Routing** line (provider, tier to model mapping), and the **Reading** line (repo size, reader count, slices from `npx zedkit-ai scan`).
 
 **Wait for the user's go before writing.** If nobody can answer (non-interactive run), output the table and stop.
 
@@ -268,7 +320,7 @@ After the owner approves the table, **persist** it as **`PLAN.md`** at the repo 
 
 - **Root `AGENTS.md`**: start from the kit template if there is none; when one exists, keep it and add the missing ladder section (the same 7 questions as the template). Replace every `<placeholder>` with a verified fact or delete the line. Non-negotiables say **`documented, not enforced`** or name a checker you opened and verified — never **`enforced by`** without that proof. Link `.agents/product.md` and domain docs from the map section.
 - **Role and style**: fill it from evidence and owner answers, not taste. Tag owner choices `source: owner`.
-- **Nested `AGENTS.md`**: only what differs from the root. Link, do not copy. When identity UI exists, close a **missing signature pointer** by linking the signature spec and state-matrix proof; **do not copy the spec** into always-loaded files.
+- **Nested `AGENTS.md`**: one per folder that differs (see phase C), only what differs from the root. Link, do not copy. When identity UI exists, close a **missing signature pointer** by linking the signature spec and state-matrix proof; **do not copy the spec** into always-loaded files.
 - **Repo skills**: folder `.agents/skills/<name>/SKILL.md`. The `description` says when to use it. Steps use this repo's real paths and commands, end with the command that proves the result, and point at an existing example file as the model.<!-- if:skill=rules-upkeep --> Follow `rules-upkeep` for format.<!-- /if -->
 - **Subagents**: `.agents/agents/<name>.md`, one-line description, `model` omitted or `inherit`. Read-only unless the job needs writes.
 - **Improve mode**: edit in place, smallest change, keep the author's wording where it is correct. Log what changed.
@@ -305,7 +357,7 @@ Short report first: what you created or changed, what you left alone and why, fi
 
 Then:
 
-1. **Self-score** — open `templates/setup-rubric.md` and score 0–3 on each of the 10 axes. Cite evidence per axis (file path, `file:line`, or transcript quote); no evidence means no score above 1. Compute **mean over the 8 measurable axes (2, 4–10)** only; show **Discovery** and **Domain rules** on a separate **owner-dependent** line (see rubric). The rubric sets pass targets and hard gates.
+1. **Self-score** — open `templates/setup-rubric.md` and score 0–3 on each of the 10 axes. Cite evidence per axis (file path, `file:line`, or transcript quote); no evidence means no score above 1. Compute **mean over the 8 measurable axes (2, 4–10)** only; show **Discovery** and **Domain rules** on a separate **owner-dependent** line (see rubric). Then score the four **depth axes D1–D4** (code reading, domain and identity rules, nested rules, model routing); each must be **>= 2**. The rubric sets pass targets and hard gates.
 2. **Setup log** — append a retro entry to `.agents/setup-log.md` from `templates/setup-log.template.md`: date, what worked, what hurt, **Providers table + Wired**, scores, decisions (`source: owner` where the owner chose), **Sidecar cleanup**, gate outcomes (see template), open kit frictions.
 3. **Kit friction** — for **each** friction you observed (stale sidecar, validate gap, tool detour, bad gate log format, **missing plan row**, plan/git mismatch, **intro skipped**, broken repo-skill links, …), draft **one** public-safe issue from `templates/kit-issue.template.md` with **Kit root cause** filled; map friction → kit file → fix. **Kit file** must be a path that **`test -e`** confirms in the **installed kit** (`.agents/skills/setup-ai/…` in the repo under setup) or in the **runtime package** (`node_modules/@zedtech/zedkit-ai/kit/…`; kit monorepo authors may use `packages/ai/kit/…`). Use **`grep`** / **`rg`** when unsure. Write **`UNVERIFIED: <why>`** only when no path passes **`test -e`**. **Completion defects count** (log missing `CMD:`/`EXIT:`, prettier appended after `EXIT:`). If there were zero frictions, say so in the log — do not skip the checklist.
 4. **Re-audit cadence** — set the next check: after the next release, or when product, domain rules, or providers change; record the trigger in the log entry.
@@ -313,7 +365,8 @@ Then:
 
 **Phase E checklist (before you finish):**
 
-- [ ] Providers value table + **Wired:** in setup-log
+- [ ] Providers value table + **Wired:** in setup-log, plus the **Routing** and **Reading** lines
+- [ ] Depth: `.agents/setup-log/reading.md` (readers scaled to size), `.agents/domain/*.md` with evidence, nested `AGENTS.md` (or `nested-agents: none`), `.agents/model-routing.md` pointed at from root `AGENTS.md`
 - [ ] Plan rows cover **`git status` / `git diff --name-only`** after Write (or **Plan gaps** documented)
 - [ ] **`npx zedkit-ai validate --setup`** is clean before the closing report (add **`--plan <file>`** when the plan is not **`PLAN.md`** at the repo root or **`.agents/setup-log/plan.md`**)
 - [ ] Gate log files: **`CMD:`** first line, **`EXIT:<code>`** last line (separate files per command)
