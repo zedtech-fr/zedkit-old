@@ -1,5 +1,5 @@
 ---
-"@zedtech/zedkit-ai": minor
+"@zedtech/zedkit-ai": patch
 ---
 
-Run-4 setup-ai scorer (SKILL/templates/rubric) and sync public API report for validateKit optional kit path.
+Run-4 setup-ai scorer: git-derived plan rows, gate log CMD/EXIT format, depth templates, presetCommands slash rules.
