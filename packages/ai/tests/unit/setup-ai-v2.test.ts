@@ -209,6 +209,7 @@ describe("setup-ai v2 kit", () => {
       "utf8",
     );
     expect(personas).toContain("Journey tests");
+    expect(personas).toContain("Partial coverage");
     const design = readFileSync(
       join(kitDir(), "skills", "setup-ai", "templates", "design.template.md"),
       "utf8",
@@ -226,6 +227,7 @@ describe("setup-ai v2 kit", () => {
       "utf8",
     );
     expect(domain).toContain("| Status");
+    expect(domain).toContain("Enforced by");
     const rubric = readFileSync(
       join(kitDir(), "skills", "setup-ai", "templates", "setup-rubric.md"),
       "utf8",

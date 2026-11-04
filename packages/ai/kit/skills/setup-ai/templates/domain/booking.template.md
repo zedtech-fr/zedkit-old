@@ -10,14 +10,16 @@ Rules for **slot lifecycle**, **cancellation**, **refunds**, and **studio payout
 
 **Status column:** `current` means the rule applies today. Do not mark a rule **`current`** while listing the same prose only under **Unenforced rules** — use **`current (documented, not enforced)`** in **Status** (or **`target`**) until a test or linter enforces it.
 
+**Enforced by column:** the checker that makes the rule true — a test, linter rule, or constraint the lead opened — or `documented, not enforced`. Status and Enforced by must agree.
+
 ## Rules
 
-| ID   | Status  | Rule                                                                                        | Source                            | Test                                  |
-| ---- | ------- | ------------------------------------------------------------------------------------------- | --------------------------------- | ------------------------------------- |
-| B-01 | current | A slot is **held** for 10 minutes during checkout; after that it returns to inventory.      | `src/booking/hold.ts:42`          | `tests/booking/hold.test.ts`          |
-| B-02 | current | **Cancel free** until 24h before start; inside 24h, cancel fee applies per studio policy.   | `source: owner`                   | `tests/booking/cancel-policy.test.ts` |
-| B-03 | target  | **Partial refund** only when the studio policy allows; platform fee is non-refundable.      | `src/billing/refund.ts:88`        | no test — flag                        |
-| B-04 | current | **Double booking** is impossible: one confirmed booking per slot id (DB unique constraint). | `migrations/014_slots_unique.sql` | `tests/booking/unique-slot.test.ts`   |
+| ID   | Status  | Rule                                                                                        | Source                            | Test                                  | Enforced by                        |
+| ---- | ------- | ------------------------------------------------------------------------------------------- | --------------------------------- | ------------------------------------- | ---------------------------------- |
+| B-01 | current | A slot is **held** for 10 minutes during checkout; after that it returns to inventory.      | `src/booking/hold.ts:42`          | `tests/booking/hold.test.ts`          | `src/booking/hold.ts` expiry sweep |
+| B-02 | current | **Cancel free** until 24h before start; inside 24h, cancel fee applies per studio policy.   | `source: owner`                   | `tests/booking/cancel-policy.test.ts` | `src/booking/cancel.ts` fee branch |
+| B-03 | target  | **Partial refund** only when the studio policy allows; platform fee is non-refundable.      | `src/billing/refund.ts:88`        | no test — flag                        | documented, not enforced           |
+| B-04 | current | **Double booking** is impossible: one confirmed booking per slot id (DB unique constraint). | `migrations/014_slots_unique.sql` | `tests/booking/unique-slot.test.ts`   | DB unique constraint               |
 
 ## Invariants
 
