@@ -55,7 +55,7 @@ Score each axis 0-3. Cite evidence (file path, `file:line`, or transcript quote)
 - 0: Commands copied from docs, never run.
 - 1: Some run; the main gate untested and unexplained.
 - 2: Every gate (`check`, test, lint, typecheck, build) was run, or skipped with a stated reason and a safe alternative (for example a throwaway worktree).
-- 3: As 2, plus real durations, prerequisites (services, env) and known-flaky steps recorded.
+- 3: As 2, plus real durations, prerequisites (services, env) and known-flaky steps recorded in **`.agents/setup-log.md` gate outcomes** (exit code, duration, what did not run and why, safe alternative per row).
 
 ### 7. Skills and subagents relevance
 
@@ -88,7 +88,7 @@ Score each axis 0-3. Cite evidence (file path, `file:line`, or transcript quote)
 ## Hard gates (binary, any failure fails the run)
 
 1. **Zero dangling references.** `zedkit-ai validate` is green and no installed file references a skill or agent that is not installed.
-2. **Zero lost user files.** Every file that existed before setup is byte-identical or was changed on purpose and listed in the plan.
+2. **Zero lost user files.** Every file that existed before setup is byte-identical or was changed on purpose and **listed in the plan table** (including `package.json`, lockfile, and root `AGENTS.md` edits).
 3. **Zero manual file copies** between `.agents/` and a provider folder.
 4. **Gates ran.** The repo's main check ran or its absence is justified in the log.
 5. **No secrets** written to any file or transcript.

@@ -285,7 +285,18 @@ function plan(kit: string, manifest: KitManifest, preset: string) {
       resolveConditionals(readFileSync(join(kit, single), "utf8"), avail, universe);
     }
   }
-  return { skills, licences, agents, commands };
+  return { skills, licences, agents, commands, personas: personasTemplate(kit, preset) };
+}
+
+// setup ships the v2 schema so phase C edits `.agents/personas.md` in place
+// instead of replacing the v1 Task/Bar table. Other presets keep v1.
+function personasTemplate(kit: string, preset: string): string | undefined {
+  if (preset === "setup") {
+    const v2 = join(kit, "skills", "setup-ai", "templates", "personas-v2.template.md");
+    if (existsSync(v2)) return v2;
+  }
+  const v1 = join(kit, "personas.template.md");
+  return existsSync(v1) ? v1 : undefined;
 }
 
 // The ladder section every AGENTS.md must carry, lifted from the bundled
@@ -371,8 +382,8 @@ function installContent(ctx: Ctx, content: ReturnType<typeof plan>): Map<string,
     copyFile(ctx, join(ctx.kit, "skills", file), join(".agents", "skills", file));
   }
   copyFile(ctx, join(ctx.kit, "THIRD_PARTY_NOTICES.md"), join(".agents", "THIRD_PARTY_NOTICES.md"));
-  if (existsSync(join(ctx.kit, "personas.template.md"))) {
-    copyFile(ctx, join(ctx.kit, "personas.template.md"), join(".agents", "personas.md"));
+  if (content.personas) {
+    copyFile(ctx, content.personas, join(".agents", "personas.md"));
   }
   for (const name of content.agents) {
     copyFile(ctx, join(ctx.kit, "agents", `${name}.md`), join(".agents", "agents", `${name}.md`));

@@ -4,6 +4,7 @@ import { dirname, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { err, ok, tryCatch, type Result } from "@zedtech/zedkit-core";
 import { ALL_PROVIDERS, installKit, type Provider } from "./install.js";
+import { installNextStepLines } from "./install-next-step.js";
 import { readManifest } from "./kit.js";
 import { checkDrift, checkKitDocs, validateKit } from "./validate.js";
 
@@ -65,11 +66,6 @@ function fail(message: string, sinks: Sinks): number {
   return 2;
 }
 
-function nextStep(dryRun: boolean): string {
-  if (dryRun) return "dry run: nothing written";
-  return "next: run /setup-ai in your agent (or ask: run the setup-ai skill). When it finishes: npx zedkit-ai validate";
-}
-
 function runInstall(args: string[], sinks: Sinks, kind: "init" | "setup"): number {
   const parsed = parse(args, OPTIONS, 1);
   if (!parsed.ok) return fail(parsed.error.message, sinks);
@@ -91,7 +87,14 @@ function runInstall(args: string[], sinks: Sinks, kind: "init" | "setup"): numbe
   for (const action of result.value) {
     sinks.out(`${action.kind.padEnd(5)} ${action.path}${action.note ? `  (${action.note})` : ""}`);
   }
-  sinks.out(nextStep(dryRun));
+  const dest = resolve(positionals[0] ?? ".");
+  if (dryRun) {
+    sinks.out("dry run: nothing written");
+  } else {
+    for (const line of installNextStepLines(dest, providers.value as readonly Provider[] | undefined)) {
+      sinks.out(line);
+    }
+  }
   return 0;
 }
 

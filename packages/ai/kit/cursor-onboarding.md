@@ -14,6 +14,8 @@ Install `@zedtech/zedkit-ai`, wire Cursor with adopt mode, run `/setup-ai` to ta
    pnpm add -D @zedtech/zedkit-ai
    ```
 
+   When **`pnpm-workspace.yaml`** exists at the repo root, use **`pnpm add -D -w @zedtech/zedkit-ai`** instead (avoids `ERR_PNPM_ADDING_TO_ROOT`).
+
    Use `npm install -D @zedtech/zedkit-ai` when the repo has no pnpm lockfile.
 
 2. **Install the kit with adopt** (keeps existing agent files on name collision; **`setup` uses the `setup` preset by default** — override with `--preset` when needed):
@@ -42,7 +44,7 @@ Install `@zedtech/zedkit-ai`, wire Cursor with adopt mode, run `/setup-ai` to ta
    ok
    ```
 
-   Fix every reported path until validate is clean.
+   Fix every reported path until validate is clean. If the repo uses Prettier, add the kit paths from the CLI **`prettier:`** hint to `.prettierignore` (or approve that row in the setup-ai plan) so `prettier --check .` stays green.
 
 ## Rules
 
