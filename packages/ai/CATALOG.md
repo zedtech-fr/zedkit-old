@@ -59,4 +59,4 @@ const issues = [...validateKit(".agents"), ...checkDrift(".", ".agents")];
 for (const issue of issues) console.error(`${issue.path}: ${issue.message}`);
 ```
 
-CLI equivalent: `zedkit-ai validate` (accepts a project root too; reports drift)
+CLI equivalent: `zedkit-ai validate` (accepts a project root too; reports drift). Opt-in `--setup` / `--plan <file>`: PLAN must cover every git-changed path; setup-log gate logs must be well-formed.

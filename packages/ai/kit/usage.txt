@@ -12,9 +12,11 @@ zedkit-ai <command>
       writes the kit version beside it (review.kit.md or zk-review).
       --provider takes cursor,claude,codex,muse,all; --target is an alias
       of --provider.
-  validate [dir]
+  validate [dir] [--setup] [--plan <file>]
       Check skills, subagents and commands, plus provider-copy drift
       (default dir: .agents; a project root is accepted too). Exit 1
-      on problems.
+      on problems. --setup (off by default) also checks that the PLAN
+      covers every git-changed path and that setup-log gate logs are
+      well-formed.
   list
       Show presets, subagents and commands.

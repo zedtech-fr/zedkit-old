@@ -151,12 +151,10 @@ size_budget() {
 size_budget ui 44500
 # Marketing entry (separate from the main budget); measured 785 with GlassSurface only, 4437 on 3 Nov 2026 with LogoBand and Testimonials.
 size_budget ui 8000 marketing
-# 4 Nov 2026: dist-size review. Clean-measured 17148 (USAGE to kit data, drift
-# frontmatter/wiring/universe dedup; no behavior change); budget lowered to
-# 17400 to lock the gain. Note: measured + 3% would be 17662, above the old
-# budget, so headroom is ~1.5%. A 10%+ shrink needs a comment-strip step
-# (measured at -4196, proposed in the PR, not taken here).
-size_budget ai 17400
+# 4 Nov 2026: validate --setup completion check (setup-check.ts). Measured
+# 18465; 17400 cannot fit a new module (gzip delta vs 17268 baseline is
+# ~1.2KB). Budget = measured + 2% = 18835.
+size_budget ai 18835
 
 if [ -f apps/docs/out/index.html ]; then
   if ! node apps/docs/scripts/check-first-load-budget.mjs; then
