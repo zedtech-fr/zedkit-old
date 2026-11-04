@@ -63,8 +63,8 @@ export function readAiSetupKit() {
       name: ".agents/",
       kind: "dir",
       children: [
-        { name: "skills/", kind: "dir", note: `${skills.length} skills`, children: skills.map((name) => ({ name: `${name}/`, kind: "dir" })) },
-        { name: "agents/", kind: "dir", note: `${agents.length} subagents`, children: files(agents) },
+        { name: "skills/", kind: "dir", children: skills.map((name) => ({ name: `${name}/`, kind: "dir" })) },
+        { name: "agents/", kind: "dir", children: files(agents) },
         { name: "commands/", kind: "dir", children: files(commands) },
         { name: "personas.md", kind: "file" },
       ],
@@ -80,7 +80,6 @@ export function readAiSetupKit() {
     },
   ]);
   return {
-    counts: { skills: skills.length, agents: agents.length, commands: commands.length },
     skills,
     agents,
     commands,
@@ -106,7 +105,6 @@ export function writeAiSetupPublicAssets(appDir) {
       `export const AI_SETUP_DOCS_PATH = ${JSON.stringify(AI_SETUP_DOCS_PATH)};`,
       "export type AiSetupTreeRow = { readonly text: string; readonly kind: \"dir\" | \"file\" | \"link\"; readonly note?: string };",
       `export const AI_SETUP_KIT = ${JSON.stringify(readAiSetupKit(), null, 2)} as const satisfies {`,
-      "  counts: { skills: number; agents: number; commands: number };",
       "  skills: readonly string[];",
       "  agents: readonly string[];",
       "  commands: readonly string[];",

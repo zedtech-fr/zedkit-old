@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button, Heading, SecretField, Section, Stack, StickyAside, Text } from "@zedtech/zedkit-ui";
+import { Animate, Button, Heading, SecretField, Section, Stack, StickyAside, Text } from "@zedtech/zedkit-ui";
 import { DocsActionLabel } from "@/components/docs-action-label";
 import { AI_SETUP_DOCS_PATH, AI_SETUP_KIT, AI_SETUP_MINI_PROMPT } from "@/lib/ai-setup-onboarding.generated";
 import { HomeAiSetupTerminal } from "@/ui/home/home-ai-setup-terminal";
@@ -21,11 +21,13 @@ function kitNames(names: readonly string[], pool: readonly string[]): string {
   return names.join(" · ");
 }
 
+const KIT_POOL = [...AI_SETUP_KIT.skills, ...AI_SETUP_KIT.agents];
 const items = [
-  { id: "review", names: kitNames(["review", "code-review", "ponytail-review", "persona-review"], AI_SETUP_KIT.skills) },
-  { id: "done", names: kitNames(["definition-of-done", "tdd", "adversarial-tests"], AI_SETUP_KIT.skills) },
-  { id: "roles", names: kitNames(["orchestrator", "explorer", "verifier"], AI_SETUP_KIT.agents) },
-  { id: "repo", names: kitNames(["setup-ai", "domain-modeling", "rules-upkeep"], AI_SETUP_KIT.skills) },
+  { id: "orchestration", names: kitNames(["orchestrator", "orchestrate", "parallel-work"], KIT_POOL) },
+  { id: "roles", names: kitNames(["explorer", "verifier", "ui-designer", "copywriter"], KIT_POOL) },
+  { id: "rules", names: kitNames(["setup-ai", "domain-modeling", "persona-review"], KIT_POOL) },
+  { id: "skills", names: kitNames(["writing-for-agents", "rules-upkeep", "retro"], KIT_POOL) },
+  { id: "checks", names: kitNames(["review", "definition-of-done", "tdd", "adversarial-tests"], KIT_POOL) },
 ] as const;
 
 function HomeAiSetupMono({ children }: { children: string }) {
@@ -37,7 +39,6 @@ function HomeAiSetupMono({ children }: { children: string }) {
 }
 
 function HomeAiSetupWhatYouGet() {
-  const { counts } = AI_SETUP_KIT;
   return (
     <Stack gap={4}>
       <Stack gap={1}>
@@ -45,10 +46,10 @@ function HomeAiSetupWhatYouGet() {
           {whatYouGet.title}
         </Heading>
         <Text variant="muted" className={HOME_PERSUASION_TEXT_CLASS}>
-          {whatYouGet.summary(counts.skills, counts.agents, counts.commands)}
+          {whatYouGet.summary}
         </Text>
       </Stack>
-      <ul className="m-0 grid list-none gap-6 p-0">
+      <ul className="m-0 grid list-none gap-6 p-0" data-animate="fade-up" data-animate-stagger="">
         {items.map((item) => (
           <li key={item.id} className="flex min-w-0 flex-col gap-1 border-l-2 border-border pl-4">
             <Heading level={4} typeRole="cardTitle">
@@ -84,35 +85,44 @@ export function HomeAiSetupSection() {
       {...HOME_SECTION_REVEAL_PROPS}
       {...HOME_MARKETING_ROOT_PROPS}
     >
-      <StickyAside side="right" ratio="2/5" gap="lg" className="pt-4" data-home-ai-setup="">
-        <StickyAside.Main>
-          <Stack gap={HOME_SECTION_CONTENT_GAP}>
-            <Stack gap={3}>
-              <SecretField
-                multiline
-                value={AI_SETUP_MINI_PROMPT}
-                aria-label={prompt.ariaLabel}
-                copyLabel={prompt.copyLabel}
-              />
-              <Text variant="muted" typeRole="caption" className={HOME_METADATA_TEXT_CLASS}>
-                {prompt.hintBefore} <HomeAiSetupMono>{prompt.hintCommand}</HomeAiSetupMono>
-                {prompt.hintMiddle} <HomeAiSetupMono>{prompt.hintSlash}</HomeAiSetupMono> {prompt.hintAfter}
-              </Text>
-              <Stack direction="horizontal" className="flex-wrap" data-docs-ctas="">
-                <Button asChild variant="outline" className="w-fit">
-                  <Link href={AI_SETUP_DOCS_PATH}>
-                    <DocsActionLabel>{homeAiSetupCopy.cta.guide}</DocsActionLabel>
-                  </Link>
-                </Button>
-              </Stack>
-            </Stack>
-            <HomeAiSetupWhatYouGet />
+      <Stack gap={HOME_SECTION_CONTENT_GAP} className="pt-4">
+        <Stack gap={3} className="max-w-3xl">
+          <SecretField
+            multiline
+            value={AI_SETUP_MINI_PROMPT}
+            aria-label={prompt.ariaLabel}
+            copyLabel={prompt.copyLabel}
+          />
+          <Text variant="muted" typeRole="caption" className={HOME_METADATA_TEXT_CLASS}>
+            {prompt.hintBefore} <HomeAiSetupMono>{prompt.hintCommand}</HomeAiSetupMono>
+            {prompt.hintMiddle} <HomeAiSetupMono>{prompt.hintSlash}</HomeAiSetupMono> {prompt.hintAfter}
+          </Text>
+          <Stack direction="horizontal" className="flex-wrap" data-docs-ctas="">
+            <Button asChild variant="outline" className="w-fit">
+              <Link href={AI_SETUP_DOCS_PATH}>
+                <DocsActionLabel>{homeAiSetupCopy.cta.guide}</DocsActionLabel>
+              </Link>
+            </Button>
           </Stack>
-        </StickyAside.Main>
-        <StickyAside.Aside asChild>
-          <HomeAiSetupTerminal />
-        </StickyAside.Aside>
-      </StickyAside>
+        </Stack>
+        {/* The benefits are the shorter column, so they are the aside and stay in view while the file tree scrolls. */}
+        <StickyAside
+          side="left"
+          mobile="before"
+          gap="lg"
+          className="[--zk-sticky-cols:minmax(0,1fr)_minmax(0,30rem)]"
+          data-home-ai-setup=""
+        >
+          <StickyAside.Main>
+            <Animate on={{ appear: "fade-in" }} delay={120}>
+              <HomeAiSetupTerminal />
+            </Animate>
+          </StickyAside.Main>
+          <StickyAside.Aside>
+            <HomeAiSetupWhatYouGet />
+          </StickyAside.Aside>
+        </StickyAside>
+      </Stack>
     </Section>
   );
 }

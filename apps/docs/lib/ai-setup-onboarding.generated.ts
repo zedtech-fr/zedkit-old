@@ -4,11 +4,6 @@ export const AI_SETUP_LLMS_URL = "https://zedkit.app/ai/setup.md";
 export const AI_SETUP_DOCS_PATH = "/docs/ai/setup";
 export type AiSetupTreeRow = { readonly text: string; readonly kind: "dir" | "file" | "link"; readonly note?: string };
 export const AI_SETUP_KIT = {
-  "counts": {
-    "skills": 15,
-    "agents": 6,
-    "commands": 2
-  },
   "skills": [
     "setup-ai",
     "ground-truth",
@@ -49,8 +44,7 @@ export const AI_SETUP_KIT = {
     },
     {
       "text": "│  ├─ skills/",
-      "kind": "dir",
-      "note": "15 skills"
+      "kind": "dir"
     },
     {
       "text": "│  │  ├─ setup-ai/",
@@ -114,8 +108,7 @@ export const AI_SETUP_KIT = {
     },
     {
       "text": "│  ├─ agents/",
-      "kind": "dir",
-      "note": "6 subagents"
+      "kind": "dir"
     },
     {
       "text": "│  │  ├─ explorer.md",
@@ -193,7 +186,6 @@ export const AI_SETUP_KIT = {
     }
   ]
 } as const satisfies {
-  counts: { skills: number; agents: number; commands: number };
   skills: readonly string[];
   agents: readonly string[];
   commands: readonly string[];
