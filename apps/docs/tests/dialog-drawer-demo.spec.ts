@@ -43,6 +43,10 @@ test.describe("docs dialog and drawer previews show realistic screens", () => {
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByRole("heading", { name: "Revoke this API key?" })).toBeVisible();
     await dialog.getByRole("button", { name: "Keep access" }).click();
+    // Gate: the first dialog must be gone before the page-wide Revoke query
+    // below, or it resolves the stale dialog's confirm button (the modal
+    // hides the page trigger from the a11y tree) and confirms early.
+    await expect(dialog).toBeHidden();
     await expect(page.getByText("In use")).toBeVisible();
     await page.getByRole("button", { name: "Revoke", exact: true }).click();
     await dialog.getByRole("button", { name: "Revoke", exact: true }).click();
