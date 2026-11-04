@@ -24,6 +24,15 @@
   }
 }
 
+/* One glass layer: the header carries the kit bar tokens (globals.css); fumadocs'
+   inner bar must not tint or blur again, or the header turns opaque. */
+:root[data-identity] #nd-nav > div {
+  background-color: transparent;
+  border-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
 /* Header: fixed compact height, nav aligned to the content width. */
 #nd-nav,
 #nd-nav > div,

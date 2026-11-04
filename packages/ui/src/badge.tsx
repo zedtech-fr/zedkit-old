@@ -20,7 +20,7 @@ const badgeVariants = cva(
           "border-transparent bg-warning px-badge-inline py-badge-block font-semibold text-warning-foreground shadow hover:bg-warning/90",
         outline: "px-badge-inline py-badge-block font-semibold text-foreground",
         /** Quiet metadata (a version, a count): caption size, muted, mono tabular numerals, no surface. */
-        meta: "rounded-sm border-transparent bg-transparent px-0.5 py-0 font-mono font-normal text-muted-foreground/80 tabular-nums shadow-none hover:text-foreground",
+        meta: "rounded-sm border-transparent bg-transparent px-0.5 py-0 font-mono font-normal text-muted-foreground tabular-nums shadow-none hover:text-foreground",
       },
     },
     defaultVariants: { variant: "default" },
