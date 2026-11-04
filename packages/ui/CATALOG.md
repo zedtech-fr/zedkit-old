@@ -1047,32 +1047,6 @@ const [span, setSpan] = useState<DateRangePickerProps["value"]>();
 </Field>
 ```
 
-## Float an identity assistant on any page
-
-- Import: `@zedtech/zedkit-ui` — `IdentityDock`, `IdentityDockTrigger`, `IdentityDockPanel`, `IdentityDockSheet`, `IdentityDockSwatch`
-- Wraps: `(none)`
-- Status: alpha
-- Short name: IdentityDock
-- Audience: Product sites that keep a create-your-look flow visible while the visitor navigates.
-- Purpose: Fixed pill trigger and a non-modal panel (side sheet on wide viewports, bottom panel on narrow) for an identity assistant without blocking the page.
-- When to use: Compose app-specific assistant content inside `IdentityDockPanel`; persist conversation state in the host app.
-- When not to use: Full-screen creator pages or modal drawers — use `Drawer`/`RouteModal` instead.
-- Examples: Collapsed pill, Expanded panel
-- A11y: Trigger is a native button; panel is `aside` with `aria-hidden` when closed. Host app should move focus into the panel on open and handle Escape.
-- Composition: `IdentityDockSwatch` shows the current look colour; panel width caps at 380px on wide viewports.
-- See also: `Slide in a drawer panel`, `Render a route as a modal over the list`
-
-```ts
-import { IdentityDock, IdentityDockPanel, IdentityDockSwatch, IdentityDockTrigger, Text } from "@zedtech/zedkit-ui";
-
-<IdentityDock>
-  <IdentityDockTrigger type="button" onClick={() => setOpen(true)}>
-    <IdentityDockSwatch />
-    <Text>And yours?</Text>
-  </IdentityDockTrigger>
-  <IdentityDockPanel open={open}>{/* assistant */}</IdentityDockPanel>
-</IdentityDock>
-```
 
 ## Render a route as a modal over the list
 

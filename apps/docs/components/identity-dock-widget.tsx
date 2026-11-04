@@ -1,14 +1,10 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { tryCatch } from "@zedtech/zedkit-core";
 import {
-  IdentityDock,
-  IdentityDockPanel,
-  IdentityDockSheet,
-  IdentityDockSwatch,
-  IdentityDockTrigger,
   Stack,
   Text,
   cn,
@@ -19,6 +15,12 @@ import {
   type IdentityTokens,
 } from "@zedtech/zedkit-ui";
 
+import {
+  IdentityDock,
+  IdentityDockPanel,
+  IdentityDockSwatch,
+  IdentityDockTrigger,
+} from "@/components/identity-dock-chrome";
 import { identityDockCopy } from "@/components/i18n/identity-dock-copy";
 import { IdentityDockAssistantPanel } from "@/components/identity-dock-assistant-panel";
 import { useCreatorHandoff } from "@/components/use-creator-handoff";
@@ -27,6 +29,11 @@ import { DEFAULT_IDENTITY } from "@/lib/default-identity";
 import { IDENTITY_EDITOR_HREF } from "@/lib/site-links.mjs";
 import { useIdentityAssistantStore } from "@/lib/identity-assistant-store";
 import { docsSiteCustomStorageKey } from "@/lib/site-identity-storage";
+
+const IdentityDockSheet = dynamic(
+  () => import("@/components/identity-dock-sheet").then((mod) => ({ default: mod.IdentityDockSheet })),
+  { ssr: false },
+);
 
 function useNarrowViewport(): boolean {
   return useSyncExternalStore(

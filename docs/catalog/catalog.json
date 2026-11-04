@@ -4046,45 +4046,6 @@
           ]
         },
         {
-          "need": "Float an identity assistant on any page",
-          "import": "`@zedtech/zedkit-ui` — `IdentityDock`, `IdentityDockTrigger`, `IdentityDockPanel`, `IdentityDockSheet`, `IdentityDockSwatch`",
-          "wraps": "`(none)`",
-          "status": "alpha",
-          "shortName": "IdentityDock",
-          "audience": "Product sites that keep a create-your-look flow visible while the visitor navigates.",
-          "purpose": "Fixed pill trigger and a non-modal panel (side sheet on wide viewports, bottom panel on narrow) for an identity assistant without blocking the page.",
-          "whenToUse": "Compose app-specific assistant content inside `IdentityDockPanel`; persist conversation state in the host app.",
-          "whenNotToUse": "Full-screen creator pages or modal drawers — use `Drawer`/`RouteModal` instead.",
-          "derivedFrom": null,
-          "example": "import { IdentityDock, IdentityDockPanel, IdentityDockSwatch, IdentityDockTrigger, Text } from \"@zedtech/zedkit-ui\";\n\n<IdentityDock>\n  <IdentityDockTrigger type=\"button\" onClick={() => setOpen(true)}>\n    <IdentityDockSwatch />\n    <Text>And yours?</Text>\n  </IdentityDockTrigger>\n  <IdentityDockPanel open={open}>{/* assistant */}</IdentityDockPanel>\n</IdentityDock>",
-          "examples": [
-            {
-              "title": "Collapsed pill",
-              "code": "import { IdentityDock, IdentityDockPanel, IdentityDockSwatch, IdentityDockTrigger, Text } from \"@zedtech/zedkit-ui\";\n\n<IdentityDock>\n  <IdentityDockTrigger type=\"button\" onClick={() => setOpen(true)}>\n    <IdentityDockSwatch />\n    <Text>And yours?</Text>\n  </IdentityDockTrigger>\n  <IdentityDockPanel open={open}>{/* assistant */}</IdentityDockPanel>\n</IdentityDock>"
-            }
-          ],
-          "adoption": {
-            "kind": "js",
-            "modules": [
-              {
-                "from": "@zedtech/zedkit-ui",
-                "exports": [
-                  "IdentityDock",
-                  "IdentityDockTrigger",
-                  "IdentityDockPanel",
-                  "IdentityDockSheet",
-                  "IdentityDockSwatch"
-                ]
-              }
-            ]
-          },
-          "a11y": "Trigger is a native button; panel is `aside` with `aria-hidden` when closed. Host app should move focus into the panel on open and handle Escape.",
-          "seeAlso": [
-            "Slide in a drawer panel",
-            "Render a route as a modal over the list"
-          ]
-        },
-        {
           "need": "Render a route as a modal over the list",
           "import": "`@zedtech/zedkit-ui` — `RouteModal`, `RouteModalProps`, `RouteModalDirection`, `RouteModalSize`, `RouteModalVariant`, `closeRoute`, `CloseRouteOptions`",
           "wraps": "`(none)`",

@@ -46,6 +46,7 @@
     "next-themes": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "vaul": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

@@ -2,18 +2,19 @@
 
 import * as React from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
-
-import { Button } from "./button.js";
-import { DrawerHandle } from "./drawer.js";
-import { Stack } from "./layout.js";
-import { signatureMotionClass } from "./type-roles.js";
-import { cn } from "./utils.js";
+import {
+  Button,
+  DrawerHandle,
+  Stack,
+  cn,
+  signatureMotionClass,
+} from "@zedtech/zedkit-ui";
 
 const SNAP_PEEK = 0.22;
 const SNAP_HALF = 0.55;
 const SNAP_FULL = 1;
 
-type IdentityDockSheetDetentLabels = {
+export type IdentityDockSheetDetentLabels = {
   peek: string;
   half: string;
   full: string;
@@ -69,7 +70,7 @@ function IdentityDockSheetDetents({
   );
 }
 
-/** Non-modal bottom sheet with peek / half / full detents (D2). */
+/** Non-modal bottom sheet with peek / half / full detents (docs IdentityDock only). */
 function IdentityDockSheet({
   open,
   onOpenChange,
@@ -117,4 +118,3 @@ function IdentityDockSheet({
 }
 
 export { IdentityDockSheet };
-export type { IdentityDockSheetDetentLabels };

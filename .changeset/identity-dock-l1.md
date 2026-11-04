@@ -1,5 +1,5 @@
 ---
-"@zedtech/zedkit-ui": minor
+"@zedtech/zedkit-docs": patch
 ---
 
-Add `IdentityDock` primitives for a non-modal floating identity assistant (pill, panel, swatch).
+Docs-only IdentityDock (chrome and sheet); not exported from `@zedtech/zedkit-ui`.

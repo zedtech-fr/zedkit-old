@@ -1,14 +1,17 @@
 "use client";
 
 import type * as React from "react";
+import {
+  Button,
+  cn,
+  signatureMotionClass,
+  type ButtonProps,
+} from "@zedtech/zedkit-ui";
 
-import { Button, type ButtonProps } from "./button.js";
-import { signatureMotionClass } from "./type-roles.js";
-import { cn } from "./utils.js";
+/** Docs-site chrome for the floating identity dock (not published in @zedtech/zedkit-ui). */
 
 type IdentityDockProps = React.ComponentProps<"div">;
 
-/** Fixed host for the floating identity dock (pill + panel). Children manage pointer-events. */
 function IdentityDock({ className, ...props }: IdentityDockProps) {
   return (
     <div
@@ -24,7 +27,6 @@ function IdentityDock({ className, ...props }: IdentityDockProps) {
 
 type IdentityDockTriggerProps = ButtonProps;
 
-/** Collapsed entry: pill on desktop, full-width bar on narrow viewports. */
 function IdentityDockTrigger({ className, ...props }: IdentityDockTriggerProps) {
   return (
     <Button
@@ -45,7 +47,6 @@ type IdentityDockPanelProps = React.ComponentProps<"aside"> & {
   open: boolean;
 };
 
-/** Non-modal side sheet (desktop). Does not trap focus or block the page. */
 function IdentityDockPanel({ open, className, children, ...props }: IdentityDockPanelProps) {
   return (
     <aside
@@ -81,4 +82,3 @@ function IdentityDockSwatch({ className, ...props }: IdentityDockSwatchProps) {
 }
 
 export { IdentityDock, IdentityDockPanel, IdentityDockSwatch, IdentityDockTrigger };
-export { IdentityDockSheet } from "./identity-dock-sheet.js";

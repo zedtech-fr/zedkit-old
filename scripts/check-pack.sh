@@ -146,8 +146,8 @@ size_budget() {
 }
 # Raised from 43500 to 44500 on 4 Nov 2026: measured 44141 with ScrollReset (route scroll reset).
 # Raised to 45500 on 4 Nov 2026 after syncing main: signature type-role and motion exports on top of ScrollReset.
-# IdentityDock + sheet: measured ~44353 on ref-widget lane; post-merge main+marketing ui dist 45768 (4 Nov 2026).
-size_budget ui 46000
+# IdentityDock chrome + vaul sheet moved to apps/docs (4 Nov 2026); ui gzip measured 44660.
+size_budget ui 45500
 # Marketing entry (separate from the main budget); measured 785 with GlassSurface only, 4437 on 3 Nov 2026 with LogoBand and Testimonials.
 size_budget ui 8000 marketing
 # 4 Nov 2026: dist-size review. Clean-measured 17148 (USAGE to kit data, drift
