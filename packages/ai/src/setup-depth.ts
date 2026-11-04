@@ -29,6 +29,8 @@ function reading(root: string, issues: Issue[]): void {
     issues.push({ path, message: `D1 code reading: ${rows.length} reader row(s), a ${size} repo needs at least ${need} (see \`zedkit-ai scan\`)` });
   }
   if (!EVIDENCE.test(body)) issues.push({ path, message: "D1 code reading: no file:line evidence in the reading log" });
+  if (!/^\*\*Budget:\*\*/mu.test(body))
+    issues.push({ path, message: "D1 code reading: no **Budget:** line (state the run budget or `none found`; an overrun needs an owner-approved exception)" });
 }
 
 const UI_FILE = /\.(tsx|jsx|vue|svelte|css|scss)$/u;

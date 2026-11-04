@@ -6,6 +6,7 @@ import { checkDepth } from "#setup-depth.js";
 import { put, tempDir } from "./helpers.js";
 
 const READING = [
+  "**Budget:** none found",
   "| Slice | Reader paths | Tier | Rules |",
   "| ----- | ------------ | ---- | ----- |",
   "| 1 | `src` | scout | 3 |",
@@ -51,11 +52,11 @@ describe("checkDepth", () => {
   it("D1: needs a reading log with reader rows and file:line evidence", () => {
     const root = tempDir();
     deep(root);
-    put(root, ".agents/setup-log/reading.md", "| Slice |\n| 1 | src |\n");
+    put(root, ".agents/setup-log/reading.md", "**Budget:** none found\n| Slice |\n| 1 | src |\n");
     expect(checkDepth(root).map((i) => i.message)).toEqual([
       expect.stringContaining("no file:line evidence"),
     ]);
-    put(root, ".agents/setup-log/reading.md", "no table, `src/refund.ts:3`\n");
+    put(root, ".agents/setup-log/reading.md", "**Budget:** none found\nno table, `src/refund.ts:3`\n");
     expect(checkDepth(root).map((i) => i.message)).toEqual([expect.stringContaining("0 reader row(s)")]);
   });
 
@@ -66,7 +67,20 @@ describe("checkDepth", () => {
     const messages = checkDepth(root).map((i) => i.message);
     expect(messages).toEqual([expect.stringMatching(/1 reader row\(s\), a medium repo needs at least 6/u)]);
     const rows = [1, 2, 3, 4, 5, 6].map((n) => `| ${n} | x | scout | 1 |`).join("\n");
-    put(root, ".agents/setup-log/reading.md", `${rows}\n\`a/f1.ts:2\`\n`);
+    put(root, ".agents/setup-log/reading.md", `**Budget:** none found\n${rows}\n\`a/f1.ts:2\`\n`);
+    expect(checkDepth(root)).toEqual([]);
+  });
+
+  it("D1: the log must state the run budget", () => {
+    const root = tempDir();
+    deep(root);
+    put(root, ".agents/setup-log/reading.md", "| Slice |\n| 1 | `src` | scout | 3 |\n\n`src/refund.ts:31`\n");
+    expect(checkDepth(root).map((i) => i.message)).toEqual([expect.stringContaining("no **Budget:** line")]);
+    put(
+      root,
+      ".agents/setup-log/reading.md",
+      "**Budget:** stop after 5 files\n**Budget exceptions:** owner-approved: reader 1 read 8 files (budget 5), approved by interview Q2\n| 1 | `src` | scout | 3 |\n\n`src/refund.ts:31`\n",
+    );
     expect(checkDepth(root)).toEqual([]);
   });
 
