@@ -227,7 +227,7 @@ describe("validate --setup depth", () => {
   it("is clean for a deep setup whose plan covers every path", () => {
     const root = tempDir();
     deep(root);
-    put(root, "PLAN.md", "PLAN.md\n");
+    put(root, "PLAN.md", "PLAN.md\nintro-first: printed before any tool call (fresh)\n");
     expect(run("validate", root, "--setup")).toEqual({ code: 0, text: "not a git repository; skipped change coverage\nok" });
   });
 });
