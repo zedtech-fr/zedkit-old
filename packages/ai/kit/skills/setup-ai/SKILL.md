@@ -59,6 +59,7 @@ In **improve** mode, audit each existing file and report before you edit:
 | Missing trigger | skills or agents whose `description` does not say when to use them |
 | Unenforced | prose rules a tool could check. Before calling a rule unenforced, open the lint, type and CI configs and search them for it. |
 | Missing ladder | root `AGENTS.md`, or the `plan` / `implement` / `review` skills, does not state the 7-question ladder. Search for the ladder section or the 7 rungs; an existing `AGENTS.md` without it is a gap like any other. |
+| Missing signature pointer | a visual signature spec or identity state-matrix test exists, and no nested AGENTS.md points at them. Link the files; do not copy the spec into always-loaded files. |
 
 In both modes, list **gaps**: repo facts an agent would otherwise get wrong. Examples: a non-obvious test command, a generated folder not to edit, a module boundary, a migration procedure, a naming rule the linter misses, a service that must be running.
 
