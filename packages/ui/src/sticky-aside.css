@@ -1,0 +1,123 @@
+/*
+ * StickyAside: main column scrolls; aside stays under the header until the
+ * section ends. Pure CSS — no script. Sticky is bounded by this grid.
+ *
+ * Custom properties on the root:
+ *   --zk-sticky-top   offset under a fixed header (default --zk-pin-top)
+ *   --zk-pin-top      calc(var(--zk-header-height, 3.5rem) + 1rem)
+ *   --zk-sticky-cols  grid-template-columns when a preset is not enough
+ *   --zk-sticky-gap   space between columns (from data-gap or override)
+ *
+ * Sticky needs an unbroken chain to the viewport: no ancestor with
+ * overflow other than visible/clip, and no transform, filter, or mask
+ * between this node and the scrolling document.
+ */
+
+[data-sticky-aside] {
+  --zk-pin-top: calc(var(--zk-header-height, 3.5rem) + 1rem);
+  --zk-sticky-top: var(--zk-pin-top, 6rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--zk-sticky-gap, var(--zk-gap-md));
+  align-items: start;
+}
+
+[data-sticky-aside][data-gap="sm"] {
+  --zk-sticky-gap: var(--zk-gap-sm);
+}
+
+[data-sticky-aside][data-gap="md"] {
+  --zk-sticky-gap: var(--zk-gap-md);
+}
+
+[data-sticky-aside][data-gap="lg"] {
+  --zk-sticky-gap: var(--zk-gap-lg);
+}
+
+[data-sticky-aside][data-side="right"] {
+  --zk-sticky-cols-default: minmax(0, 1fr) min(18rem, 34%);
+}
+
+[data-sticky-aside][data-side="left"] {
+  --zk-sticky-cols-default: min(18rem, 34%) minmax(0, 1fr);
+}
+
+[data-sticky-aside][data-ratio="1/3"] {
+  --zk-sticky-cols: minmax(0, 2fr) minmax(0, 1fr);
+}
+
+[data-sticky-aside][data-ratio="2/5"] {
+  --zk-sticky-cols: minmax(0, 3fr) minmax(0, 2fr);
+}
+
+[data-sticky-aside][data-ratio="1/2"] {
+  --zk-sticky-cols: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+[data-sticky-aside-main] {
+  scroll-margin-top: var(--zk-pin-top);
+}
+
+[data-sticky-aside][data-mobile="before"] [data-sticky-aside-aside] {
+  order: -1;
+}
+
+@media (min-width: 48rem) {
+  [data-sticky-aside][data-from="md"] {
+    grid-template-columns: var(--zk-sticky-cols, var(--zk-sticky-cols-default));
+  }
+
+  [data-sticky-aside][data-from="md"][data-side="left"] [data-sticky-aside-main] {
+    grid-column: 2;
+  }
+
+  [data-sticky-aside][data-from="md"][data-side="left"] [data-sticky-aside-aside] {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  [data-sticky-aside][data-from="md"] [data-sticky-aside-aside] {
+    position: sticky;
+    top: var(--zk-sticky-top);
+    align-self: start;
+  }
+
+  [data-sticky-aside][data-from="md"][data-scrollable] [data-sticky-aside-aside] {
+    max-height: calc(100svh - var(--zk-sticky-top));
+    overflow-y: auto;
+  }
+}
+
+@media (min-width: 64rem) {
+  [data-sticky-aside][data-from="lg"] {
+    grid-template-columns: var(--zk-sticky-cols, var(--zk-sticky-cols-default));
+  }
+
+  [data-sticky-aside][data-from="lg"][data-side="left"] [data-sticky-aside-main] {
+    grid-column: 2;
+  }
+
+  [data-sticky-aside][data-from="lg"][data-side="left"] [data-sticky-aside-aside] {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  [data-sticky-aside][data-from="lg"] [data-sticky-aside-aside] {
+    position: sticky;
+    top: var(--zk-sticky-top);
+    align-self: start;
+  }
+
+  [data-sticky-aside][data-from="lg"][data-scrollable] [data-sticky-aside-aside] {
+    max-height: calc(100svh - var(--zk-sticky-top));
+    overflow-y: auto;
+  }
+}
+
+@media print {
+  [data-sticky-aside-aside] {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}

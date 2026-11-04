@@ -1283,6 +1283,18 @@ export interface ProgressBarProps {
 }
 
 // @public
+export function PromptInput(input: PromptInputProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type PromptInputProps = Omit<React_2.ComponentProps<"textarea">, "onSubmit"> & {
+    sendLabel: string;
+    onSubmit: () => void;
+    onCancel?: () => void;
+    cancelLabel?: string;
+    busy?: boolean;
+};
+
+// @public
 export function RouteModal(input: RouteModalProps): React_2.JSX.Element;
 
 // @public (undocumented)
@@ -1497,6 +1509,60 @@ export interface StatusLabelProps {
 export type StatusLabelTone = "loading" | "updating" | "syncing" | "saved" | "retry" | "error" | "offline";
 
 // @public
+export function StickyAside(input: StickyAsideProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export namespace StickyAside {
+    var // (undocumented)
+    Main: typeof StickyAsideMain;
+    var // (undocumented)
+    Aside: typeof StickyAsideAside;
+}
+
+// @public (undocumented)
+export function StickyAsideAside(input: StickyAsideAsideProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export interface StickyAsideAsideProps extends React_2.ComponentProps<"aside"> {
+    // (undocumented)
+    asChild?: boolean | undefined;
+}
+
+// @public (undocumented)
+export type StickyAsideFrom = "md" | "lg";
+
+// @public (undocumented)
+export type StickyAsideGap = "sm" | "md" | "lg";
+
+// @public (undocumented)
+export function StickyAsideMain(input: StickyAsideMainProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type StickyAsideMainProps = React_2.ComponentProps<"div">;
+
+// @public (undocumented)
+export type StickyAsideMobile = "before" | "after" | "stack-before" | "stack-after";
+
+// @public (undocumented)
+export interface StickyAsideProps extends Omit<React_2.ComponentProps<"div">, "children"> {
+    breakpoint?: StickyAsideFrom | undefined;
+    // (undocumented)
+    children: React_2.ReactNode;
+    from?: StickyAsideFrom | undefined;
+    gap?: StickyAsideGap | undefined;
+    mobile?: StickyAsideMobile | undefined;
+    ratio?: StickyAsideRatioPreset | undefined;
+    scrollable?: boolean | undefined;
+    side?: StickyAsideSide | undefined;
+}
+
+// @public (undocumented)
+export type StickyAsideRatioPreset = "1/3" | "2/5" | "1/2";
+
+// @public (undocumented)
+export type StickyAsideSide = "left" | "right" | "start" | "end";
+
+// @public
 export function suggestIdentityTokens(prompt: string): IdentityTokens;
 
 // @public (undocumented)
@@ -1512,10 +1578,10 @@ export type SurfaceProps = React_2.ComponentProps<"div"> & VariantProps<typeof s
 
 // @public (undocumented)
 export const surfaceVariants: (props?: ({
-    variant?: "solid" | "popover" | "glass" | null | undefined;
-    elevation?: 0 | 2 | 1 | 3 | null | undefined;
-    radius?: "none" | "sm" | "md" | "lg" | "xl" | "2xl" | "full" | null | undefined;
-    padding?: "none" | "sm" | "md" | "card" | "dialog" | null | undefined;
+    variant?: "popover" | "solid" | "glass" | null | undefined;
+    elevation?: 0 | 1 | 2 | 3 | null | undefined;
+    radius?: "none" | "sm" | "lg" | "full" | "md" | "xl" | "2xl" | null | undefined;
+    padding?: "dialog" | "none" | "sm" | "md" | "card" | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public (undocumented)
