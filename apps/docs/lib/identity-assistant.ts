@@ -1,4 +1,3 @@
-import { parseIdentityTokens } from "@zedtech/zedkit-ui";
 import type { IdentityTokens } from "@zedtech/zedkit-ui";
 
 import { LIMITS } from "./identity-assistant-limits.ts";
@@ -163,9 +162,10 @@ export function requestIdentity(input: AssistantInput, { fetchImpl = globalThis.
     }),
   })
     .then((res) =>
-      readJson(res).then((body): AssistantResult => {
+      readJson(res).then(async (body): Promise<AssistantResult> => {
         if (res.status !== 200) return failure(res, body);
         const references = referencesOf(body.references);
+        const { parseIdentityTokens } = await import("./identity-tokens-parse.ts");
         const parsed = parseIdentityTokens(body.tokens);
         if (!parsed.success) return { kind: "invalid-output", references };
         return {

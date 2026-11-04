@@ -1,5 +1,5 @@
 import { tryCatch } from "@zedtech/zedkit-core";
-import { parseIdentityTokens, type IdentityTokens } from "@zedtech/zedkit-ui";
+import type { IdentityTokens } from "@zedtech/zedkit-ui";
 
 import { initialSession, type SessionState } from "./identity-creator-session.ts";
 
@@ -25,24 +25,37 @@ export type IdentityDockPersist = {
   previewTokens?: IdentityTokens;
 };
 
-function parsePersistBlob(raw: string | null): Partial<IdentityDockPersist> {
+/**
+ * A sync read. `previewTokensRaw` is unvalidated: pass it to `parsePersistedPreviewTokens`, which loads the zod schema
+ * on demand so the root provider does not ship zod in every page's first load.
+ */
+export type IdentityDockPersistRead = Partial<Omit<IdentityDockPersist, "previewTokens">> & { previewTokensRaw?: unknown };
+
+/** Validates persisted preview tokens; `null` when absent or invalid. */
+export async function parsePersistedPreviewTokens(raw: unknown): Promise<IdentityTokens | null> {
+  if (raw === undefined || raw === null) return null;
+  const { parseIdentityTokens } = await import("./identity-tokens-parse.ts");
+  const tokens = parseIdentityTokens(raw);
+  return tokens.success ? tokens.data : null;
+}
+
+function parsePersistBlob(raw: string | null): IdentityDockPersistRead {
   if (raw === null || raw === undefined || raw === "") return {};
   const parsed = tryCatch(() => JSON.parse(raw) as IdentityDockPersist);
   if (!parsed.ok || typeof parsed.value !== "object" || parsed.value === null) return {};
   const { session, brief } = parsed.value;
-  const out: Partial<IdentityDockPersist> = {};
+  const out: IdentityDockPersistRead = {};
   if (session && typeof session === "object") {
     out.session = { ...session, pending: null };
   }
   if (typeof brief === "string") out.brief = brief;
   if (parsed.value.previewTokens !== undefined && parsed.value.previewTokens !== null) {
-    const tokens = parseIdentityTokens(parsed.value.previewTokens);
-    if (tokens.success) out.previewTokens = tokens.data;
+    out.previewTokensRaw = parsed.value.previewTokens;
   }
   return out;
 }
 
-function readLegacyV1(): Partial<IdentityDockPersist> {
+function readLegacyV1(): IdentityDockPersistRead {
   if (typeof window === "undefined") return {};
   for (const store of [window.sessionStorage, window.localStorage]) {
     const raw = tryCatch(() => store.getItem(LEGACY_IDENTITY_DOCK_STORAGE_KEY));
@@ -105,7 +118,7 @@ export function encodeIdentityDockPersist(data: IdentityDockPersist): string {
   return json;
 }
 
-export function readIdentityDockPersist(): Partial<IdentityDockPersist> {
+export function readIdentityDockPersist(): IdentityDockPersistRead {
   if (typeof window === "undefined") return {};
 
   const current = tryCatch(() => window.localStorage.getItem(IDENTITY_DOCK_STORAGE_KEY));
