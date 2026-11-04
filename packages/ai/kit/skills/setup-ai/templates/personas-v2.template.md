@@ -1,6 +1,8 @@
 # Project personas (v2)
 
-Used by `persona-review`. Each row is a **named audience**, not a job title alone. Replace the fictional **Acme Bookings** names with this repo's users; keep evidence links.
+Placeholder rows for fictional **Acme Bookings** — **replace in phase C**.
+Used by `persona-review`. Each row is a **named audience**, not a job title
+alone. Keep evidence links.
 
 | Persona                          | Goals                                             | Jobs to be done                                   | Frustrations                      | Key journeys (routes)                     | Evidence                                          |
 | -------------------------------- | ------------------------------------------------- | ------------------------------------------------- | --------------------------------- | ----------------------------------------- | ------------------------------------------------- |
