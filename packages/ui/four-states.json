@@ -107,6 +107,7 @@
     "OfflineNote",
     "OptionCard",
     "OptionCards",
+    "OverlayInitialFocus",
     "PageHeader",
     "PageHeaderSkeleton",
     "Popover",

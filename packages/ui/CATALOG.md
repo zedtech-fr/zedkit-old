@@ -834,7 +834,7 @@ const columns = [helper.accessor("name", { header: "Name" })];
 
 ## Open modal dialogs
 
-- Import: `@zedtech/zedkit-ui` — `Dialog`, `DialogProps`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `DialogClose`, `DialogOverlay`, `DialogPortal`
+- Import: `@zedtech/zedkit-ui` — `Dialog`, `DialogProps`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `DialogClose`, `DialogOverlay`, `DialogPortal`, `OverlayInitialFocus`
 - Wraps: `@radix-ui/react-dialog`
 - Status: stable
 - Derived from: shadcn/ui (dialog)
