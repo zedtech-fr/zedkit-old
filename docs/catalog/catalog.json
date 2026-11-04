@@ -5065,6 +5065,47 @@
           ]
         },
         {
+          "need": "Horizontal scroll gallery row",
+          "import": "`@zedtech/zedkit-ui` — `ScrollGallery`, `ScrollGalleryProps`",
+          "wraps": "none (layout + focus scroll)",
+          "status": "alpha",
+          "shortName": "ScrollGallery",
+          "audience": "Developers showing a row of peers (identity chips, filter pills, thumbnail strips) that must stay on one line on phones.",
+          "purpose": "One snap-aligned horizontal scroll row with thin scrollbar, edge fade, and focused items scrolled into view.",
+          "whenToUse": "More items than fit at once; keyboard tabs or links inside the row.",
+          "whenNotToUse": "Primary navigation that should wrap — use a vertical stack.",
+          "derivedFrom": null,
+          "example": "import { ScrollGallery, Tabs, TabsList, TabsTrigger } from \"@zedtech/zedkit-ui\";\n\n<Tabs value=\"a\">\n  <ScrollGallery className=\"w-full\">\n    <TabsList className=\"inline-flex w-max flex-nowrap\">\n      <TabsTrigger value=\"a\">One</TabsTrigger>\n      <TabsTrigger value=\"b\">Two</TabsTrigger>\n    </TabsList>\n  </ScrollGallery>\n</Tabs>",
+          "examples": [
+            {
+              "title": "Identity picker row",
+              "code": "import { ScrollGallery, Tabs, TabsList, TabsTrigger } from \"@zedtech/zedkit-ui\";\n\n<Tabs value=\"a\">\n  <ScrollGallery className=\"w-full\">\n    <TabsList className=\"inline-flex w-max flex-nowrap\">\n      <TabsTrigger value=\"a\">One</TabsTrigger>\n      <TabsTrigger value=\"b\">Two</TabsTrigger>\n    </TabsList>\n  </ScrollGallery>\n</Tabs>"
+            },
+            {
+              "title": "Filter chips",
+              "code": "import { ScrollGallery } from \"@zedtech/zedkit-ui\";\n\n<ScrollGallery className=\"max-w-sm\">\n  <div className=\"flex w-max gap-2\">\n    <a className=\"shrink-0 snap-start rounded-md border px-3 py-2\" href=\"#a\">\n      Alpha\n    </a>\n    <a className=\"shrink-0 snap-start rounded-md border px-3 py-2\" href=\"#b\">\n      Beta\n    </a>\n  </div>\n</ScrollGallery>"
+            }
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "ScrollGallery",
+                  "ScrollGalleryProps"
+                ]
+              }
+            ]
+          },
+          "a11y": "Keep real controls inside the track (tabs, links, buttons); focused items scroll into view. Edge fades are decorative only.",
+          "troubleshooting": "Items wrap to two lines — the track child should be `inline-flex flex-nowrap` (for example `TabsList`). Nothing scrolls — confirm the row is wider than the viewport and `overflow-x-auto` is not blocked by a parent `overflow: hidden`.",
+          "seeAlso": [
+            "Pin a stage and change scene as the page scrolls",
+            "Switch between tabbed panels"
+          ]
+        },
+        {
           "need": "Pin a stage and change scene as the page scrolls",
           "import": "`@zedtech/zedkit-ui` — `ScrollScenes`, `ScrollScene`, `ScrollScenesProps`, `SCROLL_SCENES_MAX`",
           "wraps": "none (CSS scroll-driven animation)",

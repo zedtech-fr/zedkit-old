@@ -1700,6 +1700,49 @@ import { Tabs } from "@zedtech/zedkit-ui";
 <Tabs value={tab} onValueChange={setTab}> // controlled: you own the state
 ```
 
+## Horizontal scroll gallery row
+
+- Import: `@zedtech/zedkit-ui` — `ScrollGallery`, `ScrollGalleryProps`
+- Wraps: none (layout + focus scroll)
+- Status: alpha
+- Short name: ScrollGallery
+- Audience: Developers showing a row of peers (identity chips, filter pills, thumbnail strips) that must stay on one line on phones.
+- Purpose: One snap-aligned horizontal scroll row with thin scrollbar, edge fade, and focused items scrolled into view.
+- When to use: More items than fit at once; keyboard tabs or links inside the row.
+- When not to use: Primary navigation that should wrap — use a vertical stack.
+- See also: `Pin a stage and change scene as the page scrolls`, `Switch between tabbed panels`
+- Examples: Identity picker row, Filter chips, Toolbar peers
+- A11y: Keep real controls inside the track (tabs, links, buttons); focused items scroll into view. Edge fades are decorative only.
+- Troubleshooting: Items wrap to two lines — the track child should be `inline-flex flex-nowrap` (for example `TabsList`). Nothing scrolls — confirm the row is wider than the viewport and `overflow-x-auto` is not blocked by a parent `overflow: hidden`.
+
+```ts
+import { ScrollGallery, Tabs, TabsList, TabsTrigger } from "@zedtech/zedkit-ui";
+
+<Tabs value="a">
+  <ScrollGallery className="w-full">
+    <TabsList className="inline-flex w-max flex-nowrap">
+      <TabsTrigger value="a">One</TabsTrigger>
+      <TabsTrigger value="b">Two</TabsTrigger>
+    </TabsList>
+  </ScrollGallery>
+</Tabs>
+```
+
+```ts
+import { ScrollGallery } from "@zedtech/zedkit-ui";
+
+<ScrollGallery className="max-w-sm">
+  <div className="flex w-max gap-2">
+    <a className="shrink-0 snap-start rounded-md border px-3 py-2" href="#a">
+      Alpha
+    </a>
+    <a className="shrink-0 snap-start rounded-md border px-3 py-2" href="#b">
+      Beta
+    </a>
+  </div>
+</ScrollGallery>
+```
+
 ## Pin a stage and change scene as the page scrolls
 
 - Import: `@zedtech/zedkit-ui` — `ScrollScenes`, `ScrollScene`, `ScrollScenesProps`, `SCROLL_SCENES_MAX`

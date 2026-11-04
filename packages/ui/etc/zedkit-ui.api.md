@@ -1303,6 +1303,12 @@ export type RouteModalVariant = "drawer" | "dialog";
 export const SCROLL_SCENES_MAX = 8;
 
 // @public
+export function ScrollGallery(input: ScrollGalleryProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type ScrollGalleryProps = React_2.ComponentProps<"div">;
+
+// @public
 export function ScrollReset(input: ScrollResetProps): null;
 
 // @public (undocumented)

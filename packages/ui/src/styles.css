@@ -517,6 +517,33 @@ a[class*="px-badge-inline"] {
   }
 }
 
+@layer components {
+  [data-slot="scroll-gallery"]::before,
+  [data-slot="scroll-gallery"]::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: var(--zk-table-fade);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  [data-slot="scroll-gallery"]::before {
+    left: 0;
+    background: linear-gradient(to right, hsl(var(--background)), transparent);
+  }
+
+  [data-slot="scroll-gallery"]::after {
+    right: 0;
+    background: linear-gradient(to left, hsl(var(--background)), transparent);
+  }
+
+  [data-slot="scroll-gallery"] [data-scroll-gallery-track] > * {
+    scroll-snap-align: start;
+  }
+}
+
 /*
  * Button `asChild` merges onto `<a>`. Keep the same horizontal padding and
  * height tokens as `<button>` roots when utilities are stripped or overridden.
