@@ -3,6 +3,7 @@
 import type * as React from "react";
 
 import { Button, type ButtonProps } from "./button.js";
+import { signatureMotionClass } from "./type-roles.js";
 import { cn } from "./utils.js";
 
 type IdentityDockProps = React.ComponentProps<"div">;
@@ -32,6 +33,7 @@ function IdentityDockTrigger({ className, ...props }: IdentityDockTriggerProps) 
       variant="outline"
       className={cn(
         "w-full justify-between shadow-md motion-safe:transition-transform motion-reduce:transition-none sm:w-auto sm:rounded-full sm:px-4",
+        signatureMotionClass.feedback,
         className,
       )}
       {...props}
@@ -52,6 +54,7 @@ function IdentityDockPanel({ open, className, children, ...props }: IdentityDock
       aria-hidden={!open}
       className={cn(
         "flex max-h-drawer-sheet-max-height w-full flex-col overflow-hidden rounded-t-lg border border-border bg-background shadow-lg motion-safe:transition-[transform,opacity] motion-reduce:transition-none sm:w-full sm:max-w-sm sm:rounded-lg",
+        signatureMotionClass.glide,
         open ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none translate-y-full opacity-0 sm:translate-y-2 sm:opacity-0",
         className,
       )}

@@ -97,7 +97,7 @@ function IdentityDockWidget() {
           onClick={() => setExpanded(true)}
         >
           <IdentityDockSwatch />
-          <Text className="truncate text-sm font-medium">{identityDockCopy.pillLabel}</Text>
+          <Text typeRole="label" className="truncate">{identityDockCopy.pillLabel}</Text>
         </IdentityDockTrigger>
       )}
     </IdentityDock>

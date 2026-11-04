@@ -4,6 +4,7 @@ import * as React from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
 
 import { DrawerHandle } from "./drawer.js";
+import { signatureMotionClass } from "./type-roles.js";
 import { cn } from "./utils.js";
 
 type IdentityDockSheetProps = {
@@ -32,6 +33,7 @@ function IdentityDockSheet({ open, onOpenChange, children, className }: Identity
         <DrawerPrimitive.Content
           data-slot="identity-dock-sheet"
           className={cn(
+            signatureMotionClass.glide,
             "fixed inset-x-0 bottom-0 z-(--z-index-overlay) flex max-h-drawer-sheet-max-height flex-col overflow-hidden rounded-t-xl border border-border bg-background shadow-lg outline-none",
             className,
           )}
