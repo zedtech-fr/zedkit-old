@@ -119,6 +119,18 @@ describe("checkSetup", () => {
       { path: "notes.md", message: "plan misses notes.md; add plan row: | notes.md | edit | <reason> |" },
     ]);
   });
+
+  it("requires the .prettierignore plan row when the prettier hint fires", () => {
+    const root = tempDir();
+    gitInit(root);
+    put(root, "package.json", JSON.stringify({ devDependencies: { prettier: "3.9.0" } }));
+    put(root, "PLAN.md", "PLAN.md\npackage.json\n");
+    expect(checkSetup(root).issues).toEqual([
+      { path: ".prettierignore", message: "plan misses .prettierignore; add plan row: | .prettierignore | edit | exclusions for generated files |" },
+    ]);
+    put(root, "PLAN.md", "PLAN.md\npackage.json\n.prettierignore\n");
+    expect(checkSetup(root).issues).toEqual([]);
+  });
 });
 
 describe("suggestPlanRow", () => {
