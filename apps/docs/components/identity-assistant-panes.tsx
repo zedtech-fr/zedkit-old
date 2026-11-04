@@ -7,7 +7,7 @@ import { identityAssistantCopy as copy } from "@/components/i18n/identity-assist
 import { AssistantNoticeBubble, BriefForm, ProposalCard, Thread, UnavailableBanner, type View } from "@/components/identity-assistant-parts";
 import { IdentityMiniPreview } from "@/components/identity-mini-preview";
 import { IdentityRefinementChips } from "@/components/identity-refinement-chips";
-import { DetectedLinks } from "@/components/identity-references";
+import { DetectedLinks } from "@/components/identity-detected-links";
 import type { Unavailable } from "@/lib/identity-assistant";
 import type { Proposal, SessionState } from "@/lib/identity-creator-session";
 

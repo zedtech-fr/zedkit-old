@@ -2,8 +2,8 @@
 
 import { Button, Field, FieldLabel, Heading, Stack, Text, Textarea } from "@zedtech/zedkit-ui";
 
-import { identityAssistantCopy } from "@/components/i18n/identity-assistant-copy";
-import { DetectedLinks } from "@/components/identity-references";
+import { identityBriefCopy } from "@/components/i18n/identity-brief-copy";
+import { DetectedLinks } from "@/components/identity-detected-links";
 import { LIMITS } from "@/lib/identity-assistant-limits";
 import { useIdentityAssistantStore } from "@/lib/identity-assistant-store";
 import { HOME_PERSUASION_TEXT_CLASS, HOME_SMALL_TEXT_CLASS } from "@/ui/home/home-rhythm";
@@ -34,7 +34,7 @@ export function HomeYoursScene() {
       <Stack gap={4} className="max-w-2xl min-w-0">
         <Field>
           <FieldLabel htmlFor="home-yours-brief">{copy.briefLabel}</FieldLabel>
-          <Textarea id="home-yours-brief" rows={4} maxLength={LIMITS.prompt} placeholder={identityAssistantCopy.placeholder} value={brief} onChange={(event) => setBrief(event.target.value)} aria-describedby="home-yours-hint" />
+          <Textarea id="home-yours-brief" rows={4} maxLength={LIMITS.prompt} placeholder={identityBriefCopy.placeholder} value={brief} onChange={(event) => setBrief(event.target.value)} aria-describedby="home-yours-hint" />
         </Field>
         <Text variant="muted" id="home-yours-hint" className={HOME_SMALL_TEXT_CLASS}>
           {copy.briefHint}
