@@ -452,10 +452,7 @@ function wireSkillsDir(ctx: Ctx, skillsRel: string, content: ReturnType<typeof p
 
 function copyLayerKind(ctx: Ctx, kind: "agents" | "commands", names: readonly string[], layerRel: string): void {
   for (const name of names) {
-    const agentsRel = join(".agents", kind, `${name}.md`);
-    const installed = join(ctx.dest, agentsRel);
-    const from = existsSync(installed) ? installed : join(ctx.kit, kind, `${name}.md`);
-    copyFile(ctx, from, join(layerRel, `${name}.md`));
+    copyFile(ctx, join(ctx.kit, kind, `${name}.md`), join(layerRel, `${name}.md`));
   }
 }
 

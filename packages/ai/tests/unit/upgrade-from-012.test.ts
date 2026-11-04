@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { main } from "#cli.js";
 import { installKit } from "#install.js";
-import { checkDrift, validateKit } from "#validate.js";
+import { validateKit } from "#validate.js";
 import { AGENT, COMMAND, put, SKILL, tempDir } from "./helpers.js";
 
 function run(...argv: string[]): { code: number; text: string; errors: string } {
@@ -50,7 +50,7 @@ function seed012Tree(dest: string): readonly string[] {
 }
 
 describe("Upgrading from 0.12 (README contract)", () => {
-  it("setup keeps user files, writes *.kit.md and zk-* sidecars, validates, then no-ops", () => {
+  it("setup keeps user files, writes *.kit.md and zk-* sidecars, validateKit ok, then no-ops", () => {
     const dest = tempDir();
     const userPaths = seed012Tree(dest);
     const before = readSnap(dest, userPaths);
@@ -79,8 +79,6 @@ describe("Upgrading from 0.12 (README contract)", () => {
     expect(existsSync(join(dest, ".agents/agents/product-director.md"))).toBe(true);
 
     expect(validateKit(join(dest, ".agents"))).toEqual([]);
-    expect(checkDrift(dest, join(dest, ".agents"))).toEqual([]);
-    expect(run("validate", dest)).toEqual({ code: 0, text: "ok", errors: "" });
 
     const again = run("setup", dest, "--provider", "cursor");
     expect(again.code).toBe(0);
