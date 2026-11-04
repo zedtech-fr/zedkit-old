@@ -7,16 +7,12 @@ import { identitySpecimenCompositions } from "@/components/i18n/identity-specime
 import { IdentitySpecimenCard } from "@/components/identity-specimen-card";
 import type { SpecimenDomain } from "@/lib/brief-specimen-domain";
 
-const SCOPE = "[data-identity-proposal]";
-
 const SPECIMEN_DOMAIN_ATTR: Record<SpecimenDomain, string> = {
   commerce: "commerce",
   "saas-dashboard": "saas-dashboard",
   editorial: "editorial",
   booking: "service-booking",
 };
-
-const HEADINGS = `${SCOPE} h3, ${SCOPE} h4 { font-family: var(--zk-font-display); letter-spacing: var(--zk-heading-tracking); line-height: var(--zk-heading-leading, 1.1); }`;
 
 export function IdentityMiniPreview({
   tokens,
@@ -31,18 +27,40 @@ export function IdentityMiniPreview({
   compact?: boolean;
 }) {
   const copy = identitySpecimenCompositions[domain];
+  // Beat `[data-identity-scope][data-identity]` in identities.css and shared-type-scale.css
+  // (those reset leading to 1.55 / 1.1). One id per proposal so After and Before do not clobber.
+  const scope = `[data-identity-scope][data-identity="proposal"][data-identity-proposal="${CSS.escape(id)}"]`;
+  const headings = `${scope} h3, ${scope} h4 { font-family: var(--zk-font-display); letter-spacing: var(--zk-heading-tracking); line-height: var(--zk-heading-leading, 1.1); }`;
   return (
     <Stack gap={2} data-assistant-preview="" data-slot="brief-specimen" data-specimen-domain={SPECIMEN_DOMAIN_ATTR[domain]}>
-      <style>{`${tokensToCss(tokens, SCOPE)}\n${HEADINGS}`}</style>
+      <style>{`${tokensToCss(tokens, scope)}\n${headings}`}</style>
       <Text as="span" typeRole="body" className="font-medium text-foreground">
         {identityAssistantCopy.proposal.preview}
       </Text>
       {compact ? (
-        <IdentitySpecimenCard dark={false} label={identityAssistantCopy.proposal.lightLabel} id={`${id}-light`} copy={copy} />
+        <IdentitySpecimenCard
+          dark={false}
+          label={identityAssistantCopy.proposal.lightLabel}
+          id={`${id}-light`}
+          proposal={id}
+          copy={copy}
+        />
       ) : (
         <Stack gap={3} className="sm:grid sm:grid-cols-2">
-          <IdentitySpecimenCard dark={false} label={identityAssistantCopy.proposal.lightLabel} id={`${id}-light`} copy={copy} />
-          <IdentitySpecimenCard dark label={identityAssistantCopy.proposal.darkLabel} id={`${id}-dark`} copy={copy} />
+          <IdentitySpecimenCard
+            dark={false}
+            label={identityAssistantCopy.proposal.lightLabel}
+            id={`${id}-light`}
+            proposal={id}
+            copy={copy}
+          />
+          <IdentitySpecimenCard
+            dark
+            label={identityAssistantCopy.proposal.darkLabel}
+            id={`${id}-dark`}
+            proposal={id}
+            copy={copy}
+          />
         </Stack>
       )}
     </Stack>

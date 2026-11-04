@@ -116,7 +116,9 @@ scripts inside `pnpm catalog:check`.
   sheet. Using a look
   from the dock paints demo specimens only, never the site chrome. Brief-routed
   specimens are commerce, saas-dashboard, editorial and service-booking.
-  Proof: `tests/identity-state-matrix.spec.ts`.
+  Proof: `tests/identity-state-matrix.spec.ts`. Export CSS applied to a blank
+  page matches the editor specimen and the dock proposal:
+  `tests/identity-export-preview-parity.spec.ts`.
 
 ## ZedKit art direction (Product Atelier)
 
