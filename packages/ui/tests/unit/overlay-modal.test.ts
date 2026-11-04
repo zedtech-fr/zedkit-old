@@ -29,6 +29,11 @@ describe("overlay initial focus target", () => {
     expect(resolveOverlayInitialTarget(panel, "#b")).toBe(panel.querySelector("#b"));
   });
 
+  it("has no target for a selector when there is no panel", () => {
+    expect(resolveOverlayInitialTarget(null, "#a")).toBeNull();
+    expect(resolveOverlayInitialTarget(null, undefined)).toBeNull();
+  });
+
   it("falls back to the panel for a missing or invalid selector", () => {
     const panel = document.createElement("div");
     panel.innerHTML = `<input id="a">`;
@@ -66,6 +71,10 @@ describe("overlay initial focus", () => {
     expect(document.activeElement).toBe(area);
     expect(area.selectionStart).toBe(5);
     expect(area.selectionEnd).toBe(5);
+  });
+
+  it("does nothing when there is no panel and no target", () => {
+    expect(() => focusOverlayInitial(null, undefined)).not.toThrow();
   });
 
   it("focuses without a caret for field types that have none", () => {
