@@ -37,7 +37,7 @@ export function useAssistantView({ proposalId, onBrief }: { proposalId: string |
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<View>("conversation");
   const [focus, setFocus] = useState<FocusRequest | null>(null);
-  const textarea = useRef<HTMLTextAreaElement>(null);
+  const field = useRef<HTMLInputElement>(null);
   const previewButton = useRef<HTMLButtonElement>(null);
   const seenProposal = useRef<string | undefined>(undefined);
 
@@ -50,7 +50,7 @@ export function useAssistantView({ proposalId, onBrief }: { proposalId: string |
   useEffect(() => {
     if (!focus) return;
     if (focus.scroll) scrollToAssistant();
-    textarea.current?.focus({ preventScroll: focus.scroll });
+    field.current?.focus({ preventScroll: focus.scroll });
   }, [focus]);
 
   useLayoutEffect(() => {
@@ -77,7 +77,7 @@ export function useAssistantView({ proposalId, onBrief }: { proposalId: string |
     setOpen,
     view,
     setView,
-    textarea,
+    field,
     previewButton,
     /** Runs an action that ends the proposal, then returns to the form with focus in it. */
     backToConversation(action: () => void) {

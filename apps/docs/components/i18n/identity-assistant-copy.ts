@@ -37,14 +37,13 @@ export const identityAssistantCopy = {
   title: "Create an identity",
   intro: "Describe your product in a few plain sentences. The assistant proposes a look; you review it before anything changes.",
   briefLabel: "Your product and brand",
-  briefHint: "What it is, who it is for, the mood. Paste a link to a site you like if you want to: the assistant reads its styles and words, not its pictures.",
   followUpLabel: "What should change?",
-  followUpHint: "Type, density, hierarchy, colour, radius, contrast or mood. The rest stays as it is.",
   generate: "Generate",
   refine: "Refine",
   cancel: "Cancel",
   charsLeft: (left: number) => `${left} characters left`,
   open: "Create an identity from a description",
+  detailedEditorLink: "Open the detailed editor",
   working: "Working on it. Your current look is unchanged.",
   /** On a phone the conversation and the preview take turns; from a wide screen both are shown. */
   views: {
@@ -99,6 +98,13 @@ export const identityAssistantCopy = {
   },
   refinePlaceholder: "Calmer, more contrast, a serif for the headings\u2026",
   placeholder: "A small online shop selling hand-thrown ceramics. Calm and warm, a little editorial.\nIn the spirit of https://example.com/studio",
+  /** Example prompts the chat composer rotates through, until reduced motion or a follow-up asks for stillness. */
+  composerPlaceholders: [
+    "A small online shop selling hand-thrown ceramics…",
+    "A calm newsroom site, dense but readable…",
+    "A SaaS dashboard for a team of ten…",
+    "A booking page for a bike repair shop…",
+  ],
   links: {
     found: "Links the assistant will read",
     note: "It reads each page's styles (colours, fonts, radius, shadows, spacing) and its text, not the pictures.",
