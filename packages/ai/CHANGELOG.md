@@ -1,5 +1,11 @@
 # @zedtech/zedkit-ai
 
+## 0.20.2
+
+### Patch Changes
+
+- 96b877b: setup-ai: the intro is no longer a turn boundary. SKILL, /setup-ai command and Cursor onboarding now say to print the intro and continue into phase A in the same turn; only stop points are the phase B interview, plan approval before writes, and the final report.
+
 ## 0.20.1
 
 ### Patch Changes
