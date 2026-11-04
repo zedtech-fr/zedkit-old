@@ -32,7 +32,7 @@ async function openLooks(page: Page, width = 1440, height = 900): Promise<{ look
   await page.setViewportSize({ width, height });
   await page.goto("/", { waitUntil: "networkidle" });
   const looks = page.locator("[data-home-identity-looks]");
-  await looks.evaluate((node) => node.scrollIntoView({ block: "start" }));
+  await looks.evaluate((node) => node.scrollIntoView({ block: "start", behavior: "instant" }));
   await settle(looks);
   return { looks, stage: looks.locator("[data-home-identity-stage]") };
 }

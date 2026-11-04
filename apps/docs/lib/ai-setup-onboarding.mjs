@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -22,6 +22,73 @@ export function readAgentOnboardingMarkdown() {
   return readFileSync(join(KIT, "cursor-onboarding.md"), "utf8").trimEnd();
 }
 
+/** What `/setup-ai` writes after the install, as the kit's own template table names them. */
+const SETUP_AI_OUTPUTS = [
+  { path: ".agents/product.md" },
+  { path: ".agents/domain/<area>.md", note: "one per area" },
+  { path: ".agents/design.md", note: "if the repo has a UI" },
+  { path: ".agents/glossary.md", note: "or GLOSSARY.md" },
+];
+
+/** Join a tree of `{ name, kind, note?, children? }` into rows with box-drawing connectors. */
+function treeRows(nodes, prefix = "") {
+  return nodes.flatMap((node, index) => {
+    const last = index === nodes.length - 1;
+    const row = { text: `${prefix}${last ? "└─ " : "├─ "}${node.name}`, kind: node.kind, ...(node.note ? { note: node.note } : {}) };
+    return [row, ...treeRows(node.children ?? [], `${prefix}${last ? "   " : "│  "}`)];
+  });
+}
+
+/**
+ * The files `zedkit-ai setup --provider cursor` copies, derived from the kit manifest (the `setup` preset the
+ * command defaults to), plus what `/setup-ai` adds. Throws when the kit no longer matches what the home shows.
+ */
+export function readAiSetupKit() {
+  const manifest = JSON.parse(readFileSync(join(KIT, "kit.json"), "utf8"));
+  const skills = manifest.presets.setup;
+  const agents = manifest.presetAgents.setup;
+  const commands = manifest.presetCommands.setup;
+  for (const name of skills) if (!existsSync(join(KIT, "skills", name, "SKILL.md"))) throw new Error(`kit skill missing: ${name}`);
+  for (const name of agents) if (!existsSync(join(KIT, "agents", `${name}.md`))) throw new Error(`kit agent missing: ${name}`);
+  for (const name of commands) if (!existsSync(join(KIT, "commands", `${name}.md`))) throw new Error(`kit command missing: ${name}`);
+  const templates = readFileSync(join(KIT, "skills", "setup-ai", "templates", "README.md"), "utf8");
+  for (const { path } of SETUP_AI_OUTPUTS) {
+    const probe = path.replace(".agents/", "").replace(/\.md$/, "");
+    if (!templates.includes(probe)) throw new Error(`setup-ai templates README no longer mentions ${path}`);
+  }
+  const files = (names) => names.map((name) => ({ name: `${name}.md`, kind: "file" }));
+  const installed = treeRows([
+    { name: "AGENTS.md", kind: "file" },
+    {
+      name: ".agents/",
+      kind: "dir",
+      children: [
+        { name: "skills/", kind: "dir", note: `${skills.length} skills`, children: skills.map((name) => ({ name: `${name}/`, kind: "dir" })) },
+        { name: "agents/", kind: "dir", note: `${agents.length} subagents`, children: files(agents) },
+        { name: "commands/", kind: "dir", children: files(commands) },
+        { name: "personas.md", kind: "file" },
+      ],
+    },
+    {
+      name: ".cursor/",
+      kind: "dir",
+      children: [
+        { name: "skills -> ../.agents/skills", kind: "link" },
+        { name: "agents/, commands/", kind: "dir", note: "copies of .agents" },
+        { name: "rules/project.mdc", kind: "file" },
+      ],
+    },
+  ]);
+  return {
+    counts: { skills: skills.length, agents: agents.length, commands: commands.length },
+    skills,
+    agents,
+    commands,
+    installed,
+    written: SETUP_AI_OUTPUTS,
+  };
+}
+
 /** Sync kit onboarding copy into the docs app (public markdown + TS constants for the client). */
 export function writeAiSetupPublicAssets(appDir) {
   const mini = readMiniPrompt();
@@ -37,6 +104,15 @@ export function writeAiSetupPublicAssets(appDir) {
       `export const AI_SETUP_MINI_PROMPT = ${JSON.stringify(mini)};`,
       `export const AI_SETUP_LLMS_URL = ${JSON.stringify(`https://zedkit.app${AI_SETUP_LLMS_PATH}`)};`,
       `export const AI_SETUP_DOCS_PATH = ${JSON.stringify(AI_SETUP_DOCS_PATH)};`,
+      "export type AiSetupTreeRow = { readonly text: string; readonly kind: \"dir\" | \"file\" | \"link\"; readonly note?: string };",
+      `export const AI_SETUP_KIT = ${JSON.stringify(readAiSetupKit(), null, 2)} as const satisfies {`,
+      "  counts: { skills: number; agents: number; commands: number };",
+      "  skills: readonly string[];",
+      "  agents: readonly string[];",
+      "  commands: readonly string[];",
+      "  installed: readonly AiSetupTreeRow[];",
+      "  written: readonly { path: string; note?: string }[];",
+      "};",
       "",
     ].join("\n"),
   );

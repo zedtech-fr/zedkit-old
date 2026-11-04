@@ -9,6 +9,7 @@ const HomeBelowHero = dynamic(
   {
     loading: () => (
       <Stack aria-busy="true" className="min-h-screen w-full" data-home-below-loading="">
+        <div className="sr-only" data-home-section-placeholder="ai-setup" />
         <div className="sr-only" data-home-section-placeholder="identities" />
         <div className="sr-only" data-home-section-placeholder="get-started" />
         <div className="sr-only" data-home-section-placeholder="components" />
