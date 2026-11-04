@@ -8,7 +8,7 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-const RELEASES_LABEL = new RegExp(`v${escapeRegExp(featuredPackageVersion)} \\(releases\\)`);
+const VERSION_LABEL = new RegExp(`^v${escapeRegExp(featuredPackageVersion)}$`);
 
 const VIEWPORTS = [
   { name: "390", width: 390, height: 844 },
@@ -42,7 +42,8 @@ test.describe("shell nav calm guards", () => {
     await expect(page.getByLabel("Try another identity")).toHaveCount(0);
     const shell = page.locator("#nd-nav");
     await expect(shell.locator("select")).toHaveCount(0);
-    await expect(shell.getByRole("link", { name: RELEASES_LABEL })).toHaveCount(1);
+    await expect(shell.getByText(VERSION_LABEL)).toHaveCount(1);
+    await expect(shell.getByRole("link", { name: VERSION_LABEL })).toHaveCount(0);
   });
 
   test("phone header and drawer have no identity control or native select", async ({ page }) => {
@@ -51,7 +52,8 @@ test.describe("shell nav calm guards", () => {
     const mobile = page.locator("#nd-mobile-nav");
     await expect(mobile.getByLabel("Try another identity")).toHaveCount(0);
     await expect(mobile.locator("select")).toHaveCount(0);
-    await expect(mobile.getByRole("link", { name: RELEASES_LABEL })).toHaveCount(1);
+    await expect(mobile.getByText(VERSION_LABEL)).toHaveCount(1);
+    await expect(mobile.getByRole("link", { name: VERSION_LABEL })).toHaveCount(0);
     await page.getByRole("button", { name: "Open menu" }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByLabel("Try another identity")).toHaveCount(0);

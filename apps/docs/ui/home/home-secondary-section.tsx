@@ -25,7 +25,7 @@ function HomeSecondaryEntryLinks({ entryPoints }: { entryPoints: HomeEntryPoint[
               {homeCopy.secondary.entryNeedsLine(entry.needCount, entry.summary.split(".")[0]!)}
             </Text>
           </Stack>
-          <Button asChild variant="link" size="sm" className="h-auto shrink-0 px-0">
+          <Button asChild variant="ghost" size="sm" className="w-fit shrink-0">
             <Link href={entry.href}>
               <DocsActionLabel>{entry.linkLabel}</DocsActionLabel>
             </Link>

@@ -13,11 +13,11 @@ for (const viewport of [
   test.describe(`hero calm (${viewport.name}px)`, () => {
     test.use({ viewport: { width: viewport.width, height: viewport.height } });
 
-    test("hero has one visible version badge link (header only)", async ({ page }) => {
+    test("hero has one visible version caption in the header (not a link)", async ({ page }) => {
       await page.goto(BASE, { waitUntil: "networkidle" });
       const shell = viewport.width < 768 ? page.locator("#nd-mobile-nav") : page.locator("#nd-nav");
-      const badges = shell.getByRole("link", { name: new RegExp(`v${featuredPackageVersion}`) }).filter({ visible: true });
-      await expect(badges).toHaveCount(1);
+      await expect(shell.getByText(new RegExp(`^v${featuredPackageVersion}$`))).toHaveCount(1);
+      await expect(shell.getByRole("link", { name: new RegExp(`v${featuredPackageVersion}`) })).toHaveCount(0);
     });
 
     test("hero has no stray markup line and demo style stays scoped", async ({ page }) => {
