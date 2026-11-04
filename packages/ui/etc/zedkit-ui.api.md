@@ -154,7 +154,7 @@ export interface ButtonProps extends React_2.ComponentProps<"button">, VariantPr
 
 // @public (undocumented)
 export const buttonVariants: (props?: ({
-    variant?: "link" | "default" | "destructive" | "secondary" | "outline" | "ghost" | null | undefined;
+    variant?: "default" | "link" | "destructive" | "outline" | "secondary" | "ghost" | null | undefined;
     size?: "default" | "sm" | "lg" | "icon" | null | undefined;
 } & ClassProp) | undefined) => string;
 
@@ -280,7 +280,7 @@ export type ContainerProps = React_2.ComponentProps<"div"> & VariantProps<typeof
 
 // @public (undocumented)
 export const containerVariants: (props?: ({
-    width?: "narrow" | "reading" | "default" | "wide" | "full" | null | undefined;
+    width?: "default" | "narrow" | "reading" | "wide" | "full" | null | undefined;
     gutter?: boolean | null | undefined;
 } & ClassProp) | undefined) => string;
 
@@ -693,7 +693,7 @@ export type HeadingProps = React_2.ComponentProps<"h1"> & VariantProps<typeof he
 
 // @public (undocumented)
 export const headingVariants: (props?: ({
-    typeRole?: "display" | "small" | "body" | "label" | "nav" | "section" | "band" | "cardTitle" | "lead" | "prose" | null | undefined;
+    typeRole?: "display" | "title" | "heading" | "section" | "band" | "cardTitle" | "lead" | "body" | "prose" | "small" | "caption" | "label" | "nav" | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -1303,6 +1303,12 @@ export type RouteModalVariant = "drawer" | "dialog";
 export const SCROLL_SCENES_MAX = 8;
 
 // @public
+export function ScrollGallery(input: ScrollGalleryProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type ScrollGalleryProps = React_2.ComponentProps<"div">;
+
+// @public
 export function ScrollReset(input: ScrollResetProps): null;
 
 // @public (undocumented)
@@ -1355,7 +1361,14 @@ export type SectionProps = React_2.ComponentProps<"section"> & {
     tone?: "plain" | "muted" | undefined;
     spacing?: "sm" | "md" | "lg" | "xl" | undefined;
     containerWidth?: ContainerProps["width"];
+    snap?: "start" | "none" | undefined;
 };
+
+// @public
+export function SectionScroll(input: SectionScrollProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type SectionScrollProps = React_2.ComponentProps<"div">;
 
 // @public (undocumented)
 export function Select(input: SelectProps): React_2.JSX.Element;
@@ -1435,8 +1448,8 @@ export type StackProps = React_2.ComponentProps<"div"> & VariantProps<typeof sta
 
 // @public (undocumented)
 export const stackVariants: (props?: ({
-    direction?: "horizontal" | "vertical" | null | undefined;
-    gap?: 1 | 6 | 2 | 3 | 8 | 4 | 5 | 7 | null | undefined;
+    direction?: "vertical" | "horizontal" | null | undefined;
+    gap?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -1536,7 +1549,7 @@ export type TextProps = React_2.ComponentProps<"p"> & VariantProps<typeof textVa
 // @public (undocumented)
 export const textVariants: (props?: ({
     variant?: "body" | "muted" | null | undefined;
-    typeRole?: "small" | "body" | "label" | "lead" | "prose" | null | undefined;
+    typeRole?: "lead" | "body" | "prose" | "small" | "caption" | "label" | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -1582,6 +1595,8 @@ export type TypeRole = keyof typeof typeRoleClass;
 // @public
 export const typeRoleClass: {
     readonly display: "text-zk-type-display";
+    readonly title: "text-zk-type-section";
+    readonly heading: "text-zk-type-band";
     readonly section: "text-zk-type-section";
     readonly band: "text-zk-type-band";
     readonly cardTitle: "text-zk-type-card-title";
@@ -1589,6 +1604,7 @@ export const typeRoleClass: {
     readonly body: "text-zk-type-body";
     readonly prose: "text-zk-type-prose";
     readonly small: "text-zk-type-small";
+    readonly caption: "text-zk-type-label";
     readonly label: "text-zk-type-label";
     readonly nav: "text-zk-type-nav";
 };

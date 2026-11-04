@@ -1,0 +1,26 @@
+/*
+ * Section scroll: smooth paging and proximity snap. Opt in with
+ * `SectionScroll`. Not animation — motion lives in signature-motion /
+ * scroll-scenes.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  html:has([data-slot="section-scroll"]) {
+    scroll-behavior: smooth;
+    scroll-padding-top: var(--zk-header-height);
+    scroll-snap-type: y proximity;
+  }
+
+  [data-slot="section-scroll"] {
+    scroll-snap-type: y proximity;
+  }
+
+  html:has([data-slot="section-scroll"])
+    [data-slot="section"][data-snap="start"] {
+    scroll-snap-align: start;
+  }
+
+  html:has([data-slot="section-scroll"])
+    [data-slot="section"][data-snap="none"] {
+    scroll-snap-align: none;
+  }
+}

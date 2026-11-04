@@ -22,7 +22,7 @@ function HomeSecondaryEntryLinks({ entryPoints }: { entryPoints: HomeEntryPoint[
         >
           <Stack gap={1} className="min-w-0">
             <Text className="font-medium">{entry.title}</Text>
-            <Text variant="muted" className={HOME_METADATA_TEXT_CLASS}>
+            <Text variant="muted" typeRole="caption" className={HOME_METADATA_TEXT_CLASS}>
               {homeCopy.secondary.entryNeedsLine(entry.needCount, entry.summary.split(".")[0]!)}
             </Text>
           </Stack>

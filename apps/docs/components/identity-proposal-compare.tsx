@@ -15,7 +15,7 @@ function useNarrowCompare(): boolean {
       return () => mql.removeEventListener("change", onStoreChange);
     },
     () => window.matchMedia("(max-width: 1023px)").matches,
-    () => false,
+    () => true,
   );
 }
 
@@ -36,20 +36,20 @@ export function ProposalBeforeAfter({
       <Text variant="muted" className="text-sm">
         {copy.proposal.compare}
       </Text>
-      <Stack gap={3} className={cn(narrow && "flex flex-col")}>
-        <Stack gap={2} className={cn("min-w-0", narrow && "order-1")}>
+      <Stack gap={3} className={cn("flex flex-col", narrow ? "flex-col-reverse" : undefined)}>
+        <Stack gap={2} className="min-w-0">
           <Text typeRole="label" className="text-foreground">
             {copy.proposal.afterLabel}
           </Text>
-          <IdentityMiniPreview tokens={proposed} id={`proposal-${requestId}`} domain={domain} compact={narrow} />
+          <IdentityMiniPreview tokens={proposed} id={`proposal-${requestId}`} domain={domain} compact />
         </Stack>
-        <details open={!narrow} className={cn("min-w-0 text-sm", narrow && "order-2")}>
+        <details open={!narrow} className="min-w-0 text-sm">
           <summary className="flex min-h-11 cursor-pointer items-center focus-ring lg:hidden">{copy.proposal.beforeLabel}</summary>
           <Stack gap={2} className="pt-2 lg:pt-0">
             <Text typeRole="label" className="hidden text-foreground lg:block">
               {copy.proposal.beforeLabel}
             </Text>
-            <IdentityMiniPreview tokens={current} id={`before-${requestId}`} domain={domain} compact={narrow} />
+            <IdentityMiniPreview tokens={current} id={`before-${requestId}`} domain={domain} compact />
           </Stack>
         </details>
       </Stack>
