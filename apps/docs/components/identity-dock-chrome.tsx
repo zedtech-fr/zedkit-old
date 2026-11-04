@@ -34,7 +34,7 @@ function IdentityDockTrigger({ className, ...props }: IdentityDockTriggerProps) 
       data-slot="identity-dock-trigger"
       variant="outline"
       className={cn(
-        "pointer-events-auto w-auto max-w-full justify-between gap-2 rounded-full px-4 shadow-md motion-safe:transition-transform motion-reduce:transition-none",
+        "pointer-events-auto w-auto max-w-full justify-between gap-2 rounded-full px-4 shadow-md",
         signatureMotionClass.feedback,
         className,
       )}
