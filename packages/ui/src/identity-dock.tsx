@@ -57,7 +57,7 @@ function IdentityDockPanel({ open, className, children, ...props }: IdentityDock
         signatureMotionClass.glide,
         open
           ? "pointer-events-auto opacity-100 motion-safe:translate-y-0 motion-reduce:translate-y-0"
-          : "pointer-events-none opacity-0 motion-reduce:translate-y-0 motion-safe:translate-y-full motion-safe:sm:translate-y-2",
+          : "pointer-events-none opacity-0 motion-safe:translate-y-full motion-reduce:translate-y-0 motion-safe:sm:translate-y-2",
         className,
       )}
       {...props}

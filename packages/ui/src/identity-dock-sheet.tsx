@@ -51,7 +51,7 @@ function IdentityDockSheetDetents({
       gap={2}
       role="group"
       aria-label={detentGroupLabel}
-      className="shrink-0 justify-center px-3 pb-1 pt-2"
+      className="shrink-0 justify-center px-3 pt-2 pb-1"
     >
       {rows.map((row) => (
         <Button
