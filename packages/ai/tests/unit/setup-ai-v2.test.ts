@@ -110,14 +110,18 @@ describe("setup-ai v2 kit", () => {
     expect(rubric).toContain("Gate outcomes");
   });
 
-  it("routes /setup-ai command text before the skill and a First message paste template in SKILL.md", () => {
+  it("routes /setup-ai command text before the skill and an Intro text template that does not end the turn", () => {
     const cmd = readFileSync(join(kitDir(), "commands", "setup-ai.md"), "utf8");
     expect(cmd).toContain("Before anything else, tell the user");
     expect(cmd).toContain("Tell the user first");
     expect(cmd).toContain("before any tool call");
     expect(cmd).toContain("Then run the `setup-ai` skill on `$ARGUMENTS`");
-    const skill = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
-    expect(skill).toMatch(/^> \*\*First message\*\*/m);
+    expect(cmd).toMatch(/Do not end your turn after the intro/);
+    const skill = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "SKILL.md"),
+      "utf8",
+    );
+    expect(skill).toMatch(/^> \*\*Intro text\*\*/m);
     expect(skill).toMatch(/^> \*\*Modes:\*\*/m);
     expect(skill).toMatch(/^> \*\*Phases:\*\*/m);
     expect(skill).toMatch(/^> \*\*What you get \/ time:\*\*/m);
@@ -299,9 +303,14 @@ describe("setup-ai v2 kit", () => {
   });
 
   it("documents sample-2 scorer fixes T1–T3 in setup-ai SKILL and catalog templates", () => {
-    const raw = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
+    const raw = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "SKILL.md"),
+      "utf8",
+    );
     expect(raw).toMatch(/Before ANY tool call/iu);
-    expect(raw.indexOf("Before ANY tool call")).toBeLessThan(raw.indexOf("## Phase A"));
+    expect(raw.indexOf("Before ANY tool call")).toBeLessThan(
+      raw.indexOf("## Phase A"),
+    );
     expect(raw).toMatch(/Do not.*Running phase A/iu);
     expect(raw).toMatch(/Domain vs docs reconciliation/iu);
     expect(raw).toMatch(/enforced by/iu);
@@ -309,9 +318,21 @@ describe("setup-ai v2 kit", () => {
     expect(raw).toContain("../../domain/booking.md");
     expect(raw).toMatch(/test -e.*every relative link target/iu);
     expect(raw).toMatch(/UNVERIFIED:/u);
-    for (const name of ["domain-change", "add-capability", "add-migration"] as const) {
+    for (const name of [
+      "domain-change",
+      "add-capability",
+      "add-migration",
+    ] as const) {
       const tmpl = readFileSync(
-        join(kitDir(), "skills", "setup-ai", "templates", "catalog", name, "SKILL.md.tmpl"),
+        join(
+          kitDir(),
+          "skills",
+          "setup-ai",
+          "templates",
+          "catalog",
+          name,
+          "SKILL.md.tmpl",
+        ),
         "utf8",
       );
       expect(tmpl, name).toContain("[domain rules](../../domain/booking.md)");
@@ -319,14 +340,23 @@ describe("setup-ai v2 kit", () => {
       expect(tmpl, name).not.toMatch(/\(\.\.\/domain\//u);
     }
     const issue = readFileSync(
-      join(kitDir(), "skills", "setup-ai", "templates", "kit-issue.template.md"),
+      join(
+        kitDir(),
+        "skills",
+        "setup-ai",
+        "templates",
+        "kit-issue.template.md",
+      ),
       "utf8",
     );
     expect(issue).toMatch(/UNVERIFIED.*why/iu);
   });
 
   it("documents run-4 scorer add-ons T3a and persisted plan file", () => {
-    const raw = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
+    const raw = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "SKILL.md"),
+      "utf8",
+    );
     expect(raw).toMatch(/State-bearing capabilities/iu);
     expect(raw).toMatch(/ingestion\/sync/iu);
     expect(raw).toMatch(/AGENTS ladder/s);
@@ -345,13 +375,28 @@ describe("setup-ai v2 kit", () => {
   });
 
   it("documents diligence r6 scorer fixes in setup-ai SKILL and templates", () => {
-    const skill = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
+    const skill = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "SKILL.md"),
+      "utf8",
+    );
     expect(skill).toMatch(/whole.*Key journeys/iu);
     expect(skill).toMatch(/documented, not enforced/);
     expect(skill).toMatch(/never write.*enforced by/iu);
     expect(skill).toMatch(/node_modules\/@zedtech\/zedkit-ai\/kit/);
     expect(skill).toMatch(/Consistency pass/iu);
     expect(skill).toMatch(/intro skipped/iu);
+    expect(skill).toMatch(/intro is not a turn boundary/iu);
+    expect(skill).toMatch(/continue in the same turn without waiting/iu);
+    expect(skill).not.toMatch(/as your \*\*next\*\* assistant message/iu);
+    const cmd = readFileSync(join(kitDir(), "commands", "setup-ai.md"), "utf8");
+    expect(cmd).toMatch(/continue in the same turn without waiting/iu);
+    expect(cmd).not.toMatch(/very first message/iu);
+    const onboarding = readFileSync(
+      join(kitDir(), "cursor-onboarding.md"),
+      "utf8",
+    );
+    expect(onboarding).toMatch(/continue in the same turn/iu);
+    expect(onboarding).not.toMatch(/as your next message/iu);
     const rubric = readFileSync(
       join(kitDir(), "skills", "setup-ai", "templates", "setup-rubric.md"),
       "utf8",
@@ -360,17 +405,36 @@ describe("setup-ai v2 kit", () => {
     expect(rubric).toMatch(/documented, not enforced/);
     expect(rubric).toMatch(/spot-check.*enforced by/iu);
     const personas = readFileSync(
-      join(kitDir(), "skills", "setup-ai", "templates", "personas-v2.template.md"),
+      join(
+        kitDir(),
+        "skills",
+        "setup-ai",
+        "templates",
+        "personas-v2.template.md",
+      ),
       "utf8",
     );
     expect(personas).toMatch(/whole.*Key journeys/iu);
     const domain = readFileSync(
-      join(kitDir(), "skills", "setup-ai", "templates", "domain", "booking.template.md"),
+      join(
+        kitDir(),
+        "skills",
+        "setup-ai",
+        "templates",
+        "domain",
+        "booking.template.md",
+      ),
       "utf8",
     );
     expect(domain).toMatch(/current \(documented, not enforced\)/);
     const issue = readFileSync(
-      join(kitDir(), "skills", "setup-ai", "templates", "kit-issue.template.md"),
+      join(
+        kitDir(),
+        "skills",
+        "setup-ai",
+        "templates",
+        "kit-issue.template.md",
+      ),
       "utf8",
     );
     expect(issue).toMatch(/\.agents\/skills\/setup-ai/);
@@ -380,9 +444,14 @@ describe("setup-ai v2 kit", () => {
 
   it("documents validate --setup completion check in skill, rubric, and phase E checklist", () => {
     const cmd = "npx zedkit-ai validate --setup";
-    const skill = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
+    const skill = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "SKILL.md"),
+      "utf8",
+    );
     expect(skill).toContain(cmd);
-    expect(skill).toMatch(/Plan reconciliation \(after Write, before Verify\)/u);
+    expect(skill).toMatch(
+      /Plan reconciliation \(after Write, before Verify\)/u,
+    );
     expect(skill).toMatch(/git status --porcelain -uall/u);
     expect(skill).toMatch(/Phase E checklist \(before you finish\):/u);
     expect(skill).toMatch(
@@ -396,7 +465,13 @@ describe("setup-ai v2 kit", () => {
     expect(rubric).toMatch(/Zero lost user files.*validate --setup/s);
     expect(rubric).toMatch(/Gates ran.*validate --setup/s);
     const log = readFileSync(
-      join(kitDir(), "skills", "setup-ai", "templates", "setup-log.template.md"),
+      join(
+        kitDir(),
+        "skills",
+        "setup-ai",
+        "templates",
+        "setup-log.template.md",
+      ),
       "utf8",
     );
     expect(log).toContain(cmd);
@@ -425,12 +500,21 @@ describe("setup-ai v2 kit", () => {
     expect(rubric).toMatch(/Owner-dependent axes/s);
     expect(rubric).toMatch(/simulated owner cap at 2/s);
     expect(rubric).toMatch(/every axis >= 2/s);
-    const skill = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
+    const skill = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "SKILL.md"),
+      "utf8",
+    );
     expect(skill).toMatch(/mean over the 8 measurable axes \(2, 4–10\)/u);
     expect(skill).toMatch(/owner-dependent.*line/s);
     expect(skill).toMatch(/mean \(8 axes\)/u);
     const log = readFileSync(
-      join(kitDir(), "skills", "setup-ai", "templates", "setup-log.template.md"),
+      join(
+        kitDir(),
+        "skills",
+        "setup-ai",
+        "templates",
+        "setup-log.template.md",
+      ),
       "utf8",
     );
     expect(log).toMatch(/mean \(8 axes\)/u);

@@ -28,7 +28,7 @@ Install `@zedtech/zedkit-ai`, wire Cursor with adopt mode, run `/setup-ai` to ta
 
 3. **Run setup-ai** (repo audit, discovery interview, plan, and tailored instructions):
 
-   - In Cursor: run **`/setup-ai`** (or ask the agent to run the `setup-ai` skill). Read the skill, then post its intro first as your next message — before any repo reads, inventory, or writes.
+   - In Cursor: run **`/setup-ai`** (or ask the agent to run the `setup-ai` skill). Read the skill, then print its intro first — before any repo reads, inventory, or writes — and **continue in the same turn** straight into phase A without waiting for a reply. The only stop points are the phase B batched interview, plan approval before writes, and the final report.
    - Follow the skill through **verify**: run the gate commands it lists, apply the approved plan, finish the report.
    - In phase **B**, **answer or delegate the batched discovery interview** (at most 8 questions in one batch); do not skip the interview or substitute guesses for owner answers.
 
