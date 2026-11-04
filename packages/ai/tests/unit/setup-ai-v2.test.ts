@@ -378,6 +378,13 @@ describe("setup-ai v2 kit", () => {
     expect(rubric).not.toMatch(/setup-ai:validate-setup/iu);
   });
 
+  it("keeps inventories in setup-log by default with root pointers", () => {
+    const skill = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
+    expect(skill).toMatch(/Unenforced rules.*inventory to setup-log.*not root/iu);
+    expect(skill).toMatch(/root `AGENTS\.md` keeps a one-line pointer/iu);
+    expect(skill).toMatch(/moving inventories to setup-log, root keeps pointers/iu);
+  });
+
   it("documents diligence r6 scorer fixes in setup-ai SKILL and templates", () => {
     const skill = readFileSync(
       join(kitDir(), "skills", "setup-ai", "SKILL.md"),
