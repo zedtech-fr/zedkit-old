@@ -12,7 +12,7 @@ const NOT_SKILLS = new Set(["plugin", "reload-plugins", "tmp", "ask", "improve"]
 export type SkillRefIssue = { path: string; message: string };
 
 /** Names passed to the Skill tool: the author asserts these are skills. */
-export function toolRefNames(text: string): string[] {
+function toolRefNames(text: string): string[] {
   const names = new Set<string>();
   const tool = new RegExp(
     `Skill tool (?:with|twice, for)\\s+["'\`](${NAME})["'\`](?:\\s+and\\s+["'\`](${NAME})["'\`])?`,
@@ -26,7 +26,7 @@ export function toolRefNames(text: string): string[] {
 }
 
 /** /command names: ambiguous with app routes, so callers gate by universe. */
-export function slashRefNames(text: string): string[] {
+function slashRefNames(text: string): string[] {
   const names = new Set<string>();
   // `/name`, `` `/name` ``, or `` `/name extra` ``. Not `` `file`/segment ``.
   const slash = new RegExp(`(?:^|[\\s(["'])\`?\\/(${NAME})(?![A-Za-z0-9_/-])`, "gmu");
