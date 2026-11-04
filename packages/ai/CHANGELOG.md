@@ -1,5 +1,53 @@
 # @zedtech/zedkit-ai
 
+## 0.17.0
+
+### Minor Changes
+
+- c37338b: Reference closure v3: validate detects hyphenated kit names (e.g. `a11y-auditor`) as whole words anywhere in kit-origin installed files, not only when backticked — single-word names stay backtick-only so prose never false-positives. The `ui-designer` handoffs line and the `verifier` UI-design verdict now use install-time availability blocks so presets without those agents stay closed. New broken-relative-link check over kit-origin installed files (skips web links, `#anchors`, and fenced code); the `domain-modeling` glossary example, the `setup-ts-deep-modules` README pointer, and the `wayfinder` ticket-index example render paths as code instead of dead links.
+
+### Patch Changes
+
+- f5e39df: Tighten setup-ai SKILL and templates for run-3 scorer: provider table always logged, headless intro, gate EXIT lines, sidecar cleanup, kit-issue per friction.
+
+## 0.16.0
+
+### Minor Changes
+
+- 0ee85d8: Reference closure v2: validate flags any kit skill/agent named (backticked, Skill-tool, or `/command` form) that the preset does not install, with no false positives on user-authored files. Starter and setup presets gain `parallel-work`, `tdd`, and `adversarial-tests`; optional references in kit files use install-time `<!-- if:skill=x -->` / `if:agent=y` availability blocks (rows removed, sentences dropped) so every preset validates closed. Coverage extends to kit-written root docs (installed `AGENTS.md` template lines and `.agents/personas.md`); the attribution notice is exempt by design.
+
+## 0.15.1
+
+### Patch Changes
+
+- 921a2f1: The `setup` preset installs the v2 personas schema as `.agents/personas.md` so setup-ai edits it in place. `starter`, `core` and `full` still get the v1 Task/Bar template.
+- 907e829: Re-running `setup` (or `init --adopt`) links repo-added skills under `.agents/skills` into a real `.cursor/skills` or `.claude/skills` directory. After a catalog copy in setup-ai phase D, re-run `npx zedkit-ai setup` — never `ln`/`cp` by hand.
+- e287d03: After install, print phase-C artifact expectations and optional Prettier ignore lines; document pnpm workspace `-w` install in onboarding copy.
+
+## 0.15.0
+
+### Minor Changes
+
+- 93be210: Setup rubric and score-and-learn phase: setup-ai ships `templates/setup-rubric.md` (ten 0–3 axes plus binary hard gates), ends with phase E (self-score against the rubric, `.agents/setup-log.md` retro entry, public-safe kit issue drafts, re-audit cadence), and adds `templates/setup-log.template.md` and `templates/kit-issue.template.md`. Every preset that ships setup-ai installs the new templates; validate stays green and adopt re-runs stay no-ops.
+
+## 0.14.0
+
+### Minor Changes
+
+- 356d2ab: Provider parity: setup-ai offers cursor, claude, codex and muse with a one-line value each; drift checks cover the claude layer (deleted entries, dangling links) and dangling cursor skill links with non-destructive re-run hints; every preset × provider cell is install-tested in CI. Init into pre-existing real `.claude/` dirs links kit skills in and copies agents/commands (adopt sidecars on collision) instead of dead `zk-*` links.
+
+## 0.13.0
+
+### Minor Changes
+
+- 1778b77: `init --adopt` keeps colliding user files and writes the kit version beside them; a second run skips copies that already match the kit. Validate ignores `*.kit.md` sidecars, reports drift without asking to overwrite, ignores host `/ask` and `/improve`, filters `lenses.md` so uninstalled runners are `planned`, and links kit skills into a real `.cursor/skills` directory.
+- 6407f33: Setup-ai v2: discovery interview, deep artifact templates, and catalog repo skills for the setup preset.
+- 7529a41: Add a `setup` preset: starter plus domain modeling, the review lenses, retro, rules-upkeep, and the product/UI/copy subagents. Every shipped preset still validates closed.
+
+### Patch Changes
+
+- 07e2e10: Add `zedkit-ai setup` (init with adopt) and README first-5-minutes path; Cursor docs at /docs/ai/setup with copy-paste prompt and https://zedkit.app/ai/setup.md agent instructions.
+
 ## 0.12.0
 
 ### Minor Changes

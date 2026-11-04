@@ -52,6 +52,8 @@ const KIT_ENGLISH = [
   '"Loading options"',
   '" (selected)"',
   '"Remove {label}"',
+  '"Main navigation"',
+  '"Language"',
 ];
 
 function walk(dir: string): string[] {

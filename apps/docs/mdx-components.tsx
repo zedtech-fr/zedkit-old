@@ -6,6 +6,7 @@ import { ComponentWrapsLine } from "@/components/component-wraps-line";
 import { DocsProseTable } from "@/components/docs-prose-table";
 import { DocsKitNameList } from "@/components/docs-kit-name-list";
 import { IdentityEditorPanel } from "@/components/identity-editor-panel";
+import { AiSetupPrompt } from "@/components/ai-setup-prompt";
 import { MdxPre } from "@/components/mdx-pre";
 
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
@@ -17,6 +18,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     DocsKitNameList,
     DocsProseTable,
     IdentityEditorPanel,
+    AiSetupPrompt,
     pre: MdxPre,
     table: DocsProseTable,
     ...components,

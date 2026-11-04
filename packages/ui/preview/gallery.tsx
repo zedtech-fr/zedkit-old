@@ -83,7 +83,21 @@ import {
   WizardSteps,
   createDataTableColumns,
 } from "#index.js";
-import { GlassSurface } from "#marketing/index.js";
+import {
+  CtaBand,
+  Faq,
+  FeatureGrid,
+  GlassSurface,
+  Hero,
+  HowItWorks,
+  LocaleSwitch,
+  LogoBand,
+  MarketingFooter,
+  MarketingHeader,
+  MediaSection,
+  Pricing,
+  Testimonials,
+} from "#marketing/index.js";
 import { X } from "lucide-react";
 import { FormDemo } from "./form-demo.js";
 
@@ -396,14 +410,124 @@ export function Gallery() {
             selected={["a"]}
             onChange={() => {}}
           />
+          <OptionCards
+            multiple={false}
+            label="Pick one"
+            options={[
+              { id: "a", title: "Alpha", description: "First option." },
+              { id: "b", title: "Beta", description: "Second option." },
+            ]}
+            selected={["b"]}
+            onChange={() => {}}
+          />
         </GallerySection>
 
         <GallerySection id="marketing" title="Marketing">
+          <MarketingHeader
+            sticky={false}
+            brand={<a href="#marketing" className="inline-flex min-h-11 items-center font-semibold">Harbor</a>}
+            links={[
+              <a key="docs" href="#marketing">Docs</a>,
+              <a key="pricing" href="#marketing">Pricing</a>,
+            ]}
+            actions={
+              <>
+                <LocaleSwitch
+                  locales={[
+                    { code: "en", label: "EN", href: "#marketing" },
+                    { code: "fr", label: "FR", href: "#marketing" },
+                  ]}
+                  current="en"
+                />
+                <Button size="sm">Create an account</Button>
+              </>
+            }
+          />
           <div className="grid gap-4 sm:grid-cols-3">
             <GlassSurface>Plain surface</GlassSurface>
             <GlassSurface tone="raised">Raised surface</GlassSurface>
             <GlassSurface tone="tinted">Tinted surface</GlassSurface>
           </div>
+          <Hero
+            eyebrow="Gallery"
+            title="Keep your shop. Add live updates."
+            description="Stock, orders and offers update on the page without a refresh."
+            actions={
+              <>
+                <Button size="lg">Create an account</Button>
+                <Button size="lg" variant="outline">
+                  Read the docs
+                </Button>
+              </>
+            }
+          />
+          <LogoBand
+            title="Works with the shops you know"
+            logos={[
+              { name: "Harbor Studio", logo: <span className="text-lg font-semibold">Harbor</span> },
+              { name: "North Shop", logo: <span className="text-lg font-semibold">North</span> },
+              { name: "Linen & Co", logo: <span className="text-lg font-semibold">Linen</span> },
+            ]}
+          />
+          <FeatureGrid
+            title="Built for the shop you already run"
+            description="Add live features next to it, without replatforming."
+            features={[
+              { title: "Live stock", description: "Counts follow every sale." },
+              { title: "Personal offers", description: "Each visitor sees what fits." },
+              { title: "Shopping assistant", description: "Answers from your catalog." },
+            ]}
+          />
+          <HowItWorks
+            title="Live in three steps"
+            steps={[
+              { title: "Create an account", description: "No card needed." },
+              { title: "Create a key", description: "A staging key takes a minute." },
+              { title: "See your first event", description: "It shows up in the console." },
+            ]}
+          />
+          <Testimonials
+            title="What shops say"
+            items={[
+              { quote: "We launched a new offer in a day.", name: "Ada Lovelace", role: "Head of e-commerce, Harbor Studio", avatar: "AL" },
+              { quote: "Stock on the page is always right.", name: "Grace Hopper", role: "Founder, North Shop", avatar: "GH" },
+            ]}
+          />
+          <MediaSection
+            title="An assistant that knows your catalog"
+            description="Visitors ask in plain words and get answers from your products."
+            points={["Reads your products and stock", "Never changes an order"]}
+            media={<p className="text-sm text-muted-foreground">Demo or screenshot goes here.</p>}
+          />
+          <Pricing
+            title="Simple pricing"
+            description="Start on a staging key. Pay when you go live."
+            plans={[
+              { name: "Starter", price: "€0", period: "per month", features: ["1 staging key", "Community support"], action: <Button variant="outline">Start free</Button> },
+              { name: "Growth", price: "€29", period: "per month", features: ["5 keys", "Email support"], action: <Button>Choose Growth</Button>, highlighted: true, badge: "Most popular" },
+            ]}
+          />
+          <Faq
+            title="Questions"
+            items={[
+              { question: "Do I need to change my shop?", answer: "No. It runs next to the shop you already have." },
+              { question: "How long does a key take?", answer: "About a minute on staging." },
+            ]}
+          />
+          <CtaBand
+            title="Try it on a staging key"
+            description="Sign up, create a key, see your first event in minutes."
+            actions={<Button size="lg">Create an account</Button>}
+          />
+          <MarketingFooter
+            brand={<span className="font-semibold">Harbor</span>}
+            description="Live features for the shop you already run."
+            columns={[
+              { title: "Product", links: [<a key="docs" href="#marketing">Docs</a>, <a key="pricing" href="#marketing">Pricing</a>] },
+              { title: "Company", links: [<a key="about" href="#marketing">About</a>] },
+            ]}
+            legal={<p>© 2026 Harbor</p>}
+          />
         </GallerySection>
       </div>
     </AppShell>

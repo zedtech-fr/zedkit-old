@@ -19,6 +19,7 @@ export const SITE_HEADER_INTERNAL_PATHS = [
   "/docs/start-without-writing-code",
   "/docs/build-an-admin-dashboard",
   "/docs/set-up-your-coding-agents",
+  "/docs/ai/setup",
   "/docs/add-seo-to-nextjs",
   "/docs/zedkit-and-shadcn",
   "/docs/maturity-and-compatibility",

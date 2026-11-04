@@ -28,6 +28,16 @@ export type CommerceSpecimenProps = {
     messages?: typeof specimenMessagesEn.commerce;
 };
 
+// @public
+export function CtaBand(input: CtaBandProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type CtaBandProps = Omit<React_2.ComponentProps<"section">, "title"> & {
+    title: React_2.ReactNode;
+    description?: React_2.ReactNode;
+    actions?: React_2.ReactNode;
+};
+
 // @public (undocumented)
 export const DEFAULT_DOMAIN: SpecimenDomain;
 
@@ -42,6 +52,46 @@ export type EditorialSpecimenProps = {
     className?: string;
     messages?: typeof specimenMessagesEn.editorial;
 };
+
+// @public
+export function Faq(input: FaqProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export interface FaqItem {
+    // (undocumented)
+    answer: React_2.ReactNode;
+    id?: string | undefined;
+    // (undocumented)
+    question: React_2.ReactNode;
+}
+
+// @public (undocumented)
+export type FaqProps = Omit<React_2.ComponentProps<"section">, "title"> & {
+    title: React_2.ReactNode;
+    description?: React_2.ReactNode;
+    items: FaqItem[];
+};
+
+// @public
+export function FeatureGrid(input: FeatureGridProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type FeatureGridProps = Omit<React_2.ComponentProps<"section">, "title"> & {
+    title: React_2.ReactNode;
+    description?: React_2.ReactNode;
+    features: FeatureItem[];
+    columns?: 2 | 3 | 4 | undefined;
+};
+
+// @public (undocumented)
+export interface FeatureItem {
+    // (undocumented)
+    description?: React_2.ReactNode;
+    icon?: React_2.ReactNode;
+    id?: string | undefined;
+    // (undocumented)
+    title: React_2.ReactNode;
+}
 
 // @public (undocumented)
 export function GlassSurface(input: GlassSurfaceProps): React_2.JSX.Element;
@@ -58,6 +108,139 @@ export const glassSurfaceVariants: (props?: ({
     tone?: "plain" | "raised" | "tinted" | null | undefined;
     padding?: "none" | "sm" | "lg" | "md" | null | undefined;
 } & ClassProp) | undefined) => string;
+
+// @public
+export function Hero(input: HeroProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type HeroProps = Omit<React_2.ComponentProps<"section">, "title"> & {
+    eyebrow?: React_2.ReactNode;
+    title: React_2.ReactNode;
+    description?: React_2.ReactNode;
+    actions?: React_2.ReactNode;
+    media?: React_2.ReactNode;
+    align?: "center" | "start" | undefined;
+    headingLevel?: 1 | 2 | undefined;
+};
+
+// @public
+export function HowItWorks(input: HowItWorksProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type HowItWorksProps = Omit<React_2.ComponentProps<"section">, "title"> & {
+    title: React_2.ReactNode;
+    description?: React_2.ReactNode;
+    steps: HowItWorksStep[];
+};
+
+// @public (undocumented)
+export interface HowItWorksStep {
+    // (undocumented)
+    description?: React_2.ReactNode;
+    id?: string | undefined;
+    // (undocumented)
+    title: React_2.ReactNode;
+}
+
+// @public (undocumented)
+export interface LocaleOption {
+    code: string;
+    href?: string | undefined;
+    label: string;
+}
+
+// @public
+export function LocaleSwitch(input: LocaleSwitchProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type LocaleSwitchProps = Omit<React_2.ComponentProps<"nav">, "children" | "onSelect"> & {
+    locales: LocaleOption[];
+    current: string;
+    onSelect?: ((code: string) => void) | undefined;
+};
+
+// @public
+export function LogoBand(input: LogoBandProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export interface LogoBandItem {
+    href?: string | undefined;
+    id?: string | undefined;
+    logo: React_2.ReactNode;
+    name: string;
+}
+
+// @public (undocumented)
+export type LogoBandProps = Omit<React_2.ComponentProps<"section">, "title"> & {
+    title: string;
+    logos: LogoBandItem[];
+};
+
+// @public
+export function MarketingFooter(input: MarketingFooterProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export interface MarketingFooterColumn {
+    id?: string | undefined;
+    links: React_2.ReactNode[];
+    title: string;
+}
+
+// @public (undocumented)
+export type MarketingFooterProps = Omit<React_2.ComponentProps<"footer">, "children"> & {
+    brand?: React_2.ReactNode;
+    description?: React_2.ReactNode;
+    columns?: MarketingFooterColumn[] | undefined;
+    legal?: React_2.ReactNode;
+};
+
+// @public
+export function MarketingHeader(input: MarketingHeaderProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type MarketingHeaderProps = Omit<React_2.ComponentProps<"header">, "children"> & {
+    brand: React_2.ReactNode;
+    links?: React_2.ReactNode[] | undefined;
+    actions?: React_2.ReactNode;
+    sticky?: boolean | undefined;
+};
+
+// @public
+export function MediaSection(input: MediaSectionProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type MediaSectionProps = Omit<React_2.ComponentProps<"section">, "title"> & {
+    title: React_2.ReactNode;
+    description?: React_2.ReactNode;
+    points?: React_2.ReactNode[] | undefined;
+    actions?: React_2.ReactNode;
+    media: React_2.ReactNode;
+    reverse?: boolean | undefined;
+};
+
+// @public
+export function Pricing(input: PricingProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export interface PricingPlan {
+    action?: React_2.ReactNode;
+    badge?: React_2.ReactNode;
+    // (undocumented)
+    description?: React_2.ReactNode;
+    features: React_2.ReactNode[];
+    highlighted?: boolean | undefined;
+    id?: string | undefined;
+    name: React_2.ReactNode;
+    period?: React_2.ReactNode;
+    price: React_2.ReactNode;
+}
+
+// @public (undocumented)
+export type PricingProps = Omit<React_2.ComponentProps<"section">, "title"> & {
+    title: React_2.ReactNode;
+    description?: React_2.ReactNode;
+    plans: PricingPlan[];
+};
 
 // @public (undocumented)
 export function SaasDashboardSpecimen(input: SaasDashboardSpecimenProps): JSX.Element;
@@ -177,6 +360,25 @@ export const specimenMessagesEn: {
         readonly book: "Confirm booking";
         readonly booked: (service: string, slot: string) => string;
     };
+};
+
+// @public (undocumented)
+export interface Testimonial {
+    avatar?: React_2.ReactNode;
+    id?: string | undefined;
+    name: string;
+    quote: React_2.ReactNode;
+    role?: React_2.ReactNode;
+}
+
+// @public
+export function Testimonials(input: TestimonialsProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type TestimonialsProps = Omit<React_2.ComponentProps<"section">, "title"> & {
+    title: React_2.ReactNode;
+    description?: React_2.ReactNode;
+    items: Testimonial[];
 };
 
 // (No @packageDocumentation comment for this package)

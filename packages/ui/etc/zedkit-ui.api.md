@@ -249,7 +249,7 @@ export type ContainerProps = React_2.ComponentProps<"div"> & VariantProps<typeof
 
 // @public (undocumented)
 export const containerVariants: (props?: ({
-    width?: "default" | "narrow" | "reading" | "wide" | "full" | null | undefined;
+    width?: "narrow" | "reading" | "default" | "wide" | "full" | null | undefined;
     gutter?: boolean | null | undefined;
 } & ClassProp) | undefined) => string;
 
@@ -662,7 +662,7 @@ export type HeadingProps = React_2.ComponentProps<"h1"> & VariantProps<typeof he
 
 // @public (undocumented)
 export const headingVariants: (props?: ({
-    typeRole?: "display" | "section" | "band" | "cardTitle" | "lead" | "body" | "prose" | "small" | "label" | "nav" | null | undefined;
+    typeRole?: "display" | "small" | "body" | "label" | "nav" | "section" | "band" | "cardTitle" | "lead" | "prose" | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -1116,10 +1116,12 @@ export interface OptionCardProps {
     className?: string;
     // (undocumented)
     description?: React_2.ReactNode;
+    name?: string | undefined;
     // (undocumented)
     onChange: () => void;
     // (undocumented)
     title: React_2.ReactNode;
+    type?: "checkbox" | "radio";
 }
 
 // @public (undocumented)
@@ -1131,6 +1133,7 @@ export interface OptionCardsProps {
     className?: string;
     // (undocumented)
     label?: string;
+    multiple?: boolean;
     // (undocumented)
     onChange: (ids: string[]) => void;
     // (undocumented)
@@ -1264,6 +1267,20 @@ export type RouteModalVariant = "drawer" | "dialog";
 // @public
 export const SCROLL_SCENES_MAX = 8;
 
+// @public
+export function ScrollReset(input: ScrollResetProps): null;
+
+// @public (undocumented)
+export interface ScrollResetOptions {
+    behavior?: "auto" | "smooth";
+    target?: () => HTMLElement | null;
+}
+
+// @public (undocumented)
+export interface ScrollResetProps extends ScrollResetOptions {
+    routeKey: string;
+}
+
 // @public (undocumented)
 export interface ScrollScene {
     caption: React_2.ReactNode;
@@ -1383,8 +1400,8 @@ export type StackProps = React_2.ComponentProps<"div"> & VariantProps<typeof sta
 
 // @public (undocumented)
 export const stackVariants: (props?: ({
-    direction?: "vertical" | "horizontal" | null | undefined;
-    gap?: 4 | 1 | 2 | 3 | 5 | 6 | 7 | 8 | null | undefined;
+    direction?: "horizontal" | "vertical" | null | undefined;
+    gap?: 1 | 8 | 2 | 3 | 4 | 5 | 6 | 7 | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -1484,7 +1501,7 @@ export type TextProps = React_2.ComponentProps<"p"> & VariantProps<typeof textVa
 // @public (undocumented)
 export const textVariants: (props?: ({
     variant?: "body" | "muted" | null | undefined;
-    typeRole?: "lead" | "body" | "prose" | "small" | "label" | null | undefined;
+    typeRole?: "small" | "body" | "label" | "lead" | "prose" | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -1576,6 +1593,9 @@ export function useOnlineStatus(): boolean;
 // @public
 export function usePortalContainer(): HTMLElement | undefined;
 
+// @public
+export function useScrollReset(routeKey: string, options?: ScrollResetOptions): void;
+
 // @public (undocumented)
 export function useUiMessages(): ZedkitUiMessages;
 
@@ -1660,6 +1680,9 @@ export type ZedkitUiMessages = {
     justNow: string;
     pickDate: string;
     pickDateRange: string;
+    menu: string;
+    mainNavigation: string;
+    language: string;
     locale: "en" | "fr";
 };
 

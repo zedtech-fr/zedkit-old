@@ -1,5 +1,4 @@
 import { lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach } from "vitest";
@@ -39,7 +38,7 @@ export function lensTableRows(): string[][] {
     .split("\n")
     .filter((line) => line.startsWith("| "))
     .map((line) => line.split("|").map((c) => c.trim()))
-    .filter((cells) => cells[1] !== "Lens" && cells[1] !== "---");
+    .filter((cells) => (cells[1] ?? "") !== "Lens" && !/^:?-{3,}:?$/.test(cells[1] ?? ""));
 }
 
 /** Skill directory names only: stray files (LICENSE-*) never count as skills. */
@@ -66,14 +65,10 @@ export function markdownFiles(dir: string): string[] {
     .filter((full) => full.endsWith(".md") && !lstatSync(full).isSymbolicLink() && lstatSync(full).isFile());
 }
 
-/** The CLI USAGE block, the documented flag contract. */
+/** The CLI usage text (kit/usage.txt), the documented flag contract. */
 export function usageText(): string {
-  const source = readFileSync(
-    fileURLToPath(new URL("../../src/cli.ts", import.meta.url)),
-    "utf8",
-  );
-  const usage = /const USAGE = `([\s\S]*?)`;/u.exec(source)?.[1] ?? "";
-  if (usage === "") throw new Error("src/cli.ts has no USAGE block");
+  const usage = readFileSync(join(kitDir(), "usage.txt"), "utf8");
+  if (usage === "") throw new Error("kit/usage.txt is empty");
   return usage;
 }
 

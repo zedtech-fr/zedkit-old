@@ -16,7 +16,7 @@ empty diff — never inside the subagents.
 ## 2. Pick the lenses (route over `lenses.md`)
 
 Read the registry in `lenses.md` (same folder). Minimum on every review:
-`code`, `ponytail`, `persona`, `quality gate`. Add each lens whose Trigger
+`code`<!-- if:skill=ponytail -->, `ponytail`<!-- /if -->, `persona`, `quality gate`. Add each lens whose Trigger
 matches the pinned diff (e.g. `packages/ui/**` -> `ui` + `a11y` + `copy`;
 `package.json`/lockfile -> `dependencies`; public API -> `release`).
 A lens whose runner is `planned` reports skipped-planned (not a blocker);
@@ -28,8 +28,8 @@ One subagent per lens, all in parallel (see `parallel-work` for the pattern;
 skip the fan-out and run inline when the diff is a few lines). Every brief is
 self-contained: the diff command, the lens skill to apply, and the evidence
 rule from `ground-truth` — every finding cites `file:line`, or it is not a
-finding. When the change implements a plan with a ladder table, brief
-`code-review` to verify the table against the diff.
+finding. When the change implements a plan with a ladder table, verify the
+table against the diff<!-- if:skill=code-review --> (brief `code-review`)<!-- /if -->.
 
 ## 4. Merge
 

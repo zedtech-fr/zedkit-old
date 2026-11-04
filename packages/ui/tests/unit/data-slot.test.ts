@@ -5,6 +5,8 @@ const SKIP = new Set([
   "cn",
   "toast",
   "closeRoute",
+  "useScrollReset",
+  "ScrollReset",
   "applyIdentity",
   "discardCustomIdentity",
   "applyCustomIdentity",

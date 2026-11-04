@@ -30,11 +30,11 @@
           "whenToUse": "When every developer and agent should share the same instructions and review workflow.",
           "whenNotToUse": "When you only need one provider's config — write that provider's file by hand instead.",
           "derivedFrom": null,
-          "example": "import { installKit } from \"@zedtech/zedkit-ai\";\nconst result = installKit({ dest: \".\", preset: \"core\", providers: [\"claude\", \"cursor\"] });\nif (!result.ok) throw result.error;\nfor (const action of result.value) console.log(action.kind, action.path);",
+          "example": "import { installKit } from \"@zedtech/zedkit-ai\";\nconst result = installKit({\n  dest: \".\",\n  preset: \"core\",\n  providers: [\"claude\", \"cursor\"],\n});\nif (!result.ok) throw result.error;\nfor (const action of result.value) console.log(action.kind, action.path);",
           "examples": [
             {
               "title": "Simple",
-              "code": "import { installKit } from \"@zedtech/zedkit-ai\";\nconst result = installKit({ dest: \".\", preset: \"core\", providers: [\"claude\", \"cursor\"] });\nif (!result.ok) throw result.error;\nfor (const action of result.value) console.log(action.kind, action.path);"
+              "code": "import { installKit } from \"@zedtech/zedkit-ai\";\nconst result = installKit({\n  dest: \".\",\n  preset: \"core\",\n  providers: [\"claude\", \"cursor\"],\n});\nif (!result.ok) throw result.error;\nfor (const action of result.value) console.log(action.kind, action.path);"
             }
           ],
           "adoption": {
@@ -63,7 +63,7 @@
           "status": "beta",
           "shortName": "Kit validation",
           "audience": "Teams keeping an installed agent setup healthy across providers.",
-          "purpose": "Validate installed skills, subagents and commands, and report drift between providers.",
+          "purpose": "Validate installed skills, subagents and commands, report drift between providers without asking to overwrite user files, and flag kit skills a provider layer does not expose.",
           "whenToUse": "In CI and after editing shared agent files, to catch invalid or drifted copies.",
           "whenNotToUse": "For one-off local edits — run the install command again instead of validating by hand.",
           "derivedFrom": null,
@@ -4092,6 +4092,47 @@
           ]
         },
         {
+          "need": "Reset scroll on route change",
+          "import": "`@zedtech/zedkit-ui` — `ScrollReset`, `ScrollResetProps`, `useScrollReset`, `ScrollResetOptions`",
+          "wraps": "`(none)`",
+          "status": "beta",
+          "shortName": "ScrollReset",
+          "audience": "Developers whose client-side navigation keeps the previous page's scroll position.",
+          "purpose": "Scrolls to the top (or to the `#hash` anchor) when the route key changes, leaving back/forward restoration to the browser.",
+          "whenToUse": "Once near the root of the app, fed the router pathname (`usePathname()` in Next.js).",
+          "whenNotToUse": "For in-page anchor links or scroll spies — the browser already handles those.",
+          "derivedFrom": null,
+          "example": "\"use client\";\nimport { ScrollReset } from \"@zedtech/zedkit-ui\";\nimport { usePathname } from \"next/navigation\";\nexport function RouteScroll() {\n  return <ScrollReset routeKey={usePathname()} />;\n}",
+          "examples": [
+            {
+              "title": "Next.js root",
+              "code": "\"use client\";\nimport { ScrollReset } from \"@zedtech/zedkit-ui\";\nimport { usePathname } from \"next/navigation\";\nexport function RouteScroll() {\n  return <ScrollReset routeKey={usePathname()} />;\n}"
+            },
+            {
+              "title": "Inner scroll container",
+              "code": "import { useScrollReset } from \"@zedtech/zedkit-ui\";\nconst getMain = useCallback(() => document.querySelector<HTMLElement>(\"main\"), []);\nuseScrollReset(pathname, { target: getMain });"
+            }
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "ScrollReset",
+                  "ScrollResetProps",
+                  "useScrollReset",
+                  "ScrollResetOptions"
+                ]
+              }
+            ]
+          },
+          "a11y": "Jumps instantly by default and always under `prefers-reduced-motion: reduce`; `behavior=\"smooth\"` only applies when motion is allowed. Does not move focus. Back/forward (popstate) navigations are skipped so the browser restores the previous position.",
+          "seeAlso": [
+            "Render a route as a modal over the list"
+          ]
+        },
+        {
           "need": "Show toast notifications",
           "import": "`@zedtech/zedkit-ui` — `Toaster`, `ToasterProps`, `toast`",
           "wraps": "`sonner`",
@@ -4298,6 +4339,10 @@
             {
               "title": "Solo card",
               "code": "import { OptionCard } from \"@zedtech/zedkit-ui\";\nconst [solo, setSolo] = useState(false);\n<OptionCard title=\"Solo option\" checked={solo} onChange={() => setSolo(!solo)} />"
+            },
+            {
+              "title": "Pick one",
+              "code": "import { OptionCards } from \"@zedtech/zedkit-ui\";\nconst [delivery, setDelivery] = useState([\"standard\"]); // always one id\n<OptionCards multiple={false} label=\"Delivery\" options={options} selected={delivery} onChange={setDelivery} />"
             }
           ],
           "adoption": {
@@ -4323,7 +4368,7 @@
             ]
           },
           "registry": "wizard-steps",
-          "a11y": "List carries `aria-label=\"Progress\"`; current step gets `aria-current=\"step\"`. Cards are native checkboxes in labels.",
+          "a11y": "List carries `aria-label=\"Progress\"`; current step gets `aria-current=\"step\"`. Cards are native checkboxes in labels; with `multiple={false}` they are native radios in a `radiogroup`, one name per group, arrow keys move the choice.",
           "troubleshooting": "Steps stuck done/todo — `current` is a 0-based index; past the last step everything reads done. Missing connector — composed `WizardStep` rows show one only with `showConnector` (automatic in `WizardSteps`).",
           "seeAlso": [
             "Build validated forms with labels, errors, and pending state"
@@ -5145,7 +5190,7 @@
         },
         {
           "need": "Compose a public marketing page",
-          "import": "`@zedtech/zedkit-ui/marketing` — `GlassSurface`, `glassSurfaceVariants`, `GlassSurfaceProps`, `BriefSpecimen`, `BriefSpecimenProps`, `selectSpecimenDomain`, `CommerceSpecimen`, `SaasDashboardSpecimen`, `EditorialSpecimen`, `ServiceBookingSpecimen`, `specimenMessagesEn`, `SpecimenDomain`",
+          "import": "`@zedtech/zedkit-ui/marketing` — `GlassSurface`, `glassSurfaceVariants`, `GlassSurfaceProps`, `BriefSpecimen`, `BriefSpecimenProps`, `selectSpecimenDomain`, `CommerceSpecimen`, `SaasDashboardSpecimen`, `EditorialSpecimen`, `ServiceBookingSpecimen`, `specimenMessagesEn`, `SpecimenDomain`, `Hero`, `HeroProps`, `CtaBand`, `CtaBandProps`, `FeatureGrid`, `FeatureGridProps`, `FeatureItem`, `HowItWorks`, `HowItWorksProps`, `HowItWorksStep`, `MarketingHeader`, `MarketingHeaderProps`, `MarketingFooter`, `MarketingFooterProps`, `MarketingFooterColumn`, `LocaleSwitch`, `LocaleSwitchProps`, `LocaleOption`, `MediaSection`, `MediaSectionProps`, `LogoBand`, `LogoBandProps`, `LogoBandItem`, `Testimonials`, `TestimonialsProps`, `Testimonial`, `Pricing`, `PricingProps`, `PricingPlan`, `Faq`, `FaqProps`, `FaqItem`",
           "wraps": "none (theme tokens, `class-variance-authority`)",
           "status": "alpha",
           "shortName": "Marketing",
@@ -5161,8 +5206,52 @@
               "code": "import { GlassSurface } from \"@zedtech/zedkit-ui/marketing\";\n\n<GlassSurface as=\"section\" aria-label=\"Plans\" tone=\"raised\" padding=\"lg\">\n  Plans\n</GlassSurface>;"
             },
             {
-              "title": "Example 2",
+              "title": "Brief specimen",
               "code": "import { BriefSpecimen, selectSpecimenDomain } from \"@zedtech/zedkit-ui/marketing\";\n\nselectSpecimenDomain(\"Hair salon booking\"); // booking (D4)\n\n<BriefSpecimen brief=\"Independent newsroom\" />;"
+            },
+            {
+              "title": "Hero",
+              "code": "import { Hero } from \"@zedtech/zedkit-ui/marketing\";\n\n<Hero\n  title=\"Keep your shop. Add live updates.\"\n  description=\"Stock, orders and offers update without a refresh.\"\n  actions={<a href=\"/signup\">Create an account</a>}\n/>;"
+            },
+            {
+              "title": "Closing call to action",
+              "code": "import { CtaBand } from \"@zedtech/zedkit-ui/marketing\";\n\n<CtaBand\n  title=\"Try it on a staging key\"\n  actions={<a href=\"/signup\">Create an account</a>}\n/>;"
+            },
+            {
+              "title": "Feature grid",
+              "code": "import { FeatureGrid } from \"@zedtech/zedkit-ui/marketing\";\n\n<FeatureGrid\n  title=\"Built for the shop you already run\"\n  features={[\n    { title: \"Live stock\", description: \"Counts follow every sale.\" },\n    { title: \"Personal offers\", description: \"Each visitor sees what fits.\" },\n  ]}\n/>;"
+            },
+            {
+              "title": "Steps",
+              "code": "import { HowItWorks } from \"@zedtech/zedkit-ui/marketing\";\n\n<HowItWorks\n  title=\"Live in three steps\"\n  steps={[{ title: \"Create an account\" }, { title: \"Create a key\" }, { title: \"See your first event\" }]}\n/>;"
+            },
+            {
+              "title": "Header and footer",
+              "code": "import { MarketingFooter, MarketingHeader } from \"@zedtech/zedkit-ui/marketing\";\n\n<MarketingHeader\n  brand={<a href=\"/\">Harbor</a>}\n  links={[<a key=\"docs\" href=\"/docs\">Docs</a>]}\n  actions={<a href=\"/signup\">Create an account</a>}\n/>;\n<MarketingFooter brand=\"Harbor\" columns={[{ title: \"Product\", links: [<a key=\"docs\" href=\"/docs\">Docs</a>] }]} />;"
+            },
+            {
+              "title": "Language switch",
+              "code": "import { MediaSection } from \"@zedtech/zedkit-ui/marketing\";\n\n<MediaSection\n  title=\"An assistant that knows your catalog\"\n  points={[\"Reads your products\", \"Never changes an order\"]}\n  media={<img src=\"/assistant.png\" alt=\"The assistant answering a question about stock\" />}\n/>;"
+            },
+            {
+              "title": "Use case",
+              "code": "import { LogoBand } from \"@zedtech/zedkit-ui/marketing\";\n\n<LogoBand\n  title=\"Works with the shops you know\"\n  logos={[{ name: \"Harbor Studio\", logo: <img src=\"/harbor.svg\" alt=\"\" /> }]}\n/>;"
+            },
+            {
+              "title": "Logo band",
+              "code": "import { Testimonials } from \"@zedtech/zedkit-ui/marketing\";\n\n<Testimonials\n  title=\"What shops say\"\n  items={[{ quote: \"We launched a new offer in a day.\", name: \"Ada Lovelace\", role: \"Head of e-commerce\" }]}\n/>;"
+            },
+            {
+              "title": "Testimonials",
+              "code": "import { Pricing } from \"@zedtech/zedkit-ui/marketing\";\n\n<Pricing\n  title=\"Simple pricing\"\n  plans={[\n    { name: \"Starter\", price: \"€0\", period: \"per month\", features: [\"1 staging key\"], action: <a href=\"/signup\">Start free</a> },\n    { name: \"Growth\", price: \"€29\", period: \"per month\", features: [\"5 keys\"], highlighted: true, badge: \"Most popular\" },\n  ]}\n/>;"
+            },
+            {
+              "title": "Pricing",
+              "code": "import { Faq } from \"@zedtech/zedkit-ui/marketing\";\n\n<Faq\n  title=\"Questions\"\n  items={[{ question: \"Do I need to change my shop?\", answer: \"No. It runs next to it.\" }]}\n/>;"
+            },
+            {
+              "title": "Questions",
+              "code": "import { LocaleSwitch } from \"@zedtech/zedkit-ui/marketing\";\n\n<LocaleSwitch\n  current=\"en\"\n  locales={[\n    { code: \"en\", label: \"English\", href: \"/en\" },\n    { code: \"fr\", label: \"Français\", href: \"/fr\" },\n  ]}\n/>;"
             }
           ],
           "adoption": {
@@ -5182,13 +5271,45 @@
                   "EditorialSpecimen",
                   "ServiceBookingSpecimen",
                   "specimenMessagesEn",
-                  "SpecimenDomain"
+                  "SpecimenDomain",
+                  "Hero",
+                  "HeroProps",
+                  "CtaBand",
+                  "CtaBandProps",
+                  "FeatureGrid",
+                  "FeatureGridProps",
+                  "FeatureItem",
+                  "HowItWorks",
+                  "HowItWorksProps",
+                  "HowItWorksStep",
+                  "MarketingHeader",
+                  "MarketingHeaderProps",
+                  "MarketingFooter",
+                  "MarketingFooterProps",
+                  "MarketingFooterColumn",
+                  "LocaleSwitch",
+                  "LocaleSwitchProps",
+                  "LocaleOption",
+                  "MediaSection",
+                  "MediaSectionProps",
+                  "LogoBand",
+                  "LogoBandProps",
+                  "LogoBandItem",
+                  "Testimonials",
+                  "TestimonialsProps",
+                  "Testimonial",
+                  "Pricing",
+                  "PricingProps",
+                  "PricingPlan",
+                  "Faq",
+                  "FaqProps",
+                  "FaqItem"
                 ]
               }
             ]
           },
-          "a11y": "Surfaces render a plain element (`div`, `section`, `article` or `li`); pass `aria-label` or a heading inside when it is a landmark. Specimens expose labelled lists, tables, and status regions.",
-          "troubleshooting": "Surfaces look flat — the identity in use is not `glass`; set `data-identity=\"glass\"` on `<html>`. Classes missing — the `@source` line must scan the kit's `src/**` (the marketing folder is included).",
+          "a11y": "`Hero` and `CtaBand` are `section` regions named by their own heading (`Hero` renders the page `h1`; pass `headingLevel={2}` when the page already has one); calls to action are links or buttons you pass in, full width on phones. `FeatureGrid` and `HowItWorks` are regions named by a level-2 title with level-3 item titles; feature icons are decorative (`aria-hidden`), steps are an ordered list whose numbers are added for you. `MarketingHeader` is a `banner` with a named main navigation; below `md` its links and actions open from a native `details` disclosure (a 44px `summary` labelled by `menu`). `MarketingFooter` gives each link column its own labelled navigation. `MediaSection` is a region named by its level-2 title: text first in reading order, the framed media after it (`reverse` only changes the visual side from `lg`); pass `alt` text or a caption with the media. `LogoBand` reads each company name instead of its logo (the logo is `aria-hidden`). `Testimonials` renders each quote as a `figure` with a `figcaption`; quotation marks come from the browser for the page `lang`. Only pass quotes you may publish. `Pricing` lists plans as a list of surfaces: each name is a level-3 heading, features are a list, and the highlighted plan carries a visible `badge` (never colour alone). `Faq` uses native `details`/`summary`: keyboard and screen readers work without script, and browser find-in-page opens matches; add `FAQPage` structured data with `@zedtech/zedkit-seo` if the page should carry it. `LocaleSwitch` is a named navigation whose items carry `lang`, with `aria-current` on the active language. Brief-routed specimens expose labelled lists, tables, and status regions. Surfaces render a plain element (`div`, `section`, `article` or `li`); pass `aria-label` or a heading inside when it is a landmark. Text sits on the card colour, so contrast follows the identity tokens; under `prefers-reduced-transparency` the glass identity turns surfaces near-solid.",
+          "troubleshooting": "Menu, navigation and language labels stay English — wrap the tree in `ZedkitUiProvider` with `zedkitUiMessagesFr` (or your own bundle). Router links reload the page — pass your router's link elements in `links`, they are rendered as given. Surfaces look flat — the identity in use is not `glass`; set `data-identity=\"glass\"` on `<html>`. Classes missing — the `@source` line must scan the kit's `src/**` (the marketing folder is included).",
           "seeAlso": [
             "Theme an admin app (dark/light included)",
             "Render headings and body text without raw tags"

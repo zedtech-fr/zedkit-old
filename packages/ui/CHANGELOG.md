@@ -1,5 +1,40 @@
 # @zedtech/zedkit-ui
 
+## 1.5.0
+
+### Minor Changes
+
+- 5a8a70e: `OptionCards` can now pick exactly one card: `multiple={false}` renders native radio inputs in a `radiogroup` (round indicator, same visible check) and `onChange` receives `[id]`. `OptionCard` gains `type` (`checkbox` or `radio`) and `name` for custom pick-one groups. The default stays multi-select, so existing callers are unchanged.
+
+## 1.4.0
+
+### Minor Changes
+
+- 5e5fd31: `@zedtech/zedkit-ui/marketing` gains `LogoBand` (a quiet row of logos; each company name is read out instead of the logo) and `Testimonials` (customer quotes as figures with captions on glass surfaces; quotation marks follow the page language).
+- 69e6028: `@zedtech/zedkit-ui/marketing` gains `MediaSection`: a use case told as text (title, description, check-marked points, calls to action) beside a framed picture, recording, demo or code sample. `reverse` flips the sides from `lg` up while the text stays first in reading order.
+- 8e2e4df: `@zedtech/zedkit-ui/marketing` gains `Pricing` (plans side by side: name, price, period, included features, one call to action each; the highlighted plan carries a visible badge) and `Faq` (questions that open in place, native `details`, no script). The marketing entry now covers a whole public page: header, hero, logos, features, steps, use case, testimonials, pricing, FAQ, closing call to action, footer.
+
+## 1.3.0
+
+### Minor Changes
+
+- 2e4aeac: `@zedtech/zedkit-ui/marketing` gains `MarketingHeader` (compact sticky bar; links and actions open from a native disclosure on phones), `MarketingFooter` (brand, description, labelled link columns, bottom line) and `LocaleSwitch` (one item per language, current one marked, links or buttons). Links are passed as elements, so router links work.
+
+  `ZedkitUiMessages` gains three required keys (`menu`, `mainNavigation`, `language`), filled in `zedkitUiMessagesEn` and `zedkitUiMessagesFr`. Migration: apps that spread a kit bundle (`{ ...zedkitUiMessagesEn, ... }`) need nothing; apps that write a full bundle by hand add the three keys.
+
+## 1.2.0
+
+### Minor Changes
+
+- b8a0f02: `@zedtech/zedkit-ui/marketing` gains `FeatureGrid` (a titled grid of short benefits on glass surfaces, 2 to 4 columns, optional decorative icons) and `HowItWorks` (numbered steps, stacked on phones and in a row from `md`). Both are regions named by their level-2 title, with level-3 item titles; every string is a prop.
+- 5525160: `@zedtech/zedkit-ui/marketing` gains `Hero` (promise, description, calls to action, optional media; renders the page heading) and `CtaBand` (closing call to action on a tinted glass surface). Both are labelled regions named by their own heading, take every string as a prop, and stack their actions full width on phones.
+
+## 1.1.0
+
+### Minor Changes
+
+- 5643840: New `@zedtech/zedkit-ui/marketing` entry for public-page sections, starting with `GlassSurface`: a card-coloured surface (`plain`, `raised`, `tinted`; four paddings; renders `div`, `section`, `article` or `li`) that turns into frosted glass under the glass identity and a plain raised card under the others. The entry is separate from the main export, so console-only apps do not load it.
+
 ## 1.0.3
 
 ### Patch Changes
