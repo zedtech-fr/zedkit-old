@@ -1,35 +1,21 @@
 "use client";
 
-import { Stack, Text, type IdentityTokens } from "@zedtech/zedkit-ui";
+import { useSyncExternalStore } from "react";
+import { Stack, Text, cn, type IdentityTokens } from "@zedtech/zedkit-ui";
 
 import { identityAssistantCopy as copy } from "@/components/i18n/identity-assistant-copy";
 import { IdentityMiniPreview } from "@/components/identity-mini-preview";
 import type { SpecimenDomain } from "@/lib/brief-specimen-domain";
 
-function CompareBlock({
-  label,
-  tokens,
-  id,
-  domain,
-  compact,
-}: {
-  label: string;
-  tokens: IdentityTokens;
-  id: string;
-  domain: SpecimenDomain;
-  compact?: boolean;
-}) {
-  return (
-    <Stack gap={2}>
-      <Text typeRole="label" className="text-foreground">
-        {label}
-      </Text>
-      {compact ? (
-        <IdentityMiniPreview tokens={tokens} id={id} domain={domain} compact />
-      ) : (
-        <IdentityMiniPreview tokens={tokens} id={id} domain={domain} />
-      )}
-    </Stack>
+function useNarrowCompare(): boolean {
+  return useSyncExternalStore(
+    (onStoreChange) => {
+      const mql = window.matchMedia("(max-width: 1023px)");
+      mql.addEventListener("change", onStoreChange);
+      return () => mql.removeEventListener("change", onStoreChange);
+    },
+    () => window.matchMedia("(max-width: 1023px)").matches,
+    () => false,
   );
 }
 
@@ -44,20 +30,27 @@ export function ProposalBeforeAfter({
   requestId: string;
   domain: SpecimenDomain;
 }) {
+  const narrow = useNarrowCompare();
   return (
     <Stack gap={3} data-assistant-proposal-compare="">
       <Text variant="muted" className="text-sm">
         {copy.proposal.compare}
       </Text>
-      <Stack gap={3} className="max-lg:hidden">
-        <CompareBlock label={copy.proposal.beforeLabel} tokens={current} id={`before-${requestId}`} domain={domain} />
-        <CompareBlock label={copy.proposal.afterLabel} tokens={proposed} id={`proposal-${requestId}`} domain={domain} />
-      </Stack>
-      <Stack gap={3} className="lg:hidden">
-        <CompareBlock label={copy.proposal.afterLabel} tokens={proposed} id={`proposal-${requestId}`} domain={domain} compact />
-        <details className="text-sm">
-          <summary className="flex min-h-11 cursor-pointer items-center focus-ring">{copy.proposal.beforeLabel}</summary>
-          <CompareBlock label={copy.proposal.beforeLabel} tokens={current} id={`before-${requestId}`} domain={domain} compact />
+      <Stack gap={3} className={cn(narrow && "flex flex-col")}>
+        <Stack gap={2} className={cn("min-w-0", narrow && "order-1")}>
+          <Text typeRole="label" className="text-foreground">
+            {copy.proposal.afterLabel}
+          </Text>
+          <IdentityMiniPreview tokens={proposed} id={`proposal-${requestId}`} domain={domain} compact={narrow} />
+        </Stack>
+        <details open={!narrow} className={cn("min-w-0 text-sm", narrow && "order-2")}>
+          <summary className="flex min-h-11 cursor-pointer items-center focus-ring lg:hidden">{copy.proposal.beforeLabel}</summary>
+          <Stack gap={2} className="pt-2 lg:pt-0">
+            <Text typeRole="label" className="hidden text-foreground lg:block">
+              {copy.proposal.beforeLabel}
+            </Text>
+            <IdentityMiniPreview tokens={current} id={`before-${requestId}`} domain={domain} compact={narrow} />
+          </Stack>
         </details>
       </Stack>
     </Stack>
