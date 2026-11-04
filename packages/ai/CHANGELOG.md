@@ -1,5 +1,13 @@
 # @zedtech/zedkit-ai
 
+## 0.15.1
+
+### Patch Changes
+
+- 921a2f1: The `setup` preset installs the v2 personas schema as `.agents/personas.md` so setup-ai edits it in place. `starter`, `core` and `full` still get the v1 Task/Bar template.
+- 907e829: Re-running `setup` (or `init --adopt`) links repo-added skills under `.agents/skills` into a real `.cursor/skills` or `.claude/skills` directory. After a catalog copy in setup-ai phase D, re-run `npx zedkit-ai setup` — never `ln`/`cp` by hand.
+- e287d03: After install, print phase-C artifact expectations and optional Prettier ignore lines; document pnpm workspace `-w` install in onboarding copy.
+
 ## 0.15.0
 
 ### Minor Changes
