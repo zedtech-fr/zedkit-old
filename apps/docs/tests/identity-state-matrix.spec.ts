@@ -81,12 +81,33 @@ async function onScreen(page: Page, target: Locator, height: number) {
   if (pin && pin.y < 80 && pin.x < 16) expect(box.y + 1).toBeGreaterThanOrEqual(pin.y + pin.height);
 }
 
-async function typeBrief(page: Page, text: string) {
+async function storedDockBrief(page: Page) {
+  return page.evaluate(() => {
+    const raw = window.localStorage.getItem("zk-identity-dock-v2");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { brief?: unknown };
+    return typeof parsed.brief === "string" ? parsed.brief : null;
+  });
+}
+
+async function reopenDock(page: Page) {
   const field = page.locator("#identity-assistant-brief");
-  if (!(await field.isVisible())) {
+  if ((await field.count()) === 0 || !(await field.isVisible())) {
     await page.keyboard.press("Control+I");
   }
   await expect(field).toBeVisible();
+  return field;
+}
+
+/** The visible panel: the phone sheet when it is mounted, otherwise the desktop aside. */
+async function dockPanel(page: Page) {
+  const sheet = page.locator("[data-slot='identity-dock-sheet']");
+  if ((await sheet.count()) > 0) return sheet;
+  return page.locator("[data-slot='identity-dock-panel'][data-state='open']");
+}
+
+async function typeBrief(page: Page, text: string) {
+  const field = await reopenDock(page);
   await field.fill(text);
   await field.scrollIntoViewIfNeeded();
 }
@@ -166,9 +187,9 @@ test.describe("creator state matrix", () => {
       await page.setViewportSize({ width: vp.width, height: vp.height });
       await page.goto(EDITOR, { waitUntil: "networkidle" });
       await typeBrief(page, "A ceramics shop");
-      await expect.poll(() => page.evaluate(() => sessionStorage.getItem("zk-creator-session-brief"))).toBe("A ceramics shop");
+      await expect.poll(() => storedDockBrief(page)).toBe("A ceramics shop");
       await page.reload({ waitUntil: "networkidle" });
-      await expect(page.locator("#identity-assistant-brief")).toHaveValue("A ceramics shop");
+      await expect(await reopenDock(page)).toHaveValue("A ceramics shop");
     });
   }
 
@@ -176,11 +197,11 @@ test.describe("creator state matrix", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(EDITOR, { waitUntil: "networkidle" });
     await typeBrief(page, "A ceramics shop");
-    await expect.poll(() => page.evaluate(() => sessionStorage.getItem("zk-creator-session-brief"))).toBe("A ceramics shop");
+    await expect.poll(() => storedDockBrief(page)).toBe("A ceramics shop");
     await page.locator("#identity-assistant-brief").fill("");
-    await expect.poll(() => page.evaluate(() => sessionStorage.getItem("zk-creator-session-brief"))).toBeNull();
+    await expect.poll(() => storedDockBrief(page)).toBeNull();
     await page.reload({ waitUntil: "networkidle" });
-    await expect(page.locator("#identity-assistant-brief")).toHaveValue("");
+    await expect(await reopenDock(page)).toHaveValue("");
   });
 });
 
@@ -190,7 +211,7 @@ test.describe("widget state matrix", () => {
     await expect(page.getByTestId("identity-dock")).toBeVisible();
     await page.keyboard.press("Control+I");
     await expect(page.locator("#identity-assistant-brief")).toBeVisible();
-    return page.locator("[data-slot='identity-dock-panel']");
+    return dockPanel(page);
   }
 
   test("Control+I opens the panel, Escape closes it", async ({ page }) => {
