@@ -9,7 +9,7 @@ Make the AI setup of **this** repo true and specific. Generic advice is already 
 
 ## Tell the user first
 
-**Output order:** This block is the **first message** of the run — before install announcements, inventory, subagent spawns, or file writes — including **headless**, **CI**, and **non-interactive** runs. Paste it as plain text at the top of the transcript; never skip it because nobody is chatting live.
+**Output order:** This block is the **first output after `/setup-ai` starts** (your first assistant message once the skill is loaded) — before phase A inventory, subagent spawns, or file writes — including **headless**, **CI**, and **non-interactive** runs. Paste it as plain text; never skip it because nobody is chatting live. **Exclude** mechanical install output that ran **before** the skill loaded (for example `npx zedkit-ai setup` or package manager lines); those stay above this block in the transcript.
 
 When `/setup-ai` starts (or the user asks to set up AI), say this in plain language before phase A — no interview yet:
 
@@ -86,15 +86,31 @@ Then **run the gate commands you found**, preferring forms without side effects 
 
 ### Gate execution log (persisted evidence)
 
-Every gate you cite in setup-log, domain rules, or a repo skill must be **persisted**, not chat-only:
+Every gate you cite in setup-log, domain rules, or a repo skill must be **persisted**, not chat-only. **One gate = one log file** (for example `.agents/setup-log/gates/main-check.log`). Do not append validate, prettier, or a second command to the same file after **`EXIT:<code>`**.
 
 | Field   | Required                                                              |
 | ------- | --------------------------------------------------------------------- |
-| Command | Exact shell line run                                                  |
-| Timing  | Start/end timestamp or duration                                       |
-| Result  | Final line **`EXIT:<code>`** (include non-zero; do not hide failures) |
+| Command | First line **`CMD: <exact shell line>`**                              |
+| Timing  | **`START:`** timestamp, command output, **`END:`** timestamp          |
+| Result  | **`EXIT:<code>`** as the **last line of the file** (nothing after it) |
 
-If a log file you referenced is **empty**, re-run the command and append before scoring. Table rows in setup-log are a summary; the persisted block or attached log must still include **`EXIT:<code>`**.
+Example persisted log (self-describing; copy this shape):
+
+```sh
+LOG=.agents/setup-log/gates/typecheck.log
+mkdir -p "$(dirname "$LOG")"
+{
+  echo "CMD: pnpm exec turbo run typecheck --concurrency=2"
+  echo "START: $(date -Iseconds)"
+  pnpm exec turbo run typecheck --concurrency=2
+  code=$?
+  echo "END: $(date -Iseconds)"
+  echo "EXIT:$code"
+} | tee "$LOG"
+test "$(tail -1 "$LOG")" = "EXIT:$code"
+```
+
+If a log file you referenced is **empty**, or the last line is not **`EXIT:<n>`**, re-run and replace the file before scoring. Table rows in setup-log are a summary only.
 
 **OOM-safe fallback:** When the repo's main gate is `pnpm check` (or similar) and it **cannot take flags** and dies from memory pressure, run the **underlying turbo chain explicitly** with `--concurrency=2` and a capped heap (for example `NODE_OPTIONS=--max-old-space-size=4096`, lower if the host requires). Record that exact command in setup-log and in **domain rules / generated repo skills** — never leave a generic `pnpm check` if that is not what you verified.
 
@@ -144,7 +160,13 @@ Open **`templates/README.md`** in this skill folder (after install: `.agents/ski
 | Design / identity | `.agents/design.md`                    | `templates/design.template.md`                       |
 | Glossary          | `GLOSSARY.md` or `.agents/glossary.md` | `templates/glossary.template.md`                     |
 
-Each domain file includes **rules, invariants, edge cases**, sources (`file:line` or `source: owner`), and a **Test** column (test path or `no test — flag`).<!-- if:agent=ui-designer --> Use **`ui-designer`** and **`copywriter`** for `design.md` when UI exists.<!-- /if -->
+Each domain file includes **rules, invariants, edge cases**, sources (`file:line` or `source: owner`), a **Status** column (**`current`** = enforced in code today, **`target`** = planned policy), and a **Test** column. For **Test** paths: **open the test file**, confirm it asserts the rule's behavior (not merely a nearby module); use **`no test — flag`** when nothing applies. **`current`** rules must be verified in code; **`target`** rules must not be written as if already enforced.<!-- if:agent=ui-designer --> Use **`ui-designer`** and **`copywriter`** for `design.md` when UI exists.<!-- /if -->
+
+**Personas (score 3 path):** add a **Journey tests** column — test path per persona or **`no test — flag`** (see `templates/personas-v2.template.md`).
+
+**Design (score 3 path, multilingual repos):** add **Do / don't by language** with real UI strings from cited screens (`file:line`), not generic placeholders.
+
+**Architecture (score 3 path):** add an **Unenforced rules** inventory to root `AGENTS.md` (or setup-log if `AGENTS.md` is frozen): each prose-only rule, lint proposal or ticket draft line, evidence `file:line`.
 
 ### Phase C close — stale adopt sidecars
 
@@ -170,9 +192,23 @@ Propose copies from **`templates/catalog/`** (each skill folder has `SKILL.md.tm
 
 Every row states **one-line value** for the owner.
 
+**Deferred high-risk skills (score 3 path):** for each of **add-capability**, **add-migration**, **domain-change** you tier **could** or skip, either install the repo skill in this run **or** add a one-line **stub** in setup-log (`skill: <name> — deferred because …`) with kit root cause if the kit blocked you.
+
 ## Plan table (before write)
 
-Present one table covering phase A gaps, phase C artifacts, phase D skills, hygiene edits, and **every pre-existing file the run will touch** (nothing may change outside this table):
+### Derive touched files from git (required before the plan table)
+
+Do **not** recall paths from memory. Run from the repo root:
+
+```sh
+git status --porcelain
+git diff --name-only
+git diff --cached --name-only
+```
+
+Every path that is **modified, created, or staged** before you present the plan — including **`package.json`**, **lockfile**, **root `AGENTS.md`** (ladder append counts as `edit`), **`.prettierignore`**, **provider folders**, and adopt sidecars — gets its **own plan row** with action and OK column. Union git output with paths you **will** create in phase C/D. Missing a git-visible path fails the **zero lost user files** hard gate.
+
+Present one table covering phase A gaps, phase C artifacts, phase D skills, hygiene edits, and **every file the run will touch** (nothing may change outside this table):
 
 | Tier | Artifact / skill | Path | Why (evidence) | Action                         | Value (one line) | OK              |
 | ---- | ---------------- | ---- | -------------- | ------------------------------ | ---------------- | --------------- |
@@ -206,6 +242,17 @@ Present one table covering phase A gaps, phase C artifacts, phase D skills, hygi
 - **Subagents**: `.agents/agents/<name>.md`, one-line description, `model` omitted or `inherit`. Read-only unless the job needs writes.
 - **Improve mode**: edit in place, smallest change, keep the author's wording where it is correct. Log what changed.
 
+### Plan reconciliation (after Write, before Verify)
+
+Re-run:
+
+```sh
+git status --porcelain
+git diff --name-only
+```
+
+Compare to plan rows. **Every changed path needs a matching row.** Any gap goes into the closing report, setup-log **Plan gaps** section, and (if kit-caused) a kit-issue draft — do not treat silent edits as success.
+
 ## Verify
 
 - Every command in the written files was run, or is marked `UNVERIFIED` with the reason.
@@ -227,13 +274,14 @@ Then:
 
 1. **Self-score** — open `templates/setup-rubric.md` and score 0–3 on each of the 10 axes. Cite evidence per axis (file path, `file:line`, or transcript quote); no evidence means no score above 1. The rubric sets the pass targets and hard gates.
 2. **Setup log** — append a retro entry to `.agents/setup-log.md` from `templates/setup-log.template.md`: date, what worked, what hurt, **Providers table + Wired**, scores, decisions (`source: owner` where the owner chose), **Sidecar cleanup**, gate outcomes (see template), open kit frictions.
-3. **Kit friction** — for **each** friction you observed (stale sidecar, validate gap, tool detour, empty gate log, plan gap, …), draft **one** public-safe issue from `templates/kit-issue.template.md` with **Kit root cause** filled; map friction → kit file → fix. If there were zero frictions, say so in the log — do not skip the checklist.
+3. **Kit friction** — for **each** friction you observed (stale sidecar, validate gap, tool detour, bad gate log format, **missing plan row**, plan/git mismatch, …), draft **one** public-safe issue from `templates/kit-issue.template.md` with **Kit root cause** filled; map friction → kit file → fix. **Completion defects count** (log missing `CMD:`/`EXIT:`, prettier appended after `EXIT:`). If there were zero frictions, say so in the log — do not skip the checklist.
 4. **Re-audit cadence** — set the next check: after the next release, or when product, domain rules, or providers change; record the trigger in the log entry.
 
 **Phase E checklist (before you finish):**
 
 - [ ] Providers value table + **Wired:** in setup-log
-- [ ] Gate rows match persisted logs with **`EXIT:<code>`**
+- [ ] Plan rows cover **`git status` / `git diff --name-only`** after Write (or **Plan gaps** documented)
+- [ ] Gate log files: **`CMD:`** first line, **`EXIT:<code>`** last line (separate files per command)
 - [ ] One kit-issue draft per friction (or explicit "none")
 - [ ] Sidecar cleanup recorded if any `*.kit.md` removed
 - [ ] Self-score mean and hard gates noted

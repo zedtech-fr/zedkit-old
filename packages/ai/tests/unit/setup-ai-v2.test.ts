@@ -80,16 +80,18 @@ describe("setup-ai v2 kit", () => {
       join(kitDir(), "skills", "setup-ai", "templates", "setup-rubric.md"),
       "utf8",
     );
-    expect(rubric).toContain("gate outcomes");
+    expect(rubric).toMatch(/CMD:/u);
+    expect(rubric).toContain("Gate outcomes");
   });
 
   it("documents run-3 scorer fixes S1–S5 in setup-ai SKILL and templates", () => {
     const raw = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
-    expect(raw).toMatch(/Output order.*first message/iu);
+    expect(raw).toMatch(/first output after `\/setup-ai` starts/iu);
     expect(raw).toMatch(/headless/iu);
     expect(raw).toMatch(/Always record.*every setup-log entry/iu);
     expect(raw).toMatch(/selection question.*conditional/iu);
-    expect(raw).toContain("EXIT:<code>");
+    expect(raw).toContain("CMD:");
+    expect(raw).toMatch(/last line of the file/iu);
     expect(raw).toMatch(/OOM-safe fallback/iu);
     expect(raw).toMatch(/--concurrency=2/);
     expect(raw).toMatch(/Sidecar cleanup/iu);
@@ -101,13 +103,48 @@ describe("setup-ai v2 kit", () => {
       "utf8",
     );
     expect(log).toContain("Providers (always paste");
-    expect(log).toContain("EXIT:0");
+    expect(log).toMatch(/CMD:/);
     expect(log).toMatch(/Sidecar cleanup/);
     const issue = readFileSync(
       join(kitDir(), "skills", "setup-ai", "templates", "kit-issue.template.md"),
       "utf8",
     );
     expect(issue).toContain("Kit root cause");
+  });
+
+  it("documents run-4 scorer fixes R1–R5 in setup-ai SKILL and templates", () => {
+    const raw = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
+    expect(raw).toContain("git status --porcelain");
+    expect(raw).toContain("git diff --name-only");
+    expect(raw).toMatch(/Plan reconciliation/iu);
+    expect(raw).toMatch(/Do not append validate, prettier/iu);
+    expect(raw).toMatch(/Journey tests/iu);
+    expect(raw).toMatch(/Unenforced rules/iu);
+    expect(raw).toMatch(/Status.*current.*target/iu);
+    expect(raw).toMatch(/open the test file/iu);
+    expect(raw).toMatch(/Deferred high-risk skills/iu);
+    expect(raw).toMatch(/Completion defects count/iu);
+    const personas = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "personas-v2.template.md"),
+      "utf8",
+    );
+    expect(personas).toContain("Journey tests");
+    const design = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "design.template.md"),
+      "utf8",
+    );
+    expect(design).toMatch(/Do \/ don't by language/iu);
+    const domain = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "domain", "booking.template.md"),
+      "utf8",
+    );
+    expect(domain).toContain("| Status");
+    const rubric = readFileSync(
+      join(kitDir(), "skills", "setup-ai", "templates", "setup-rubric.md"),
+      "utf8",
+    );
+    expect(rubric).toMatch(/git diff --name-only.*against plan/iu);
+    expect(rubric).toMatch(/after `\/setup-ai` loads/iu);
   });
 
   it("installs templates beside setup-ai for every preset that ships setup-ai; validate stays clean", () => {
