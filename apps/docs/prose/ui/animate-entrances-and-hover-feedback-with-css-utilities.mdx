@@ -5,7 +5,7 @@ future identity can change how things move without touching a component.
 
 | Token | Default | Used by |
 | --- | --- | --- |
-| `--zk-reveal-duration` | `300ms` | `animate-fade-up`, `animate-fade-in`, `animate-pop-in`, `data-reveal`, `data-stagger` |
+| `--zk-reveal-duration` | `300ms` | `animate-fade-up`, `animate-fade-in`, `animate-pop-in`, `data-reveal`, `data-stagger`, `data-animate` |
 | `--zk-reveal-distance` | `0.75rem` | upward travel of fade-up and reveal |
 | `--zk-reveal-ease` | `cubic-bezier(0.22, 1, 0.36, 1)` | entrance easing |
 | `--zk-stagger-step` | `70ms` | `stagger-*`, `data-reveal-delay`, `data-stagger` children |
@@ -23,41 +23,21 @@ future identity can change how things move without touching a component.
 
 ## Reveal on scroll
 
-`data-reveal` and `data-stagger` are plain attributes: the kit styles them,
-your code decides when content is visible. Render `"pending"` (hidden), then
-switch to `"in"` once the element enters the viewport.
+Prefer `data-animate` / `<Animate>` (see *Reveal and react with motion on
+any element*): the kit observer writes `data-animate-state`. The older
+`data-reveal` / `data-stagger` attributes still style `pending` → `in` if
+you drive them yourself.
 
 ```tsx title="reveal-on-scroll.tsx" preview="RevealOnScrollDemo"
-"use client";
-import { useEffect, useId, useState } from "react";
-import { Stack, Text } from "@zedtech/zedkit-ui";
+import { Animate, Stack, Text } from "@zedtech/zedkit-ui";
 
-export function RevealList() {
-  const id = useId();
-  const [state, setState] = useState<"pending" | "in">("pending");
-  useEffect(() => {
-    const node = document.getElementById(id);
-    if (!node) return;
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry?.isIntersecting) {
-        setState("in");
-        observer.disconnect();
-      }
-    });
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [id]);
-  return (
-    <Stack id={id} data-stagger={state}>
-      <Text>One</Text>
-      <Text>Two</Text>
-    </Stack>
-  );
-}
+<Animate on={{ appear: "fade-up" }} stagger>
+  <Stack>
+    <Text>One</Text>
+    <Text>Two</Text>
+  </Stack>
+</Animate>
 ```
-
-Variants: `data-reveal-variant="fade"` or `"pop"` on a `data-reveal` element;
-`data-reveal-delay="1"` to `"6"` offsets it by that many stagger steps.
 
 ## Marquee
 

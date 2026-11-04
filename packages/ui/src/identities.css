@@ -65,6 +65,7 @@
   --zk-lift-translate: 0 -2px;
   --zk-lift-shadow: 0 10px 20px -8px rgb(0 0 0 / 0.18);
   --zk-press-translate: 0 1px;
+  --zk-longpress-ms: 500ms;
   /* Decorative layers: which one an identity shows */
   --zk-deco-ticker: none;
 }
@@ -421,6 +422,7 @@
   --zk-lift-translate: 0 -2px;
   --zk-lift-shadow: 0 10px 20px -8px rgb(0 0 0 / 0.18);
   --zk-press-translate: 0 1px;
+  --zk-longpress-ms: 500ms;
   --zk-btn-ease: initial;
   --zk-btn-hover-translate: initial;
   --zk-btn-hover-shadow: initial;

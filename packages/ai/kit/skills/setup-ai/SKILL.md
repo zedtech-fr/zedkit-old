@@ -7,6 +7,12 @@ description: "Set up or improve this repo's AI setup from what the repo actually
 
 **Before ANY tool call** after reading this skill, output the **Tell the user first** block below as your **next** assistant message — no phase A inventory, no subagent spawns, no repo reads, no file writes until after that message is sent.
 
+> **First message** (paste as your first assistant reply; replace `{…}` only with what you already know, or keep it generic):
+>
+> **Modes:** We'll run **fresh** or **improve** for this repo — {one sentence from what you already know or will confirm in phase A}.
+> **Phases:** **A** audit → **B** one batched interview (≤ 8 questions) → **C–D** artifacts and repo skills → write, verify, report → **E** score and learn.
+> **What you get / time:** Verified `AGENTS.md`, `.agents/` product, domain, personas, design when UI exists, and thin provider layers — about **15–45 minutes** typical; you approve the plan before writes and answer the batched interview in phase B.
+
 Make the AI setup of **this** repo true and specific. Generic advice is already in the kit; your job is what only this repo can say: its product, domain rules, commands, layout, traps, and repeated workflows.
 
 ## Tell the user first
