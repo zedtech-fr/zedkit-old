@@ -1,11 +1,8 @@
----
-name: add-capability
-description: "Add a new user-facing capability end to end in this repo. Use when shipping a feature that touches routes, API, data model, and tests together."
----
-
 # Add capability
 
-Repo-specific workflow — paths and commands below are **placeholders**. `setup-ai` copies this from the kit catalog and replaces them with verified facts.
+Template — copy to `.agents/skills/add-capability/SKILL.md` and add YAML frontmatter (`name`, `description`).
+
+Repo-specific workflow — paths and commands below are **placeholders**. Replace them with verified facts from this repo.
 
 ## Before you start
 
@@ -18,7 +15,7 @@ Repo-specific workflow — paths and commands below are **placeholders**. `setup
 2. **Domain check** — list rules touched; add rows to domain docs if policy changes (`source: owner` when the owner confirmed).
 3. **Implement** — follow repo boundaries; smallest diff.
 4. **Prove** — run the repo gate commands from root `AGENTS.md`; add or extend tests for new rules.
-5. **Review** — run `/review` or the repo's review skill before opening a PR.
+5. **Review** — run the repo review workflow before opening a PR.
 
 ## Done when
 

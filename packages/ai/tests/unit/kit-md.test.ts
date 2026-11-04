@@ -10,7 +10,6 @@ function firstPartyMarkdown(): string[] {
   return [
     join(kit, "AGENTS.template.md"),
     join(kit, "personas.template.md"),
-    ...markdownFiles(join(kit, "artifacts")),
     join(kit, "THIRD_PARTY_NOTICES.md"),
     ...markdownFiles(join(kit, "agents")),
     ...markdownFiles(join(kit, "commands")),

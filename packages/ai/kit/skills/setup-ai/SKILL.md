@@ -95,21 +95,21 @@ In both modes, list **gaps**: repo facts an agent would otherwise get wrong.
 
 ## Phase C — Build artifacts
 
-Copy from the kit **`artifacts/`** templates (index: `artifacts/README.md` beside `skills/` in `@zedtech/zedkit-ai`). Replace fiction with repo facts; keep fictional names only in kit templates, not in the target repo.
+Open **`templates/README.md`** in this skill folder (after install: `.agents/skills/setup-ai/templates/README.md`). Copy from the **`templates/`** files below; replace fiction with repo facts.
 
-| Artifact          | Path                                   | Template                                       |
-| ----------------- | -------------------------------------- | ---------------------------------------------- |
-| Product summary   | `.agents/product.md`                   | `product.template.md`                          |
-| Domain rules      | `.agents/domain/<area>.md`             | `domain/booking.template.md` (rename `<area>`) |
-| Personas v2       | `.agents/personas.md`                  | `personas-v2.template.md`                      |
-| Design / identity | `.agents/design.md`                    | `design.template.md`                           |
-| Glossary          | `GLOSSARY.md` or `.agents/glossary.md` | `glossary.template.md`                         |
+| Artifact          | Path                                   | Template                                             |
+| ----------------- | -------------------------------------- | ---------------------------------------------------- |
+| Product summary   | `.agents/product.md`                   | `templates/product.template.md`                      |
+| Domain rules      | `.agents/domain/<area>.md`             | `templates/domain/booking.template.md` (rename area) |
+| Personas v2       | `.agents/personas.md`                  | `templates/personas-v2.template.md`                  |
+| Design / identity | `.agents/design.md`                    | `templates/design.template.md`                       |
+| Glossary          | `GLOSSARY.md` or `.agents/glossary.md` | `templates/glossary.template.md`                     |
 
 Each domain file includes **rules, invariants, edge cases**, sources (`file:line` or `source: owner`), and a **Test** column (test path or `no test — flag`). Use **`ui-designer`** and **`copywriter`** for `design.md` when UI exists.
 
 ## Phase D — Catalog skills
 
-Propose copies from kit **`artifacts/skills/`** into `.agents/skills/<name>/` (see catalog table in `artifacts/README.md`). Customize paths and gate commands. Prefer **`domain-change`** when money or policy edits are common; **`add-migration`** when schema changes are frequent; **`add-capability`** for full-stack features.
+Propose copies from **`templates/catalog/`** (each skill folder has `SKILL.md.tmpl`) into `.agents/skills/<name>/SKILL.md` (see **`templates/README.md`**). Customize paths and gate commands. Prefer **domain-change** when money or policy edits are common; **add-migration** when schema changes are frequent; **add-capability** for full-stack features.
 
 | Tier       | Meaning                                          |
 | ---------- | ------------------------------------------------ |

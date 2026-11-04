@@ -29,7 +29,7 @@ CLI equivalent: `zedkit-ai init .` (`--provider cursor,claude,codex,all`; `--tar
 
 Presets: `starter` (onboard + review; default), `setup` (starter plus domain,
 review lenses, retro, rules-upkeep, product/UI/copy subagents, and setup-ai
-artifact templates under `kit/artifacts/`), `core`
+`templates/` under `.agents/skills/setup-ai/`), `core`
 (planning and implement entry points), `full` (every skill).
 
 Providers: `cursor` (rules file, skills link or per-skill links inside a
