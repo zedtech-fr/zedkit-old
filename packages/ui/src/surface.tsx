@@ -1,6 +1,8 @@
 import type * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 
+import { ParallaxLayer } from "./parallax.js";
+import { isMovingDepth } from "./parallax-types.js";
 import { cn } from "./utils.js";
 
 const surfaceVariants = cva("", {
@@ -43,9 +45,20 @@ const surfaceVariants = cva("", {
 });
 
 export type SurfaceProps = React.ComponentProps<"div"> &
-  VariantProps<typeof surfaceVariants> & {
+  Omit<VariantProps<typeof surfaceVariants>, "variant"> & {
     as?: "div" | "section" | "article" | undefined;
-  };
+  } & (
+    | {
+        variant?: "solid" | "popover" | undefined;
+        depth?: "far" | "back" | "mid" | "near" | "0" | number | undefined;
+        layerClassName?: string | undefined;
+      }
+    | {
+        variant: "glass";
+        depth?: never;
+        layerClassName?: never;
+      }
+  );
 
 function Surface({
   as = "div",
@@ -54,16 +67,24 @@ function Surface({
   radius,
   padding,
   className,
+  depth,
+  layerClassName,
   ...props
 }: SurfaceProps) {
   const Tag = as;
-  return (
+  const surface = (
     <Tag
       data-slot="surface"
       data-surface={variant === "glass" ? "glass" : undefined}
       className={cn(surfaceVariants({ variant, elevation, radius, padding }), className)}
       {...props}
     />
+  );
+  if (variant === "glass" || !isMovingDepth(depth)) return surface;
+  return (
+    <ParallaxLayer depth={depth} className={layerClassName} decorative={false}>
+      {surface}
+    </ParallaxLayer>
   );
 }
 

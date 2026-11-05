@@ -1,0 +1,5 @@
+/* Standalone motion CSS (tokens + parallax + sticky + scenes). Kit apps still import styles.css. */
+@import "./motion-tokens.css";
+@import "./parallax.css";
+@import "./sticky-aside.css";
+@import "./scroll-scenes.css";
