@@ -239,6 +239,10 @@ Each domain file includes **rules, invariants, edge cases**, sources (`file:line
 
 Use the readers' **folder notes**. Write one `<folder>/AGENTS.md` (`templates/nested-agents.template.md`) for each folder whose rules, boundaries or traps differ from the root: features, ui, design, api, db, jobs, tests. Only what differs, link to the domain and design files, under about 60 lines, every rule with `file:line`. With Cursor wired, add a `.cursor/rules/<folder>.mdc` (globs on the folder) that only points at the nested file. **Provider-scoped rules:** a rule file only one provider reads (Cursor `.mdc` with `globs:`, a folder's own `.cursor/rules`) gets a nested `AGENTS.md` at its folder with a one-line summary and a pointer, so the other providers find it; the rule file stays the owner and is never copied (one law, one owner). **Improve mode:** nested files the repo already has are audited in A3, then **extended in place**: add the folder's rules the readers found, a link to the matching `.agents/domain/` and `.agents/design.md` files, and `file:line` evidence; keep the author's wording and never replace the file. Thin stubs (a few lines, no rules, no pointer to `.agents/`) are the usual gap. A repo with no folder that differs, or whose files you deliberately keep, records `nested-agents: none — <reason>` or `nested-agents: kept — <reason>` in the setup-log instead.
 
+### Rule map refresh (after nested files)
+
+The Rule map in `.agents/setup-log/reading.md` was written in phase B, before any nested `AGENTS.md` existed, so its pointer cells are promises. Once the nested files are written, reopen the map and make it true: for each row, set **Decision** to what you did; for every `mirrored by pointer` row, `test -e` the nested `AGENTS.md` named in **Where other providers find it** and confirm that file names the rule file; add a row for any provider rule file you met only in phase C; fix a pointer that moved or was never written. Record `rule-map: refreshed after phase C (<n> rows changed)` under the table. An unrefreshed map is a phase E defect.
+
 ### Model routing (after nested files)
 
 Write `.agents/model-routing.md` from `templates/model-routing.template.md` with the provider, the model list and the tiers you actually used in this run (see **Model routing** above), then add a short **Model routing** section to root `AGENTS.md`: three lines (reading and inventory go to the scout tier, synthesis and decisions to the lead, the file to read). Plan rows for both.
@@ -382,6 +386,7 @@ Then:
 **Phase E checklist (before you finish):**
 
 - [ ] Providers value table + **Wired:** in setup-log, plus the **Routing** and **Reading** lines
+- [ ] Rule map refreshed after phase C (`rule-map: refreshed after phase C` line, every pointer `test -e`)
 - [ ] Depth: `.agents/setup-log/reading.md` (readers scaled to size), `.agents/domain/*.md` with evidence, nested `AGENTS.md` (or `nested-agents: none`), `.agents/model-routing.md` pointed at from root `AGENTS.md`
 - [ ] Plan rows cover **`git status` / `git diff --name-only`** after Write (or **Plan gaps** documented)
 - [ ] **`npx zedkit-ai validate --setup`** is clean before the closing report (add **`--plan <file>`** when the plan is not **`PLAN.md`** at the repo root or **`.agents/setup-log/plan.md`**)
