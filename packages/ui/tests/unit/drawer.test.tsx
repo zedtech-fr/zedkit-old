@@ -563,6 +563,66 @@ describe("drawer", () => {
     expect(document.activeElement).toBe(trigger);
   });
 
+  it("allows Tab to reach outside when modal is false", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <button type="button">before</button>
+        <Drawer modal={false}>
+          <DrawerTrigger asChild>
+            <Button>Open drawer</Button>
+          </DrawerTrigger>
+          <DrawerContent modal={false}>
+            <DrawerTitle>Delivery details</DrawerTitle>
+            <button type="button">inside</button>
+          </DrawerContent>
+        </Drawer>
+        <button type="button">after</button>
+      </>,
+    );
+    const after = screen.getByRole("button", { name: "after" });
+    await user.click(screen.getByRole("button", { name: "Open drawer" }));
+    await user.tab();
+    expect(document.activeElement).toBe(after);
+    expect(screen.getByRole("dialog", { name: "Delivery details" }).contains(document.activeElement)).toBe(
+      false,
+    );
+  });
+
+  it("does not aria-hide page content when modal is false", () => {
+    render(
+      <>
+        <main data-testid="page-main">Page</main>
+        <Drawer defaultOpen modal={false}>
+          <DrawerContent modal={false}>
+            <DrawerTitle>Delivery details</DrawerTitle>
+          </DrawerContent>
+        </Drawer>
+      </>,
+    );
+    expect(screen.getByTestId("page-main").getAttribute("aria-hidden")).toBeNull();
+  });
+
+  it("closes on Escape when modal is false and returns focus to the trigger", async () => {
+    const user = userEvent.setup();
+    render(
+      <Drawer modal={false}>
+        <DrawerTrigger asChild>
+          <Button>Open drawer</Button>
+        </DrawerTrigger>
+        <DrawerContent modal={false}>
+          <DrawerTitle>Delivery details</DrawerTitle>
+        </DrawerContent>
+      </Drawer>,
+    );
+    const trigger = screen.getByRole("button", { name: "Open drawer" });
+    await user.click(trigger);
+    expect(screen.getByRole("dialog", { name: "Delivery details" })).not.toBeNull();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+  });
+
   it("has no axe violations when open", async () => {
     const user = userEvent.setup();
     render(<OpenDrawer />);

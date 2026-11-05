@@ -2,12 +2,25 @@
 // positioning via data variants (vaul sets data-vaul-drawer-direction on the content), drag handle and
 // close left to the consumer to compose, ref-as-prop (React 19). Vaul injects its own base CSS
 // (drag transitions, open/close keyframes) at import; the kit retunes motion in styles.css.
+// `modal={false}` uses a kit inline panel (Surface + portal), not Vaul/Radix Dialog, so the page
+// stays keyboard- and pointer-reachable.
 "use client";
 
 import * as React from "react";
 import { X } from "lucide-react";
 import { Drawer as DrawerPrimitive } from "vaul";
 import { buttonVariants } from "./button.js";
+import {
+  NonModalDrawerClose,
+  NonModalDrawerContent,
+  NonModalDrawerDescription,
+  NonModalDrawerHandle,
+  NonModalDrawerProvider,
+  NonModalDrawerTitle,
+  NonModalDrawerTrigger,
+  useMaybeNonModalDrawer,
+} from "./drawer-non-modal.js";
+import { drawerPanelClassName, type DrawerSize } from "./drawer-panel-classes.js";
 import {
   focusOverlayInitial,
   type OverlayInitialFocus,
@@ -21,20 +34,6 @@ import { surfaceVariants } from "./surface.js";
 import { OverlayMountContext, ScopePortal } from "./theme-scope.js";
 import { useNarrowViewport } from "./use-narrow-viewport.js";
 import { useUiMessages } from "./ui-provider.js";
-
-type DrawerSize = "sm" | "md" | "lg";
-
-const drawerSideRightMaxWidth: Record<DrawerSize, string> = {
-  sm: "data-[vaul-drawer-direction=right]:sm:max-w-drawer-side-sm",
-  md: "data-[vaul-drawer-direction=right]:sm:max-w-drawer-side",
-  lg: "data-[vaul-drawer-direction=right]:sm:max-w-drawer-side-lg",
-};
-
-const drawerSideLeftMaxWidth: Record<DrawerSize, string> = {
-  sm: "data-[vaul-drawer-direction=left]:sm:max-w-drawer-side-sm",
-  md: "data-[vaul-drawer-direction=left]:sm:max-w-drawer-side",
-  lg: "data-[vaul-drawer-direction=left]:sm:max-w-drawer-side-lg",
-};
 
 type DrawerRootProps = React.ComponentProps<typeof DrawerPrimitive.Root> & {
   /**
@@ -63,29 +62,75 @@ function Drawer({
   direction,
   modal = true,
   autoFocus,
+  open: openProp,
+  onOpenChange,
+  defaultOpen = false,
+  dismissible = true,
+  children,
   ...props
 }: DrawerRootProps) {
   const isMobile = useNarrowViewport();
   const resolvedDirection = resolveDrawerDirection(direction, mobile, isMobile) ?? "bottom";
+  const triggerRef = React.useRef<HTMLElement | null>(null);
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(defaultOpen);
+  const open = openProp ?? uncontrolledOpen;
+  const setOpen = React.useCallback(
+    (next: boolean) => {
+      onOpenChange?.(next);
+      if (openProp === undefined) setUncontrolledOpen(next);
+    },
+    [onOpenChange, openProp],
+  );
+
+  if (!modal) {
+    return (
+      <NonModalDrawerProvider
+        open={open}
+        onOpenChange={setOpen}
+        direction={resolvedDirection}
+        dismissible={dismissible}
+        triggerRef={triggerRef}
+      >
+        {children}
+      </NonModalDrawerProvider>
+    );
+  }
+
   const mountAutoFocus = resolveModalMountAutoFocus(autoFocus, modal);
+  const vaulOpenProps = {
+    ...(openProp !== undefined ? { open: openProp } : { defaultOpen }),
+    ...(onOpenChange !== undefined ? { onOpenChange } : {}),
+  };
   return (
     <DrawerPrimitive.Root
       data-slot="drawer"
       key={`${resolvedDirection}-${isMobile ? "narrow" : "wide"}`}
       direction={resolvedDirection}
       modal={modal}
+      dismissible={dismissible}
       // eslint-disable-next-line jsx-a11y/no-autofocus -- Vaul prop; modal drawers must mount-focus inside so the trap engages.
       autoFocus={mountAutoFocus}
+      {...vaulOpenProps}
       {...props}
-    />
+    >
+      {children}
+    </DrawerPrimitive.Root>
   );
 }
 
-function DrawerTrigger({ ...props }: React.ComponentProps<typeof DrawerPrimitive.Trigger>) {
+function DrawerTrigger(props: React.ComponentProps<typeof DrawerPrimitive.Trigger>) {
+  const inline = useMaybeNonModalDrawer();
+  if (inline) {
+    return <NonModalDrawerTrigger {...props} />;
+  }
   return <DrawerPrimitive.Trigger data-slot="drawer-trigger" {...props} />;
 }
 
-function DrawerClose({ ...props }: React.ComponentProps<typeof DrawerPrimitive.Close>) {
+function DrawerClose(props: React.ComponentProps<typeof DrawerPrimitive.Close>) {
+  const inline = useMaybeNonModalDrawer();
+  if (inline) {
+    return <NonModalDrawerClose {...props} />;
+  }
   return <DrawerPrimitive.Close data-slot="drawer-close" {...props} />;
 }
 
@@ -156,6 +201,15 @@ function DrawerContent({
    */
   initialFocus?: OverlayInitialFocus;
 }) {
+  const inline = useMaybeNonModalDrawer();
+  if (inline) {
+    return (
+      <NonModalDrawerContent className={className} size={size} ref={ref as React.Ref<HTMLDivElement>} {...props}>
+        {children}
+      </NonModalDrawerContent>
+    );
+  }
+
   const contentRef = React.useRef<HTMLDivElement | null>(null);
   const [mount, setMount] = React.useState<HTMLDivElement | null>(null);
   const exitRef = useExitUnmountFallback<HTMLDivElement>();
@@ -173,28 +227,18 @@ function DrawerContent({
     <DrawerPortal>
       {modal ? <DrawerOverlay /> : null}
       <DrawerPrimitive.Content
-          data-slot="drawer-content"
-          ref={setRef}
-          tabIndex={-1}
-          onOpenAutoFocus={(event) => {
-            if (!modal) return;
-            event.preventDefault();
-            focusOverlayInitial(contentRef.current, initialFocus);
-          }}
-          className={cn(
-            "fixed z-drawer flex flex-col outline-none",
-            surfaceVariants({ variant: "solid", elevation: 3, radius: "none", padding: "none" }),
-          // Safety net for content composed without DrawerHeader/Body/Footer (a bare form, text, a list): it still
-          // gets the shared side gutters and a bottom inset that clears the home indicator. Buttons and the
-          // kit slots keep their own spacing.
-          "[&>:not([data-slot^=drawer-],[data-vaul-handle],button)]:px-4 [&>:not([data-slot^=drawer-],[data-vaul-handle],button):last-child]:pb-drawer-footer-safe",
-          "data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:max-h-drawer-sheet-max-height data-[vaul-drawer-direction=bottom]:rounded-t-xl",
-          "data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:max-h-drawer-sheet-max-height data-[vaul-drawer-direction=top]:rounded-b-xl data-[vaul-drawer-direction=top]:pt-drawer-safe-top",
-          "data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:w-drawer-side-mobile-width data-[vaul-drawer-direction=right]:pt-drawer-safe-top data-[vaul-drawer-direction=right]:pr-drawer-safe-right data-[vaul-drawer-direction=right]:max-sm:rounded-l-xl data-[vaul-drawer-direction=right]:sm:w-full",
-          drawerSideRightMaxWidth[size],
-          "data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:w-drawer-side-mobile-width data-[vaul-drawer-direction=left]:pt-drawer-safe-top data-[vaul-drawer-direction=left]:pl-drawer-safe-left data-[vaul-drawer-direction=left]:max-sm:rounded-r-xl data-[vaul-drawer-direction=left]:sm:w-full",
-          drawerSideLeftMaxWidth[size],
-          className,
+        data-slot="drawer-content"
+        ref={setRef}
+        tabIndex={-1}
+        onOpenAutoFocus={(event) => {
+          if (!modal) return;
+          event.preventDefault();
+          focusOverlayInitial(contentRef.current, initialFocus);
+        }}
+        className={cn(
+          drawerPanelClassName(size, className),
+          "outline-none",
+          surfaceVariants({ variant: "solid", elevation: 3, radius: "none", padding: "none" }),
         )}
         {...props}
       >
@@ -205,6 +249,10 @@ function DrawerContent({
 }
 
 function DrawerHandle({ className, ...props }: React.ComponentProps<typeof DrawerPrimitive.Handle>) {
+  const inline = useMaybeNonModalDrawer();
+  if (inline) {
+    return <NonModalDrawerHandle className={className} {...props} />;
+  }
   return (
     <DrawerPrimitive.Handle
       data-slot="drawer-handle"
@@ -249,8 +297,6 @@ function DrawerFooter({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-// Styled with buttonVariants rather than `asChild` so the copied registry file
-// compiles with whichever Button flavour the target project ships (Slot or render prop).
 function DrawerCloseButton({
   className,
   children,
@@ -275,6 +321,10 @@ function DrawerCloseButton({
 }
 
 function DrawerTitle({ className, ...props }: React.ComponentProps<typeof DrawerPrimitive.Title>) {
+  const inline = useMaybeNonModalDrawer();
+  if (inline) {
+    return <NonModalDrawerTitle className={className} {...props} />;
+  }
   return (
     <DrawerPrimitive.Title
       data-slot="drawer-title"
@@ -288,6 +338,10 @@ function DrawerDescription({
   className,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Description>) {
+  const inline = useMaybeNonModalDrawer();
+  if (inline) {
+    return <NonModalDrawerDescription className={className} {...props} />;
+  }
   return (
     <DrawerPrimitive.Description
       data-slot="drawer-description"

@@ -242,6 +242,14 @@
           "type": "registry:ui"
         },
         {
+          "path": "registry/ui/drawer-non-modal.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/drawer-panel-classes.ts",
+          "type": "registry:ui"
+        },
+        {
           "path": "registry/ui/overlay-modal.ts",
           "type": "registry:ui"
         },

@@ -91,14 +91,6 @@ function IdentityDockWidget() {
   useEditorDockAutoOpen(onEditor, pathname, setBrief, setExpanded);
   useIdentityDockOpenRequest(setBrief, setExpanded);
 
-  useEffect(() => {
-    if (!expanded) {
-      document.body.style.pointerEvents = "";
-      return;
-    }
-    document.body.style.pointerEvents = "auto";
-  }, [expanded, pathname]);
-
   return (
     <>
       <IdentityDock data-testid="identity-dock">
