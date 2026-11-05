@@ -42,6 +42,7 @@ function parityCell(dest: string, preset: string, providers: readonly string[] |
   expect(validateKit(join(dest, ".agents")), "validate").toEqual([]);
   expect(checkKitDocs(dest, join(dest, ".agents")), "docs").toEqual([]);
   expect(checkPlaceholders(dest, join(dest, ".agents")), "placeholders").toEqual([]);
+  expect(existsSync(join(dest, ".agents", "tokenomics.md")), "tokenomics.md installed").toBe(true);
   const again = install(dest, preset, providers, adopt);
   expect(again.filter((action) => action.kind !== "skip"), "rerun").toEqual([]);
   expect(checkDrift(dest, join(dest, ".agents")), "drift").toEqual([]);

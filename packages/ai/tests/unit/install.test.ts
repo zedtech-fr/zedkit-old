@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { installKit } from "#install.js";
-import { agentsForPreset, commandsForPreset, readManifest } from "#kit.js";
+import { agentsForPreset, commandsForPreset, kitDir, readManifest } from "#kit.js";
 import { checkDrift, validateKit } from "#validate.js";
 import { firstPartySkills, markdownFiles, put, SKILL, tempDir } from "./helpers.js";
 
@@ -127,6 +127,40 @@ describe("installKit", () => {
     const again = install(dest, { preset: "starter", providers: ["cursor"], adopt: true });
     expect(existsSync(join(dest, ".agents", "personas.kit.md"))).toBe(false);
     expect(again).toContainEqual({ kind: "skip", path: join(".agents", "personas.md"), note: "kept (already customized)" });
+  });
+
+  it("installs the tokenomics stub once, and a re-run is a no-op", () => {
+    const dest = tempDir();
+    const first = install(dest, { providers: [] });
+    expect(first).toContainEqual(expect.objectContaining({ kind: "copy", path: join(".agents", "tokenomics.md") }));
+    const stub = readFileSync(join(dest, ".agents", "tokenomics.md"), "utf8");
+    expect(stub).toBe(readFileSync(join(kitDir(), "tokenomics.template.md"), "utf8"));
+    const again = install(dest, { providers: [] });
+    expect(again.filter((a) => a.kind !== "skip")).toEqual([]);
+    expect(validateKit(join(dest, ".agents"))).toEqual([]);
+  });
+
+  it("leaves an edited tokenomics.md alone, with or without adopt, and writes no sidecar", () => {
+    for (const adopt of [false, true]) {
+      const dest = tempDir();
+      install(dest, { providers: [], adopt });
+      const file = join(dest, ".agents", "tokenomics.md");
+      const edited = `${readFileSync(file, "utf8")}\nOur own note.\n`;
+      writeFileSync(file, edited);
+      const again = install(dest, { providers: [], adopt });
+      expect(again.filter((a) => a.kind !== "skip")).toEqual([]);
+      expect(readFileSync(file, "utf8")).toBe(edited);
+      expect(existsSync(join(dest, ".agents", "tokenomics.kit.md"))).toBe(false);
+    }
+  });
+
+  it("validate reports an invalid project tokenomics.md", () => {
+    const dest = tempDir();
+    install(dest, { providers: [] });
+    writeFileSync(join(dest, ".agents", "tokenomics.md"), "---\nschema: 1\ntiers: {}\n---\n");
+    expect(validateKit(join(dest, ".agents"))).toEqual([
+      { path: "tokenomics.md", message: expect.stringContaining("tiers: unknown key") },
+    ]);
   });
 
   it("adopt still sidecars a lightly edited v1 personas file", () => {

@@ -183,6 +183,12 @@ or differing copy and never tells you to overwrite a user file. Re-run
 `setup-ai` takes provider names (`setup-ai cursor claude`) and asks once
 which providers to wire when it cannot tell.
 
+## Tokenomics
+
+`.agents/tokenomics.md` is the one policy file for which model and effort each kind of work gets. Its frontmatter maps **kind** (`decide`, `design`, `build`, `check`) times **stakes** (`trivial`, `standard`, `sensitive`, `critical`) to a `{ model, effort }` cell, per provider: 16 cells each for `cursor`, `claude`, `codex` and `muse`. It also holds the review gates per stakes: `sensitive` needs a review, `critical` also needs a second independent review on a different model and a human validation line. `validate` refuses a file that weakens those floors, leaves a cell out, uses an unknown key, or names a model anywhere in the frontmatter except `providers`.
+
+The kit ships the full policy (every `model` is `inherit`) and reads it from the package at run time, so a project file only holds what it changes and later default changes still reach it. `init` and `setup` install a short stub and never overwrite an existing file. This slice adds the file and its check; routing from it comes next. The older `.agents/model-routing.md` is untouched for now.
+
 ## What you get
 
 ```
@@ -195,6 +201,7 @@ CLAUDE.md -> AGENTS.md
 .cursor/skills             symlink to .agents/skills (or per-skill links)
 .cursor/{agents,commands}  real-file copies (a link shows up empty)
 .cursor/rules/project.mdc  one always-on rule pointing at AGENTS.md
+.agents/tokenomics.md      model and effort per kind x stakes (yours to edit)
 ```
 
 One source (`.agents/`), thin per-tool links. Nested `AGENTS.md` files hold

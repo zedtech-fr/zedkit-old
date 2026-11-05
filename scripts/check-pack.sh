@@ -185,7 +185,10 @@ size_budget ui 10200 marketing
 # Raised to 27200 on 5 Nov 2026: validate --setup checks the full-gate log
 # and the persisted validate log; PR measured 26935 on top of the signature
 # check. Budget = measured + ~1%.
-size_budget ai 27200
+# Raised to 31000 on 5 Nov 2026: tokenomics policy schema, merge and check
+# (tokenomics.ts) plus the validate and install hooks; PR measured 30681.
+# Budget = measured + ~1%.
+size_budget ai 31000
 
 if [ -f apps/docs/out/index.html ]; then
   if ! node apps/docs/scripts/check-first-load-budget.mjs; then
