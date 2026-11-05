@@ -16,7 +16,7 @@ export function CommerceScreen({ copy }: { copy: CommerceComposition }) {
       </Stack>
       <Stack
         aria-hidden="true"
-        className="aspect-[16/9] justify-end rounded-md bg-primary/10 p-3"
+        className="aspect-[3/1] justify-end rounded-md bg-primary/10 p-3"
       >
         <Text as="span" typeRole="label" className="text-foreground">
           {copy.imageNote}
