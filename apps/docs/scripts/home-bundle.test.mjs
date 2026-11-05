@@ -35,10 +35,13 @@ test("home hero lead prioritizes get started then catalog (#ZK-09)", () => {
   const actions = readFileSync(join(app, "ui/home/home-hero-lead-actions.tsx"), "utf8");
   const copy = readFileSync(join(app, "ui/home/i18n/home-hero-copy.ts"), "utf8");
   assert.match(lead, /HomeHeroLeadActions/);
+  assert.match(actions, /from "@\/ui\/home\/home-link"/);
   // Primary first, then the quiet catalog link; no third action competes with them.
-  assert.match(actions, /<Button asChild>\s*\n\s*<Link href="#get-started">\{homeCopy\.heroActions\.getStarted\}/);
-  assert.match(actions, /variant="link"[^>]*>\s*\n\s*<Link href="\/catalog">\{homeCopy\.heroActions\.browseCatalog\}/);
-  assert.equal((actions.match(/<Link /g) ?? []).length, 2);
+  assert.match(actions, /<Button asChild>\s*\n\s*<HomeLink href="#get-started">\{homeCopy\.heroActions\.getStarted\}/);
+  assert.match(actions, /variant="link"[^>]*>\s*\n\s*<HomeLink href="\/catalog">\{homeCopy\.heroActions\.browseCatalog\}/);
+  assert.equal((actions.match(/<HomeLink[\s>]/g) ?? []).length, 2);
+  const homeLink = readFileSync(join(app, "ui/home/home-link.tsx"), "utf8");
+  assert.match(homeLink, /prefetch=\{false\}/);
   assert.match(copy, /getStarted: "Get started"/);
   assert.match(copy, /browseCatalog: "Browse catalog"/);
   assert.doesNotMatch(actions + copy, /Browse components/);
