@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { KIT_HEADERS } from "#agent-header.js";
 import { readManifest } from "#kit.js";
 import { shippedNames } from "./helpers.js";
 
@@ -31,6 +32,30 @@ describe("agents catalog", () => {
     const shipped = new Set(manifest.value.agents);
     for (const row of catalogRows()) {
       expect(shipped.has(row), `stale catalog row: ${row}`).toBe(true);
+    }
+  });
+
+  it("lists default_needs, allowed kinds and the default_kind hint of each agent as the kit declares them", () => {
+    const raw = readFileSync(
+      fileURLToPath(
+        new URL("../../../../docs/agents-catalog.md", import.meta.url),
+      ),
+      "utf8",
+    );
+    const rows = raw.split("\n").filter((line) => line.startsWith("| `"));
+    expect(rows).toHaveLength(Object.keys(KIT_HEADERS).length);
+    for (const row of rows) {
+      const cells = row.split("|").map((cell) => cell.trim());
+      const name = (cells[1] ?? "").replaceAll("`", "");
+      const header = KIT_HEADERS[name];
+      expect(header, name).toBeDefined();
+      expect(cells[4], `${name} default_needs`).toBe(
+        `${header?.default_needs.reasoning}, ${header?.default_needs.context}`,
+      );
+      expect(cells[5], `${name} kinds`).toBe(
+        header?.kinds?.join(", ") ?? "all",
+      );
+      expect(cells[6], `${name} default_kind`).toBe(header?.default_kind);
     }
   });
 

@@ -190,7 +190,9 @@ size_budget ui 10200 marketing
 # Budget = measured + ~1%.
 # Raised to 34900 on 5 Nov 2026: model-name check (hardcode.ts, model-names.ts)
 # in validate; PR measured 34506. Budget = measured + ~1%.
-size_budget ai 34900
+# Raised to 37800 on 5 Nov 2026: agent header contract (shipped header reader
+# and validate rules); PR measured 37466. Budget = measured + ~1%.
+size_budget ai 37800
 
 if [ -f apps/docs/out/index.html ]; then
   if ! node apps/docs/scripts/check-first-load-budget.mjs; then
