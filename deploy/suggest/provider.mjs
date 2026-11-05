@@ -150,7 +150,17 @@ export function callProvider(provider, { messages, maxTokens, signal, fetchImpl,
 }
 
 /** Same contract as `callProvider`, with token deltas as they arrive (or one delta if the origin answers JSON). */
+function streamRejected(res, text) {
+  return res.status === 400 && /stream/i.test(text);
+}
+
+function asStreamed(result, onDelta) {
+  if (result.ok) onDelta?.(result.content);
+  return result;
+}
+
 export function callProviderStream(provider, { messages, maxTokens, signal, fetchImpl, effort, onDelta }) {
+  const args = { messages, maxTokens, signal, fetchImpl, effort };
   return fetchImpl(chatUrl(provider.base), {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${provider.key}` },
@@ -165,7 +175,11 @@ export function callProviderStream(provider, { messages, maxTokens, signal, fetc
     signal,
   })
     .then((res) => {
-      if (!res.ok) return res.text().then((text) => failHttp(res, text));
+      if (!res.ok) {
+        return res.text().then((text) => (streamRejected(res, text)
+          ? callProvider(provider, args).then((result) => asStreamed(result, onDelta))
+          : failHttp(res, text)));
+      }
       const type = contentTypeOf(res);
       if (type.includes("text/event-stream")) return consumeOpenAiSse(res, onDelta);
       return res.text().then((text) => interpretJsonReply(text, onDelta));

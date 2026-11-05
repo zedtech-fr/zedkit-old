@@ -783,6 +783,29 @@ test("an early refusal stays JSON even when the client asked to stream", async (
   assert.equal(p.calls.length, 0);
 });
 
+test("when the origin refuses to stream, the same visit still gets SSE from a JSON reply", async () => {
+  const p = provider((call) => {
+    if (call.body.stream) {
+      return { ok: false, status: 400, text: () => Promise.resolve(JSON.stringify({ error: { type: "invalid_request", message: "stream is not supported" } })) };
+    }
+    return reply(PATCH);
+  });
+  await withServer({ env: configured(), fetchImpl: p.fetchImpl }, async ({ port }) => {
+    const res = await post(port, body(), { accept: "text/event-stream" });
+    assert.equal(res.status, 200);
+    assert.match(res.headers.get("content-type") ?? "", /text\/event-stream/);
+    const frames = sseEvents(await res.text());
+    const names = frames.map((frame) => frame.event);
+    assert.ok(names.includes("status"));
+    assert.ok(names.includes("text"));
+    assert.ok(names.includes("complete"));
+    assert.match(frames.find((frame) => frame.event === "complete").data.summary, /Rounder corners/);
+    assert.equal(p.calls.length, 2);
+    assert.equal(p.calls[0].body.stream, true);
+    assert.equal(p.calls[1].body.stream, undefined);
+  });
+});
+
 test("a stream with a reference announces reading-reference before the model runs", async () => {
   const p = provider();
   const html = "<html><head><title>Example</title><style>body{color:#111}</style></head><body><p>Hello from the page.</p></body></html>";
