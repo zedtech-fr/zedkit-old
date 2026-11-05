@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { checkHardcodedModels, KIT_ALLOW, LEGACY_EXEMPT } from "#hardcode.js";
 import { kitDir } from "#kit.js";
+import { checkTokenomics } from "#tokenomics.js";
 import { isPinnedId, MODEL_FAMILIES } from "#model-names.js";
 import { AGENT, put, SKILL, tempDir } from "./helpers.js";
 
@@ -176,6 +177,13 @@ describe("inline marker and allow_paths", () => {
       ].join("\n"),
     });
     expect(scan(root)).toEqual([expect.stringContaining('"gemini-2.5-pro"')]);
+  });
+
+  it("a policy that names a model in hardcode.* passes the policy check and the scan together", () => {
+    const text = policy("hardcode:\n  allow_paths: ['docs/claude-opus-9/**']\n  extra_patterns: ['acme-\\d+']\n");
+    expect(checkTokenomics(text)).toEqual([]);
+    const root = project({ ".agents/tokenomics.md": text, "docs/claude-opus-9/notes.md": "gpt-5\n", "AGENTS.md": "Nothing here.\n" });
+    expect(scan(root)).toEqual([]);
   });
 
   it("a later unmarked use still counts when the first use was marked", () => {
