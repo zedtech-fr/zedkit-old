@@ -36,22 +36,28 @@ describe("Surface", () => {
 });
 
 describe("Surface composition", () => {
-  it("Card uses surface tokens", () => {
+  it("Card composes Surface as the host", () => {
+    expect(Function.prototype.toString.call(Card)).toContain("Surface");
     render(<Card data-testid="card">Body</Card>);
     const card = screen.getByTestId("card");
+    expect(card.getAttribute("data-slot")).toBe("card");
+    expect(card.className).toContain("bg-card");
     expect(card.className).toContain("shadow-md");
     expect(card.className).toContain("rounded-xl");
   });
 
-  it("WidgetButton exposes the widget slot", () => {
+  it("WidgetButton composes surfaceVariants on the button host", () => {
+    expect(Function.prototype.toString.call(WidgetButton)).toContain("surfaceVariants");
     render(<WidgetButton>Ask</WidgetButton>);
     const button = screen.getByRole("button", { name: "Ask" });
     expect(button.getAttribute("data-slot")).toBe("widget-button");
     expect(button.className).toContain("rounded-full");
     expect(button.className).toContain("shadow-md");
+    expect(button.className).toContain("bg-card");
   });
 
-  it("Popover content uses popover surface", () => {
+  it("Popover content composes Surface as the panel", () => {
+    expect(Function.prototype.toString.call(PopoverContent)).toContain("Surface");
     render(
       <Popover open>
         <PopoverTrigger asChild>
@@ -61,11 +67,13 @@ describe("Surface composition", () => {
       </Popover>,
     );
     const panel = screen.getByTestId("popover");
+    expect(panel.getAttribute("data-slot")).toBe("popover-content");
     expect(panel.className).toContain("bg-popover");
     expect(panel.className).toContain("shadow-md");
   });
 
-  it("Dialog content uses overlay elevation", () => {
+  it("Dialog content composes Surface as the panel", () => {
+    expect(Function.prototype.toString.call(DialogContent)).toContain("Surface");
     render(
       <Dialog open>
         <DialogContent data-testid="dialog">
@@ -74,6 +82,7 @@ describe("Surface composition", () => {
       </Dialog>,
     );
     const panel = screen.getByTestId("dialog");
+    expect(panel.getAttribute("data-slot")).toBe("dialog-content");
     expect(panel.className).toContain("shadow-overlay");
     expect(panel.className).toContain("bg-card");
   });
