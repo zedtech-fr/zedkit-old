@@ -71,7 +71,7 @@ Then run **`/setup-ai`** if you want the discovery artifacts (`product.md`, `dom
 What changed since 0.12 (all already in the package; this re-run picks them up):
 
 - **`setup` command** — onboarding entry. Defaults to the `setup` preset. `init` still defaults to `starter`.
-- **`setup` preset** — starter plus `domain-modeling`, `persona-review`, `code-review`, `ponytail-review`, `retro`, `rules-upkeep`, `writing-for-agents`, and subagents `product-director`, `ui-designer`, `copywriter`. `starter` stays the small closed preset.
+- **`setup` preset** — starter plus `domain-modeling`, `persona-review`, `compose-ui`, `code-review`, `ponytail-review`, `retro`, `rules-upkeep`, `writing-for-agents`, and subagents `product-director`, `ui-designer`, `copywriter`. `starter` stays the small closed preset.
 - **`*.kit.md` sidecars** — adopt keeps a colliding user file and writes the kit copy next to it. Validate ignores `*.kit.md`. If you already had `.agents/personas.md` (v1 Task/Bar columns), a re-run keeps it and may add `personas.kit.md` (v2 schema). Merge or replace when you want the v2 columns (goals, jobs, frustrations, journeys, evidence, routes). The `setup` preset installs v2 on a blank tree; `starter`, `core`, and `full` still install v1.
 - **`.agents/setup-log.md`** — `/setup-ai` phase E appends a retro entry here. The plan file is `PLAN.md` at the repo root or `.agents/setup-log/plan.md`. Gate command logs go in `.agents/setup-log/gates/*.log`.
 - **`validate --setup`** — opt-in; plain `validate` is unchanged. With `--setup`, every path from `git status --porcelain -uall` must appear in the plan text (a parent folder with a trailing slash counts), and each gate log must start with `CMD:` and end with `EXIT:<code>`. Pass `--plan <file>` if the plan is not at those default paths. It also runs the four depth checks below (tags `D1`–`D4`).
@@ -104,8 +104,8 @@ and commands `/setup-ai` and `/review`. Enough to onboard a repo, verify facts,
 run one review workflow, and check done-ness without loading the whole kit.
 
 **Setup preset (default for `setup`):** everything in starter, plus
-`domain-modeling`, `persona-review`, `code-review`, `ponytail-review`,
-`retro`, `rules-upkeep`, and `writing-for-agents`, and subagents
+`domain-modeling`, `persona-review`, `compose-ui`, `code-review`,
+`ponytail-review`, `retro`, `rules-upkeep`, and `writing-for-agents`, and subagents
 `product-director`, `ui-designer`, and `copywriter`. Use this for the
 first-5-minutes path and `/setup-ai` discovery depth.
 
@@ -221,7 +221,7 @@ when the skills link is not followed.
 
 **Skills first-party:** `ground-truth`, `parallel-work`, `definition-of-done`,
 `adversarial-tests`, `rules-upkeep`, `persona-review`, `setup-ai`, `use-zedkit`,
-`use-signature`, `review`, `plan`, `challenge`, `audit`, `orchestrate`,
+`use-signature`, `compose-ui` (persona chain brief before composing UI), `review`, `plan`, `challenge`, `audit`, `orchestrate`,
 `evidence-grounded-analysis` (answers about customer or user material only
 from that material, every claim tagged verbatim, inference or absent;
 technical audits skip the source quota and the wait-for-question stop).
