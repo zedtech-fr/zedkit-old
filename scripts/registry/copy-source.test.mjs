@@ -68,6 +68,15 @@ test("drawer family uses kit registry slug for button", () => {
   assert.deepEqual(checkCopySourceFamily(registry, DRAWER_FAMILY), []);
   const drawer = registry.items.find((item) => item.name === "drawer");
   assert.deepEqual(drawer.registryDependencies, ["@zedkit/button", "utils", "@zedkit/surface"]);
+  const paths = drawer.files.map((file) => file.path);
+  for (const leaf of [
+    "drawer-non-modal.tsx",
+    "drawer-panel-classes.ts",
+    "drawer-non-modal-effects.ts",
+    "drawer-parts.tsx",
+  ]) {
+    assert.ok(paths.some((path) => path.endsWith(leaf)), `drawer item missing ${leaf}`);
+  }
 });
 
 test("copy theme item matches styles.css motion and semantic tokens", () => {

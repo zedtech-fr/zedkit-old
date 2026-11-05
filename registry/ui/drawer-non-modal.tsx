@@ -7,6 +7,7 @@ import { OverlayMountContext, ScopePortal } from "@/components/ui/theme-scope";
 import { cn } from "@/lib/utils";
 import type { DrawerSize } from "@/components/ui/drawer-panel-classes";
 import { drawerPanelClassName } from "@/components/ui/drawer-panel-classes";
+import { useNonModalDrawerEscape, useNonModalDrawerFocusRestore } from "@/components/ui/drawer-non-modal-effects";
 
 type DrawerDirection = "top" | "right" | "bottom" | "left";
 
@@ -57,30 +58,9 @@ function NonModalDrawerProvider({
   const descriptionId = React.useId();
   const [titlePresent, setTitlePresent] = React.useState(false);
   const [descriptionPresent, setDescriptionPresent] = React.useState(false);
-  const wasOpen = React.useRef(open);
-
-  React.useEffect(() => {
-    if (!open || !dismissible) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || event.defaultPrevented) return;
-      event.preventDefault();
-      onOpenChange(false);
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [dismissible, onOpenChange, open]);
-
-  React.useEffect(() => {
-    if (open) {
-      wasOpen.current = true;
-      return;
-    }
-    if (!wasOpen.current) return;
-    const trigger = triggerRef.current;
-    if (trigger && document.contains(trigger)) {
-      trigger.focus({ preventScroll: true });
-    }
-  }, [open, triggerRef]);
+  const focusProps = { open, dismissible, onOpenChange, triggerRef };
+  useNonModalDrawerEscape(focusProps);
+  useNonModalDrawerFocusRestore(focusProps);
 
   const value = React.useMemo(
     () => ({

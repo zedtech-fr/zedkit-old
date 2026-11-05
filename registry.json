@@ -250,6 +250,14 @@
           "type": "registry:ui"
         },
         {
+          "path": "registry/ui/drawer-non-modal-effects.ts",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/drawer-parts.tsx",
+          "type": "registry:ui"
+        },
+        {
           "path": "registry/ui/overlay-modal.ts",
           "type": "registry:ui"
         },

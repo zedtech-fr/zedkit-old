@@ -7,11 +7,8 @@
 "use client";
 
 import * as React from "react";
-import { X } from "lucide-react";
 import { Drawer as DrawerPrimitive } from "vaul";
-import { buttonVariants } from "./button.js";
 import {
-  NonModalDrawerClose,
   NonModalDrawerContent,
   NonModalDrawerDescription,
   NonModalDrawerHandle,
@@ -20,12 +17,17 @@ import {
   NonModalDrawerTrigger,
   useMaybeNonModalDrawer,
 } from "./drawer-non-modal.js";
-import { drawerPanelClassName, type DrawerSize } from "./drawer-panel-classes.js";
+import {
+  DrawerBody,
+  DrawerClose,
+  DrawerCloseButton,
+  DrawerFooter,
+  DrawerHeader,
+} from "./drawer-parts.js";
+import { drawerPanelClassName, resolveDrawerDirection, type DrawerSize } from "./drawer-panel-classes.js";
 import {
   focusOverlayInitial,
   type OverlayInitialFocus,
-  overlayDrawerFooterClass,
-  overlayDrawerHeaderClass,
   resolveModalMountAutoFocus,
   useExitUnmountFallback,
 } from "./overlay-modal.js";
@@ -33,7 +35,6 @@ import { cn } from "./utils.js";
 import { surfaceVariants } from "./surface.js";
 import { OverlayMountContext, ScopePortal } from "./theme-scope.js";
 import { useNarrowViewport } from "./use-narrow-viewport.js";
-import { useUiMessages } from "./ui-provider.js";
 
 type DrawerRootProps = React.ComponentProps<typeof DrawerPrimitive.Root> & {
   /**
@@ -42,20 +43,6 @@ type DrawerRootProps = React.ComponentProps<typeof DrawerPrimitive.Root> & {
    */
   mobile?: "sheet" | "side";
 };
-
-function resolveDrawerDirection(
-  direction: DrawerRootProps["direction"],
-  mobile: DrawerRootProps["mobile"],
-  isMobile: boolean,
-): DrawerRootProps["direction"] {
-  if (!isMobile || mobile === "side") {
-    return direction;
-  }
-  if (direction === "left" || direction === "right") {
-    return "bottom";
-  }
-  return direction;
-}
 
 function Drawer({
   mobile = "sheet",
@@ -126,26 +113,11 @@ function DrawerTrigger(props: React.ComponentProps<typeof DrawerPrimitive.Trigge
   return <DrawerPrimitive.Trigger data-slot="drawer-trigger" {...props} />;
 }
 
-function DrawerClose(props: React.ComponentProps<typeof DrawerPrimitive.Close>) {
-  const inline = useMaybeNonModalDrawer();
-  if (inline) {
-    return <NonModalDrawerClose {...props} />;
-  }
-  return <DrawerPrimitive.Close data-slot="drawer-close" {...props} />;
-}
-
 function DrawerPortal({
   container,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Portal>) {
-  // Default mount is document.body: a scoped mount inherits whatever stacking context traps the trigger
-  // (a transform, filter, or isolation) and the site header then paints above the overlay. An explicit
-  // `container` still wins for consumers that need a subtree mount.
-  // Plain `createPortal`, not the vaul/Radix portal: Radix wraps each portal child in a Presence that
-  // unmounts instantly when the child has no exit animation, and the child here is the ScopeMirror (a
-  // plain look-carrying div), which would swallow the overlay/panel exit. The overlay and panel keep their
-  // own inner Presences, which own the exit lifecycle (closed state, animationend/cancel, instant when
-  // reduced motion removes the animations).
+  // ScopePortal to document.body keeps the overlay above site chrome; see theme-scope.tsx.
   return <ScopePortal container={container}>{props.children}</ScopePortal>;
 }
 
@@ -264,59 +236,6 @@ function DrawerHandle({ className, ...props }: React.ComponentProps<typeof Drawe
       )}
       {...props}
     />
-  );
-}
-
-function DrawerHeader({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="drawer-header"
-      className={cn(overlayDrawerHeaderClass, className)}
-      {...props}
-    />
-  );
-}
-
-function DrawerBody({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="drawer-body"
-      className={cn("min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 last:pb-drawer-safe-bottom", className)}
-      {...props}
-    />
-  );
-}
-
-function DrawerFooter({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="drawer-footer"
-      className={cn(overlayDrawerFooterClass, className)}
-      {...props}
-    />
-  );
-}
-
-function DrawerCloseButton({
-  className,
-  children,
-  ...props
-}: React.ComponentProps<typeof DrawerClose>) {
-  const messages = useUiMessages();
-  return (
-    <DrawerClose
-      data-slot="drawer-close-button"
-      type="button"
-      aria-label={messages.close}
-      className={cn(
-        buttonVariants({ variant: "ghost", size: "icon" }),
-        "size-overlay-touch-target shrink-0",
-        className,
-      )}
-      {...props}
-    >
-      {children ?? <X className="size-4" />}
-    </DrawerClose>
   );
 }
 
