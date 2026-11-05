@@ -62,3 +62,28 @@ for (const issue of issues) console.error(`${issue.path}: ${issue.message}`);
 CLI equivalent: `zedkit-ai validate` (accepts a project root too; reports drift). Opt-in `--setup` / `--plan <file>`: PLAN must cover every git-changed path; setup-log gate logs must be well-formed; and the setup must have gone deep: a reading log (D1), domain rules with evidence, plus Identity rules when there is a UI (D2), a nested `AGENTS.md` that links them or a stated reason (D3), `.agents/model-routing.md` pointed at from `AGENTS.md` (D4).
 
 Need: size a repo and cut it for parallel read-only readers. CLI: `zedkit-ai scan [dir]` prints the size class (small, medium, large), the reader count (1-5, 6-10, 11-20) and one slice per reader.
+
+## Run one gate command and keep a log that setup validation accepts
+
+- Import: `@zedtech/zedkit-ai` — `runGate`, `GateOptions`, `GateResult`, `GateCause`
+- Wraps: `(none)`
+- Status: stable
+- Short name: Gate log
+- Audience: Agents and maintainers who run lint, test or build gates and need the result as evidence.
+- Purpose: Run a shell command and write a gate log in the `CMD:` / `START:` / `END:` / `EXIT:<code>` shape that `zedkit-ai validate --setup` checks, with the V8 heap capped and a `CAUSE:` line when the command times out, is killed or runs out of memory.
+- When to use: When a setup run, a handoff or a PR cites a gate and the log must outlive the chat.
+- When not to use: For interactive commands or when a CI job already stores its own log.
+- See also: `Check that skills, subagents, commands and provider copies are valid`
+
+```ts
+import { runGate } from "@zedtech/zedkit-ai";
+const result = await runGate({
+  cmd: "pnpm exec turbo run test --concurrency=2",
+  log: ".agents/setup-log/gates/test.log",
+  timeoutMs: 20 * 60_000,
+});
+if (!result.ok) throw result.error;
+process.exitCode = result.value.code;
+```
+
+CLI equivalent: `zedkit-ai gate .agents/setup-log/gates/test.log -- pnpm exec turbo run test --concurrency=2` (exits with the command's code, output goes straight to the file).
