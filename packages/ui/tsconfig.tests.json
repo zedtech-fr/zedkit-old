@@ -3,7 +3,13 @@
   "compilerOptions": {
     "composite": false,
     "noEmit": true,
-    "rootDir": "."
+    "rootDir": ".",
+    "incremental": true,
+    "tsBuildInfoFile": "tsconfig.tests.tsbuildinfo"
   },
-  "include": ["src", "tests", "preview"]
+  "include": [
+    "src",
+    "tests",
+    "preview"
+  ]
 }

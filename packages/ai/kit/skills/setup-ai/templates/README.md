@@ -34,7 +34,7 @@ Read in place, never copied wholesale:
 
 ## Catalog skills (repo copies)
 
-Copy from `templates/catalog/<name>/SKILL.md.tmpl` to `.agents/skills/<name>/SKILL.md` when the plan tier says **must** or **should**. Add YAML frontmatter (`name`, `description`) on copy.
+Copy from `templates/catalog/<name>/SKILL.md.tmpl` to `.agents/skills/<name>/SKILL.md` when the plan tier says **must** or **should**. Each file is ready to install as-is: frontmatter included, no placeholders, links resolve once phase C wrote `product.md` and `domain/`.
 
 | Catalog skill  | When to propose                                              |
 | -------------- | ------------------------------------------------------------ |
@@ -42,4 +42,4 @@ Copy from `templates/catalog/<name>/SKILL.md.tmpl` to `.agents/skills/<name>/SKI
 | add-migration  | Schema changes are regular and gated                         |
 | domain-change  | Money, cancel, refund, or policy edits are common            |
 
-After copying, rewrite paths and commands from evidence; run `zedkit-ai validate`.
+After copying, edit only what this repo contradicts (a gate command, a path you verified); run `zedkit-ai validate`.
