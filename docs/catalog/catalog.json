@@ -4630,11 +4630,11 @@
           "whenToUse": "Custom panels that should match Dialog, Drawer, Card, and Popover chrome; floating assistant triggers via `WidgetButton`. Pass `depth` (not with glass) to wrap the panel in a parallax layer.",
           "whenNotToUse": "Marketing page sections — use `@zedtech/zedkit-ui/marketing` `GlassSurface` instead.",
           "derivedFrom": null,
-          "example": "import { Surface, WidgetButton } from \"@zedtech/zedkit-ui\";\n<Surface variant=\"solid\" elevation={2} radius=\"xl\" padding=\"md\">Summary</Surface>\n<WidgetButton aria-label=\"Open assistant\">Ask</WidgetButton>",
+          "example": "import { Surface } from \"@zedtech/zedkit-ui\";\n<Surface variant=\"solid\" elevation={2} radius=\"xl\" padding=\"md\">Summary</Surface>",
           "examples": [
             {
               "title": "Solid card panel",
-              "code": "import { Surface, WidgetButton } from \"@zedtech/zedkit-ui\";\n<Surface variant=\"solid\" elevation={2} radius=\"xl\" padding=\"md\">Summary</Surface>\n<WidgetButton aria-label=\"Open assistant\">Ask</WidgetButton>"
+              "code": "import { Surface } from \"@zedtech/zedkit-ui\";\n<Surface variant=\"solid\" elevation={2} radius=\"xl\" padding=\"md\">Summary</Surface>"
             }
           ],
           "adoption": {
@@ -4654,7 +4654,9 @@
               }
             ]
           },
+          "registry": "surface",
           "a11y": "Presentational wrapper — name regions with headings or `aria-label`. `WidgetButton` is a normal button (outline variant) with pill radius and card elevation.",
+          "troubleshooting": "Glass looks solid — frost applies only under the glass identity (`data-identity=\"glass\"`). Dialog, Drawer and Card copy-paste payloads pull this brick in; add `surface` on its own for a custom panel.",
           "seeAlso": [
             "Group content in a card section",
             "Slide in a drawer panel",

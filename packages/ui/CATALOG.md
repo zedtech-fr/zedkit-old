@@ -1440,11 +1440,12 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldSet }
 - See also: `Group content in a card section`, `Slide in a drawer panel`, `Open modal dialogs`, `Add depth with parallax layers`
 - A11y: Presentational wrapper — name regions with headings or `aria-label`. `WidgetButton` is a normal button (outline variant) with pill radius and card elevation.
 - Examples: Solid card panel, Glass popover hook, Widget trigger
+- Registry: surface
+- Troubleshooting: Glass looks solid — frost applies only under the glass identity (`data-identity="glass"`). Dialog, Drawer and Card copy-paste payloads pull this brick in; add `surface` on its own for a custom panel.
 
 ```ts
-import { Surface, WidgetButton } from "@zedtech/zedkit-ui";
+import { Surface } from "@zedtech/zedkit-ui";
 <Surface variant="solid" elevation={2} radius="xl" padding="md">Summary</Surface>
-<WidgetButton aria-label="Open assistant">Ask</WidgetButton>
 ```
 
 ## Group content in a card section
