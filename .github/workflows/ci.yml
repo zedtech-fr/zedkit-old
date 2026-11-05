@@ -14,6 +14,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+# Same-repo PRs into `dev` run heavy jobs on the Dedibox self-hosted runner
+# (persistent /runner-cache + TURBO_CACHE_DIR, Playwright from the runner
+# image). Forks, PRs into `main`, and pushes stay on ubuntu-latest.
+# Release/deploy workflows are separate and untouched.
+
 jobs:
   # Scope of this run (scripts/ci-affected.mjs). Full CI runs only for pushes
   # and PRs targeting main. Every other PR, lockfile / root config / workflow
@@ -51,7 +56,7 @@ jobs:
           else
             base="HEAD~1"
           fi
-          git diff --name-only --no-renames "$base"...HEAD |
+          git diff --name-only --no-renames "$base"...HEAD 2>/dev/null |
             node scripts/ci-affected.mjs --event "$EVENT" --base-ref "$BASE_REF" | tee -a "$GITHUB_OUTPUT"
 
   workflow-lint:
@@ -107,7 +112,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   checks:
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name == 'pull_request' && github.base_ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","dedibox"]') || 'ubuntu-latest' }}
     timeout-minutes: 30
     needs: changes
     if: needs.changes.outputs.workflow_only != 'true'
@@ -119,6 +124,21 @@ jobs:
       FULL: ${{ needs.changes.outputs.full }}
       DOCS: ${{ needs.changes.outputs.docs }}
     steps:
+      - name: Dedibox runner env
+        if: runner.environment == 'self-hosted'
+        run: |
+          mkdir -p /runner-cache/{pnpm,nm,tsbuildinfo,eslint,turbo,npm,xdg}
+          {
+            echo "PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright"
+            echo "npm_config_store_dir=/runner-cache/pnpm"
+            echo "npm_config_cache=/runner-cache/npm"
+            echo "TURBO_CACHE_DIR=/runner-cache/turbo"
+            echo "RUNNER_TOOL_CACHE=/tmp/runner-tool-cache"
+            echo "XDG_CACHE_HOME=/runner-cache/xdg"
+            echo "TURBO_CONCURRENCY=4"
+            echo "VITEST_MAX_WORKERS=4"
+            echo "VITEST_MAX_FORKS=4"
+          } >> "$GITHUB_ENV"
       - uses: actions/checkout@v7
         with:
           # changeset status diffs against origin/main (see baseBranch in
@@ -127,38 +147,83 @@ jobs:
           fetch-depth: 0
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
       - uses: actions/setup-node@v7
+        if: runner.environment != 'self-hosted'
         with:
           node-version: 22
           cache: pnpm
+      - uses: actions/setup-node@v7
+        if: runner.environment == 'self-hosted'
+        with:
+          node-version: 22
+          package-manager-cache: false
       - run: pnpm install --frozen-lockfile
+        if: runner.environment != 'self-hosted'
+      - name: pnpm install (store + nm archive)
+        if: runner.environment == 'self-hosted'
+        run: bash scripts/ci-dedibox-cache.sh install
+      - name: Restore tsbuildinfo
+        if: runner.environment == 'self-hosted'
+        run: bash scripts/ci-dedibox-cache.sh restore-ts
       - run: bash scripts/check-deps-audit.sh
       - run: node scripts/check-publish-engines.mjs
       - run: bash scripts/check-registry-ui-drift.sh
       - uses: actions/cache@v6
+        if: runner.environment != 'self-hosted'
         with:
           path: .turbo
           key: turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
           restore-keys: |
             turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
       # Sequential phases: build output is read by later phases.
-      - run: pnpm exec turbo run typecheck lint ${FILTER:+"$FILTER"}
+      - name: typecheck and lint
+        run: |
+          extra=()
+          if [ "${RUNNER_ENVIRONMENT}" = "self-hosted" ]; then
+            extra+=(--cache-dir=/runner-cache/turbo)
+          fi
+          pnpm exec turbo run typecheck lint ${FILTER:+"$FILTER"} "${extra[@]}"
+      - name: Save tsbuildinfo
+        if: always() && runner.environment == 'self-hosted'
+        run: bash scripts/ci-dedibox-cache.sh save-ts
       # Smoke-test the shared ESLint config itself: with zero packages turbo
       # runs no lint task, so a broken config would otherwise stay green.
       # Affected path: lint the changed files, and the whole repo only when
       # the config itself changed.
       - name: ESLint
-        run: bash scripts/ci-eslint.sh
-      # Package builds must precede catalog:check: docs check.mjs builds
-      # seo/ai/ui and needs workspace dist (i18n types). Affected-only
-      # typecheck/lint can skip those packages entirely.
+        run: |
+          if [ "${RUNNER_ENVIRONMENT}" = "self-hosted" ]; then
+            bash scripts/ci-eslint.sh --cache --cache-location /runner-cache/eslint/.eslintcache
+          else
+            bash scripts/ci-eslint.sh
+          fi
+      # catalog:check (docs check.mjs) always builds seo/ai/ui (admin tutorial
+      # spawns ui build). Build only those packages; turbo ^build pulls i18n/
+      # core/quality. Avoids building all 16 when DOCS=true. Persistent
+      # TURBO_CACHE_DIR on Dedibox keeps repeats warm.
+      - name: Build (catalog deps)
+        run: |
+          extra=()
+          if [ "${RUNNER_ENVIRONMENT}" = "self-hosted" ]; then
+            extra+=(--cache-dir=/runner-cache/turbo)
+          fi
+          pnpm exec turbo run build \
+            --filter=@zedtech/zedkit-seo \
+            --filter=@zedtech/zedkit-ai \
+            --filter=@zedtech/zedkit-ui \
+            "${extra[@]}"
+      - run: pnpm run catalog:check
+      # Remaining package builds feed API report / pack; docs only when affected.
       - name: Build
         run: |
-          if [ "$DOCS" = "true" ]; then
-            pnpm exec turbo run build
-          else
-            pnpm exec turbo run build --filter='!@zedtech/zedkit-docs'
+          extra=()
+          if [ "${RUNNER_ENVIRONMENT}" = "self-hosted" ]; then
+            extra+=(--cache-dir=/runner-cache/turbo)
           fi
-      - run: pnpm run catalog:check
+          if [ "$DOCS" = "true" ]; then
+            pnpm exec turbo run build "${extra[@]}"
+          else
+            pnpm exec turbo run build --filter='!@zedtech/zedkit-docs' "${extra[@]}"
+          fi
       - run: bash scripts/check-api-report.sh
       - name: Docs static export SEO check
         if: env.DOCS == 'true'
@@ -168,7 +233,13 @@ jobs:
         run: node apps/docs/scripts/check-first-load-budget.mjs
       - run: bash scripts/check-pack.sh
       - run: bash scripts/check-e2e-registered.sh
-      - run: pnpm exec turbo run test ${FILTER:+"$FILTER"}
+      - name: test
+        run: |
+          extra=()
+          if [ "${RUNNER_ENVIRONMENT}" = "self-hosted" ]; then
+            extra+=(--cache-dir=/runner-cache/turbo)
+          fi
+          pnpm exec turbo run test ${FILTER:+"$FILTER"} "${extra[@]}"
       - name: Kit markdown prettier
         run: pnpm --filter @zedtech/zedkit-ai run kit:md
       # Workspace-wide thresholds, and it reruns every test: full path only.
@@ -187,16 +258,39 @@ jobs:
           path: coverage/
           if-no-files-found: ignore
           retention-days: 14
-      - run: pnpm test:registry
+      # deploy/* needs Docker + rsync; Dedibox runners drop privileges and
+      # do not mount docker.sock — keep those tests on github-hosted only.
+      - name: test:registry
+        if: runner.environment != 'self-hosted'
+        run: pnpm test:registry
+      - name: test:registry (exclude deploy/*)
+        if: runner.environment == 'self-hosted'
+        run: |
+          node --test \
+            scripts/registry/*.test.mjs \
+            scripts/dts-api-report.test.mjs \
+            scripts/check-api-report.test.mjs \
+            scripts/catalog-states.test.mjs \
+            scripts/catalog-maturity.test.mjs \
+            scripts/catalog-adoption.test.mjs \
+            scripts/adoption-shown-commands.test.mjs \
+            scripts/coverage-summary.test.mjs \
+            scripts/release-tags-wait.test.mjs \
+            scripts/require-green-ci.test.mjs \
+            scripts/ci-affected.test.mjs \
+            apps/docs/scripts/*.test.mjs
       # Gallery smoke: real chromium over the built ui gallery (both
       # themes, zero console errors), screenshots kept as artifacts.
       - uses: actions/cache@v6
-        if: needs.changes.outputs.ui == 'true'
+        if: needs.changes.outputs.ui == 'true' && runner.environment != 'self-hosted'
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm exec playwright install --with-deps chromium
-        if: needs.changes.outputs.ui == 'true'
+        if: needs.changes.outputs.ui == 'true' && runner.environment != 'self-hosted'
+      - name: Playwright browsers (image)
+        if: needs.changes.outputs.ui == 'true' && runner.environment == 'self-hosted'
+        run: bash scripts/ci-dedibox-cache.sh playwright
       - run: pnpm --filter @zedtech/zedkit-ui smoke
         if: needs.changes.outputs.ui == 'true'
       - uses: actions/upload-artifact@v7
@@ -204,6 +298,7 @@ jobs:
         with:
           name: ui-gallery
           path: packages/ui/test-results/*.png
+          if-no-files-found: ignore
       # Versioning dry-run only: proves the Changesets metadata is sane.
       # Skipped on the Version PR itself: it consumed the changesets, so
       # `status` always reports "changed packages, no changesets" there.
@@ -218,68 +313,174 @@ jobs:
           else
             pnpm run changeset:status
           fi
+      - name: Cache disk report
+        if: always() && runner.environment == 'self-hosted'
+        run: bash scripts/ci-dedibox-cache.sh disk-report
 
   registry-smoke:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    needs: changes
-    if: needs.changes.outputs.registry == 'true' && needs.changes.outputs.workflow_only != 'true'
-    steps:
-      - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm registry:build
-      - run: pnpm registry:smoke
-
-  quickstart-smoke:
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name == 'pull_request' && github.base_ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","dedibox"]') || 'ubuntu-latest' }}
     timeout-minutes: 15
     needs: changes
     if: needs.changes.outputs.registry == 'true' && needs.changes.outputs.workflow_only != 'true'
     steps:
+      - name: Dedibox runner env
+        if: runner.environment == 'self-hosted'
+        run: |
+          mkdir -p /runner-cache/{pnpm,nm,tsbuildinfo,eslint,turbo,npm,xdg}
+          {
+            echo "PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright"
+            echo "npm_config_store_dir=/runner-cache/pnpm"
+            echo "npm_config_cache=/runner-cache/npm"
+            echo "TURBO_CACHE_DIR=/runner-cache/turbo"
+            echo "RUNNER_TOOL_CACHE=/tmp/runner-tool-cache"
+            echo "XDG_CACHE_HOME=/runner-cache/xdg"
+            echo "TURBO_CONCURRENCY=4"
+            echo "VITEST_MAX_WORKERS=4"
+            echo "VITEST_MAX_FORKS=4"
+          } >> "$GITHUB_ENV"
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
       - uses: actions/setup-node@v7
+        if: runner.environment != 'self-hosted'
         with:
           node-version: 22
           cache: pnpm
+      - uses: actions/setup-node@v7
+        if: runner.environment == 'self-hosted'
+        with:
+          node-version: 22
+          package-manager-cache: false
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec turbo run build --filter=@zedtech/zedkit-ui
+        if: runner.environment != 'self-hosted'
+      - name: pnpm install (store + nm archive)
+        if: runner.environment == 'self-hosted'
+        run: bash scripts/ci-dedibox-cache.sh install
       - run: pnpm registry:build
-      - run: bash scripts/quickstart-smoke.sh
+      # quickstart-smoke.sh runs playwright install --with-deps when CI is set,
+      # which needs sudo. Dedibox no-new-privileges blocks sudo; browsers are
+      # in the runner image. Strip --with-deps on self-hosted only.
+      - name: Playwright browsers (image)
+        if: runner.environment == 'self-hosted'
+        run: bash scripts/ci-dedibox-cache.sh playwright
+      - name: registry smoke
+        run: |
+          if [ "${RUNNER_ENVIRONMENT}" = "self-hosted" ]; then
+            # shellcheck disable=SC2016
+            sed -i 's/${CI:+--with-deps}//' scripts/quickstart-smoke.sh
+          fi
+          pnpm registry:smoke
+
+  quickstart-smoke:
+    runs-on: ${{ (github.event_name == 'pull_request' && github.base_ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","dedibox"]') || 'ubuntu-latest' }}
+    timeout-minutes: 15
+    needs: changes
+    if: needs.changes.outputs.registry == 'true' && needs.changes.outputs.workflow_only != 'true'
+    steps:
+      - name: Dedibox runner env
+        if: runner.environment == 'self-hosted'
+        run: |
+          mkdir -p /runner-cache/{pnpm,nm,tsbuildinfo,eslint,turbo,npm,xdg}
+          {
+            echo "PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright"
+            echo "npm_config_store_dir=/runner-cache/pnpm"
+            echo "npm_config_cache=/runner-cache/npm"
+            echo "TURBO_CACHE_DIR=/runner-cache/turbo"
+            echo "RUNNER_TOOL_CACHE=/tmp/runner-tool-cache"
+            echo "XDG_CACHE_HOME=/runner-cache/xdg"
+            echo "TURBO_CONCURRENCY=4"
+          } >> "$GITHUB_ENV"
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@v7
+        if: runner.environment != 'self-hosted'
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: actions/setup-node@v7
+        if: runner.environment == 'self-hosted'
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - run: pnpm install --frozen-lockfile
+        if: runner.environment != 'self-hosted'
+      - name: pnpm install (store + nm archive)
+        if: runner.environment == 'self-hosted'
+        run: bash scripts/ci-dedibox-cache.sh install
+      - name: Build UI
+        run: |
+          extra=()
+          if [ "${RUNNER_ENVIRONMENT}" = "self-hosted" ]; then
+            extra+=(--cache-dir=/runner-cache/turbo)
+          fi
+          pnpm exec turbo run build --filter=@zedtech/zedkit-ui "${extra[@]}"
+      - run: pnpm registry:build
+      - name: Playwright browsers (image)
+        if: runner.environment == 'self-hosted'
+        run: bash scripts/ci-dedibox-cache.sh playwright
+      - name: quickstart smoke
+        run: |
+          if [ "${RUNNER_ENVIRONMENT}" = "self-hosted" ]; then
+            # shellcheck disable=SC2016
+            sed -i 's/${CI:+--with-deps}//' scripts/quickstart-smoke.sh
+          fi
+          bash scripts/quickstart-smoke.sh
 
   # Follows the adoption instructions the site shows (home, getting-started, component pages), and nothing else,
   # in clean Next.js projects: install Button, copy Button and Drawer by CLI and by hand, Theme, Motion, the
   # getting-started package adds, plus a negative control that must fail. Not in ci-required until it has been
   # stable on main for a while.
   adoption-smoke:
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name == 'pull_request' && github.base_ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","dedibox"]') || 'ubuntu-latest' }}
     timeout-minutes: 30
     needs: changes
     if: needs.changes.outputs.registry == 'true' && needs.changes.outputs.workflow_only != 'true'
     steps:
+      - name: Dedibox runner env
+        if: runner.environment == 'self-hosted'
+        run: |
+          mkdir -p /runner-cache/{pnpm,nm,tsbuildinfo,eslint,turbo,npm,xdg}
+          {
+            echo "PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright"
+            echo "npm_config_store_dir=/runner-cache/pnpm"
+            echo "npm_config_cache=/runner-cache/npm"
+            echo "TURBO_CACHE_DIR=/runner-cache/turbo"
+            echo "RUNNER_TOOL_CACHE=/tmp/runner-tool-cache"
+            echo "XDG_CACHE_HOME=/runner-cache/xdg"
+            echo "TURBO_CONCURRENCY=4"
+          } >> "$GITHUB_ENV"
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
       - uses: actions/setup-node@v7
+        if: runner.environment != 'self-hosted'
         with:
           node-version: 22
           cache: pnpm
+      - uses: actions/setup-node@v7
+        if: runner.environment == 'self-hosted'
+        with:
+          node-version: 22
+          package-manager-cache: false
       - run: pnpm install --frozen-lockfile
+        if: runner.environment != 'self-hosted'
+      - name: pnpm install (store + nm archive)
+        if: runner.environment == 'self-hosted'
+        run: bash scripts/ci-dedibox-cache.sh install
       - run: pnpm registry:build
       - uses: actions/cache@v6
+        if: runner.environment != 'self-hosted'
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm exec playwright install --with-deps chromium
+        if: runner.environment != 'self-hosted'
+      - name: Playwright browsers (image)
+        if: runner.environment == 'self-hosted'
+        run: bash scripts/ci-dedibox-cache.sh playwright
       - run: pnpm adoption:smoke
 
   docs-e2e-shard:
     name: docs-e2e-shard (${{ matrix.shard }}/3)
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name == 'pull_request' && github.base_ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","dedibox"]') || 'ubuntu-latest' }}
     timeout-minutes: 35
     needs: changes
     if: needs.changes.outputs.docs == 'true' && needs.changes.outputs.workflow_only != 'true'
@@ -288,19 +489,53 @@ jobs:
       matrix:
         shard: [1, 2, 3]
     steps:
+      - name: Dedibox runner env
+        if: runner.environment == 'self-hosted'
+        run: |
+          mkdir -p /runner-cache/{pnpm,nm,tsbuildinfo,eslint,turbo,npm,xdg}
+          {
+            echo "PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright"
+            echo "npm_config_store_dir=/runner-cache/pnpm"
+            echo "npm_config_cache=/runner-cache/npm"
+            echo "TURBO_CACHE_DIR=/runner-cache/turbo"
+            echo "RUNNER_TOOL_CACHE=/tmp/runner-tool-cache"
+            echo "XDG_CACHE_HOME=/runner-cache/xdg"
+            echo "TURBO_CONCURRENCY=4"
+          } >> "$GITHUB_ENV"
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
       - uses: actions/setup-node@v7
+        if: runner.environment != 'self-hosted'
         with:
           node-version: 22
           cache: pnpm
+      - uses: actions/setup-node@v7
+        if: runner.environment == 'self-hosted'
+        with:
+          node-version: 22
+          package-manager-cache: false
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec turbo run build --filter=@zedtech/zedkit-docs
+        if: runner.environment != 'self-hosted'
+      - name: pnpm install (store + nm archive)
+        if: runner.environment == 'self-hosted'
+        run: bash scripts/ci-dedibox-cache.sh install
+      - name: Build docs
+        run: |
+          extra=()
+          if [ "${RUNNER_ENVIRONMENT}" = "self-hosted" ]; then
+            extra+=(--cache-dir=/runner-cache/turbo)
+          fi
+          pnpm exec turbo run build --filter=@zedtech/zedkit-docs "${extra[@]}"
       - uses: actions/cache@v6
+        if: runner.environment != 'self-hosted'
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm exec playwright install --with-deps chromium
+        if: runner.environment != 'self-hosted'
+      - name: Playwright browsers (image)
+        if: runner.environment == 'self-hosted'
+        run: bash scripts/ci-dedibox-cache.sh playwright
       - run: |
           pnpm dlx serve@14.2.6 apps/docs/out -l 3100 >/tmp/docs-e2e.log 2>&1 &
           echo $! > /tmp/docs-e2e.pid
@@ -319,24 +554,58 @@ jobs:
   # Sitemap sweep (100+ routes × axe views) lives outside the shards: it alone
   # can exceed a 20-minute job since #1203 grew the route list and e2e count.
   docs-e2e-routes:
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name == 'pull_request' && github.base_ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","dedibox"]') || 'ubuntu-latest' }}
     timeout-minutes: 25
     needs: changes
     if: needs.changes.outputs.docs == 'true' && needs.changes.outputs.workflow_only != 'true'
     steps:
+      - name: Dedibox runner env
+        if: runner.environment == 'self-hosted'
+        run: |
+          mkdir -p /runner-cache/{pnpm,nm,tsbuildinfo,eslint,turbo,npm,xdg}
+          {
+            echo "PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright"
+            echo "npm_config_store_dir=/runner-cache/pnpm"
+            echo "npm_config_cache=/runner-cache/npm"
+            echo "TURBO_CACHE_DIR=/runner-cache/turbo"
+            echo "RUNNER_TOOL_CACHE=/tmp/runner-tool-cache"
+            echo "XDG_CACHE_HOME=/runner-cache/xdg"
+            echo "TURBO_CONCURRENCY=4"
+          } >> "$GITHUB_ENV"
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
       - uses: actions/setup-node@v7
+        if: runner.environment != 'self-hosted'
         with:
           node-version: 22
           cache: pnpm
+      - uses: actions/setup-node@v7
+        if: runner.environment == 'self-hosted'
+        with:
+          node-version: 22
+          package-manager-cache: false
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec turbo run build --filter=@zedtech/zedkit-docs
+        if: runner.environment != 'self-hosted'
+      - name: pnpm install (store + nm archive)
+        if: runner.environment == 'self-hosted'
+        run: bash scripts/ci-dedibox-cache.sh install
+      - name: Build docs
+        run: |
+          extra=()
+          if [ "${RUNNER_ENVIRONMENT}" = "self-hosted" ]; then
+            extra+=(--cache-dir=/runner-cache/turbo)
+          fi
+          pnpm exec turbo run build --filter=@zedtech/zedkit-docs "${extra[@]}"
       - uses: actions/cache@v6
+        if: runner.environment != 'self-hosted'
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm exec playwright install --with-deps chromium
+        if: runner.environment != 'self-hosted'
+      - name: Playwright browsers (image)
+        if: runner.environment == 'self-hosted'
+        run: bash scripts/ci-dedibox-cache.sh playwright
       - run: |
           pnpm dlx serve@14.2.6 apps/docs/out -l 3100 >/tmp/docs-e2e.log 2>&1 &
           echo $! > /tmp/docs-e2e.pid
@@ -363,27 +632,61 @@ jobs:
           test "${{ needs.docs-e2e-routes.result }}" = "success"
 
   docs-smoke:
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name == 'pull_request' && github.base_ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","dedibox"]') || 'ubuntu-latest' }}
     timeout-minutes: 20
     needs: changes
     if: needs.changes.outputs.docs == 'true' && needs.changes.outputs.workflow_only != 'true'
     steps:
+      - name: Dedibox runner env
+        if: runner.environment == 'self-hosted'
+        run: |
+          mkdir -p /runner-cache/{pnpm,nm,tsbuildinfo,eslint,turbo,npm,xdg}
+          {
+            echo "PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright"
+            echo "npm_config_store_dir=/runner-cache/pnpm"
+            echo "npm_config_cache=/runner-cache/npm"
+            echo "TURBO_CACHE_DIR=/runner-cache/turbo"
+            echo "RUNNER_TOOL_CACHE=/tmp/runner-tool-cache"
+            echo "XDG_CACHE_HOME=/runner-cache/xdg"
+            echo "TURBO_CONCURRENCY=4"
+          } >> "$GITHUB_ENV"
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
       - uses: actions/setup-node@v7
+        if: runner.environment != 'self-hosted'
         with:
           node-version: 22
           cache: pnpm
+      - uses: actions/setup-node@v7
+        if: runner.environment == 'self-hosted'
+        with:
+          node-version: 22
+          package-manager-cache: false
       - run: pnpm install --frozen-lockfile
+        if: runner.environment != 'self-hosted'
+      - name: pnpm install (store + nm archive)
+        if: runner.environment == 'self-hosted'
+        run: bash scripts/ci-dedibox-cache.sh install
       # Scoped build (turbo builds workspace deps first), then serve the
       # static export (apps/docs/out, same files Caddy serves in prod)
       # and prove the home renders with live demos.
-      - run: pnpm exec turbo run build --filter=@zedtech/zedkit-docs
+      - name: Build docs
+        run: |
+          extra=()
+          if [ "${RUNNER_ENVIRONMENT}" = "self-hosted" ]; then
+            extra+=(--cache-dir=/runner-cache/turbo)
+          fi
+          pnpm exec turbo run build --filter=@zedtech/zedkit-docs "${extra[@]}"
       - uses: actions/cache@v6
+        if: runner.environment != 'self-hosted'
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm exec playwright install --with-deps chromium
+        if: runner.environment != 'self-hosted'
+      - name: Playwright browsers (image)
+        if: runner.environment == 'self-hosted'
+        run: bash scripts/ci-dedibox-cache.sh playwright
       - run: |
           pnpm dlx serve@14.2.6 apps/docs/out -l 3100 >/tmp/docs-start.log 2>&1 &
           echo $! > /tmp/docs.pid
@@ -398,10 +701,15 @@ jobs:
           curl -sf -o /dev/null http://127.0.0.1:3100/robots.txt
           curl -sf -o /dev/null http://127.0.0.1:3100/sitemap.xml
           curl -sf -o /dev/null http://127.0.0.1:3100/llms.txt
-          pnpm --filter @zedtech/zedkit-docs run smoke
+          if [ "${RUNNER_ENVIRONMENT}" = "self-hosted" ]; then
+            pnpm --filter @zedtech/zedkit-docs run smoke -- --workers=1 --retries=2
+          else
+            pnpm --filter @zedtech/zedkit-docs run smoke
+          fi
           kill "$(cat /tmp/docs.pid)"
         env:
           DOCS_E2E_PROJECT: chromium
+          DOCS_E2E_EXPECT_TIMEOUT: ${{ runner.environment == 'self-hosted' && '30000' || '' }}
       - uses: actions/upload-artifact@v7
         if: success()
         with:

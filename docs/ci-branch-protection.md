@@ -20,6 +20,15 @@ packages and their dependents, the docs and registry jobs run only when
 `scripts/ci-affected.mjs` finds a relevant path, and the workspace-wide
 coverage run is skipped. Skipped jobs are what `ci-required` accepts.
 
+**Same-repo PRs into `dev`** run the heavy jobs (`checks`, `registry-smoke`,
+`quickstart-smoke`, `adoption-smoke`, `docs-e2e-shard`, `docs-e2e-routes`,
+`docs-smoke`) on the Dedibox self-hosted runner (`[self-hosted, dedibox]`),
+with persistent `/runner-cache` (pnpm store, turbo, tsbuildinfo, eslint) and
+Playwright from the runner image. Job **names** stay neutral (`checks`, not
+`checks-dedibox`) so `ci-required` and the ruleset do not change. Fork PRs,
+PRs into `main`, and pushes stay on `ubuntu-latest`. The former trial
+workflow `ci-dedibox-trial.yml` was removed once this path landed in `ci.yml`.
+
 | Check | Role |
 | --- | --- |
 | `ci-required` | Aggregate gate: hygiene + checks + registry-smoke + docs-e2e + docs-smoke |
