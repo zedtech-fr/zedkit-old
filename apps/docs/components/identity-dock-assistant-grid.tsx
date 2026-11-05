@@ -13,6 +13,7 @@ import { ReferenceReportList } from "@/components/identity-references";
 import type { Unavailable } from "@/lib/identity-assistant";
 import type { SessionState } from "@/lib/identity-creator-session";
 import type { IdentityTokens } from "@zedtech/zedkit-ui";
+import type { SpecimenDomain } from "@/lib/brief-specimen-domain";
 
 import type { ApplySiteHandlers, ApplySiteTokenHandlers } from "@/components/identity-apply-site-row";
 
@@ -28,6 +29,7 @@ function DockAssistantPreviewColumn(props: {
   proposal: SessionState["proposal"];
   previewTokens: IdentityTokens;
   domainBrief: string;
+  previewDomain?: SpecimenDomain;
   busy: boolean;
   references: SessionState["references"];
   narrowSplit: boolean | undefined;
@@ -44,6 +46,7 @@ function DockAssistantPreviewColumn(props: {
         proposal={props.proposal}
         tokens={props.previewTokens}
         domainBrief={props.domainBrief}
+        previewDomain={props.previewDomain}
         busy={props.busy}
         onUse={props.onUse}
         onDiscard={props.onDiscard}
@@ -107,6 +110,7 @@ type IdentityDockAssistantGridProps = {
   busy: boolean;
   previewTokens: IdentityTokens;
   domainBrief: string;
+  previewDomain?: SpecimenDomain;
   narrowSplit?: boolean;
   inputRef: RefObject<HTMLTextAreaElement | null>;
   onBrief: (brief: string) => void;
@@ -142,6 +146,7 @@ export function IdentityDockAssistantGrid(props: IdentityDockAssistantGridProps)
         proposal={props.session.proposal}
         previewTokens={props.previewTokens}
         domainBrief={props.domainBrief}
+        previewDomain={props.previewDomain}
         busy={props.busy}
         references={props.session.references}
         narrowSplit={props.narrowSplit}

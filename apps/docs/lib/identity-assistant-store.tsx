@@ -14,6 +14,8 @@ import {
 } from "react";
 import type { IdentityTokens } from "@zedtech/zedkit-ui";
 
+import { type SpecimenDomain } from "@/lib/brief-specimen-domain";
+
 import type { AssistantStatus } from "@/lib/identity-assistant";
 import { initialSession, sessionReducer, type SessionAction, type SessionState } from "@/lib/identity-creator-session";
 import {
@@ -35,6 +37,8 @@ type IdentityAssistantStore = {
   setBrief: (value: string) => void;
   previewTokens: IdentityTokens | null;
   setPreviewTokens: (tokens: IdentityTokens | null) => void;
+  previewDomain: SpecimenDomain | null;
+  setPreviewDomain: (domain: SpecimenDomain | null) => void;
   expanded: boolean;
   setExpanded: (open: boolean) => void;
   toggleExpanded: () => void;
@@ -62,7 +66,13 @@ function usePersistedPreviewTokens(boot: IdentityDockPersistRead) {
   return { previewTokens, setPreviewTokens, tokensReady };
 }
 
-function usePersistDock(session: SessionState, brief: string, previewTokens: IdentityTokens | null, tokensReady: boolean) {
+function usePersistDock(
+  session: SessionState,
+  brief: string,
+  previewTokens: IdentityTokens | null,
+  tokensReady: boolean,
+  previewDomain: SpecimenDomain | null,
+) {
   useEffect(() => {
     if (!tokensReady) return;
     const empty =
@@ -72,13 +82,19 @@ function usePersistDock(session: SessionState, brief: string, previewTokens: Ide
       session.pending === null &&
       session.notice === null &&
       session.references.length === 0 &&
-      previewTokens === null;
+      previewTokens === null &&
+      previewDomain === null;
     if (empty) {
       clearIdentityDockPersist();
       return;
     }
-    writeIdentityDockPersist({ session, brief, ...(previewTokens ? { previewTokens } : {}) });
-  }, [session, brief, previewTokens, tokensReady]);
+    writeIdentityDockPersist({
+      session,
+      brief,
+      ...(previewTokens ? { previewTokens } : {}),
+      ...(previewDomain ? { previewDomain } : {}),
+    });
+  }, [session, brief, previewTokens, tokensReady, previewDomain]);
 }
 
 function IdentityAssistantStoreProvider({ children }: { children: ReactNode }) {
@@ -86,6 +102,7 @@ function IdentityAssistantStoreProvider({ children }: { children: ReactNode }) {
   const [session, dispatch] = useReducer(sessionReducer, boot.session ?? initialSession);
   const [brief, setBrief] = useState(boot.brief ?? "");
   const { previewTokens, setPreviewTokens, tokensReady } = usePersistedPreviewTokens(boot);
+  const [previewDomain, setPreviewDomain] = useState<SpecimenDomain | null>(boot.previewDomain ?? null);
   const [expanded, setExpanded] = useState(false);
   const [status, setStatus] = useState<AssistantStatus | null>(null);
   const live = useRef({ thread: session.thread });
@@ -95,7 +112,7 @@ function IdentityAssistantStoreProvider({ children }: { children: ReactNode }) {
     live.current.thread = session.thread;
   }, [session.thread]);
 
-  usePersistDock(session, brief, previewTokens, tokensReady);
+  usePersistDock(session, brief, previewTokens, tokensReady, previewDomain);
 
   const ensureAssistantStatus = useCallback(() => {
     const stop = new AbortController();
@@ -123,12 +140,14 @@ function IdentityAssistantStoreProvider({ children }: { children: ReactNode }) {
       setBrief,
       previewTokens,
       setPreviewTokens,
+      previewDomain,
+      setPreviewDomain,
       expanded,
       setExpanded,
       toggleExpanded,
       ensureAssistantStatus,
     }),
-    [session, status, submit, cancel, brief, previewTokens, expanded, toggleExpanded, ensureAssistantStatus],
+    [session, status, submit, cancel, brief, previewTokens, previewDomain, expanded, toggleExpanded, ensureAssistantStatus],
   );
 
   return <IdentityAssistantStoreContext.Provider value={value}>{children}</IdentityAssistantStoreContext.Provider>;

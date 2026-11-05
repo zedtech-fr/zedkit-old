@@ -108,6 +108,59 @@ test.describe("IdentityDock", () => {
     expect(posts[1]!.current.radius).toBe("0.875rem");
   });
 
+  test("accepted newsroom preview keeps the editorial specimen after reload", async ({ page }) => {
+    const proposed = {
+      spacing: "0.25rem",
+      borderWidth: "1px",
+      radius: "0.875rem",
+      bodyLeading: "1.55",
+      headingLeading: "1.1",
+      headingTracking: "-0.02em",
+      labelTracking: "0.025em",
+      fontSans: '"Inter Variable", Inter, "Inter Variable Fallback", ui-sans-serif, system-ui, sans-serif',
+      fontDisplay: '"Inter Variable", Inter, "Inter Variable Fallback", ui-sans-serif, system-ui, sans-serif',
+      light: { background: "0 0% 100%", foreground: "240 10% 3.9%", primary: "240 5.9% 10%", primaryForeground: "0 0% 98%", accent: "240 4.8% 59.9%", border: "240 5.9% 60%", mutedForeground: "240 5% 32%" },
+      dark: { background: "240 10% 3.9%", foreground: "0 0% 98%", primary: "0 0% 98%", primaryForeground: "240 5.9% 10%", accent: "240 3.7% 37.9%", border: "240 3.7% 37.9%", mutedForeground: "240 5% 64.9%" },
+      shadowSm: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+      shadowMd: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+    };
+    await page.route(SERVICE, async (route) => {
+      if (route.request().method() !== "POST") {
+        await route.fallback();
+        return;
+      }
+      const posted = route.request().postDataJSON() as { requestId: string };
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        json: { requestId: posted.requestId, summary: "Editorial.", changed: ["radius"], references: [], tokens: proposed },
+      });
+    });
+    await page.route(`${SERVICE}/status`, (route) =>
+      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ available: true }) }),
+    );
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.keyboard.press("Control+I");
+    await brief(page).fill("I run a daily newspaper");
+    await page.getByRole("button", { name: "Generate", exact: true }).click();
+    await expect(page.locator("[data-assistant-proposal] [data-specimen-domain=editorial]")).toBeVisible();
+    await expect(page.locator("[data-assistant-proposal]")).toContainText("North Ledger");
+    await page.getByRole("button", { name: "Use this look" }).click();
+    await page.getByRole("button", { name: "Preview" }).click();
+    await expect(page.locator("[data-assistant-pane=preview] [data-specimen-domain=editorial]")).toBeVisible();
+    await expect(page.locator("[data-assistant-pane=preview]")).toContainText("North Ledger");
+    const stored = await page.evaluate(() => {
+      const raw = window.localStorage.getItem("zk-identity-dock-v2");
+      return raw ? (JSON.parse(raw) as { previewDomain?: string }).previewDomain : null;
+    });
+    expect(stored).toBe("editorial");
+    await page.reload({ waitUntil: "networkidle" });
+    await page.keyboard.press("Control+I");
+    await page.getByRole("button", { name: "Preview" }).click();
+    await expect(page.locator("[data-assistant-pane=preview] [data-specimen-domain=editorial]")).toBeVisible();
+    await expect(page.locator("[data-assistant-pane=preview]")).toContainText("North Ledger");
+  });
+
   test("after accepting a look, export rows copy install, CSS, and AI prompt", async ({ page, context }) => {
     const proposed = {
       spacing: "0.25rem",

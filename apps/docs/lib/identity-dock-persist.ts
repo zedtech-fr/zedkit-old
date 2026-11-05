@@ -1,6 +1,7 @@
 import { tryCatch } from "@zedtech/zedkit-core";
 import type { IdentityTokens } from "@zedtech/zedkit-ui";
 
+import { isSpecimenDomain, type SpecimenDomain } from "./brief-specimen-domain.ts";
 import { initialSession, type SessionState } from "./identity-creator-session.ts";
 
 /** Current persisted dock state (localStorage). */
@@ -23,6 +24,8 @@ export type IdentityDockPersist = {
   brief: string;
   /** Last identity the visitor accepted in the dock; restored on reload for the next tweak. */
   previewTokens?: IdentityTokens;
+  /** Specimen domain accepted with those tokens; kept even if thread trim drops the original brief. */
+  previewDomain?: SpecimenDomain;
 };
 
 /**
@@ -51,6 +54,9 @@ function parsePersistBlob(raw: string | null): IdentityDockPersistRead {
   if (typeof brief === "string") out.brief = brief;
   if (parsed.value.previewTokens !== undefined && parsed.value.previewTokens !== null) {
     out.previewTokensRaw = parsed.value.previewTokens;
+  }
+  if (isSpecimenDomain(parsed.value.previewDomain)) {
+    out.previewDomain = parsed.value.previewDomain;
   }
   return out;
 }
@@ -86,12 +92,14 @@ export function encodeIdentityDockPersist(data: IdentityDockPersist): string {
   let session = trimSessionForPersist(data.session);
   let brief = data.brief;
   let previewTokens = data.previewTokens;
+  const previewDomain = data.previewDomain;
 
   const pack = () =>
     JSON.stringify({
       session,
       brief,
       ...(previewTokens ? { previewTokens } : {}),
+      ...(previewDomain ? { previewDomain } : {}),
     });
 
   let json = pack();

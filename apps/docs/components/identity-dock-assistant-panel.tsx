@@ -9,6 +9,7 @@ import { IdentityDockComposerFooter } from "@/components/identity-dock-composer-
 import { IdentityDockExportBlock } from "@/components/identity-dock-export-block";
 import { IdentityDockPanelToolbar } from "@/components/identity-dock-panel-toolbar";
 import { useIdentityDockAssistantPanel } from "@/components/use-identity-dock-assistant-panel";
+import { specimenDomainFromBrief, type SpecimenDomain } from "@/lib/brief-specimen-domain";
 import { applyWidgetSpecimenPreview } from "@/lib/identity-widget-specimen-preview";
 import { dispatchIdentityEditorDraftApply } from "@/lib/identity-editor-draft-apply";
 import { repairContrast } from "@/lib/identity-contrast-repair";
@@ -22,12 +23,15 @@ import type { IdentityTokens } from "@zedtech/zedkit-ui";
 function acceptProposal(
   backToConversation: (action: () => void) => void,
   onPreviewTokens: (tokens: IdentityTokens) => void,
+  onPreviewDomain: (domain: SpecimenDomain) => void,
   dispatch: (action: { type: "accept" }) => void,
   setBrief: (value: string) => void,
   next: IdentityTokens,
+  domain: SpecimenDomain,
 ) {
   backToConversation(() => {
     onPreviewTokens(next);
+    onPreviewDomain(domain);
     applyWidgetSpecimenPreview(next);
     if (typeof window !== "undefined" && window.location.pathname === IDENTITY_EDITOR_HREF) {
       dispatchIdentityEditorDraftApply(next);
@@ -68,6 +72,8 @@ function IdentityDockPanelScroll(props: {
   busy: boolean;
   previewTokens: IdentityTokens;
   domainBrief: string;
+  previewDomain: SpecimenDomain | null;
+  setPreviewDomain: (domain: SpecimenDomain | null) => void;
   inputRef: RefObject<HTMLTextAreaElement | null>;
   setBrief: (value: string) => void;
   send: () => void;
@@ -96,13 +102,14 @@ function IdentityDockPanelScroll(props: {
         busy={props.busy}
         previewTokens={props.previewTokens}
         domainBrief={props.domainBrief}
+        previewDomain={props.previewDomain ?? undefined}
         narrowSplit={!props.viewSwitchAlways}
         inputRef={props.inputRef}
         onBrief={props.setBrief}
         onSubmit={props.send}
         onQuickRefine={props.quickRefine}
         onCancel={props.cancel}
-        onUse={(next) => acceptProposal(props.backToConversation, props.onPreviewTokens, props.dispatch, props.setBrief, next)}
+        onUse={(next) => acceptProposal(props.backToConversation, props.onPreviewTokens, props.setPreviewDomain, props.dispatch, props.setBrief, next, specimenDomainFromBrief(props.domainBrief))}
         onDiscard={() => props.backToConversation(() => props.dispatch({ type: "discard" }))}
         hideComposer
         siteApply={props.siteApply}
@@ -147,6 +154,8 @@ export function IdentityDockAssistantPanel({
         busy={panel.busy}
         previewTokens={previewTokens}
         domainBrief={panel.domainBrief}
+        previewDomain={panel.previewDomain}
+        setPreviewDomain={panel.setPreviewDomain}
         inputRef={panel.ui.field}
         setBrief={panel.setBrief}
         send={panel.send}
