@@ -57,8 +57,8 @@ jobs:
             printf '%s=%s\n' IDENTITY_AI_PRICE_OUTPUT_USD_PER_MTOK "$IDENTITY_AI_DEV_PRICE_OUTPUT_USD_PER_MTOK"
           } > deploy/suggest-dev.env
           chmod 600 deploy/suggest-dev.env
-      - name: Configure SSH to Dedibox
-        # Reuse DOCS_DEPLOY_KEY (the docs-ci pubkey is authorized on dedibox).
+      - name: Configure SSH to deploy host
+        # Reuse DOCS_DEPLOY_KEY (the docs-ci pubkey is authorized on the deploy host).
         # Do not use DOCS_DEPLOY_HOST / DOCS_DEPLOY_USER / DOCS_DEPLOY_KNOWN_HOSTS:
         # those still point at the production docs VM (zedkit.app).
         env:
@@ -68,15 +68,15 @@ jobs:
           printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           printf '%s\n' '195.154.208.75 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDPESq5xmwyuPt3alDGhEe9fE3oOmCDPBt70I8hhylnE' > ~/.ssh/known_hosts
-          printf 'Host dedibox-dev\n  HostName 195.154.208.75\n  User zed\n  IdentityFile ~/.ssh/deploy_key\n  IdentitiesOnly yes\n' > ~/.ssh/config
-      - name: Publish docs on Dedibox
+          printf 'Host zed-dev\n  HostName 195.154.208.75\n  User zed\n  IdentityFile ~/.ssh/deploy_key\n  IdentitiesOnly yes\n' > ~/.ssh/config
+      - name: Publish docs on deploy host
         run: |
-          scp deploy/suggest-dev.env dedibox-dev:/data/work/secrets/zedkit-suggest-dev.env
-          ssh dedibox-dev 'chmod 600 /data/work/secrets/zedkit-suggest-dev.env'
+          scp deploy/suggest-dev.env zed-dev:/data/work/secrets/zedkit-suggest-dev.env
+          ssh zed-dev 'chmod 600 /data/work/secrets/zedkit-suggest-dev.env'
           # Client-side expansion of DEV_SHA is intentional (GHA env -> remote argv).
           # shellcheck disable=SC2029
-          ssh dedibox-dev "/data/work/infra/deploy-zedkit-dev.sh $DEV_SHA"
-          ssh dedibox-dev 'cd /data/work/infra && docker compose up -d --force-recreate zedkit-suggest-dev'
+          ssh zed-dev "/data/work/infra/deploy-zedkit-dev.sh $DEV_SHA"
+          ssh zed-dev 'cd /data/work/infra && docker compose up -d --force-recreate zedkit-suggest-dev'
       - name: Verify dev build stamp
         run: |
           for _ in $(seq 1 8); do
@@ -91,12 +91,12 @@ jobs:
       - name: Dev suggest diagnostics
         if: always()
         run: |
-          ssh dedibox-dev 'cd /data/work/infra && docker compose ps -a zedkit-suggest-dev && docker compose logs --no-color --tail 30 zedkit-suggest-dev' || true
+          ssh zed-dev 'cd /data/work/infra && docker compose ps -a zedkit-suggest-dev && docker compose logs --no-color --tail 30 zedkit-suggest-dev' || true
           curl -s -w ' [%{http_code}]\n' https://dev.zedkit.app/api/identity/suggest/status || true
       - name: Refuse deploy when suggest-dev rejects the provider key
         if: success()
         run: |
-          if ssh dedibox-dev 'cd /data/work/infra && docker compose logs --no-color --tail 200 zedkit-suggest-dev' | grep -q 'invalid_api_key'; then
+          if ssh zed-dev 'cd /data/work/infra && docker compose logs --no-color --tail 200 zedkit-suggest-dev' | grep -q 'invalid_api_key'; then
             echo "suggest-dev logs show invalid_api_key: fix repository secret IDENTITY_AI_DEV_API_KEY (and matching IDENTITY_AI_BASE_URL) then redeploy." >&2
             exit 1
           fi
