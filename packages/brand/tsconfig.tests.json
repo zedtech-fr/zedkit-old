@@ -3,8 +3,19 @@
   "compilerOptions": {
     "noEmit": true,
     "rootDir": ".",
-    "lib": ["ES2022", "DOM"],
-    "types": ["vitest/globals", "node"]
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
+    "types": [
+      "vitest/globals",
+      "node"
+    ],
+    "incremental": true,
+    "tsBuildInfoFile": "tsconfig.tests.tsbuildinfo"
   },
-  "include": ["src", "tests"]
+  "include": [
+    "src",
+    "tests"
+  ]
 }
