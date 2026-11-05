@@ -129,7 +129,7 @@ function DrawerContent({
       className={className}
       modal={modal}
       size={size}
-      initialFocus={initialFocus}
+      {...(initialFocus !== undefined ? { initialFocus } : {})}
       ref={ref}
       {...props}
     >
