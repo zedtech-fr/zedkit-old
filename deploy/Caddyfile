@@ -28,8 +28,9 @@ zedkit.app {
 		}
 		reverse_proxy suggest:3001 {
 			transport http {
-				read_timeout 90s
-				write_timeout 90s
+				# Above the suggest provider budget (max 180s) plus reference fetch (max 15s).
+				read_timeout 240s
+				write_timeout 240s
 			}
 		}
 	}
@@ -82,8 +83,9 @@ dev.zedkit.app {
 		}
 		reverse_proxy suggest-dev:3001 {
 			transport http {
-				read_timeout 90s
-				write_timeout 90s
+				# Above the suggest provider budget (max 180s) plus reference fetch (max 15s).
+				read_timeout 240s
+				write_timeout 240s
 			}
 		}
 	}
