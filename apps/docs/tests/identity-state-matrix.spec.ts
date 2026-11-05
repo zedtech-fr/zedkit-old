@@ -213,7 +213,28 @@ test.describe("creator state matrix", () => {
   });
 });
 
+/** Phone sheet: status can sit slightly past the body box; keep the existing 320 slack. */
+function dockBodySlack(width: number) {
+  return width <= 320 ? 120 : 1;
+}
+
+async function inDockBody(page: Page, target: Locator, slack: number) {
+  const panel = await dockPanel(page);
+  const body = panel.locator("[data-slot='identity-dock-body']");
+  await expect(target).toBeVisible();
+  const bodyBox = (await body.boundingBox())!;
+  const box = (await target.boundingBox())!;
+  expect(box.y).toBeGreaterThanOrEqual(bodyBox.y);
+  expect(box.y + box.height).toBeLessThanOrEqual(bodyBox.y + bodyBox.height + slack);
+}
+
 test.describe("widget state matrix", () => {
+  const WIDGET_VIEWPORTS = [
+    { name: "320", width: 320, height: 568 },
+    { name: "390", width: 390, height: 844 },
+    { name: "1440", width: 1440, height: 900 },
+  ] as const;
+
   async function openDock(page: Page) {
     await page.goto("/", { waitUntil: "networkidle" });
     await expect(page.getByTestId("identity-dock")).toBeVisible();
@@ -244,28 +265,6 @@ test.describe("widget state matrix", () => {
     expect(box.height).toBeLessThan(844);
   });
 
-  test("320: loading and success stay inside the panel", async ({ page }) => {
-    let release: () => void = () => {};
-    const gate = new Promise<void>((done) => (release = done));
-    await service(page, async (posted, route) => {
-      await gate;
-      await route.fulfill(ok(posted));
-    });
-    await page.setViewportSize({ width: 320, height: 568 });
-    const panel = await openDock(page);
-    const body = panel.locator("[data-slot='identity-dock-body']");
-    await page.locator("#identity-assistant-brief").fill("A ceramics shop");
-    await page.getByRole("button", { name: "Generate" }).click();
-    const cancel = body.getByRole("button", { name: "Cancel" });
-    await expect(cancel).toBeVisible();
-    const bodyBox = (await body.boundingBox())!;
-    const cancelBox = (await cancel.boundingBox())!;
-    expect(cancelBox.y).toBeGreaterThanOrEqual(bodyBox.y);
-    expect(cancelBox.y + cancelBox.height).toBeLessThanOrEqual(bodyBox.y + bodyBox.height + 120);
-    release();
-    await expect(panel.locator("[data-assistant-proposal]")).toBeVisible();
-  });
-
   test("using a look does not paint the site chrome", async ({ page }) => {
     await service(page, (posted, route) => route.fulfill(ok(posted)));
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -277,31 +276,65 @@ test.describe("widget state matrix", () => {
     expect(await siteBackground(page)).toBe(before);
   });
 
-  test("quota stays inside the panel; resume keeps the brief after reload", async ({ page }) => {
-    await service(page, (_posted, route) =>
-      route.fulfill({
-        status: 429,
-        contentType: "application/json",
-        headers: { "retry-after": "1800" },
-        json: { error: "quota", retryAfterSec: 1800 },
-      }),
-    );
-    await page.setViewportSize({ width: 390, height: 844 });
-    const panel = await openDock(page);
-    await page.locator("#identity-assistant-brief").fill("A ceramics shop");
-    await page.getByRole("button", { name: "Generate" }).click();
-    const status = page.locator("[data-assistant-notice]");
-    await expect(status).toContainText("The assistant limit has been reached.");
-    const statusBox = (await status.boundingBox())!;
-    const body = panel.locator("[data-slot='identity-dock-body']");
-    const bodyBox = (await body.boundingBox())!;
-    expect(statusBox.y).toBeGreaterThanOrEqual(bodyBox.y);
-    expect(statusBox.y + statusBox.height).toBeLessThanOrEqual(bodyBox.y + bodyBox.height + 1);
+  for (const vp of WIDGET_VIEWPORTS) {
+    test(`${vp.name}: idle, loading and success stay inside the panel`, async ({ page }) => {
+      let release: () => void = () => {};
+      const gate = new Promise<void>((done) => (release = done));
+      await service(page, async (posted, route) => {
+        await gate;
+        await route.fulfill(ok(posted));
+      });
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      const panel = await openDock(page);
+      await expect(page.locator("[data-assistant-notice]")).toHaveCount(0);
+      await page.locator("#identity-assistant-brief").fill("A ceramics shop");
+      await page.getByRole("button", { name: "Generate" }).click();
+      await inDockBody(page, page.getByRole("button", { name: "Cancel" }), dockBodySlack(vp.width));
+      release();
+      await expect(panel.locator("[data-assistant-proposal]")).toBeVisible();
+    });
 
-    await page.reload({ waitUntil: "networkidle" });
-    await expect(page.getByTestId("identity-dock")).toBeVisible();
-    await expect(await reopenDock(page)).toHaveValue("A ceramics shop");
-  });
+    test(`${vp.name}: error stays inside the panel`, async ({ page }) => {
+      await service(page, (posted, route) => route.fulfill(ok(posted, { ...WARM, radius: "0.5rem; } body { display: none" })));
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await openDock(page);
+      await page.locator("#identity-assistant-brief").fill("A ceramics shop");
+      await page.getByRole("button", { name: "Generate" }).click();
+      const status = page.locator("[data-assistant-notice]");
+      await inDockBody(page, status, dockBodySlack(vp.width));
+      await expect(status).toContainText("could not be used, so nothing changed");
+    });
+
+    test(`${vp.name}: quota stays inside the panel and is not a daily allowance`, async ({ page }) => {
+      await service(page, (_posted, route) =>
+        route.fulfill({
+          status: 429,
+          contentType: "application/json",
+          headers: { "retry-after": "1800" },
+          json: { error: "quota", retryAfterSec: 1800 },
+        }),
+      );
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await openDock(page);
+      await page.locator("#identity-assistant-brief").fill("A ceramics shop");
+      await page.getByRole("button", { name: "Generate" }).click();
+      const status = page.locator("[data-assistant-notice]");
+      await inDockBody(page, status, dockBodySlack(vp.width));
+      await expect(status).toContainText("The assistant limit has been reached.");
+      await expect(status).toContainText("Try again in 30 minutes.");
+      await expect(status).not.toContainText(/daily/i);
+    });
+
+    test(`${vp.name}: an unfinished brief is still there after reload`, async ({ page }) => {
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await openDock(page);
+      await page.locator("#identity-assistant-brief").fill("A ceramics shop");
+      await expect.poll(() => storedDockBrief(page)).toBe("A ceramics shop");
+      await page.reload({ waitUntil: "networkidle" });
+      await expect(page.getByTestId("identity-dock")).toBeVisible();
+      await expect(await reopenDock(page)).toHaveValue("A ceramics shop");
+    });
+  }
 });
 
 test.describe("domain compositions", () => {
