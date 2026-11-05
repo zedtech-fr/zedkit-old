@@ -322,5 +322,20 @@
     "canonical": "--spacing-section-xl",
     "value": "var(--zk-section-xl)",
     "tokens": ["--spacing-section-xl"]
+  },
+  {
+    "canonical": "--spacing-prompt-input-max-height",
+    "value": "calc(8 * 1lh + var(--spacing-control-block) * 2)",
+    "tokens": ["--spacing-prompt-input-max-height"]
+  },
+  {
+    "canonical": "--spacing-prompt-input-max-height-sm",
+    "value": "calc(4 * 1lh + var(--spacing-control-block) * 2)",
+    "tokens": ["--spacing-prompt-input-max-height-sm"]
+  },
+  {
+    "canonical": "--spacing-prompt-input-max-height-lg",
+    "value": "calc(12 * 1lh + var(--spacing-control-block) * 2)",
+    "tokens": ["--spacing-prompt-input-max-height-lg"]
   }
 ]
