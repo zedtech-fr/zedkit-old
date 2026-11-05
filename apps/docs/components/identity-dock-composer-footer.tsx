@@ -19,7 +19,7 @@ export function IdentityDockComposerFooter(props: {
   inputRef: RefObject<HTMLTextAreaElement | null>;
 }) {
   const notice = props.session.notice;
-  const showNotice = notice !== null && notice.kind !== "cancelled";
+  const showNotice = notice !== null;
   return (
     <Stack gap={2} className="shrink-0 border-t border-border bg-background px-3 py-3">
       {showNotice ? (
