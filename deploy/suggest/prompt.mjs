@@ -8,7 +8,7 @@ import { FIELD_MAX } from "./references.mjs";
 import { FONT_STACKS } from "./tokens.mjs";
 
 const SYSTEM = `You design identities for a UI kit: a coherent look (typography, shape, density, colour) a team can adopt.
-Reply with one JSON object and nothing else, no markdown: {"summary": string, "tokens": object}.
+Reply with one JSON object and nothing else, no markdown: {"summary": string, "tokens": object}. Write fields in that order: summary first, then tokens.light and tokens.dark, then fontSans and fontDisplay, then spacing, radius, and the rest.
 
 summary: two or three short plain sentences, in the language of the request, saying what you changed and why. No marketing words, no claims about things you did not do.
 
