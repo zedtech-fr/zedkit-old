@@ -8,17 +8,14 @@ import {
 } from "@/ui/home/home-rhythm";
 import { homeCopy } from "@/ui/home/i18n/home-copy";
 
+/** Each name is a control: bordered like one, 44px tall on a phone, 13px text (dense-UI size). */
 function FamilyExampleLinks({ examples }: { examples: readonly { label: string; href: string }[] }) {
   return (
     <Stack direction="horizontal" gap={2} className="flex-wrap">
       {examples.map((item) => (
-        <HomeLink
-          key={item.href}
-          href={item.href}
-          className={`inline-flex min-h-11 items-center text-sm underline-offset-4 hover:underline md:min-h-6`}
-        >
-          {item.label}
-        </HomeLink>
+        <Button key={item.href} asChild variant="outline" size="sm" className="min-h-11 text-sm md:min-h-0">
+          <HomeLink href={item.href}>{item.label}</HomeLink>
+        </Button>
       ))}
     </Stack>
   );
@@ -47,7 +44,7 @@ export function HomeComponentFamiliesSection({
             <Stack
               key={family.label}
               gap={2}
-              className="py-6 md:grid md:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] md:items-baseline md:gap-x-8"
+              className="py-4 md:grid md:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] md:items-baseline md:gap-x-8 md:py-6"
             >
               <Stack gap={1} className="min-w-0">
                 <Heading level={3} typeRole="heading" data-family-title="">
