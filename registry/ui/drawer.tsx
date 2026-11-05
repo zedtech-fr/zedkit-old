@@ -81,7 +81,6 @@ function Drawer({
   return (
     <DrawerPrimitive.Root
       data-slot="drawer"
-      key={`${resolvedDirection}-${isMobile ? "narrow" : "wide"}`}
       direction={resolvedDirection}
       modal={modal}
       dismissible={dismissible}

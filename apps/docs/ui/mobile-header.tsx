@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
-import Link from "next/link";
+import { DocsAppLink } from "@/ui/docs-app-link";
 import { usePathname } from "next/navigation";
 import { ExternalLink, Menu, Moon, Sun } from "lucide-react";
 import { GithubIcon } from "@/ui/github-icon";
@@ -81,7 +81,7 @@ function NavDrawerLink({
 }) {
   const active = isSiteNavLinkActive(pathname, link);
   return (
-    <Link
+    <DocsAppLink
       href={link.href}
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
@@ -90,7 +90,7 @@ function NavDrawerLink({
     >
       <span className="min-w-0 flex-1">{link.text}</span>
       {link.external ? <ExternalLink aria-hidden="true" className="size-4 shrink-0 opacity-70" /> : null}
-    </Link>
+    </DocsAppLink>
   );
 }
 
@@ -210,13 +210,13 @@ export function MobileHeader({
         }
       >
         <div className="flex min-w-0 items-center gap-1.5">
-          <Link
+          <DocsAppLink
             href="/"
             aria-label="zedkit home"
             className="inline-flex min-h-overlay-touch-target items-center rounded-md px-1 text-foreground focus-ring-control"
           >
             <SiteBrand />
-          </Link>
+          </DocsAppLink>
           <span className="hidden sm:inline-flex">
             <KitVersionLabel version={version} releasesHref={releasesHref} tone="shell" />
           </span>
