@@ -1,6 +1,8 @@
 export const homeHeroCopy = {
   hero: {
-    title: "UI/AI kit · A top-notch AI setup, one prompt away. Only the UI you need.",
+    /** Product class before the promise (visual `label` role; see docs/design/signature.md). */
+    titleCategory: "UI/AI kit ·",
+    title: "A top-notch AI setup, one prompt away. Only the UI you need.",
     /** The first words are an invitation to use the example beside the text; the rest says what it is made of. */
     /** Kept on one line at phone width so the hyphen never ends a line. */
     titleNoBreak: "top-notch",
