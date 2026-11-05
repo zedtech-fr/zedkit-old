@@ -166,12 +166,17 @@ jobs:
           path: apps/docs/test-results/*.png
           if-no-files-found: ignore
 
-  # Typical GitHub-hosted wall-clock setter (~10 min). One routes job, not
-  # the 3 e2e shards — a single runner would serialize those.
+  # Sitemap sweep sharded 3 ways (DOCS_E2E_SHARD*) across the 3 parallel
+  # Dedibox runners; no needs chain.
   docs-e2e-routes-dedibox:
+    name: docs-e2e-routes-dedibox (${{ matrix.shard }}/3)
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, dedibox]
     timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     steps:
       - name: Ensure local cache dirs
         run: mkdir -p /runner-cache/pnpm /runner-cache/ms-playwright /runner-cache/turbo /runner-cache/npm /runner-cache/toolcache
@@ -195,3 +200,5 @@ jobs:
           kill "$(cat /tmp/docs-e2e.pid)"
         env:
           DOCS_E2E_PROJECT: chromium
+          DOCS_E2E_SHARD: ${{ matrix.shard }}
+          DOCS_E2E_SHARD_TOTAL: "3"
