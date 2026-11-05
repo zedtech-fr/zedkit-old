@@ -143,11 +143,11 @@ test.describe("IdentityDock", () => {
     await page.keyboard.press("Control+I");
     await brief(page).fill("I run a daily newspaper");
     await page.getByRole("button", { name: "Generate", exact: true }).click();
-    await expect(page.locator("[data-assistant-proposal] [data-specimen-domain=editorial]")).toBeVisible();
+    await expect(page.locator("[data-assistant-proposal] [data-specimen-domain=editorial]").first()).toBeVisible();
     await expect(page.locator("[data-assistant-proposal]")).toContainText("North Ledger");
     await page.getByRole("button", { name: "Use this look" }).click();
     await page.getByRole("button", { name: "Preview" }).click();
-    await expect(page.locator("[data-assistant-pane=preview] [data-specimen-domain=editorial]")).toBeVisible();
+    await expect(page.locator("[data-assistant-pane=preview] [data-specimen-domain=editorial]").first()).toBeVisible();
     await expect(page.locator("[data-assistant-pane=preview]")).toContainText("North Ledger");
     const stored = await page.evaluate(() => {
       const raw = window.localStorage.getItem("zk-identity-dock-v2");
@@ -157,7 +157,7 @@ test.describe("IdentityDock", () => {
     await page.reload({ waitUntil: "networkidle" });
     await page.keyboard.press("Control+I");
     await page.getByRole("button", { name: "Preview" }).click();
-    await expect(page.locator("[data-assistant-pane=preview] [data-specimen-domain=editorial]")).toBeVisible();
+    await expect(page.locator("[data-assistant-pane=preview] [data-specimen-domain=editorial]").first()).toBeVisible();
     await expect(page.locator("[data-assistant-pane=preview]")).toContainText("North Ledger");
   });
 
