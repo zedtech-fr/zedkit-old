@@ -1233,7 +1233,7 @@ toast.error("Upload failed"); // typed variants: success | error | info | warnin
 ```ts
 import { Label, SecretField } from "@zedtech/zedkit-ui";
 <Label htmlFor="key">API key (shown once)</Label>
-<SecretField id="key" value={key} />
+<SecretField id="key" value="zk_live_example_secret" />
 ```
 
 ## Show a sortable, filterable, paginated data table
