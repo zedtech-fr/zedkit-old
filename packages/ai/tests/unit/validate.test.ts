@@ -253,7 +253,7 @@ describe("validateKit", () => {
     put(root, ".agents/skills/review/SKILL.md", `${SKILL("review")}\nladder\n`);
     put(root, "AGENTS.md", "# Mine\n\nRun the `plan` phase on Fridays.\n");
     expect(checkKitDocs(root, join(root, ".agents"))).toEqual([]);
-    put(root, "AGENTS.md", "at the first rung that holds (skill `ponytail-review` has the full text):\n");
+    put(root, "AGENTS.md", "that holds (skill `ponytail-review`):\n");
     const found = checkKitDocs(root, join(root, ".agents")).map((i) => `${i.path}: ${i.message}`);
     expect(found).toContain('AGENTS.md: references skill "ponytail-review", which this preset does not install');
   });
