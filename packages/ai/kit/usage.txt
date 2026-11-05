@@ -14,7 +14,8 @@ zedkit-ai <command>
       of --provider.
   validate [dir] [--setup] [--plan <file>]
       Check skills, subagents and commands, plus provider-copy drift
-      (default dir: .agents; a project root is accepted too). Exit 1
+      (default dir: .agents; a project root is accepted too), and flags
+      model names written outside .agents/tokenomics.md. Exit 1
       on problems. --setup (off by default) also checks that the PLAN
       covers every git-changed path, that setup-log gate logs are
       well-formed, and that the setup went deep: a reading log, domain

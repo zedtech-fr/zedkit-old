@@ -43,7 +43,7 @@ Do not write down what the code already shows (file lists, signatures). Write on
 | Skill            | folder `<name>/SKILL.md`, `name` equals the folder | may never be loaded                                                                             |
 | Subagent         | file `<name>.md`, `description` on a single line   | a folded or block description can be shown as `>` and the agent cannot decide when to be used   |
 | Any file         | LF line endings                                    | a trailing `\r` breaks YAML values                                                              |
-| Subagent `model` | omit it, or `inherit`                              | an unknown model id can fall back silently; list the models the tool accepts before pinning one |
+| Subagent `model` | omit it, or `inherit`                              | an unknown model id can fall back silently; never name one here, see `.agents/tokenomics.md`    |
 
 Run `zedkit-ai validate` (package `@zedtech/zedkit-ai`, or the repo's equivalent) after editing. It checks these.
 

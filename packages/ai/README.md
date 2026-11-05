@@ -189,6 +189,8 @@ which providers to wire when it cannot tell.
 
 The kit ships the full policy (every `model` is `inherit`) and reads it from the package at run time, so a project file only holds what it changes and later default changes still reach it. `init` and `setup` install a short stub and never overwrite an existing file. This slice adds the file and its check; routing from it comes next. The older `.agents/model-routing.md` is untouched for now.
 
+`validate` also fails when a model name is written outside `tokenomics.md`: in a skill, subagent, command, top-level `.agents/*.md`, root `AGENTS.md` / `CLAUDE.md` or a `.cursor/rules/*.mdc` file. It matches id-shaped names (`claude-…`, `gpt-…`, `gemini-…`, `sonnet 4`, and so on), every id-shaped model your cells pin, and your own `hardcode.extra_patterns`; the bare words "sonnet" or "opus", `claude-code` and `GEMINI.md` stay clean. Each hit prints `path:line`, one per file and name. To keep a name on purpose, put `<!-- zk:model-ok -->` on the same line or the line above, or list the file under `hardcode.allow_paths` (globs, relative to the project root or to `.agents/`). `*.kit.md` sidecars, the setup log and `.agents/model-routing.md` (a legacy file that holds real ids until its migration ships) are not scanned; nested `AGENTS.md` files are scanned only with `hardcode.scan_nested: true`. Commands always run on the session model, so a `model:` other than `inherit` in a command is an error too.
+
 ## What you get
 
 ```
