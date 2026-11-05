@@ -4,7 +4,7 @@
 import type * as React from "react";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 
-import { usePortalContainer } from "./theme-scope.js";
+import { useOverlayMount, usePortalContainer } from "./theme-scope.js";
 import { cn } from "./utils.js";
 
 function TooltipProvider({
@@ -34,13 +34,14 @@ function TooltipContent({
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Content>) {
   const container = usePortalContainer();
+  const overlayMount = useOverlayMount();
   return (
-    <TooltipPrimitive.Portal container={container}>
+    <TooltipPrimitive.Portal container={overlayMount ?? container}>
       <TooltipPrimitive.Content
         data-slot="tooltip-content"
         sideOffset={sideOffset}
         className={cn(
-          "z-overlay origin-[--radix-tooltip-content-transform-origin] rounded-md bg-popover px-3 py-control-block text-sm text-popover-foreground shadow-md",
+          "z-dropdown origin-[--radix-tooltip-content-transform-origin] rounded-md bg-popover px-3 py-control-block text-sm text-popover-foreground shadow-md",
           className,
         )}
         {...props}

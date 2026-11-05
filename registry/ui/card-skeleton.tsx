@@ -1,6 +1,7 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { surfaceVariants } from "@/components/ui/surface";
 import { cn } from "@/lib/utils";
 import { useUiMessages } from "@/components/ui/ui-provider";
 
@@ -20,7 +21,7 @@ export function CardSkeleton({ label, className }: CardSkeletonProps) {
       data-slot="card-skeleton"
       role="status"
       aria-label={label ?? messages.loading}
-      className={cn("rounded-xl border bg-card p-card-padding shadow-md", className)}
+      className={cn(surfaceVariants({ variant: "solid", elevation: 2, radius: "xl", padding: "card" }), className)}
     >
       <div className="space-y-card-stack">
         <Skeleton className="h-5 w-1/3" />

@@ -28,14 +28,14 @@ test.describe("guide previews", () => {
 
   test("reveal-on-scroll preview reveals its three tasks", async ({ page }) => {
     await page.goto("/docs/ui/animate-entrances-and-hover-feedback-with-css-utilities", { waitUntil: "networkidle" });
+    // The page's primary Example preview (a data-stagger demo with the same tasks)
+    // renders before the guide fence, so anchor on the Animate stagger root itself.
     const stage = page
-      .locator("[data-component-preview]")
+      .locator("[data-component-preview] [data-animate-stagger]")
       .filter({ hasText: "Publish the sale banner" })
-      .first()
-      .locator("[data-stagger]")
       .first();
     await stage.scrollIntoViewIfNeeded();
-    await expect(stage).toHaveAttribute("data-stagger", "in");
+    await expect(stage).toHaveAttribute("data-animate-state", "in");
     await expect(stage.getByText("Publish the sale banner")).toBeVisible();
   });
 

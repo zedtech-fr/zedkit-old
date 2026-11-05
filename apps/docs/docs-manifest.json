@@ -13,6 +13,18 @@
         "Staggered children": "MotionStaggerDemo"
       }
     },
+    "Reveal and react with motion on any element": {
+      "package": "@zedtech/zedkit-ui",
+      "component": "Animate",
+      "props": "AnimateProps",
+      "source": "animate.tsx",
+      "demo": "AnimateDemo",
+      "examples": {
+        "Wrapper with several triggers": "AnimateTriggersDemo",
+        "Stagger children": "AnimateStaggerDemo"
+      },
+      "propsPriority": ["on", "delay", "stagger"]
+    },
     "Trigger actions with buttons": {
       "package": "@zedtech/zedkit-ui",
       "component": "Button",
@@ -306,6 +318,13 @@
         "With footer": "CardFooterDemo"
       }
     },
+    "Shared panel surface (border, shadow, glass)": {
+      "package": "@zedtech/zedkit-ui",
+      "component": "Surface",
+      "props": "SurfaceProps",
+      "source": "surface.tsx",
+      "demo": "SurfaceDemo"
+    },
     "Stack content and group titled sections": {
       "package": "@zedtech/zedkit-ui",
       "component": "Stack",
@@ -386,6 +405,16 @@
       "demo": "TabsDemo",
       "examples": {
         "Controlled": "TabsControlledDemo"
+      }
+    },
+    "Horizontal scroll gallery row": {
+      "package": "@zedtech/zedkit-ui",
+      "component": "ScrollGallery",
+      "props": "ScrollGalleryProps",
+      "source": "scroll-gallery.tsx",
+      "demo": "ScrollGalleryIdentityDemo",
+      "examples": {
+        "Filter chips": "ScrollGalleryChipsDemo"
       }
     },
     "Show toast notifications": {
@@ -514,6 +543,27 @@
         "Before and after": "ScrollScenesBeforeAfterDemo",
         "Same product in three looks": "ScrollScenesLooksDemo",
         "Pricing walkthrough": "ScrollScenesPricingDemo"
+      }
+    },
+    "Compose a chat prompt": {
+      "package": "@zedtech/zedkit-ui",
+      "component": "PromptInput",
+      "props": "PromptInputProps",
+      "source": "prompt-input.tsx",
+      "demo": "PromptInputDemo",
+      "examples": {
+        "Simple": "PromptInputDemo",
+        "Complete": "PromptInputCompleteDemo"
+      }
+    },
+    "Keep a side panel in view": {
+      "package": "@zedtech/zedkit-ui",
+      "component": "StickyAside",
+      "props": "StickyAsideProps",
+      "source": "sticky-aside.tsx",
+      "demo": "StickyAsideDemo",
+      "examples": {
+        "Doc page with summary card": "StickyAsideDocStepsDemo"
       }
     },
     "Compose a public marketing page": {

@@ -131,7 +131,7 @@ test("the kill switch is read on every request and stops paid work at once", asy
 
 test("a brief in, a validated identity out; the provider gets the contract, and the visitor gets a session", async () => {
   const p = provider();
-  const env = configured({ IDENTITY_AI_REASONING_EFFORT: "low" });
+  const env = configured({ IDENTITY_AI_REASONING_EFFORT: "low", IDENTITY_AI_MODEL: "o4-mini" });
   await withServer({ env, fetchImpl: p.fetchImpl }, async ({ port, ledger }) => {
     const res = await post(port, body({ history: [{ role: "user", text: "Make it warmer" }, { role: "assistant", text: "Warmer palette." }] }));
     assert.equal(res.status, 200);
@@ -147,8 +147,8 @@ test("a brief in, a validated identity out; the provider gets the contract, and 
     const [call] = p.calls;
     assert.equal(call.url, "https://primary.test/v1/chat/completions");
     assert.equal(call.auth, "Bearer sk-primary-secret");
-    assert.equal(call.body.model, "primary-model");
-    assert.equal(call.body.max_tokens, 4000);
+    assert.equal(call.body.model, "o4-mini");
+    assert.equal(call.body.max_tokens, 8_000);
     assert.equal(call.body.reasoning_effort, "low");
     assert.equal(call.body.messages.length, 2);
     // 1000 in at $1/M plus 500 out at $10/M = $0.006, charged from the provider's own usage report.
@@ -627,10 +627,42 @@ test("the burst limiter sits just above the per-minute quota, so a flood cannot 
   });
 });
 
+test("reasoning effort uses the full output ceiling so the JSON answer is not starved", () => {
+  const env = configured({ IDENTITY_AI_REASONING_EFFORT: "low", IDENTITY_AI_MAX_TOKENS: "4000", IDENTITY_AI_MODEL: "o4-mini" });
+  assert.equal(loadConfig(env).limits.maxOutputTokens, 8_000);
+});
+
+test("muse-spark models omit reasoning_effort even when env sets low", () => {
+  const env = configured({ IDENTITY_AI_MODEL: "muse-spark-1.3", IDENTITY_AI_REASONING_EFFORT: "low", IDENTITY_AI_MAX_TOKENS: "4000" });
+  assert.equal(loadConfig(env).primary.effort, "");
+  assert.equal(loadConfig(env).limits.maxOutputTokens, 8_000);
+});
+
+test("provider env values are trimmed so trailing newlines on secrets do not break auth", () => {
+  const env = configured({ IDENTITY_AI_API_KEY: "sk-primary-secret\n", IDENTITY_AI_BASE_URL: "https://primary.test/\n" });
+  assert.equal(loadConfig(env).primary.key, "sk-primary-secret");
+  assert.equal(loadConfig(env).primary.base, "https://primary.test");
+});
+
+test("a provider that refuses reasoning_effort is retried once without it", async () => {
+  const p = provider((call) => (call.body.reasoning_effort ? refusal(400) : reply(PATCH, { usage: { prompt_tokens: 1000, completion_tokens: 500 } })));
+  const env = configured({ IDENTITY_AI_REASONING_EFFORT: "low", IDENTITY_AI_MODEL: "o4-mini" });
+  await withServer({ env, fetchImpl: p.fetchImpl }, async ({ port }) => {
+    const res = await post(port, body());
+    assert.equal(res.status, 200);
+    assert.equal(p.calls.length, 2);
+    assert.equal(p.calls[0].body.reasoning_effort, "low");
+    assert.equal(p.calls[1].body.reasoning_effort, undefined);
+  });
+});
+
 test("a request has seconds, not minutes, to arrive, and the number of open connections is capped", async () => {
-  const { server, ledger } = await listenSuggest({ port: 0, host: "127.0.0.1", log: () => {}, env: configured() });
-  assert.equal(server.headersTimeout, 5_000);
-  assert.equal(server.requestTimeout, 10_000);
+  const env = configured();
+  const limits = loadConfig(env).limits;
+  const window = limits.timeoutMs + limits.referenceTimeoutMs + 5_000;
+  const { server, ledger } = await listenSuggest({ port: 0, host: "127.0.0.1", log: () => {}, env });
+  assert.equal(server.headersTimeout, window);
+  assert.equal(server.requestTimeout, window);
   assert.ok(server.maxConnections > 0 && server.maxConnections <= 1_000);
   ledger.close();
   await new Promise((done) => server.close(done));

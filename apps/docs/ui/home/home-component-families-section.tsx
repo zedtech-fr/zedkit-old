@@ -4,6 +4,7 @@ import { CatalogActionLabel } from "@/components/docs-action-label";
 import {
   HOME_PERSUASION_TEXT_CLASS,
   HOME_SECTION_CONTENT_GAP,
+  HOME_SECTION_REVEAL_PROPS,
 } from "@/ui/home/home-rhythm";
 import { homeCopy } from "@/ui/home/i18n/home-copy";
 
@@ -37,6 +38,8 @@ export function HomeComponentFamiliesSection({
       id="components"
       title={homeCopy.componentFamilies.section.title}
       description={homeCopy.componentFamilies.section.description(componentCount)}
+      snap="none"
+      {...HOME_SECTION_REVEAL_PROPS}
     >
       <Stack gap={HOME_SECTION_CONTENT_GAP} data-home-component-families="">
         <Stack className="min-w-0 divide-y divide-border border-y border-border">
@@ -44,10 +47,10 @@ export function HomeComponentFamiliesSection({
             <Stack
               key={family.label}
               gap={2}
-              className="py-4 md:grid md:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] md:items-baseline md:gap-x-8"
+              className="py-6 md:grid md:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] md:items-baseline md:gap-x-8"
             >
               <Stack gap={1} className="min-w-0">
-                <Heading level={3} className="text-base font-medium" data-family-title="">
+                <Heading level={3} typeRole="heading" data-family-title="">
                   {family.label}
                 </Heading>
                 <Text variant="muted" className={HOME_PERSUASION_TEXT_CLASS}>

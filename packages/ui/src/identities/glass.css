@@ -108,7 +108,7 @@
     inset 0 -1px 0 hsl(var(--zk-glass-bar-edge) / var(--zk-glass-bar-edge-alpha));
 
   /* Glass overlays: panel alpha and blur, tint, and a light scrim. */
-  --zk-glass-overlay-alpha: 0.72;
+  --zk-glass-overlay-alpha: 0.76;
   --zk-glass-overlay-blur: 24px;
   --zk-glass-overlay-filter: blur(var(--zk-glass-overlay-blur)) saturate(var(--zk-glass-saturate));
   --zk-glass-overlay-tint: linear-gradient(160deg, hsl(262 90% 80% / 0.14), hsl(190 90% 70% / 0.1));
@@ -247,6 +247,12 @@
   border-color: hsl(var(--zk-glass-edge) / var(--zk-glass-edge-alpha));
   -webkit-backdrop-filter: var(--zk-glass-filter);
   backdrop-filter: var(--zk-glass-filter);
+}
+
+/* The floating pill sits over any content, so its label cannot rely on what is behind it: near-solid in every theme. */
+:root[data-identity="glass"] [data-widget-button],
+[data-identity-scope][data-identity="glass"] [data-widget-button] {
+  --zk-glass-alpha: 0.94;
 }
 
 /*

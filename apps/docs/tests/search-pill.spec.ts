@@ -21,7 +21,7 @@ for (const size of SIZES) {
       await expect(dialog.locator("input").first()).toBeFocused();
       await page.keyboard.press("Escape");
       await expect(dialog).toBeHidden();
-      await expect(headerSearch).toBeFocused();
+      await expect.poll(() => headerSearch.evaluate((node) => node === document.activeElement)).toBe(true);
     });
   }
 }

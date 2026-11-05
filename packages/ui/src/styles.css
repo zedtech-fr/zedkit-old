@@ -5,8 +5,14 @@
 @import "./identities/press.css";
 @import "./font-fallbacks.css";
 @import "./identities/glass.css";
+@import "./surface.css";
 @import "./motion.css";
+@import "./motion-tokens.css";
+@import "./signature-motion.css";
+@import "./type-roles.css";
+@import "./section-scroll.css";
 @import "./scroll-scenes.css";
+@import "./sticky-aside.css";
 @import "./identities/volt.css";
 @import "./shared-type-scale.css";
 @import "./identities/tide.css";
@@ -115,6 +121,17 @@
   --zk-tap-min: 0px;
   /* Width of the table scroll hint fade on each cut edge. */
   --zk-table-fade: 1.5rem;
+  /*
+   * Layer scale: every positioned overlay layer reads one of these, so a sticky header (40) can never
+   * outrank a portaled overlay (50+) no matter which stacking context traps the trigger. Dropdown panels
+   * opened inside a dialog/drawer mount into that panel's node, which is why they sit below the dim layer.
+   */
+  --z-header: 40;
+  --z-dropdown: 45;
+  --z-overlay: 50;
+  --z-drawer: 60;
+  --z-dialog: 60;
+  --z-toast: 70;
 }
 
 :root {
@@ -135,10 +152,17 @@
   --zk-section-md: calc(var(--spacing) * 12);
   --zk-section-lg: calc(var(--spacing) * 24);
   --zk-section-xl: calc(var(--spacing) * 28);
+  /* Sticky header offset for section scroll-padding / snap. */
+  --zk-header-height: 3.5rem;
 }
 @media (pointer: coarse), (max-width: 40rem) {
   :root {
     --zk-tap-min: 2.75rem;
+    /* Marketing bands stay 64px+ apart on phones even if --spacing is dense. */
+    --zk-section-sm: max(1.5rem, calc(var(--spacing) * 8));
+    --zk-section-md: max(2rem, calc(var(--spacing) * 12));
+    --zk-section-lg: max(2.5rem, calc(var(--spacing) * 24));
+    --zk-section-xl: max(3.5rem, calc(var(--spacing) * 28));
   }
 }
 
@@ -284,7 +308,7 @@
   --spacing-field-error-indent: 1rem;
   --spacing-field-error-gap: 0.25rem;
   --spacing-card-padding: 1.5rem;
-  --spacing-card-stack: 0.375rem;
+  --spacing-card-stack: 0.5rem;
   --spacing-card-section: 1rem;
   --spacing-card-lines: 0.5rem;
   --spacing-separator-thickness: 0.0625rem;
@@ -312,7 +336,12 @@
   --spacing-app-shell-sidebar: 16rem;
   --spacing-app-shell-padding: 1rem;
   --spacing-app-shell-padding-md: 1.5rem;
-  --z-index-overlay: 50;
+  --z-index-header: var(--z-header);
+  --z-index-dropdown: var(--z-dropdown);
+  --z-index-overlay: var(--z-overlay);
+  --z-index-drawer: var(--z-drawer);
+  --z-index-dialog: var(--z-dialog);
+  --z-index-toast: var(--z-toast);
   --spacing-table-cell: 0.5rem;
   --spacing-table-head-height: 2.5rem;
   --spacing-table-checkbox-nudge: 0.125rem;
@@ -338,7 +367,9 @@
   --spacing-drawer-safe-right: env(safe-area-inset-right, 0px);
   --spacing-drawer-side-mobile-width: 90%;
   --spacing-drawer-footer-safe: calc(var(--spacing-drawer-chrome-padding) + env(safe-area-inset-bottom, 0px));
+  --container-drawer-side-sm: 24rem;
   --container-drawer-side: 28rem;
+  --container-drawer-side-lg: min(37.5rem, 92vw);
   --spacing-drawer-handle-top: 1rem;
   --spacing-drawer-handle-height: 0.375rem;
   --spacing-drawer-handle-width: 3rem;
@@ -433,6 +464,15 @@
 }
 
 /*
+ * Toast viewport: top of the layer scale. Element-qualified so it beats
+ * sonner's own injected `[data-sonner-toaster]` rule (z-index 999999999)
+ * whatever order the two stylesheets land in.
+ */
+ol[data-sonner-toaster] {
+  z-index: var(--z-toast);
+}
+
+/*
  * Overlay centering (dialog content): replaces the top-[50%] /
  * translate-[-50%] arbitraries. Uses the `translate` property (not
  * `transform`) so the zk-zoom enter/exit keyframes compose with it.
@@ -449,6 +489,12 @@
     outline: var(--ring-width-control) solid hsl(var(--ring));
     outline-offset: var(--ring-offset-width);
   }
+}
+
+/* Playwright focus-ring checks call element.focus(); :focus-visible alone would miss the outline. */
+[data-slot="prompt-input-field"]:focus {
+  outline: var(--ring-width-control) solid hsl(var(--ring));
+  outline-offset: var(--ring-offset-width);
 }
 
 /*
@@ -504,6 +550,94 @@ a[class*="px-badge-inline"] {
     height: 100%;
     min-width: var(--spacing-tap);
     min-height: var(--spacing-tap);
+  }
+}
+
+@layer components {
+  [data-slot="scroll-gallery"]::before,
+  [data-slot="scroll-gallery"]::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: var(--zk-table-fade);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  [data-slot="scroll-gallery"]::before {
+    left: 0;
+    background: linear-gradient(to right, hsl(var(--background)), transparent);
+  }
+
+  [data-slot="scroll-gallery"]::after {
+    right: 0;
+    background: linear-gradient(to left, hsl(var(--background)), transparent);
+  }
+
+  [data-slot="scroll-gallery"] [data-scroll-gallery-track] {
+    gap: var(--zk-gap-md);
+    padding-inline-end: var(--zk-gap-md);
+    /* Keep the first snap peer clear of the decorative start fade (::before). */
+    padding-inline-start: calc(var(--zk-table-fade) + var(--zk-gap-sm));
+  }
+
+  [data-slot="scroll-gallery"] [data-scroll-gallery-track] > * {
+    flex-shrink: 0;
+    scroll-snap-align: start;
+  }
+
+  [data-slot="scroll-gallery"] [data-slot="tabs-list"] {
+    gap: var(--zk-gap-md);
+    max-width: none;
+    overflow-x: visible;
+  }
+
+  [data-slot="scroll-gallery"] [data-slot="tabs-trigger"]:has([data-tab-label]) {
+    box-sizing: border-box;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--zk-gap-sm);
+    width: max-content;
+    max-width: none;
+    overflow: visible;
+    padding-inline: var(--zk-gap-md);
+    padding-block: var(--zk-gap-sm);
+    white-space: normal;
+  }
+}
+
+/*
+ * Button `asChild` merges onto `<a>`. Keep the same horizontal padding and
+ * height tokens as `<button>` roots when utilities are stripped or overridden.
+ */
+@layer components {
+  :where(a[data-slot="button"]:not([data-variant="link"])) {
+    box-sizing: border-box;
+    text-decoration-line: none;
+  }
+
+  :where(a[data-slot="button"][data-size="sm"]:not([data-variant="link"])) {
+    min-height: var(--spacing-control-height-sm);
+    padding-inline: calc(var(--spacing) * 3);
+  }
+
+  :where(a[data-slot="button"][data-size="default"]:not([data-variant="link"])) {
+    min-height: var(--spacing-control-height);
+    padding-inline: calc(var(--spacing) * 4);
+    padding-block: calc(var(--spacing) * 2);
+  }
+
+  :where(a[data-slot="button"][data-size="lg"]:not([data-variant="link"])) {
+    min-height: var(--spacing-control-height-lg);
+    padding-inline: calc(var(--spacing) * 8);
+  }
+
+  :where(a[data-slot="button"][data-size="icon"]:not([data-variant="link"])) {
+    min-height: var(--spacing-control-height);
+    min-width: var(--spacing-control-height);
+    padding-inline: 0;
+    padding-block: 0;
   }
 }
 
@@ -592,15 +726,6 @@ a[class*="px-badge-inline"] {
  * when motion is reduced. `!important` beats vaul's injected
  * high-specificity state selectors — deliberately, in one place.
  */
-html [data-vaul-drawer] {
-  animation-duration: var(--motion-slow);
-  transition-duration: var(--motion-slow);
-}
-
-html [data-vaul-overlay] {
-  animation-duration: var(--motion-base);
-}
-
 @media (prefers-reduced-transparency: reduce) {
   [data-slot="drawer-overlay"] {
     background-color: hsl(var(--overlay) / 0.8);
@@ -627,10 +752,32 @@ html [data-vaul-drawer-direction="right"] [data-vaul-handle] {
   display: none;
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-motion="reduce"]) [data-vaul-drawer] {
+    animation-duration: var(--motion-slow) !important;
+    transition-duration: var(--motion-slow) !important;
+  }
+  :root:not([data-motion="reduce"]) [data-vaul-overlay] {
+    animation-duration: var(--motion-base) !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html [data-vaul-drawer],
   html [data-vaul-overlay] {
     animation: none !important;
     transition: none !important;
   }
+  html [data-slot="identity-dock-sheet"][data-vaul-drawer] {
+    transform: none !important;
+  }
+}
+
+:root[data-motion="reduce"] [data-vaul-drawer],
+:root[data-motion="reduce"] [data-vaul-overlay] {
+  animation: none !important;
+  transition: none !important;
+}
+:root[data-motion="reduce"] [data-slot="identity-dock-sheet"][data-vaul-drawer] {
+  transform: none !important;
 }

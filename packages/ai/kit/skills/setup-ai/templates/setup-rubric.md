@@ -85,6 +85,38 @@ Score each axis 0-3. Cite evidence (file path, `file:line`, or transcript quote)
 - 2: `.agents/setup-log.md` retro entry (what worked, what hurt, scores) and a drafted kit issue for each friction found.
 - 3: As 2, plus re-audit cadence, owner decision log, **one kit-issue draft per friction including completion defects** (plan/git mismatch, bad gate log, intro not first, broken repo-skill links), each with kit root cause and a **verified Kit file** path (or **`UNVERIFIED`**).
 
+## Depth axes (v3)
+
+Four more axes, scored 0-3 like the others, each measurable from files. **Every depth axis must score >= 2; a 0 on any of them fails the run.** They sit outside the 8-axis mean so the mean stays comparable across runs; `npx zedkit-ai validate --setup` runs the mechanical half of each (tag `D1`-`D4` in its messages).
+
+### D1. Code reading
+
+- 0: No reading phase; facts come from docs and the owner only.
+- 1: One agent skimmed the code, or readers ran with no log and no citations.
+- 2: `.agents/setup-log/reading.md` lists one numbered reader row per slice (inside any run budget the repo already sets, such as a cap on files read), scaled to repo size (1-5 small, 6-10 medium, 11-20 large; see `npx zedkit-ai scan`), with `file:line` evidence; the interview asked at most what the code left open.
+- 3: As 2, plus the lead spot-checked citations per reader and dropped the failures, conflicts between code and docs are listed, and every interview question cites the gap it closes (an owner asked something the code answered counts against).
+
+### D2. Domain and identity rules
+
+- 0: No business, domain, invariant or brand rule written down.
+- 1: A traps line or glossary; rules without citations; template text left in.
+- 2: `.agents/domain/<area>.md` per state-, money- or policy-bearing area and an **Identity rules** section in `.agents/design.md` when UI exists, every rule with `file:line` or `source: owner`, from the reading log.
+- 3: As 2, plus every policy doc (playbook, ADR, vision, runbook) is landed in a domain, design or nested file or marked `not a rule: <reason>`, **Status** (`current` / `target`) and **Enforced by** are honest (a checker opened, or `documented, not enforced`), and every `current` rule has a test cell or `no test — flag`.
+
+### D3. Nested rules
+
+- 0: Only a root `AGENTS.md`, and folders with their own rules exist.
+- 1: A nested file that copies the root, a folder list without rules, or existing nested stubs left untouched and unlinked.
+- 2: Nested `AGENTS.md` (or an equivalent folder rule) in each folder that differs (features, ui, design, api, db), only what differs, with `file:line`, and linking the matching `.agents/domain` and `.agents/design` files; existing nested files were extended in place, not left alone as stubs; or `nested-agents: none|kept — <reason>` in the setup-log with a reason that holds.
+- 3: As 2, plus the reading log's **Rule map** accounts for every provider-scoped rule file (kept as owner, mirrored by a pointer, or not a rule; none copied), links to domain and design files instead of copies, about 60 lines or fewer, every link resolves, and the Cursor rule (when wired) only points at the nested file.
+
+### D4. Model routing
+
+- 0: Nothing; every spawn inherits the session model.
+- 1: A sentence in chat or in the setup-log, not written into the repo.
+- 2: `.agents/model-routing.md` names the provider the run executed on (from the tool, not the repo folders), the model list it read, and the scout / worker / lead tiers; root `AGENTS.md` points at it; reading spawns passed the scout model.
+- 3: As 2, plus the repo's own subagents are mapped to tiers (**Roles in this repo**), the setup-log records the tier and model of each fan-out, a provider that cannot route per spawn is stated plainly instead of papered over, and kit subagent files still say `model` omitted or `inherit`. A small repo with zero fan-out (the lead read inline, no reader spawns) reaches 3 when the setup-log states that plainly (`no fan-out: lead read inline`, which satisfies the fan-out record) and the rest holds.
+
 ## Hard gates (binary, any failure fails the run)
 
 1. **Zero dangling references.** `zedkit-ai validate` is green and no installed file references a skill or agent that is not installed.
@@ -101,8 +133,8 @@ Score each axis 0-3. Cite evidence (file path, `file:line`, or transcript quote)
 2. Score each axis independently, evidence first, number second.
 3. Write one line per axis: `axis | score | evidence`.
 4. Compute the **mean over axes 2, 4, 5, 6, 7, 8, 9, and 10 only**. On a separate line report **Owner-dependent axes:** Discovery (1) and Domain rules (3) with their scores; note **simulated owner cap at 2** on those two when the run did not have a live human owner. Report pass or fail: every axis >= 2, mean >= 2.5 on the eight measurable axes, and hard gates.
-5. **Report format (required):** one line `mean (8 axes) | <value> | pass|fail`; one line `Owner-dependent axes | discovery <n>, domain rules <n> | <optional: simulated owner cap>`.
+5. **Report format (required):** one line `mean (8 axes) | <value> | pass|fail`; one line `Owner-dependent axes | discovery <n>, domain rules <n> | <optional: simulated owner cap>`; one line `Depth axes | D1 <n>, D2 <n>, D3 <n>, D4 <n> | pass|fail` (pass: every one >= 2).
 6. For hard gate 2, compare `git diff --name-only` and status to the plan in the transcript, **`PLAN.md`**, or **`.agents/setup-log/plan.md`** — confirm an **`AGENTS.md` ladder** row exists when the ladder changed.
 7. List friction in the form: what happened, which kit file caused it, proposed fix. Each item becomes a fix PR or a kit issue.
 8. **Personas:** any positive **Journey tests** cell must cite a test that covers the **whole** stated journey (open the test); otherwise expect **`no test — flag`**.
-9. **Domain / AGENTS:** **Status** vs **Unenforced rules** must agree; spot-check **`enforced by`** claims against opened checkers.
+9. **Domain / AGENTS:** **Status** vs **Unenforced rules** must agree; spot-check **`enforced by`** claims against opened checkers. Reconcile: walk every `current` rule in root/nested `AGENTS.md` and `.agents/domain/*.md` — each genuinely unenforced one is inventoried (domain rows by ID); no inventoried rule is actually enforced.

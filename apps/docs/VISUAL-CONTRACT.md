@@ -40,7 +40,7 @@ Sizes are the implemented tokens (`packages/ui/src/shared-type-scale.css`, appli
 | Role | Rule |
 |---|---|
 | Marketing H1 | `--zk-type-h1-size`: 32px up to 44px (`clamp`), 32px at 390px and below, weight 600, one per page. No second display size. |
-| Docs H1 | Same token as marketing H1 (one page title scale). H2 `--zk-type-h2-size` 22-26px, H3 18px, weight 600. Linked headings inherit size and weight. |
+| Docs H1 | `--zk-type-doc-h1-size`: 2rem, 1.75rem below 48rem (not the marketing clamp). H2 `--zk-type-h2-size` 22-26px, H3 18px, weight 600. Linked headings inherit size and weight. |
 | Prose | 15/1.6 (`--zk-type-prose-size`), 64-72ch. Lead paragraph `--zk-type-lead-size` 16-18px, once. |
 | Body and dense UI | Body 14/1.55. Dense UI (controls, tabs, example links, table cells, nav) is the kit's `--text-sm`: 13px. Nothing a person must read to act is below 13px. |
 | Metadata | 12/1.4 (`--zk-type-label-size`). Counts, captions, eyebrow labels, timestamps. Never essential copy or a link people need. |
@@ -83,7 +83,7 @@ Both obey reduced motion completely (no animation, no tour, no pinning, final nu
 
 ## Home
 
-Promise and one working example (hero: the proposition beside one small working app whose pages are the examples, no scroll pinning of the hero), then each look doing the job it suits (one product screen per identity, built from the same components, never one page restyled six times; on a wide, tall screen the scroll picks the look), then adoption (npm or copy source, one command), then finding a component by family, then the rest of the kit. Each band has one focal point, one next action and a different shape from its neighbours. A band that repeats another (two blocks about coding agents) is removed.
+Promise and one working example (hero: the proposition, which names both the UI and the one-prompt AI setup, beside one small working app whose pages are the examples, no scroll pinning of the hero), then the AI setup (the copyable prompt, what the kit installs, and the real file tree it leaves, all derived from the `zedkit-ai` kit manifest), then each look doing the job it suits (one product screen per identity, built from the same components, never one page restyled six times; on a wide, tall screen the scroll picks the look), then adoption (npm or copy source, one command), then finding a component by family, then the rest of the kit. Each band has one focal point, one next action and a different shape from its neighbours. A band that repeats another (two blocks about coding agents) is removed.
 
 Identity examples sell what the kit builds, not how many identities it ships: no count in the title or copy, and each identity shows its own product screen (Maison a bag shop, Press a newsroom, Glass a SaaS app), never one page restyled per identity. Each example uses live kit components and keeps its own identity in full.
 

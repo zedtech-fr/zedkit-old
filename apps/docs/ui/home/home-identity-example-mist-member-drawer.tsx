@@ -114,7 +114,13 @@ export function HomeIdentityExampleMistMemberDrawer({
   onRestoreFocus: () => void;
 }) {
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} onAnimationEnd={(isOpen) => !isOpen && onRestoreFocus()} direction="right">
+    <Drawer
+      open={open}
+      onOpenChange={onOpenChange}
+      onAnimationEnd={(isOpen) => !isOpen && onRestoreFocus()}
+      direction="right"
+      noBodyStyles
+    >
       <DrawerContent
         onCloseAutoFocus={(event) => {
           event.preventDefault();

@@ -1,0 +1,76 @@
+/*
+ * Named signature motions (durations + easings as tokens). Identities tune
+ * personality via --zk-reveal-* and --motion-*; apps use these names, not raw ms.
+ */
+
+:root {
+  --zk-motion-reveal-duration: var(--zk-reveal-duration, 300ms);
+  --zk-motion-reveal-distance: var(--zk-reveal-distance, 0.75rem);
+  --zk-motion-reveal-ease: var(--zk-reveal-ease, var(--ease-enter));
+
+  --zk-motion-settle-duration: var(--motion-base, 200ms);
+  --zk-motion-settle-ease: var(--ease-enter);
+
+  --zk-motion-emphasis-duration: var(--motion-base, 200ms);
+  --zk-motion-emphasis-ease: var(--ease-enter);
+
+  --zk-motion-glide-duration: var(--motion-slow, 250ms);
+  --zk-motion-glide-ease: var(--ease-enter);
+
+  --zk-motion-feedback-duration: var(--motion-fast, 150ms);
+  --zk-motion-feedback-ease: var(--ease-exit);
+}
+
+@utility motion-reveal {
+  :root:not([data-motion="reduce"]) & {
+    animation: zk-reveal-up var(--zk-motion-reveal-duration) var(--zk-motion-reveal-ease) backwards;
+  }
+}
+
+@utility motion-settle {
+  :root:not([data-motion="reduce"]) & {
+    animation: zk-reveal-fade var(--zk-motion-settle-duration) var(--zk-motion-settle-ease) backwards;
+  }
+}
+
+@utility motion-emphasis {
+  :root:not([data-motion="reduce"]) & {
+    animation: zk-reveal-pop var(--zk-motion-emphasis-duration) var(--zk-motion-emphasis-ease) backwards;
+  }
+}
+
+@utility motion-glide {
+  :root:not([data-motion="reduce"]) & {
+    transition-duration: var(--zk-motion-glide-duration);
+    transition-timing-function: var(--zk-motion-glide-ease);
+  }
+}
+
+@utility motion-feedback {
+  :root:not([data-motion="reduce"]) & {
+    transition-duration: var(--zk-motion-feedback-duration);
+    transition-timing-function: var(--zk-motion-feedback-ease);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-reveal,
+  .motion-settle,
+  .motion-emphasis {
+    animation: none !important;
+  }
+  .motion-glide,
+  .motion-feedback {
+    transition: none !important;
+  }
+}
+
+:root[data-motion="reduce"] .motion-reveal,
+:root[data-motion="reduce"] .motion-settle,
+:root[data-motion="reduce"] .motion-emphasis {
+  animation: none !important;
+}
+:root[data-motion="reduce"] .motion-glide,
+:root[data-motion="reduce"] .motion-feedback {
+  transition: none !important;
+}

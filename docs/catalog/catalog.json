@@ -2826,10 +2826,73 @@
             ]
           },
           "a11y": "Every utility and attribute is switched off under `prefers-reduced-motion: reduce`, with content left visible and in place. Hover lift only applies on devices that hover, so it never sticks after a tap.",
-          "troubleshooting": "Nothing animates — check the OS reduced-motion setting first. Content stays hidden — `data-reveal=\"pending\"` and `data-stagger=\"pending\"` hide content until your code sets them to `\"in\"`. Stagger has no delay — `stagger-*` delays an animation class (`animate-fade-up stagger-2`), not a transition.",
+          "troubleshooting": "Nothing animates — check the OS reduced-motion setting first. Content stays hidden — `data-reveal=\"pending\"` and `data-stagger=\"pending\"` hide content until your code sets them to `\"in\"`. Stagger has no delay — `stagger-*` delays an animation class (`animate-fade-up stagger-2`), not a transition. Parallax travel follows `--zk-motion-intensity` (default 1, `0` = no shift) times `--zk-motion-mobile` (`0.5` under 40rem); override on a subtree (`.hero { --zk-motion-intensity: 0.3 }`), not as an identity token. Derived amplitude is `min(calc(var(--zk-reveal-distance) * 8), var(--zk-parallax-max-shift, 120px))` (x-axis cap `12vw`). Sticky offset is `--zk-pin-top` (`calc(var(--zk-header-height) + 1rem)`).",
           "seeAlso": [
             "Theme an admin app (dark/light included)",
-            "Group content in a card section"
+            "Group content in a card section",
+            "Reveal and react with motion on any element"
+          ]
+        },
+        {
+          "need": "Reveal and react with motion on any element",
+          "import": "`@zedtech/zedkit-ui` — `Animate`, `AnimateObserver`, `AnimateProps`, `AnimateOn`, `AnimatePreset`, `AnimateTrigger`, `AnimateMotion`, `observeAnimate`, `ANIMATE_PRESETS`, `ANIMATE_TRIGGERS`, `MotionScript`, `MotionScriptProps`, `useMotionPreference`, `applyMotionPreference`, `isMotionReduced`, `MotionPreference`, `MOTION_STORAGE_KEY`, `MOTION_CHANGE_EVENT`",
+          "wraps": "`(none)`",
+          "status": "alpha",
+          "shortName": "Animate",
+          "audience": "Developers adding appear, scroll, press, longpress, hover or focus motion to any kit element.",
+          "purpose": "One typed attribute and wrapper API for identity-token motion, with a tiny SSR-safe runtime.",
+          "whenToUse": "When a card, section or control should move on appear, scroll progress, press, longpress, hover or focus.",
+          "whenNotToUse": "For pinned scene crossfades use `ScrollScenes`. For section snap/smooth-scroll use `SectionScroll`. For first-paint class utilities see `Animate entrances and hover feedback with CSS utilities`.",
+          "derivedFrom": null,
+          "example": "import { AnimateObserver, Card } from \"@zedtech/zedkit-ui\";\n\n<AnimateObserver />\n<Card data-animate=\"fade-up\" data-animate-delay=\"100\" data-animate-press=\"scale-down\">\n  Invoice\n</Card>",
+          "examples": [
+            {
+              "title": "Attribute on a card",
+              "code": "import { AnimateObserver, Card } from \"@zedtech/zedkit-ui\";\n\n<AnimateObserver />\n<Card data-animate=\"fade-up\" data-animate-delay=\"100\" data-animate-press=\"scale-down\">\n  Invoice\n</Card>"
+            },
+            {
+              "title": "Wrapper with several triggers",
+              "code": "import { Animate } from \"@zedtech/zedkit-ui\";\n\n<Animate on={{ appear: \"fade-up\", press: \"scale-down\", longpress: \"pulse\", scroll: \"parallax\" }}>\n  Band\n</Animate>"
+            },
+            {
+              "title": "Stagger children",
+              "code": "import { Animate, Stack, Text } from \"@zedtech/zedkit-ui\";\n\n<Animate on={{ appear: \"fade-up\" }} stagger>\n  <Stack>\n    <Text>One</Text>\n    <Text>Two</Text>\n  </Stack>\n</Animate>"
+            }
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Animate",
+                  "AnimateObserver",
+                  "AnimateProps",
+                  "AnimateOn",
+                  "AnimatePreset",
+                  "AnimateTrigger",
+                  "AnimateMotion",
+                  "observeAnimate",
+                  "ANIMATE_PRESETS",
+                  "ANIMATE_TRIGGERS",
+                  "MotionScript",
+                  "MotionScriptProps",
+                  "useMotionPreference",
+                  "applyMotionPreference",
+                  "isMotionReduced",
+                  "MotionPreference",
+                  "MOTION_STORAGE_KEY",
+                  "MOTION_CHANGE_EVENT"
+                ]
+              }
+            ]
+          },
+          "a11y": "`prefers-reduced-motion: reduce` leaves content visible and in place. Hover is gated to hover-capable pointers. Focus uses `:focus-visible`. Press ignores disabled. Longpress is decorative, never the only action. Appear does not set `aria-hidden`.",
+          "troubleshooting": "Nothing appears to move — mount `<AnimateObserver />` once near the app root (or call `observeAnimate()`), then check reduced motion and `data-motion` on `<html>`. Content stays visible without JS by design. Scroll parallax needs `animation-timeline: view()` or the runtime fallback. In-app reduce flashes on load — render `<MotionScript />` in `<head>` (same pattern as `IdentityScript`) so `data-motion=\"reduce\"` is set before paint; `useMotionPreference()` is `\"reduce\"` on the server.",
+          "seeAlso": [
+            "Animate entrances and hover feedback with CSS utilities",
+            "Pin a stage and change scene as the page scrolls",
+            "Stack content and group titled sections"
           ]
         },
         {
@@ -3172,6 +3235,47 @@
           "seeAlso": [
             "Show a status or count badge",
             "Show key-value details and a live indicator"
+          ]
+        },
+        {
+          "need": "Compose a chat prompt",
+          "import": "`@zedtech/zedkit-ui` — `PromptInput`, `PromptInputProps`",
+          "wraps": "native `<form>` + `<textarea>` + `IconButton`",
+          "status": "stable",
+          "shortName": "PromptInput",
+          "audience": "Developers building assistant or messaging UIs.",
+          "purpose": "One rounded surface with an auto-growing field and an in-field send control; Enter sends, Shift+Enter adds a line.",
+          "whenToUse": "Chat-style briefs where the send affordance sits inside the composer.",
+          "whenNotToUse": "Plain forms with a separate submit row — use `Field` + `Textarea` + `Button`.",
+          "derivedFrom": null,
+          "example": "import { PromptInput } from \"@zedtech/zedkit-ui\";\n<PromptInput sendLabel=\"Send\" value={text} onChange={(e) => setText(e.target.value)} onSubmit={send} placeholder=\"Ask anything\" aria-label=\"Message\" />",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "import { PromptInput } from \"@zedtech/zedkit-ui\";\n<PromptInput sendLabel=\"Send\" value={text} onChange={(e) => setText(e.target.value)} onSubmit={send} placeholder=\"Ask anything\" aria-label=\"Message\" />"
+            },
+            {
+              "title": "Complete",
+              "code": "import { PromptInput } from \"@zedtech/zedkit-ui\";\n<PromptInput\n  id=\"chat\"\n  sendLabel=\"Send\"\n  value={text}\n  onChange={(e) => setText(e.target.value)}\n  onSubmit={send}\n  busy={pending}\n  onCancel={stop}\n  cancelLabel=\"Stop\"\n  rows={1}\n  maxLength={2000}\n  aria-label=\"Message\"\n/>"
+            }
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "PromptInput",
+                  "PromptInputProps"
+                ]
+              }
+            ]
+          },
+          "a11y": "Pass `sendLabel` (and `cancelLabel` when using cancel); the field keeps a visible label via `aria-label` or associated `FieldLabel`.",
+          "troubleshooting": "Send stays disabled — value is trimmed; whitespace-only counts as empty. Field does not grow — use `field-sizing-content` (Tailwind v4) on the consumer stylesheet.",
+          "seeAlso": [
+            "Collect multi-line text input",
+            "Icon-only actions with a visible name"
           ]
         },
         {
@@ -3665,7 +3769,7 @@
         },
         {
           "need": "Open modal dialogs",
-          "import": "`@zedtech/zedkit-ui` — `Dialog`, `DialogProps`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `DialogClose`, `DialogOverlay`, `DialogPortal`",
+          "import": "`@zedtech/zedkit-ui` — `Dialog`, `DialogProps`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `DialogClose`, `DialogOverlay`, `DialogPortal`, `OverlayInitialFocus`",
           "wraps": "`@radix-ui/react-dialog`",
           "status": "stable",
           "shortName": "Dialog",
@@ -3701,13 +3805,14 @@
                   "DialogFooter",
                   "DialogClose",
                   "DialogOverlay",
-                  "DialogPortal"
+                  "DialogPortal",
+                  "OverlayInitialFocus"
                 ]
               }
             ]
           },
           "registry": "dialog",
-          "a11y": "Focus trap and Escape come from Radix; opening moves focus to the panel (no heavy ring) before tabbing to actions. Header and footer share the content surface (transparent chrome on glass and solid identities). Content centers via the `dialog-center` utility (`--spacing-dialog-center`) and elevates with `--shadow-overlay`. Slots, close offset, and overlay stacking come from `--spacing-dialog-*` / `--z-index-overlay`; the close control is a 44px (`size-overlay-touch-target`) hit area with `focus-ring-control`, aligned to the title row. Tall content scrolls inside `max-h-dialog-max-height`, further capped to the visual viewport when the software keyboard is open, with `overscroll-behavior: contain`. Header copy is left-aligned; footer actions are right-aligned with token gaps; footer clears `env(safe-area-inset-bottom)`.",
+          "a11y": "Focus trap and Escape come from Radix; opening moves focus to the panel (no heavy ring, never inside a field, never a text selection) before tabbing to actions. `initialFocus` (a ref or a selector) opts a field in, with the caret at the end. Header and footer share the content surface (transparent chrome on glass and solid identities). Content centers via the `dialog-center` utility (`--spacing-dialog-center`) and elevates with `--shadow-overlay`. Slots, close offset, and overlay stacking come from `--spacing-dialog-*` / `--z-index-overlay`; the close control is a 44px (`size-overlay-touch-target`) hit area with `focus-ring-control`, aligned to the title row. Tall content scrolls inside `max-h-dialog-max-height`, further capped to the visual viewport when the software keyboard is open, with `overscroll-behavior: contain`. Header copy is left-aligned; footer actions are right-aligned with token gaps; footer clears `env(safe-area-inset-bottom)`.",
           "troubleshooting": "A footer button does not close the dialog unless it is `DialogClose`. Nested overlays need their own `Dialog` root. Tall content scrolls inside the panel (`max-h-dialog-max-height`), not the page behind it.",
           "seeAlso": [
             "Confirm destructive actions",
@@ -3759,13 +3864,13 @@
         },
         {
           "need": "Slide in a drawer panel",
-          "import": "`@zedtech/zedkit-ui` — `Drawer`, `DrawerProps`, `DrawerTrigger`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerBody`, `DrawerFooter`, `DrawerHandle`, `DrawerClose`, `DrawerCloseButton`, `DrawerOverlay`, `DrawerPortal`",
+          "import": "`@zedtech/zedkit-ui` — `Drawer`, `DrawerProps`, `DrawerSize`, `DrawerTrigger`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerBody`, `DrawerFooter`, `DrawerHandle`, `DrawerClose`, `DrawerCloseButton`, `DrawerOverlay`, `DrawerPortal`",
           "wraps": "`vaul`",
           "status": "beta",
           "shortName": "Drawer",
           "audience": "Developers showing detail views beside a list without navigation.",
-          "purpose": "Slide-in panels from any edge (right-side detail on desktop, bottom sheet on mobile, left, right, or top on demand).",
-          "whenToUse": "For list-detail previews and short side forms.",
+          "purpose": "Slide-in panels from any edge: right-side detail on desktop, bottom sheet on mobile; size sm, md or lg.",
+          "whenToUse": "For list-detail previews and short side forms. Panel chrome (border, fill, edge shadow) comes from `Surface` elevation 3 (`shadow-overlay`); `size=\"sm\" | \"md\" | \"lg\"` on `DrawerContent` sets desktop side width (`md` is the default 28rem; `lg` is about min(600px, 92vw)).",
           "whenNotToUse": "For multi-step flows — use a full page or wizard instead.",
           "derivedFrom": "shadcn/ui (drawer)",
           "example": "import { Button, Drawer, DrawerClose, DrawerContent, DrawerTitle, DrawerTrigger } from \"@zedtech/zedkit-ui\";\n<Drawer direction=\"right\">\n  <DrawerTrigger asChild><Button>Open</Button></DrawerTrigger>\n  <DrawerContent>\n    <DrawerClose asChild><Button variant=\"ghost\" size=\"sm\">Close</Button></DrawerClose>\n    <DrawerTitle>Details</DrawerTitle>\n  </DrawerContent>\n</Drawer>",
@@ -3791,6 +3896,7 @@
                 "exports": [
                   "Drawer",
                   "DrawerProps",
+                  "DrawerSize",
                   "DrawerTrigger",
                   "DrawerContent",
                   "DrawerHeader",
@@ -3808,7 +3914,7 @@
             ]
           },
           "registry": "drawer",
-          "a11y": "Built on vaul / Radix Dialog: modal drawers move focus inside on open so the focus trap engages; Escape to close and focus returns to the trigger; rest of the page is hidden from assistive tech while open (`role=\"dialog\"`). Pass `modal={false}` (and matching `DrawerContent`) when the dimmed page must stay keyboard-reachable — mount autofocus stays off. Provide `DrawerTitle` (and `DrawerDescription` when the panel needs context). Use `DrawerCloseButton` (44px touch target) plus `DrawerHandle` for swipe-down; the handle hides itself on left and right drawers and moves to the bottom edge of a top drawer. Every direction closes by dragging toward its edge, tapping the dimmed area, or pressing Escape. Safe-area insets are respected, and fields inside a drawer stay at 16px on touch screens. Sticky `DrawerHeader` / `DrawerFooter` keep title and actions visible; `DrawerBody` scrolls with `overscroll-behavior: contain`.",
+          "a11y": "Modal drawers use Vaul / Radix Dialog: focus lands on the panel itself on open (never a field, never a text selection) so the focus trap engages; `initialFocus` (a ref or a selector) opts a field in, with the caret at the end. Escape to close and focus returns to the trigger; rest of the page is hidden from assistive tech while open (`role=\"dialog\"`). `modal={false}` (and matching `DrawerContent`) renders a kit inline panel with Surface styling—not Vaul/Radix—so the page stays pointer- and keyboard-reachable, without `aria-hidden` on siblings; mount autofocus stays off, Escape still closes and returns focus to the trigger. Provide `DrawerTitle` (and `DrawerDescription` when the panel needs context). Use `DrawerCloseButton` (44px touch target) plus `DrawerHandle` for swipe-down; the handle hides itself on left and right drawers and moves to the bottom edge of a top drawer. Every direction closes by dragging toward its edge, tapping the dimmed area, or pressing Escape on modal drawers. Safe-area insets are respected, and fields inside a drawer stay at 16px on touch screens. Sticky `DrawerHeader` / `DrawerFooter` keep title and actions visible; `DrawerBody` scrolls with `overscroll-behavior: contain`.",
           "troubleshooting": "Dim overlay missing after `shadcn add` — install the drawer registry item (it injects the `--overlay` token) or add the token to your theme. `direction=\"right\"` with default `mobile=\"sheet\"` becomes a bottom sheet under 640px; pass `mobile=\"side\"` to keep a full-height side panel on phones (up to 90% of the width, so the dimmed page stays tappable).",
           "seeAlso": [
             "Open modal dialogs",
@@ -4513,6 +4619,48 @@
           ]
         },
         {
+          "need": "Shared panel surface (border, shadow, glass)",
+          "import": "`@zedtech/zedkit-ui` — `Surface`, `surfaceVariants`, `SurfaceProps`, `surfaceGlassPanelClass`, `applySurfaceGlassPanel`, `WidgetButton`, `WidgetButtonProps`",
+          "wraps": "none (`surface.css` frosts `variant=\"glass\"` under the glass identity)",
+          "status": "alpha",
+          "shortName": "Surface",
+          "audience": "Developers building floating panels or composing kit overlays.",
+          "purpose": "One panel surface: solid card, popover or glass, elevation `0`–`3` with token shadows, border, radius and optional padding.",
+          "whenToUse": "Custom panels that should match Dialog, Drawer, Card, and Popover chrome; floating assistant triggers via `WidgetButton`.",
+          "whenNotToUse": "Marketing page sections — use `@zedtech/zedkit-ui/marketing` `GlassSurface` instead.",
+          "derivedFrom": null,
+          "example": "import { Surface, WidgetButton } from \"@zedtech/zedkit-ui\";\n<Surface variant=\"solid\" elevation={2} radius=\"xl\" padding=\"md\">Summary</Surface>\n<WidgetButton aria-label=\"Open assistant\">Ask</WidgetButton>",
+          "examples": [
+            {
+              "title": "Solid card panel",
+              "code": "import { Surface, WidgetButton } from \"@zedtech/zedkit-ui\";\n<Surface variant=\"solid\" elevation={2} radius=\"xl\" padding=\"md\">Summary</Surface>\n<WidgetButton aria-label=\"Open assistant\">Ask</WidgetButton>"
+            }
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "Surface",
+                  "surfaceVariants",
+                  "SurfaceProps",
+                  "surfaceGlassPanelClass",
+                  "applySurfaceGlassPanel",
+                  "WidgetButton",
+                  "WidgetButtonProps"
+                ]
+              }
+            ]
+          },
+          "a11y": "Presentational wrapper — name regions with headings or `aria-label`. `WidgetButton` is a normal button (outline variant) with pill radius and card elevation.",
+          "seeAlso": [
+            "Group content in a card section",
+            "Slide in a drawer panel",
+            "Open modal dialogs"
+          ]
+        },
+        {
           "need": "Group content in a card section",
           "import": "`@zedtech/zedkit-ui` — `Card`, `CardProps`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`",
           "wraps": "none (presentational, theme tokens only)",
@@ -4552,7 +4700,7 @@
             ]
           },
           "registry": "card",
-          "a11y": "Slots are plain containers — put headings and labels inside. Spacing comes from `--spacing-card-*` theme tokens; elevation is `shadow-md` (`--zk-shadow-md` per identity). `CardSkeleton` mirrors the same tokens so async content lands without shifting.",
+          "a11y": "Slots are plain containers — put headings and labels inside. Spacing comes from `--spacing-card-*` theme tokens; elevation is Surface level 2 (`shadow-md`, `--zk-shadow-md` per identity). `CardSkeleton` mirrors the same tokens so async content lands without shifting.",
           "troubleshooting": "Cramped content — inner padding comes from the `--spacing-card-padding` theme token (`pt-0` on content/footer avoids doubling it). Title not announced as a heading — slots are plain `div`s; put a real heading element inside `CardTitle` when the card needs one.",
           "seeAlso": [
             "Stack content and group titled sections"
@@ -4560,20 +4708,20 @@
         },
         {
           "need": "Stack content and group titled sections",
-          "import": "`@zedtech/zedkit-ui` — `Stack`, `stackVariants`, `StackProps`, `Section`, `SectionProps`",
+          "import": "`@zedtech/zedkit-ui` — `Stack`, `stackVariants`, `StackProps`, `Section`, `SectionProps`, `SectionScroll`, `SectionScrollProps`",
           "wraps": "none (flex/gap utilities over `Heading`, `Text`)",
           "status": "stable",
           "shortName": "Stack",
           "audience": "Developers laying out kit pages without raw divs.",
-          "purpose": "Gap-based vertical/horizontal stacks plus titled sections.",
+          "purpose": "Gap-based vertical/horizontal stacks plus titled sections, with optional proximity scroll-snap.",
           "whenToUse": "For all kit-page layout instead of hand-written flex.",
-          "whenNotToUse": "For complex grids — use CSS grid directly instead.",
+          "whenNotToUse": "For complex grids — use CSS grid directly instead. For motion/enter animations, use the motion utilities, not `SectionScroll`.",
           "derivedFrom": null,
-          "example": "import { Section, Stack } from \"@zedtech/zedkit-ui\";\n<Section title=\"Team\" description=\"Who can access.\">\n<Stack direction=\"horizontal\" gap={2}>...</Stack>",
+          "example": "import { Section, SectionScroll, Stack } from \"@zedtech/zedkit-ui\";\n<SectionScroll>\n  <Section title=\"Team\" description=\"Who can access.\">\n    <Stack direction=\"horizontal\" gap={2}>...</Stack>\n  </Section>\n  <Section snap=\"none\" title=\"Long band\">...</Section>\n</SectionScroll>",
           "examples": [
             {
               "title": "Simple",
-              "code": "import { Section, Stack } from \"@zedtech/zedkit-ui\";\n<Section title=\"Team\" description=\"Who can access.\">\n<Stack direction=\"horizontal\" gap={2}>...</Stack>"
+              "code": "import { Section, SectionScroll, Stack } from \"@zedtech/zedkit-ui\";\n<SectionScroll>\n  <Section title=\"Team\" description=\"Who can access.\">\n    <Stack direction=\"horizontal\" gap={2}>...</Stack>\n  </Section>\n  <Section snap=\"none\" title=\"Long band\">...</Section>\n</SectionScroll>"
             }
           ],
           "adoption": {
@@ -4586,12 +4734,14 @@
                   "stackVariants",
                   "StackProps",
                   "Section",
-                  "SectionProps"
+                  "SectionProps",
+                  "SectionScroll",
+                  "SectionScrollProps"
                 ]
               }
             ]
           },
-          "a11y": "`Stack` renders a plain `div` with no role. `Section` renders a `section` landmark named by its string `title`, with that title as a level-2 heading: use one `title` per region, keep heading levels in order, and do not repeat a title that a nearby landmark already uses.",
+          "a11y": "`Stack` renders a plain `div` with no role. `Section` renders a `section` landmark named by its string `title`, with that title as a level-2 heading: use one `title` per region, keep heading levels in order, and do not repeat a title that a nearby landmark already uses. `SectionScroll` is a plain `div`; snap and smooth scrolling apply only when `prefers-reduced-motion` is `no-preference`.",
           "seeAlso": [
             "Render headings and body text without raw tags",
             "Group content in a card section",
@@ -4638,20 +4788,20 @@
         },
         {
           "need": "Render headings and body text without raw tags",
-          "import": "`@zedtech/zedkit-ui` — `Heading`, `HeadingProps`, `headingVariants`, `Text`, `TextProps`, `textVariants`",
+          "import": "`@zedtech/zedkit-ui` — `Heading`, `HeadingProps`, `headingVariants`, `Text`, `TextProps`, `textVariants`, `typeRoleClass`, `signatureMotionClass`, `headingLevelDefaultRole`, `TypeRole`, `SignatureMotion`",
           "wraps": "`class-variance-authority` (styles follow the documented shadcn typography recipes; no registry item exists)",
           "status": "stable",
           "shortName": "Typography",
           "audience": "Developers writing kit pages with consistent type.",
-          "purpose": "Heading levels and Text variants with theme-aware styles.",
+          "purpose": "Heading levels and Text variants with theme-aware styles; visual roles decouple size from semantic level (`typeRole` / `typeRoleClass`).",
           "whenToUse": "For every heading and paragraph in kit UI.",
           "whenNotToUse": "For raw HTML emails or markdown — style those separately.",
           "derivedFrom": null,
-          "example": "import { Heading, Text } from \"@zedtech/zedkit-ui\";\n<Heading level={1}>Page title</Heading>\n<Heading level={2} as=\"div\">Styled as h2, neutral tag</Heading>\n<Text>Body copy.</Text>\n<Text variant=\"muted\">Secondary copy.</Text>",
+          "example": "import {\n  Heading,\n  Text,\n  typeRoleClass,\n  signatureMotionClass,\n  headingLevelDefaultRole,\n  type TypeRole,\n  type SignatureMotion,\n} from \"@zedtech/zedkit-ui\";\n<Heading level={1} typeRole=\"display\">Page title</Heading>\n<Heading level={2} typeRole=\"title\">Section title</Heading>\n<Heading level={3} typeRole=\"heading\">Band heading</Heading>\n<Text typeRole=\"body\">Body copy.</Text>\n<Text typeRole=\"caption\">Caption</Text>",
           "examples": [
             {
               "title": "Simple",
-              "code": "import { Heading, Text } from \"@zedtech/zedkit-ui\";\n<Heading level={1}>Page title</Heading>\n<Heading level={2} as=\"div\">Styled as h2, neutral tag</Heading>\n<Text>Body copy.</Text>\n<Text variant=\"muted\">Secondary copy.</Text>"
+              "code": "import {\n  Heading,\n  Text,\n  typeRoleClass,\n  signatureMotionClass,\n  headingLevelDefaultRole,\n  type TypeRole,\n  type SignatureMotion,\n} from \"@zedtech/zedkit-ui\";\n<Heading level={1} typeRole=\"display\">Page title</Heading>\n<Heading level={2} typeRole=\"title\">Section title</Heading>\n<Heading level={3} typeRole=\"heading\">Band heading</Heading>\n<Text typeRole=\"body\">Body copy.</Text>\n<Text typeRole=\"caption\">Caption</Text>"
             },
             {
               "title": "Heading styles on a link (asChild)",
@@ -4669,7 +4819,12 @@
                   "headingVariants",
                   "Text",
                   "TextProps",
-                  "textVariants"
+                  "textVariants",
+                  "typeRoleClass",
+                  "signatureMotionClass",
+                  "headingLevelDefaultRole",
+                  "TypeRole",
+                  "SignatureMotion"
                 ]
               }
             ]
@@ -5003,6 +5158,97 @@
           ]
         },
         {
+          "need": "Horizontal scroll gallery row",
+          "import": "`@zedtech/zedkit-ui` — `ScrollGallery`, `ScrollGalleryProps`",
+          "wraps": "none (layout + focus scroll)",
+          "status": "alpha",
+          "shortName": "ScrollGallery",
+          "audience": "Developers showing a row of peers (identity chips, filter pills, thumbnail strips) that must stay on one line on phones.",
+          "purpose": "One snap-aligned horizontal scroll row with thin scrollbar, edge fade, and focused items scrolled into view.",
+          "whenToUse": "More items than fit at once; keyboard tabs or links inside the row.",
+          "whenNotToUse": "Primary navigation that should wrap — use a vertical stack.",
+          "derivedFrom": null,
+          "example": "import { ScrollGallery, Tabs, TabsList, TabsTrigger } from \"@zedtech/zedkit-ui\";\n\n<Tabs value=\"a\">\n  <ScrollGallery className=\"w-full\">\n    <TabsList className=\"inline-flex w-max flex-nowrap\">\n      <TabsTrigger value=\"a\">One</TabsTrigger>\n      <TabsTrigger value=\"b\">Two</TabsTrigger>\n    </TabsList>\n  </ScrollGallery>\n</Tabs>",
+          "examples": [
+            {
+              "title": "Identity picker row",
+              "code": "import { ScrollGallery, Tabs, TabsList, TabsTrigger } from \"@zedtech/zedkit-ui\";\n\n<Tabs value=\"a\">\n  <ScrollGallery className=\"w-full\">\n    <TabsList className=\"inline-flex w-max flex-nowrap\">\n      <TabsTrigger value=\"a\">One</TabsTrigger>\n      <TabsTrigger value=\"b\">Two</TabsTrigger>\n    </TabsList>\n  </ScrollGallery>\n</Tabs>"
+            },
+            {
+              "title": "Filter chips",
+              "code": "import { ScrollGallery } from \"@zedtech/zedkit-ui\";\n\n<ScrollGallery className=\"max-w-sm\">\n  <div className=\"flex w-max gap-2\">\n    <a className=\"shrink-0 snap-start rounded-md border px-3 py-2\" href=\"#a\">\n      Alpha\n    </a>\n    <a className=\"shrink-0 snap-start rounded-md border px-3 py-2\" href=\"#b\">\n      Beta\n    </a>\n  </div>\n</ScrollGallery>"
+            }
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "ScrollGallery",
+                  "ScrollGalleryProps"
+                ]
+              }
+            ]
+          },
+          "a11y": "Keep real controls inside the track (tabs, links, buttons); focused items scroll into view. Edge fades are decorative only.",
+          "troubleshooting": "Items wrap to two lines — the track child should be `inline-flex flex-nowrap` (for example `TabsList`). Nothing scrolls — confirm the row is wider than the viewport and `overflow-x-auto` is not blocked by a parent `overflow: hidden`.",
+          "seeAlso": [
+            "Pin a stage and change scene as the page scrolls",
+            "Switch between tabbed panels"
+          ]
+        },
+        {
+          "need": "Keep a side panel in view",
+          "import": "`@zedtech/zedkit-ui` — `StickyAside`, `StickyAsideMain`, `StickyAsideAside`, `StickyAsideProps`, `StickyAsideMainProps`, `StickyAsideAsideProps`, `StickyAsideSide`, `StickyAsideFrom`, `StickyAsideGap`, `StickyAsideMobile`, `StickyAsideRatioPreset`",
+          "wraps": "none (CSS `position: sticky`)",
+          "status": "alpha",
+          "shortName": "StickyAside",
+          "audience": "Developers building docs, onboarding, or pricing pages where steps scroll on one side and a summary or preview should stay visible until the section ends.",
+          "purpose": "Main column scrolls; aside sticks under the header until the section ends. Pure CSS, server components, no scroll hijacking.",
+          "whenToUse": "Long step lists beside a short preview, install instructions beside a rendered example, or any section where reading order is main then aside.",
+          "whenNotToUse": "Pinning a single stage that crossfades through scenes — use `ScrollScenes`. A sticky bar that spans the whole viewport outside a section — use your shell header. Tall aside content without `scrollable` when you need the full block visible at once on small viewports — stack on mobile or shorten the aside.",
+          "derivedFrom": null,
+          "example": "import { StickyAside, Stack, Text } from \"@zedtech/zedkit-ui\";\nimport { GlassSurface } from \"@zedtech/zedkit-ui/marketing\";\n\n<StickyAside side=\"right\" ratio=\"1/3\" className=\"[--zk-sticky-top:7rem]\">\n  <StickyAside.Main>\n    <Stack gap={4}>{/* numbered steps */}</Stack>\n  </StickyAside.Main>\n  <StickyAside.Aside asChild>\n    <GlassSurface padding=\"md\">\n      <Text>Rendered example</Text>\n    </GlassSurface>\n  </StickyAside.Aside>\n</StickyAside>",
+          "examples": [
+            {
+              "title": "Get started steps with live preview",
+              "code": "import { StickyAside, Stack, Text } from \"@zedtech/zedkit-ui\";\nimport { GlassSurface } from \"@zedtech/zedkit-ui/marketing\";\n\n<StickyAside side=\"right\" ratio=\"1/3\" className=\"[--zk-sticky-top:7rem]\">\n  <StickyAside.Main>\n    <Stack gap={4}>{/* numbered steps */}</Stack>\n  </StickyAside.Main>\n  <StickyAside.Aside asChild>\n    <GlassSurface padding=\"md\">\n      <Text>Rendered example</Text>\n    </GlassSurface>\n  </StickyAside.Aside>\n</StickyAside>"
+            },
+            {
+              "title": "Doc page with summary card",
+              "code": "import { Card, CardContent, StickyAside, Text } from \"@zedtech/zedkit-ui\";\n\n// Aside on the left from the md breakpoint; stack main first on phones.\n<StickyAside side=\"left\" from=\"md\" mobile=\"stack-after\">\n  <StickyAside.Main>\n    <Text>Form fields…</Text>\n  </StickyAside.Main>\n  <StickyAside.Aside scrollable>\n    <Card>\n      <CardContent>Order summary</CardContent>\n    </Card>\n  </StickyAside.Aside>\n</StickyAside>"
+            }
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "StickyAside",
+                  "StickyAsideMain",
+                  "StickyAsideAside",
+                  "StickyAsideProps",
+                  "StickyAsideMainProps",
+                  "StickyAsideAsideProps",
+                  "StickyAsideSide",
+                  "StickyAsideFrom",
+                  "StickyAsideGap",
+                  "StickyAsideMobile",
+                  "StickyAsideRatioPreset"
+                ]
+              }
+            ]
+          },
+          "a11y": "DOM order is always main then aside; use `mobile=\"before\"` only when the aside should appear first visually on phones. Put headings and steps in the main column; label specimen previews (for example with `role=\"group\"` and `aria-label`). In-section links in the main column get `scroll-margin-top` from `--zk-pin-top`. With `scrollable`, the aside scrolls internally — keep focusable controls reachable.",
+          "troubleshooting": "Aside never sticks — check that `data-from` matches your breakpoint, the section is tall enough to scroll, and no ancestor between this root and the viewport uses `overflow: hidden|auto|scroll` or a transform. Aside hides under the site header — set `--zk-sticky-top` (or `--zk-pin-top` globally) to the header offset. Columns too narrow — pass `ratio=\"1/2\"` or `--zk-sticky-cols`. Aside taller than the window — pass `scrollable` so it keeps sticky with an internal scroll area. Snap fights a long section — parent sections that contain `StickyAside` disable scroll-snap when `SectionScroll` is active.",
+          "seeAlso": [
+            "Stack content and group titled sections",
+            "Pin a stage and change scene as the page scrolls"
+          ]
+        },
+        {
           "need": "Pin a stage and change scene as the page scrolls",
           "import": "`@zedtech/zedkit-ui` — `ScrollScenes`, `ScrollScene`, `ScrollScenesProps`, `SCROLL_SCENES_MAX`",
           "wraps": "none (CSS scroll-driven animation)",
@@ -5185,13 +5431,13 @@
         },
         {
           "need": "Compose a public marketing page",
-          "import": "`@zedtech/zedkit-ui/marketing` — `GlassSurface`, `glassSurfaceVariants`, `GlassSurfaceProps`, `Hero`, `HeroProps`, `CtaBand`, `CtaBandProps`, `FeatureGrid`, `FeatureGridProps`, `FeatureItem`, `HowItWorks`, `HowItWorksProps`, `HowItWorksStep`, `MarketingHeader`, `MarketingHeaderProps`, `MarketingFooter`, `MarketingFooterProps`, `MarketingFooterColumn`, `LocaleSwitch`, `LocaleSwitchProps`, `LocaleOption`, `MediaSection`, `MediaSectionProps`, `LogoBand`, `LogoBandProps`, `LogoBandItem`, `Testimonials`, `TestimonialsProps`, `Testimonial`, `Pricing`, `PricingProps`, `PricingPlan`, `Faq`, `FaqProps`, `FaqItem`",
+          "import": "`@zedtech/zedkit-ui/marketing` — `GlassSurface`, `glassSurfaceVariants`, `GlassSurfaceProps`, `BriefSpecimen`, `BriefSpecimenProps`, `selectSpecimenDomain`, `CommerceSpecimen`, `SaasDashboardSpecimen`, `EditorialSpecimen`, `ServiceBookingSpecimen`, `specimenMessagesEn`, `SpecimenDomain`, `Hero`, `HeroProps`, `CtaBand`, `CtaBandProps`, `FeatureGrid`, `FeatureGridProps`, `FeatureItem`, `HowItWorks`, `HowItWorksProps`, `HowItWorksStep`, `MarketingHeader`, `MarketingHeaderProps`, `MarketingFooter`, `MarketingFooterProps`, `MarketingFooterColumn`, `LocaleSwitch`, `LocaleSwitchProps`, `LocaleOption`, `MediaSection`, `MediaSectionProps`, `LogoBand`, `LogoBandProps`, `LogoBandItem`, `Testimonials`, `TestimonialsProps`, `Testimonial`, `Pricing`, `PricingProps`, `PricingPlan`, `Faq`, `FaqProps`, `FaqItem`",
           "wraps": "none (theme tokens, `class-variance-authority`)",
           "status": "alpha",
           "shortName": "Marketing",
-          "audience": "Teams building a public landing page or pricing page on the same tokens and identities as their app.",
-          "purpose": "Presentational page sections that follow the active identity, so a public site and the console share one look. Strings are props.",
-          "whenToUse": "For a signed-out home, pricing or product page built from the kit's tokens (frosted under the glass identity, plain cards elsewhere).",
+          "audience": "Teams building a public landing page or identity preview on the same tokens and identities as their app.",
+          "purpose": "Marketing sections and brief-routed domain specimens (commerce, SaaS dashboard, editorial, booking). Glass stays the default identity; strings are props.",
+          "whenToUse": "For a signed-out home, pricing page, or in-`ThemeScope` preview while refining an identity.",
           "whenNotToUse": "For app screens — use `Card`, `PageHeader` and `Section` instead; for full-page bands use `Section` with `bleed`.",
           "derivedFrom": null,
           "example": "import { GlassSurface } from \"@zedtech/zedkit-ui/marketing\";\n\n<GlassSurface as=\"section\" aria-label=\"Plans\" tone=\"raised\" padding=\"lg\">\n  Plans\n</GlassSurface>;",
@@ -5199,6 +5445,10 @@
             {
               "title": "Simple",
               "code": "import { GlassSurface } from \"@zedtech/zedkit-ui/marketing\";\n\n<GlassSurface as=\"section\" aria-label=\"Plans\" tone=\"raised\" padding=\"lg\">\n  Plans\n</GlassSurface>;"
+            },
+            {
+              "title": "Brief specimen",
+              "code": "import { BriefSpecimen, selectSpecimenDomain } from \"@zedtech/zedkit-ui/marketing\";\n\nselectSpecimenDomain(\"Hair salon booking\"); // booking (D4)\n\n<BriefSpecimen brief=\"Independent newsroom\" />;"
             },
             {
               "title": "Hero",
@@ -5254,6 +5504,15 @@
                   "GlassSurface",
                   "glassSurfaceVariants",
                   "GlassSurfaceProps",
+                  "BriefSpecimen",
+                  "BriefSpecimenProps",
+                  "selectSpecimenDomain",
+                  "CommerceSpecimen",
+                  "SaasDashboardSpecimen",
+                  "EditorialSpecimen",
+                  "ServiceBookingSpecimen",
+                  "specimenMessagesEn",
+                  "SpecimenDomain",
                   "Hero",
                   "HeroProps",
                   "CtaBand",
@@ -5290,10 +5549,11 @@
               }
             ]
           },
-          "a11y": "`Hero` and `CtaBand` are `section` regions named by their own heading (`Hero` renders the page `h1`; pass `headingLevel={2}` when the page already has one); calls to action are links or buttons you pass in, full width on phones. `FeatureGrid` and `HowItWorks` are regions named by a level-2 title with level-3 item titles; feature icons are decorative (`aria-hidden`), steps are an ordered list whose numbers are added for you. `MarketingHeader` is a `banner` with a named main navigation; below `md` its links and actions open from a native `details` disclosure (a 44px `summary` labelled by `menu`). `MarketingFooter` gives each link column its own labelled navigation. `MediaSection` is a region named by its level-2 title: text first in reading order, the framed media after it (`reverse` only changes the visual side from `lg`); pass `alt` text or a caption with the media. `LogoBand` reads each company name instead of its logo (the logo is `aria-hidden`). `Testimonials` renders each quote as a `figure` with a `figcaption`; quotation marks come from the browser for the page `lang`. Only pass quotes you may publish. `Pricing` lists plans as a list of surfaces: each name is a level-3 heading, features are a list, and the highlighted plan carries a visible `badge` (never colour alone). `Faq` uses native `details`/`summary`: keyboard and screen readers work without script, and browser find-in-page opens matches; add `FAQPage` structured data with `@zedtech/zedkit-seo` if the page should carry it. `LocaleSwitch` is a named navigation whose items carry `lang`, with `aria-current` on the active language. Surfaces render a plain element (`div`, `section`, `article` or `li`); pass `aria-label` or a heading inside when it is a landmark. Text sits on the card colour, so contrast follows the identity tokens; under `prefers-reduced-transparency` the glass identity turns surfaces near-solid.",
+          "a11y": "`Hero` and `CtaBand` are `section` regions named by their own heading (`Hero` renders the page `h1`; pass `headingLevel={2}` when the page already has one); calls to action are links or buttons you pass in, full width on phones. `FeatureGrid` and `HowItWorks` are regions named by a level-2 title with level-3 item titles; feature icons are decorative (`aria-hidden`), steps are an ordered list whose numbers are added for you. `MarketingHeader` is a `banner` with a named main navigation; below `md` its links and actions open from a native `details` disclosure (a 44px `summary` labelled by `menu`). `MarketingFooter` gives each link column its own labelled navigation. `MediaSection` is a region named by its level-2 title: text first in reading order, the framed media after it (`reverse` only changes the visual side from `lg`); pass `alt` text or a caption with the media. `LogoBand` reads each company name instead of its logo (the logo is `aria-hidden`). `Testimonials` renders each quote as a `figure` with a `figcaption`; quotation marks come from the browser for the page `lang`. Only pass quotes you may publish. `Pricing` lists plans as a list of surfaces: each name is a level-3 heading, features are a list, and the highlighted plan carries a visible `badge` (never colour alone). `Faq` uses native `details`/`summary`: keyboard and screen readers work without script, and browser find-in-page opens matches; add `FAQPage` structured data with `@zedtech/zedkit-seo` if the page should carry it. `LocaleSwitch` is a named navigation whose items carry `lang`, with `aria-current` on the active language. Brief-routed specimens expose labelled lists, tables, and status regions. Surfaces render a plain element (`div`, `section`, `article` or `li`); pass `aria-label` or a heading inside when it is a landmark. Text sits on the card colour, so contrast follows the identity tokens; under `prefers-reduced-transparency` the glass identity turns surfaces near-solid.",
           "troubleshooting": "Menu, navigation and language labels stay English — wrap the tree in `ZedkitUiProvider` with `zedkitUiMessagesFr` (or your own bundle). Router links reload the page — pass your router's link elements in `links`, they are rendered as given. Surfaces look flat — the identity in use is not `glass`; set `data-identity=\"glass\"` on `<html>`. Classes missing — the `@source` line must scan the kit's `src/**` (the marketing folder is included).",
           "seeAlso": [
-            "Theme an admin app (dark/light included)"
+            "Theme an admin app (dark/light included)",
+            "Render headings and body text without raw tags"
           ]
         }
       ]

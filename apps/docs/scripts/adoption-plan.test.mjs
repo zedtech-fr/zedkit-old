@@ -116,6 +116,14 @@ test("Drawer manual copy lists every companion file, dependency and token", () =
     files.map((file) => file.path),
     [
       "src/components/ui/drawer.tsx",
+      "src/components/ui/drawer-non-modal.tsx",
+      "src/components/ui/drawer-panel-classes.ts",
+      "src/components/ui/drawer-non-modal-effects.ts",
+      "src/components/ui/drawer-parts.tsx",
+      "src/components/ui/drawer-non-modal-context.tsx",
+      "src/components/ui/drawer-portal.tsx",
+      "src/components/ui/drawer-vaul.tsx",
+      "src/components/ui/drawer-meta.tsx",
       "src/components/ui/overlay-modal.ts",
       "src/components/ui/theme-scope.tsx",
       "src/components/ui/use-narrow-viewport.ts",
@@ -123,6 +131,7 @@ test("Drawer manual copy lists every companion file, dependency and token", () =
       "src/components/ui/create-messages-context.tsx",
       "src/components/ui/messages.ts",
       "src/components/ui/button.tsx",
+      "src/components/ui/surface.tsx",
     ],
   );
   assert.equal(files[0].role, "main");

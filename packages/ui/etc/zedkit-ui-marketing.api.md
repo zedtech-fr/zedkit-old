@@ -5,8 +5,28 @@
 ```ts
 
 import { ClassProp } from 'class-variance-authority/types';
+import { JSX } from 'react';
 import type * as React_2 from 'react';
 import { VariantProps } from 'class-variance-authority';
+
+// @public
+export function BriefSpecimen(input: BriefSpecimenProps): JSX.Element;
+
+// @public (undocumented)
+export type BriefSpecimenProps = {
+    brief: string;
+    domain?: SpecimenDomain;
+    className?: string;
+};
+
+// @public (undocumented)
+export function CommerceSpecimen(input: CommerceSpecimenProps): JSX.Element;
+
+// @public (undocumented)
+export type CommerceSpecimenProps = {
+    className?: string;
+    messages?: typeof specimenMessagesEn.commerce;
+};
 
 // @public
 export function CtaBand(input: CtaBandProps): React_2.JSX.Element;
@@ -16,6 +36,21 @@ export type CtaBandProps = Omit<React_2.ComponentProps<"section">, "title"> & {
     title: React_2.ReactNode;
     description?: React_2.ReactNode;
     actions?: React_2.ReactNode;
+};
+
+// @public (undocumented)
+export const DEFAULT_DOMAIN: SpecimenDomain;
+
+// @public (undocumented)
+export const DOMAIN_KEYWORDS: Readonly<Record<SpecimenDomain, readonly string[]>>;
+
+// @public (undocumented)
+export function EditorialSpecimen(input: EditorialSpecimenProps): JSX.Element;
+
+// @public (undocumented)
+export type EditorialSpecimenProps = {
+    className?: string;
+    messages?: typeof specimenMessagesEn.editorial;
 };
 
 // @public
@@ -205,6 +240,126 @@ export type PricingProps = Omit<React_2.ComponentProps<"section">, "title"> & {
     title: React_2.ReactNode;
     description?: React_2.ReactNode;
     plans: PricingPlan[];
+};
+
+// @public (undocumented)
+export function SaasDashboardSpecimen(input: SaasDashboardSpecimenProps): JSX.Element;
+
+// @public (undocumented)
+export type SaasDashboardSpecimenProps = {
+    className?: string;
+    messages?: typeof specimenMessagesEn.saasDashboard;
+};
+
+// @public
+export function selectSpecimenDomain(brief: string): SpecimenDomain;
+
+// @public (undocumented)
+export function ServiceBookingSpecimen(input: ServiceBookingSpecimenProps): JSX.Element;
+
+// @public (undocumented)
+export type ServiceBookingSpecimenProps = {
+    className?: string;
+    messages?: typeof specimenMessagesEn.serviceBooking;
+};
+
+// @public
+export type SpecimenDomain = "commerce" | "saas-dashboard" | "editorial" | "service-booking";
+
+// @public (undocumented)
+export type SpecimenMessages = typeof specimenMessagesEn;
+
+// @public
+export const specimenMessagesEn: {
+    readonly commerce: {
+        readonly heading: "Shop catalog";
+        readonly description: "Pick a piece, adjust price and stock, save.";
+        readonly listAriaLabel: "Products";
+        readonly priceLabel: "Price (EUR)";
+        readonly stockLabel: "Stock";
+        readonly save: "Save product";
+        readonly saved: (name: string) => string;
+        readonly lowStock: (count: number) => string;
+        readonly inStock: (count: number) => string;
+    };
+    readonly saasDashboard: {
+        readonly heading: "Workspace usage";
+        readonly description: "Quotas and seats for this month.";
+        readonly stats: readonly [{
+            readonly label: "Active projects";
+            readonly value: "12";
+        }, {
+            readonly label: "Seats used";
+            readonly value: "8 / 10";
+        }];
+        readonly quotasAriaLabel: "Quotas";
+        readonly quotaLabel: "API calls";
+        readonly quotaText: (used: number, limit: number) => string;
+        readonly teamHeading: "Team";
+        readonly invite: "Invite";
+        readonly inviteTitle: "Invite teammate";
+        readonly emailLabel: "Email";
+        readonly emailPlaceholder: "name@company.com";
+        readonly send: "Send invite";
+        readonly invitedRole: "Invited";
+        readonly invitedMessage: (email: string) => string;
+        readonly teamAriaLabel: "Team members";
+    };
+    readonly editorial: {
+        readonly heading: "Story desk";
+        readonly description: "Edit the queue, preview the reader view.";
+        readonly queueAriaLabel: "Story queue";
+        readonly columns: {
+            readonly story: "Story";
+            readonly status: "Status";
+        };
+        readonly headlineLabel: "Headline";
+        readonly standfirstLabel: "Standfirst";
+        readonly previewLabel: "Reader preview";
+        readonly publish: "Publish";
+        readonly saveDraft: "Save draft";
+        readonly published: (headline: string) => string;
+        readonly drafted: (headline: string) => string;
+        readonly statuses: {
+            readonly draft: {
+                readonly label: "Draft";
+                readonly tone: "secondary";
+            };
+            readonly published: {
+                readonly label: "Live";
+                readonly tone: "success";
+            };
+        };
+        readonly seed: readonly [{
+            readonly id: "1";
+            readonly headline: "City opens late-night market";
+            readonly standfirst: "Vendors test longer hours through winter.";
+            readonly status: "draft";
+        }, {
+            readonly id: "2";
+            readonly headline: "Interview: studio on craft";
+            readonly standfirst: "Why small batches beat scale.";
+            readonly status: "published";
+        }];
+    };
+    readonly serviceBooking: {
+        readonly heading: "Book a visit";
+        readonly description: "Choose a service and a time that works.";
+        readonly servicesAriaLabel: "Services";
+        readonly services: readonly [{
+            readonly id: "cut";
+            readonly label: "Haircut";
+            readonly duration: "45 min";
+        }, {
+            readonly id: "color";
+            readonly label: "Colour";
+            readonly duration: "90 min";
+        }];
+        readonly slotsAriaLabel: "Available times";
+        readonly slots: readonly ["09:00", "11:30", "14:00", "16:30"];
+        readonly book: "Confirm booking";
+        readonly booked: (service: string, slot: string) => string;
+    };
 };
 
 // @public (undocumented)

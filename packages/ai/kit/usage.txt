@@ -16,7 +16,12 @@ zedkit-ai <command>
       Check skills, subagents and commands, plus provider-copy drift
       (default dir: .agents; a project root is accepted too). Exit 1
       on problems. --setup (off by default) also checks that the PLAN
-      covers every git-changed path and that setup-log gate logs are
-      well-formed.
+      covers every git-changed path, that setup-log gate logs are
+      well-formed, and that the setup went deep: a reading log, domain
+      rules, nested AGENTS.md and model routing (the v3 depth axes).
+  scan [dir]
+      Size the repo and cut it into slices, one per read-only reader:
+      1-5 readers on a small repo, 6-10 medium, 11-20 large. Run it
+      before the setup-ai code-reading phase.
   list
       Show presets, subagents and commands.

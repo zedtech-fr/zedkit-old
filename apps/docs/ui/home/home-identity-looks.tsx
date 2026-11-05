@@ -42,10 +42,14 @@ export function HomeIdentityLooks() {
 
   return (
     <Stack gap={3} className="min-w-0 scroll-mt-24" data-home-identity-looks="">
-      <Text variant="muted" className={HOME_METADATA_TEXT_CLASS}>
-        {homeIdentityLooksCopy.liveNote}{" "}
-        <span data-identity-pinned-hint="">{homeIdentityLooksCopy.scrollHint}</span>
-      </Text>
+      <Stack gap={1} className="min-w-0">
+        <Text as="p" variant="muted" typeRole="caption" className="text-xs leading-snug">
+          {homeIdentityLooksCopy.liveNote}
+        </Text>
+        <Text variant="muted" typeRole="caption" className={HOME_METADATA_TEXT_CLASS}>
+          <span data-identity-pinned-hint="">{homeIdentityLooksCopy.scrollHint}</span>
+        </Text>
+      </Stack>
       {/* The track is as tall as the pin plus one stretch of scroll per example; see home-identity-scroll.css. */}
       <div ref={track} data-identity-track="" data-count={IDENTITY_IDS.length}>
         <div ref={pin} data-identity-pin="">
@@ -122,7 +126,7 @@ function HomeIdentityLooksLinks() {
   return (
     <Stack direction="horizontal" gap={2} className="flex-wrap">
       <Button asChild variant="outline" size="sm" className="w-fit">
-        <Link href={IDENTITY_EDITOR_HREF}>{homeIdentityLooksCopy.openEditor}</Link>
+        <Link href={`${IDENTITY_EDITOR_HREF}#create`}>{homeIdentityLooksCopy.openEditor}</Link>
       </Button>
       <Button asChild variant="link" size="sm" className="w-fit">
         <Link href="/features/identity-kit-demos">{homeIdentityLooksCopy.seeInComponents}</Link>

@@ -14,6 +14,10 @@
  *   animate-float  animate-marquee  animate-blink
  * Scroll reveal (below the fold): a scroll observer sets the
  * `data-reveal` / `data-stagger` attributes styled here.
+ *
+ * Published API (`packages/ui/docs/animate-spec.md`): `data-animate`
+ * and `data-animate-*` triggers. The runtime (`observeAnimate`) writes
+ * `data-animate-state` / `data-animate-longpress-on`.
  */
 
 @theme inline {
@@ -40,6 +44,25 @@
   from {
     opacity: 0;
     scale: 0.96;
+  }
+}
+@keyframes zk-reveal-down {
+  from {
+    opacity: 0;
+    translate: 0 calc(var(--zk-reveal-distance, 0.75rem) * -1);
+  }
+}
+@keyframes zk-pulse {
+  50% {
+    scale: 1.03;
+  }
+}
+@keyframes zk-parallax {
+  from {
+    translate: 0 var(--zk-reveal-distance, 0.75rem);
+  }
+  to {
+    translate: 0 calc(var(--zk-reveal-distance, 0.75rem) * -1);
   }
 }
 @keyframes zk-float {
@@ -110,6 +133,160 @@
 [data-stagger="in"] > :nth-child(8) { animation-delay: calc(7 * var(--zk-stagger-step, 70ms)); }
 [data-stagger="in"] > :nth-child(n + 9) { animation-delay: calc(8 * var(--zk-stagger-step, 70ms)); }
 
+/* data-animate: appear (pending → in), then held / progress triggers. */
+[data-animate="fade-up"][data-animate-state="pending"],
+[data-animate-appear="fade-up"][data-animate-state="pending"],
+[data-animate-stagger][data-animate-state="pending"] > * {
+  opacity: 0;
+  translate: 0 var(--zk-reveal-distance, 0.75rem);
+}
+[data-animate="fade-in"][data-animate-state="pending"],
+[data-animate-appear="fade-in"][data-animate-state="pending"] {
+  opacity: 0;
+  translate: none;
+}
+[data-animate="fade-down"][data-animate-state="pending"],
+[data-animate-appear="fade-down"][data-animate-state="pending"] {
+  opacity: 0;
+  translate: 0 calc(var(--zk-reveal-distance, 0.75rem) * -1);
+}
+[data-animate="pop-in"][data-animate-state="pending"],
+[data-animate-appear="pop-in"][data-animate-state="pending"] {
+  opacity: 0;
+  translate: none;
+  scale: 0.96;
+}
+[data-animate-state="in"],
+[data-animate-stagger][data-animate-state="in"] > * {
+  opacity: 1;
+  translate: none;
+  scale: none;
+  transition-property: opacity, translate, scale;
+  transition-duration: var(--zk-reveal-duration, 300ms);
+  transition-timing-function: var(--zk-reveal-ease, cubic-bezier(0.22, 1, 0.36, 1));
+  transition-delay: var(--zk-animate-delay, 0ms);
+  animation-name: var(--zk-animate-appear-name, none);
+  animation-duration: var(--zk-reveal-duration, 300ms);
+  animation-timing-function: var(--zk-reveal-ease, cubic-bezier(0.22, 1, 0.36, 1));
+  animation-delay: var(--zk-animate-delay, 0ms);
+  animation-fill-mode: backwards;
+}
+[data-animate-stagger][data-animate-state="in"] > :nth-child(1) { transition-delay: calc(var(--zk-animate-delay, 0ms) + 0 * var(--zk-stagger-step, 70ms)); }
+[data-animate-stagger][data-animate-state="in"] > :nth-child(2) { transition-delay: calc(var(--zk-animate-delay, 0ms) + 1 * var(--zk-stagger-step, 70ms)); }
+[data-animate-stagger][data-animate-state="in"] > :nth-child(3) { transition-delay: calc(var(--zk-animate-delay, 0ms) + 2 * var(--zk-stagger-step, 70ms)); }
+[data-animate-stagger][data-animate-state="in"] > :nth-child(4) { transition-delay: calc(var(--zk-animate-delay, 0ms) + 3 * var(--zk-stagger-step, 70ms)); }
+[data-animate-stagger][data-animate-state="in"] > :nth-child(5) { transition-delay: calc(var(--zk-animate-delay, 0ms) + 4 * var(--zk-stagger-step, 70ms)); }
+[data-animate-stagger][data-animate-state="in"] > :nth-child(6) { transition-delay: calc(var(--zk-animate-delay, 0ms) + 5 * var(--zk-stagger-step, 70ms)); }
+[data-animate-stagger][data-animate-state="in"] > :nth-child(7) { transition-delay: calc(var(--zk-animate-delay, 0ms) + 6 * var(--zk-stagger-step, 70ms)); }
+[data-animate-stagger][data-animate-state="in"] > :nth-child(8) { transition-delay: calc(var(--zk-animate-delay, 0ms) + 7 * var(--zk-stagger-step, 70ms)); }
+[data-animate-stagger][data-animate-state="in"] > :nth-child(n + 9) { transition-delay: calc(var(--zk-animate-delay, 0ms) + 8 * var(--zk-stagger-step, 70ms)); }
+
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-motion="reduce"]) {
+    [data-animate-press],
+    [data-animate-hover],
+    [data-animate-focus] {
+      transition-property: translate, scale, opacity;
+      transition-duration: var(--zk-lift-duration, 200ms);
+      transition-timing-function: var(--zk-lift-ease, cubic-bezier(0.22, 1, 0.36, 1));
+    }
+    [data-animate-press="scale-down"]:active:not(:disabled):not([aria-disabled="true"]) {
+      scale: var(--zk-press-scale, 0.97);
+    }
+    [data-animate-press="scale-up"]:active:not(:disabled):not([aria-disabled="true"]) {
+      scale: 1.03;
+    }
+    [data-animate-press="lift"]:active:not(:disabled):not([aria-disabled="true"]) {
+      translate: var(--zk-press-translate, 0 1px);
+    }
+    [data-animate-focus="lift"]:focus-visible {
+      translate: var(--zk-lift-translate, 0 -2px);
+    }
+    [data-animate-focus="scale-up"]:focus-visible {
+      scale: 1.03;
+    }
+    [data-animate-press]:active:not(:disabled):not([aria-disabled="true"]) {
+      animation-name: var(--zk-animate-press-name, none);
+      animation-duration: var(--zk-lift-duration, 200ms);
+      animation-fill-mode: forwards;
+    }
+    [data-animate-longpress][data-animate-longpress-on] {
+      animation-name: var(--zk-animate-longpress-name, none);
+      animation-duration: var(--zk-reveal-duration, 300ms);
+      animation-fill-mode: forwards;
+    }
+    [data-animate-longpress="pulse"][data-animate-longpress-on] {
+      animation: zk-pulse var(--zk-reveal-duration, 300ms) ease-in-out infinite;
+    }
+    [data-animate-focus]:focus-visible {
+      animation-name: var(--zk-animate-focus-name, none);
+      animation-duration: var(--zk-lift-duration, 200ms);
+      animation-fill-mode: forwards;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) and (hover: hover) {
+  :root:not([data-motion="reduce"]) {
+    [data-animate-hover="lift"]:hover {
+      translate: var(--zk-lift-translate, 0 -2px);
+    }
+    [data-animate-hover="scale-up"]:hover {
+      scale: 1.03;
+    }
+    [data-animate-hover="scale-down"]:hover {
+      scale: var(--zk-press-scale, 0.97);
+    }
+    [data-animate-hover]:hover {
+      animation-name: var(--zk-animate-hover-name, none);
+      animation-duration: var(--zk-lift-duration, 200ms);
+      animation-fill-mode: forwards;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-motion="reduce"]) {
+    @supports (animation-timeline: view()) {
+      [data-animate-scroll] {
+        animation-name: var(--zk-animate-scroll-name, none);
+        animation-duration: 1ms;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+        animation-timeline: view();
+      }
+      [data-animate-scroll="parallax"] {
+        animation: zk-parallax linear both;
+        animation-timeline: view();
+      }
+      [data-animate-scroll="fade-up"] {
+        animation: zk-reveal-up linear both;
+        animation-timeline: view();
+      }
+      [data-animate-scroll="fade-in"] {
+        animation: zk-reveal-fade linear both;
+        animation-timeline: view();
+      }
+      [data-animate-scroll="fade-down"] {
+        animation: zk-reveal-down linear both;
+        animation-timeline: view();
+      }
+    }
+    @supports not (animation-timeline: view()) {
+      [data-animate-scroll="parallax"] {
+        translate: 0 calc(var(--zk-reveal-distance, 0.75rem) * (1 - 2 * var(--zk-animate-progress, 0.5)));
+      }
+      [data-animate-scroll="fade-up"] {
+        opacity: var(--zk-animate-progress, 1);
+        translate: 0 calc(var(--zk-reveal-distance, 0.75rem) * (1 - var(--zk-animate-progress, 1)));
+      }
+      [data-animate-scroll="fade-in"] {
+        opacity: var(--zk-animate-progress, 1);
+      }
+    }
+  }
+}
+
 /* Hover feedback: lift for cards, press for buttons. */
 @utility hover-lift {
   transition:
@@ -146,11 +323,21 @@
 
 @media (prefers-reduced-motion: reduce) {
   [data-reveal],
-  [data-stagger] > * {
+  [data-stagger] > *,
+  [data-animate],
+  [data-animate-appear],
+  [data-animate-scroll],
+  [data-animate-press],
+  [data-animate-longpress],
+  [data-animate-hover],
+  [data-animate-focus],
+  [data-animate-stagger] > *,
+  [data-animate-state] {
     opacity: 1 !important;
     translate: none !important;
     scale: none !important;
     animation: none !important;
+    transition: none !important;
   }
   .animate-fade-up,
   .animate-fade-in,
@@ -169,4 +356,37 @@
   .hover-press:active {
     translate: none !important;
   }
+}
+
+:root[data-motion="reduce"] [data-reveal],
+:root[data-motion="reduce"] [data-stagger] > *,
+:root[data-motion="reduce"] [data-animate],
+:root[data-motion="reduce"] [data-animate-appear],
+:root[data-motion="reduce"] [data-animate-scroll],
+:root[data-motion="reduce"] [data-animate-press],
+:root[data-motion="reduce"] [data-animate-longpress],
+:root[data-motion="reduce"] [data-animate-hover],
+:root[data-motion="reduce"] [data-animate-focus],
+:root[data-motion="reduce"] [data-animate-stagger] > *,
+:root[data-motion="reduce"] [data-animate-state],
+:root[data-motion="reduce"] .animate-fade-up,
+:root[data-motion="reduce"] .animate-fade-in,
+:root[data-motion="reduce"] .animate-pop-in,
+:root[data-motion="reduce"] .animate-float,
+:root[data-motion="reduce"] .animate-marquee,
+:root[data-motion="reduce"] .animate-blink,
+:root[data-motion="reduce"] .marquee-track {
+  opacity: 1 !important;
+  translate: none !important;
+  scale: none !important;
+  animation: none !important;
+  transition: none !important;
+}
+:root[data-motion="reduce"] .hover-lift,
+:root[data-motion="reduce"] .hover-press {
+  transition: none !important;
+}
+:root[data-motion="reduce"] .hover-lift:hover,
+:root[data-motion="reduce"] .hover-press:active {
+  translate: none !important;
 }

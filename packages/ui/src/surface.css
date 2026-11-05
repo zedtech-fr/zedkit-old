@@ -1,0 +1,59 @@
+/*
+ * Reusable frosted surface: `data-surface="glass"` on any floating panel
+ * (menu, popover, search sheet). One hook, every identity: panels without
+ * glass tokens render a plain popover surface, the glass identity frosts
+ * them like the Team card — heavier, because a floating panel needs it:
+ * the same overlay tokens as drawer/dialog panels (tinted wash, 24px blur
+ * with saturate, soft shadow, translucent edge), light and dark.
+ * Text sits on the popover pair, so contrast follows the identity tokens.
+ *
+ * Unlayered on purpose: it must win over precompiled `bg-*` utilities the
+ * same way identities.css does.
+ */
+
+/* Solid base: a plain popover panel (radius, edge, shadow, clipped). */
+[data-surface="glass"] {
+  background-color: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  border: var(--zk-border-width, 1px) solid hsl(var(--border));
+  border-radius: var(--radius-xl, 0.75rem);
+  box-shadow: var(--zk-shadow-md, 0 2px 6px hsl(0 0% 0% / 0.08));
+  overflow: hidden;
+}
+
+/* Glass: overlay tokens carry the frost (dark, reduced-transparency and
+   no-backdrop-filter fallbacks live with the tokens in identities/glass.css). */
+:root[data-identity="glass"] [data-surface="glass"]:where(:not([data-identity-scope] *)),
+[data-identity-scope][data-identity="glass"] [data-surface="glass"] {
+  background-color: hsl(var(--popover) / var(--zk-glass-overlay-alpha));
+  background-image: var(--zk-glass-overlay-tint);
+  border-color: hsl(var(--zk-glass-edge) / var(--zk-glass-edge-alpha));
+  box-shadow: var(--zk-shadow-overlay);
+  -webkit-backdrop-filter: var(--zk-glass-overlay-filter);
+  backdrop-filter: var(--zk-glass-overlay-filter);
+}
+
+/*
+ * No backdrop-filter: near-solid panel, no wash, explicit even though the
+ * token fallbacks in identities/glass.css already raise the alpha — the
+ * surface stays readable if that file is not in the cascade.
+ */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root[data-identity="glass"] [data-surface="glass"]:where(:not([data-identity-scope] *)),
+  [data-identity-scope][data-identity="glass"] [data-surface="glass"] {
+    background-color: hsl(var(--popover) / 0.98);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* Forced colors: opaque panel, system colours, no blur. */
+@media (forced-colors: active) {
+  [data-surface="glass"] {
+    background-color: hsl(var(--popover));
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}

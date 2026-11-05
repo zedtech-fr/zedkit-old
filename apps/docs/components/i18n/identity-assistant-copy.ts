@@ -1,31 +1,50 @@
 import type { Unavailable } from "@/lib/identity-assistant";
+import { identityBriefCopy } from "./identity-brief-copy.ts";
 
 /** English copy for the identity assistant, its references and its proposal. Keys only; no markup. */
 
 const minutes = (seconds: number) => Math.max(1, Math.ceil(seconds / 60));
+const MINUTE_MS = 60_000;
 
-/** "in 5 minutes", or "after 14:30" when it is further off. Only said when the service gave a retry time. */
+/** Round up to the next displayed minute so the clock is never earlier than Retry-After. */
+function ceilToMinute(at: Date): Date {
+  const ms = at.getTime();
+  const extra = ms % MINUTE_MS;
+  return extra === 0 ? at : new Date(ms + (MINUTE_MS - extra));
+}
+
+function clock(at: Date): string {
+  return new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(at);
+}
+
+function calendarDay(at: Date): number {
+  return Date.UTC(at.getFullYear(), at.getMonth(), at.getDate());
+}
+
+/** "in 5 minutes", "after 14:30" today, "tomorrow after 09:00", or an explicit date further out. */
 export function retryText(seconds: number | undefined, now: Date = new Date()): string {
   if (!seconds) return "Try again a little later.";
   if (seconds < 3_600) return `Try again in ${minutes(seconds)} ${minutes(seconds) === 1 ? "minute" : "minutes"}.`;
-  const at = new Date(now.getTime() + seconds * 1000);
-  const time = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(at);
-  const sameDay = at.toDateString() === now.toDateString();
-  return `Try again ${sameDay ? "after" : "tomorrow after"} ${time}.`;
+  const at = ceilToMinute(new Date(now.getTime() + seconds * 1000));
+  const time = clock(at);
+  const dayDelta = (calendarDay(at) - calendarDay(now)) / 86_400_000;
+  if (dayDelta <= 0) return `Try again after ${time}.`;
+  if (dayDelta === 1) return `Try again tomorrow after ${time}.`;
+  const date = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" }).format(at);
+  return `Try again after ${date}, ${time}.`;
 }
 
 export const identityAssistantCopy = {
   title: "Create an identity",
   intro: "Describe your product in a few plain sentences. The assistant proposes a look; you review it before anything changes.",
-  briefLabel: "Your product and brand",
-  briefHint: "What it is, who it is for, the mood. Paste a link to a site you like if you want to: the assistant reads its styles and words, not its pictures.",
+  briefLabel: identityBriefCopy.briefLabel,
   followUpLabel: "What should change?",
-  followUpHint: "Type, density, hierarchy, colour, radius, contrast or mood. The rest stays as it is.",
   generate: "Generate",
   refine: "Refine",
   cancel: "Cancel",
   charsLeft: (left: number) => `${left} characters left`,
   open: "Create an identity from a description",
+  detailedEditorLink: "Open the detailed editor",
   working: "Working on it. Your current look is unchanged.",
   /** On a phone the conversation and the preview take turns; from a wide screen both are shown. */
   views: {
@@ -48,13 +67,16 @@ export const identityAssistantCopy = {
     lightLabel: "Light",
     darkLabel: "Dark",
     preview: "Preview of the proposal in light and dark",
+    beforeLabel: "Before",
+    afterLabel: "After",
+    compare: "Your current look and the proposal side by side.",
     apply: "Use this look",
     discard: "Discard",
     contrastAdjusted: (count: number) => `${count} ${count === 1 ? "colour was" : "colours were"} adjusted so text stays readable.`,
     contrastOk: "Text and controls keep their contrast in light and dark.",
     contrastUnresolved: (count: number) =>
       `${count} ${count === 1 ? "pair still misses" : "pairs still miss"} the contrast target after adjustment; check them before applying.`,
-    note: "Nothing is applied until you use it. Your saved looks and this page are not touched.",
+    note: "Applies to demo specimens on this site only, not the docs chrome. Saved looks and the site default are not changed until you export or save elsewhere.",
   },
   /** Sample content the proposal is shown in: a small shop, so type, colour, shape and density have something to act on. */
   preview: {
@@ -70,21 +92,29 @@ export const identityAssistantCopy = {
     secondary: "Browse the shop",
   },
   /** Links are written in the brief itself; the page only shows which ones it found and lets a visitor drop one. */
-  refinePlaceholder: "Calmer, more contrast, a serif for the headings\u2026",
-  placeholder: "A small online shop selling hand-thrown ceramics. Calm and warm, a little editorial.\nIn the spirit of https://example.com/studio",
-  links: {
-    found: "Links the assistant will read",
-    note: "It reads each page's styles (colours, fonts, radius, shadows, spacing) and its text, not the pictures.",
-    remove: (host: string) => `Stop reading ${host}`,
-    tooMany: "Only the first 3 links are read.",
-    list: "Links found in your text",
+  refineChips: {
+    label: "Quick refinements",
+    group: "Quick refinements",
+    hint: "Or describe the change in your own words below.",
   },
+  refinePlaceholder: "Calmer, more contrast, a serif for the headings\u2026",
+  placeholder: identityBriefCopy.placeholder,
+  /** Example prompts the chat composer rotates through, until reduced motion or a follow-up asks for stillness. */
+  composerPlaceholders: [
+    "A small online shop selling hand-thrown ceramics…",
+    "A calm newsroom site, dense but readable…",
+    "A SaaS dashboard for a team of ten…",
+    "A booking page for a bike repair shop…",
+  ],
+  links: identityBriefCopy.links,
   references: {
     textOnly: "Read as text only. Pictures and layout are not analysed.",
     styles: (signals: string) => (signals ? `Styles and text read: ${signals}.` : "Styles and text read. No distinct colours or fonts found."),
     radius: (value: string) => `radius ${value}`,
     failed: (reason: string) => `Could not be used: ${referenceReason(reason)}.`,
     report: "What happened to your links",
+    used: "Used",
+    notUsed: "Not used",
   },
   unavailable: (reason: Unavailable) =>
     ({
@@ -95,7 +125,7 @@ export const identityAssistantCopy = {
       unreachable: "The assistant is not available here. The looks and the fields below still work.",
     })[reason],
   failure: {
-    quota: (seconds?: number) => `The daily limit for the assistant has been reached. ${retryText(seconds)}`,
+    quota: (seconds?: number) => `The assistant limit has been reached. ${retryText(seconds)}`,
     rate: (seconds?: number) => `That was a lot of requests in a short time. ${retryText(seconds)}`,
     busy: "The assistant is busy with another request. Try again in a few seconds.",
     duplicate: "That request was already sent. Wait for its answer.",

@@ -1,0 +1,68 @@
+/*
+ * Visual type roles (signature typography). Semantic heading level (h1–h4) is
+ * chosen in React; size and weight come from these utilities only.
+ * Tokens live in shared-type-scale.css.
+ */
+
+@utility text-zk-type-display {
+  font-size: var(--zk-type-h1-size);
+  font-weight: var(--zk-type-h1-weight);
+  line-height: var(--zk-type-h1-leading);
+  letter-spacing: var(--zk-type-h1-tracking, -0.02em);
+}
+
+@utility text-zk-type-section {
+  font-size: var(--zk-type-h2-size);
+  font-weight: var(--zk-type-h2-weight);
+  line-height: var(--zk-type-h2-leading);
+  letter-spacing: var(--zk-heading-tracking, -0.02em);
+}
+
+@utility text-zk-type-band {
+  font-size: var(--zk-type-h3-size);
+  font-weight: var(--zk-type-h3-weight);
+  line-height: var(--zk-type-h3-leading);
+  letter-spacing: var(--zk-heading-tracking, -0.02em);
+}
+
+@utility text-zk-type-card-title {
+  font-size: var(--zk-type-card-title-size);
+  font-weight: var(--zk-type-card-title-weight);
+  line-height: var(--zk-type-card-title-leading);
+}
+
+@utility text-zk-type-lead {
+  font-size: var(--zk-type-lead-size);
+  font-weight: var(--zk-type-lead-weight);
+  line-height: var(--zk-type-lead-leading);
+}
+
+@utility text-zk-type-body {
+  font-size: var(--zk-type-body-size);
+  font-weight: var(--zk-type-body-weight);
+  line-height: var(--zk-type-body-leading);
+}
+
+@utility text-zk-type-prose {
+  font-size: var(--zk-type-prose-size);
+  font-weight: var(--zk-type-body-weight);
+  line-height: var(--zk-type-prose-leading);
+}
+
+@utility text-zk-type-small {
+  font-size: var(--zk-type-small-size);
+  font-weight: var(--zk-type-small-weight);
+  line-height: var(--zk-type-small-leading);
+}
+
+@utility text-zk-type-label {
+  font-size: var(--zk-type-label-size);
+  font-weight: var(--zk-type-label-weight);
+  line-height: var(--zk-type-label-leading);
+}
+
+@utility text-zk-type-nav {
+  font-size: var(--zk-type-nav-size);
+  font-weight: var(--zk-type-nav-weight);
+  line-height: var(--zk-type-nav-leading);
+}

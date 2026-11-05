@@ -7,6 +7,14 @@ const SKIP = new Set([
   "closeRoute",
   "useScrollReset",
   "ScrollReset",
+  "observeAnimate",
+  "AnimateObserver",
+  // Layout hosts: data-sticky-aside-* is the selector contract, not data-slot.
+  "StickyAsideAside",
+  "StickyAsideMain",
+  "applyMotionPreference",
+  "isMotionReduced",
+  "useMotionPreference",
   "applyIdentity",
   "discardCustomIdentity",
   "applyCustomIdentity",
@@ -34,11 +42,18 @@ const SKIP = new Set([
   "headingVariants",
   "stackVariants",
   "textVariants",
+  "surfaceVariants",
+  "surfaceGlassPanelClass",
+  "applySurfaceGlassPanel",
   // Context/controller wrappers: no host node of their own.
   "Form",
   "FormField",
   "ZedkitUiProvider",
   "useUiMessages",
+  // Portal passthroughs: children render into the container with no host node of their own (a host div
+  // here would only exist to carry the slot, so the slot lives on the overlay/panel children instead).
+  "DialogPortal",
+  "DrawerPortal",
 ]);
 // Root/portal re-exports still carry data-slot in source (kit convention).
 // DOM hosts are also checked in primitives.test.tsx (Button, Input).

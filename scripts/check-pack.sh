@@ -144,13 +144,18 @@ size_budget() {
     echo "$label: size $bytes / $max ok"
   fi
 }
-# Measured 42212 on 2 Nov 2026 (identity tokens, route modal, ThemeScope ref and nested-identity handling);
-# the previous 40800 was already exceeded at 41771 before this change. Keep roughly 2% headroom.
-# Raised from 43100 to 43500 on 3 Nov 2026: measured 43137 with the OptionCard check indicator.
 # Raised from 43500 to 44500 on 4 Nov 2026: measured 44141 with ScrollReset (route scroll reset).
-size_budget ui 44500
-# Marketing entry (separate from the main budget); measured 785 with GlassSurface only, 4437 on 3 Nov 2026 with LogoBand and Testimonials.
-size_budget ui 8000 marketing
+# Raised to 45500 on 4 Nov 2026 after syncing main: signature type-role and motion exports on top of ScrollReset.
+# IdentityDock chrome + vaul sheet moved to apps/docs (4 Nov 2026); ui gzip measured 44660.
+# Raised to 48000 on 4 Nov 2026: Animate runtime + types (measured 46973).
+# Raised to 56000 on 4 Nov 2026 (measured 54172 in CI): approved by the maintainers
+# raising size budgets now and optimising later; trim tracked in issue 1398
+# (identity-tokens, splitting the Animate runtime).
+size_budget ui 56000
+# Marketing entry (separate from the main budget); measured 785 with GlassSurface only;
+# 9865 with L2 domain specimens plus goal/reference marketing sections (Hero, Pricing, …);
+# 10020 after specimen-primitives barrel; tokenized keyword routing measured 10084 gzip.
+size_budget ui 10200 marketing
 # 4 Nov 2026: validate --setup completion check (setup-check.ts). Measured
 # 18465; 17400 cannot fit a new module (gzip delta vs 17268 baseline is
 # ~1.2KB). Budget = measured + 2% = 18835.
@@ -160,7 +165,13 @@ size_budget ui 8000 marketing
 # Raised to 19750 on 4 Nov 2026: main had consumed the headroom
 # (19081/19250); this PR adds ~300B net (placeholder-link check, shared link
 # scan, measured 19381). Budget 19750 is measured + ~2%.
-size_budget ai 19750
+# Raised to 23600 on 4 Nov 2026: setup-ai v3 adds `scan` (repo sizing and
+# slicing) and the D1-D4 depth checks for validate --setup (scan.ts,
+# setup-depth.ts); baseline 19381, measured 23102. Budget = measured + ~2%.
+# Raised to 23850 on 5 Nov 2026: D2 unenforced-ID check (validate --setup
+# flags uninventoried IDs); base tip measured 23486, PR measured 23637
+# after a 70B shave. Budget = measured + ~1%.
+size_budget ai 23850
 
 if [ -f apps/docs/out/index.html ]; then
   if ! node apps/docs/scripts/check-first-load-budget.mjs; then

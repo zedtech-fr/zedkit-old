@@ -5,7 +5,7 @@ import type * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
 
-import { usePortalContainer } from "./theme-scope.js";
+import { useOverlayMount, usePortalContainer } from "./theme-scope.js";
 import { cn } from "./utils.js";
 
 export type SelectProps = React.ComponentProps<typeof SelectPrimitive.Root>;
@@ -81,8 +81,9 @@ function SelectContent({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
   const container = usePortalContainer();
+  const overlayMount = useOverlayMount();
   return (
-    <SelectPrimitive.Portal container={container}>
+    <SelectPrimitive.Portal container={overlayMount ?? container}>
       <SelectPrimitive.Content
         data-slot="select-content"
         className={cn(
@@ -92,7 +93,7 @@ function SelectContent({
           // Allowed arbitraries (Radix runtime vars, unsettable at build
           // time, so no theme token can replace them): content max-height,
           // transform origin, trigger height/width below.
-          "relative z-overlay max-h-[--radix-select-content-available-height] min-w-select-content-min origin-[--radix-select-content-transform-origin] overflow-x-hidden overflow-y-auto rounded-md border bg-popover text-popover-foreground shadow-md",
+          "relative z-dropdown max-h-[--radix-select-content-available-height] min-w-select-content-min origin-[--radix-select-content-transform-origin] overflow-x-hidden overflow-y-auto rounded-md border bg-popover text-popover-foreground shadow-md",
           position === "popper" &&
             "data-[side=bottom]:translate-y-select-separator data-[side=left]:-translate-x-select-separator data-[side=right]:translate-x-select-separator data-[side=top]:-translate-y-select-separator",
           className,

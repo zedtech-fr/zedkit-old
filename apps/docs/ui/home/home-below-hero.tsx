@@ -1,29 +1,9 @@
-import dynamic from "next/dynamic";
 import type { HomeEntryPoint } from "@/content/home-entry-points";
-import { loadHomeInitCommand } from "@/ui/home/home-get-started-section";
+import { HomeAiSetupSection } from "@/ui/home/home-ai-setup-section";
+import { HomeComponentFamiliesSection } from "@/ui/home/home-component-families-section";
+import { HomeGetStartedSection } from "@/ui/home/home-get-started-section";
 import { HomeIdentitiesSection } from "@/ui/home/home-identities-section";
 import { HomeSecondarySection } from "@/ui/home/home-secondary-section";
-
-const HomeGetStartedSection = dynamic(
-  () => import("@/ui/home/home-get-started-section").then((mod) => ({ default: mod.HomeGetStartedSection })),
-  {
-    loading: () => (
-      <section id="get-started" aria-busy="true" className="min-h-96 w-full scroll-mt-24">
-        <section id="install-or-copy" className="sr-only" />
-      </section>
-    ),
-  },
-);
-
-const HomeComponentFamiliesSection = dynamic(
-  () =>
-    import("@/ui/home/home-component-families-section").then((mod) => ({
-      default: mod.HomeComponentFamiliesSection,
-    })),
-  {
-    loading: () => <section id="components" aria-busy="true" className="min-h-48 w-full scroll-mt-24" />,
-  },
-);
 
 export type HomeBelowHeroProps = {
   featuredPackage: string;
@@ -32,21 +12,22 @@ export type HomeBelowHeroProps = {
 };
 
 /**
- * Marketing sections below the hero, code-split from the first home payload (#618), in the order a visitor
- * decides: the proof is above, then the same task in six looks, then how to adopt, then where to look next.
+ * Marketing sections below the hero, in the order a visitor decides: the proof is above,
+ * then the one-prompt AI setup, then the same task in six looks, then how to adopt, then where to look next.
+ * Kept in the main home payload (not dynamically imported) so section anchors stay in the live layout on first paint.
  */
 export function HomeBelowHero({
   featuredPackage,
   uiGalleryStats,
   entryPoints,
 }: HomeBelowHeroProps) {
-  const initCommand = loadHomeInitCommand();
   return (
     <div data-home-below-hero="">
+      <HomeAiSetupSection />
       <HomeIdentitiesSection />
       <HomeGetStartedSection npmPackage={featuredPackage} />
       <HomeComponentFamiliesSection componentCount={uiGalleryStats.components} />
-      <HomeSecondarySection entryPoints={entryPoints} initCommand={initCommand} />
+      <HomeSecondarySection entryPoints={entryPoints} />
     </div>
   );
 }

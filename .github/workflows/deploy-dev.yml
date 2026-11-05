@@ -51,11 +51,12 @@ jobs:
           IDENTITY_AI_DEV_PRICE_OUTPUT_USD_PER_MTOK: ${{ secrets.IDENTITY_AI_DEV_PRICE_OUTPUT_USD_PER_MTOK }}
         run: |
           umask 077
+          trim() { printf '%s' "$1" | tr -d '\r\n'; }
           : > deploy/suggest-dev.env
-          printf '%s=%s\n' IDENTITY_AI_BASE_URL "$IDENTITY_AI_BASE_URL" >> deploy/suggest-dev.env
-          printf '%s=%s\n' IDENTITY_AI_API_KEY "$IDENTITY_AI_API_KEY" >> deploy/suggest-dev.env
-          printf '%s=%s\n' IDENTITY_AI_MODEL "$IDENTITY_AI_MODEL" >> deploy/suggest-dev.env
-          printf '%s=%s\n' IDENTITY_AI_REASONING_EFFORT "$IDENTITY_AI_REASONING_EFFORT" >> deploy/suggest-dev.env
+          printf '%s=%s\n' IDENTITY_AI_BASE_URL "$(trim "$IDENTITY_AI_BASE_URL")" >> deploy/suggest-dev.env
+          printf '%s=%s\n' IDENTITY_AI_API_KEY "$(trim "$IDENTITY_AI_API_KEY")" >> deploy/suggest-dev.env
+          printf '%s=%s\n' IDENTITY_AI_MODEL "$(trim "$IDENTITY_AI_MODEL")" >> deploy/suggest-dev.env
+          printf '%s=%s\n' IDENTITY_AI_REASONING_EFFORT "$(trim "$IDENTITY_AI_REASONING_EFFORT")" >> deploy/suggest-dev.env
           printf '%s=%s\n' IDENTITY_AI_ENABLED "$IDENTITY_AI_DEV_ENABLED" >> deploy/suggest-dev.env
           printf '%s=%s\n' IDENTITY_AI_BUDGET_DAILY_USD "$IDENTITY_AI_DEV_BUDGET_DAILY_USD" >> deploy/suggest-dev.env
           printf '%s=%s\n' IDENTITY_AI_BUDGET_MONTHLY_USD "$IDENTITY_AI_DEV_BUDGET_MONTHLY_USD" >> deploy/suggest-dev.env
@@ -101,3 +102,12 @@ jobs:
         run: |
           ssh "$TARGET" 'cd /srv/app && docker compose -f compose.yaml -f compose.override.yaml -f compose.dev.yaml ps -a suggest-dev; docker compose -f compose.yaml -f compose.override.yaml -f compose.dev.yaml logs --no-color --tail 30 suggest-dev; docker inspect -f "{{json .NetworkSettings.Networks}}" $(docker compose ps -q caddy) | tr , "\n" | grep -E "NetworkID|Aliases" ; docker network inspect -f "{{range .Containers}}{{.Name}} {{end}}" app_default; docker compose exec -T caddy wget -qO- -S http://suggest-dev:3001/api/identity/suggest/status 2>&1 | head -5' || true
           curl -s -w ' [%{http_code}]\n' https://dev.zedkit.app/api/identity/suggest/status || true
+      - name: Refuse deploy when suggest-dev rejects the provider key
+        if: success()
+        env:
+          TARGET: ${{ secrets.DOCS_DEPLOY_USER }}@${{ secrets.DOCS_DEPLOY_HOST }}
+        run: |
+          if ssh "$TARGET" 'cd /srv/app && docker compose -f compose.yaml -f compose.override.yaml -f compose.dev.yaml logs --no-color --tail 200 suggest-dev' | grep -q 'invalid_api_key'; then
+            echo "suggest-dev logs show invalid_api_key: fix repository secret IDENTITY_AI_DEV_API_KEY (and matching IDENTITY_AI_BASE_URL) then redeploy." >&2
+            exit 1
+          fi

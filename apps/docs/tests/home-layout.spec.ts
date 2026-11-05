@@ -1,9 +1,11 @@
 import { expect, test } from "@playwright/test";
 
-const BASE = "http://127.0.0.1:3100";
-const WIDTHS = [390, 768, 1280] as const;
+const BASE = process.env.DOCS_E2E_BASE_URL ?? "http://127.0.0.1:3100";
+const WIDTHS = [375, 390, 768, 1280] as const;
 
 const SECTION_IDS = ["identities", "get-started", "components", "entry-points"];
+const MIN_SECTION_PADDING_PX = 32;
+const MIN_CARD_PADDING_PX = 16;
 
 test.describe("home layout rhythm (#387)", () => {
   for (const width of WIDTHS) {
@@ -44,6 +46,73 @@ test.describe("home layout rhythm (#387)", () => {
       }
     });
   }
+
+  test("min section and card padding at 375px", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto(BASE, { waitUntil: "networkidle" });
+
+    const metrics = await page.evaluate((sectionIds) => {
+      const padding = (el: Element | null) => {
+        if (!el) return 0;
+        const s = getComputedStyle(el);
+        return Number.parseFloat(s.paddingTop);
+      };
+      const sections = sectionIds
+        .map((id) => document.getElementById(id))
+        .filter((el): el is HTMLElement => el !== null);
+      const familyRows = [...document.querySelectorAll("[data-home-component-families] [data-slot='stack'].py-6, [data-home-component-families] .py-6")];
+      return {
+        sectionPads: sections.map((el) => padding(el)),
+        familyPads: familyRows.map((el) => padding(el)),
+      };
+    }, SECTION_IDS);
+
+    expect(metrics.sectionPads.length).toBe(SECTION_IDS.length);
+    for (const pad of metrics.sectionPads) {
+      expect(pad).toBeGreaterThanOrEqual(MIN_SECTION_PADDING_PX);
+    }
+    expect(metrics.familyPads.length).toBeGreaterThan(0);
+    for (const pad of metrics.familyPads) {
+      expect(pad).toBeGreaterThanOrEqual(MIN_CARD_PADDING_PX);
+    }
+  });
+
+  test("proximity snap on the home scroll root; pin section is not snapped", async ({ page }) => {
+    const readSnap = () =>
+      page.evaluate(() => {
+        const html = getComputedStyle(document.documentElement);
+        const root = document.querySelector("[data-slot='section-scroll']");
+        const identities = document.getElementById("identities");
+        const pin = document.querySelector("[data-identity-pin]");
+        const entry = document.getElementById("entry-points");
+        const snap = (el: Element | null) => (el ? getComputedStyle(el).scrollSnapAlign : "");
+        return {
+          htmlType: html.scrollSnapType,
+          htmlBehavior: html.scrollBehavior,
+          htmlPaddingTop: html.scrollPaddingTop,
+          rootType: root ? getComputedStyle(root).scrollSnapType : "",
+          identitiesAlign: snap(identities),
+          identitiesSnap: identities?.getAttribute("data-snap"),
+          pinAlign: snap(pin),
+          entryAlign: snap(entry),
+        };
+      });
+
+    for (const width of [375, 1440] as const) {
+      await page.setViewportSize({ width, height: width === 375 ? 812 : 900 });
+      await page.goto(BASE, { waitUntil: "networkidle" });
+      const metrics = await readSnap();
+      expect(metrics.htmlType, `${width}`).toMatch(/^y(\s+proximity)?$/);
+      expect(metrics.htmlType, `${width}`).not.toMatch(/mandatory/);
+      expect(metrics.rootType, `${width}`).toMatch(/^y(\s+proximity)?$/);
+      expect(metrics.htmlBehavior, `${width}`).toBe("smooth");
+      expect(Number.parseFloat(metrics.htmlPaddingTop), `${width}`).toBeGreaterThanOrEqual(48);
+      expect(metrics.identitiesSnap, `${width}`).toBe("none");
+      expect(metrics.identitiesAlign, `${width}`).toBe("none");
+      expect(["none", "normal", ""]).toContain(metrics.pinAlign);
+      expect(metrics.entryAlign, `${width}`).toMatch(/start/);
+    }
+  });
 });
 
 test.describe("home bands (#1025)", () => {

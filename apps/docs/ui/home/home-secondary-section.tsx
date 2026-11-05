@@ -2,10 +2,10 @@ import Link from "next/link";
 import { Button, Section, Stack, Text } from "@zedtech/zedkit-ui";
 import { DocsActionLabel } from "@/components/docs-action-label";
 import type { HomeEntryPoint } from "@/content/home-entry-points";
-import { HomeGetStartedAiBlock } from "@/ui/home/home-get-started-ai-block";
 import {
   HOME_METADATA_TEXT_CLASS,
   HOME_SECTION_CONTENT_GAP,
+  HOME_SECTION_REVEAL_PROPS,
 } from "@/ui/home/home-rhythm";
 import { homeCopy } from "@/ui/home/i18n/home-copy";
 
@@ -21,11 +21,11 @@ function HomeSecondaryEntryLinks({ entryPoints }: { entryPoints: HomeEntryPoint[
         >
           <Stack gap={1} className="min-w-0">
             <Text className="font-medium">{entry.title}</Text>
-            <Text variant="muted" className={HOME_METADATA_TEXT_CLASS}>
+            <Text variant="muted" typeRole="caption" className={HOME_METADATA_TEXT_CLASS}>
               {homeCopy.secondary.entryNeedsLine(entry.needCount, entry.summary.split(".")[0]!)}
             </Text>
           </Stack>
-          <Button asChild variant="link" size="sm" className="h-auto shrink-0 px-0">
+          <Button asChild variant="ghost" size="sm" className="w-fit shrink-0">
             <Link href={entry.href}>
               <DocsActionLabel>{entry.linkLabel}</DocsActionLabel>
             </Link>
@@ -39,10 +39,8 @@ function HomeSecondaryEntryLinks({ entryPoints }: { entryPoints: HomeEntryPoint[
 /** Packages and agents: one quiet band after the main path. */
 export function HomeSecondarySection({
   entryPoints,
-  initCommand,
 }: {
   entryPoints: HomeEntryPoint[];
-  initCommand: string;
 }) {
   return (
     <Section
@@ -53,11 +51,10 @@ export function HomeSecondarySection({
       id="entry-points"
       title={homeCopy.secondary.section.title}
       description={homeCopy.secondary.section.description}
+      {...HOME_SECTION_REVEAL_PROPS}
     >
       <Stack gap={HOME_SECTION_CONTENT_GAP}>
         <HomeSecondaryEntryLinks entryPoints={entryPoints} />
-        {/* The agents row above names the job; its commands follow it directly, with no second heading. */}
-        <HomeGetStartedAiBlock initCommand={initCommand} />
       </Stack>
     </Section>
   );

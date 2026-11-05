@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { identityContrastWarnings, keepIdentityDarkKeys, withIdentityDarkPair } from "#identity-contrast.js";
+import {
+  identityContrastTokenLabel,
+  identityContrastWarnings,
+  keepIdentityDarkKeys,
+  withIdentityDarkPair,
+} from "#identity-contrast.js";
 import { identityPresets, identityTokenSchema, parseIdentityTokens } from "#identity-tokens.js";
 
 function ofToken(
@@ -153,5 +158,48 @@ describe("withIdentityDarkPair", () => {
     expect(rewritten.dark.background).not.toBe("120 40% 20%");
     expect(next.dark.background).toBe("120 40% 20%");
     expect(next.dark.foreground).toBe(rewritten.dark.foreground);
+  });
+});
+
+describe("unreadable colours and labels", () => {
+  const loose = (light: Partial<(typeof identityPresets.mist)["light"]>) =>
+    ({ ...identityPresets.mist, light: { ...identityPresets.mist.light, ...light } }) as typeof identityPresets.mist;
+
+  it("names each token the way the editor says it", () => {
+    expect(identityContrastTokenLabel("foreground")).toBe("text");
+    expect(identityContrastTokenLabel("primaryForeground")).toBe("primary text");
+    expect(identityContrastTokenLabel("mutedForeground")).toBe("muted text");
+    expect(identityContrastTokenLabel("accent")).toBe("accent");
+    expect(identityContrastTokenLabel("border")).toBe("border");
+  });
+
+  it("does not warn about a colour it cannot read", () => {
+    const warnings = identityContrastWarnings(loose({ foreground: "not-a-colour", accent: "red" }));
+    expect(warnings.filter((w) => w.scheme === "light" && (w.token === "foreground" || w.token === "accent"))).toEqual([]);
+    expect(identityContrastWarnings(loose({ background: "nope" })).filter((w) => w.scheme === "light")).toEqual([]);
+  });
+
+  it("keeps an unreadable light background as it is when it writes the dark pair", () => {
+    const next = withIdentityDarkPair(loose({ background: "nope" }));
+    expect(next.dark.background).toBe("nope");
+  });
+
+  it("skips an unreadable colour while it repairs the rest of the dark pair", () => {
+    const next = withIdentityDarkPair(loose({ foreground: "nope", accent: "also-nope" }));
+    expect(next.dark.foreground).toBe("nope");
+    expect(next.dark.accent).toBe("also-nope");
+    expect(next.dark.background).not.toBe("nope");
+  });
+
+  it("darkens a very light inverted background until it reads as dark", () => {
+    const next = withIdentityDarkPair(loose({ background: "40 30% 3%" }));
+    const lightness = Number(next.dark.background.split(" ")[2]?.replace("%", ""));
+    expect(lightness).toBeLessThan(97);
+    expect(identityContrastWarnings(next).filter((w) => w.scheme === "dark")).toEqual([]);
+  });
+
+  it("leaves the primary text alone when the primary fill is unreadable", () => {
+    const next = withIdentityDarkPair(loose({ primary: "nope" }));
+    expect(next.dark.primary).toBe("nope");
   });
 });

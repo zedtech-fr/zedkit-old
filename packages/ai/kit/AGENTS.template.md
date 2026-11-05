@@ -46,9 +46,10 @@ at the first rung that holds<!-- if:skill=ponytail-review --> (skill `ponytail-r
   check. (skill `ground-truth`)
 - **Smallest complete change.** Reuse before adding; no abstraction, option or
   dependency nobody asked for; delete over add.<!-- if:skill=ponytail --> (skill `ponytail`)<!-- /if -->
-- **Parallelize independent work.** Fan out read-only exploration and review
-  lenses to subagents with self-contained briefs; implement in parallel only
-  after the shared contract is fixed. (skill `parallel-work`)
+- **Parallelize independent work, route by tier.** Fan out read-only reading
+  and review to subagents with self-contained briefs on a cheap fast model,
+  passed on every spawn (omitted = the strong session model); synthesis and
+  decisions stay strong. (skill `parallel-work`; `.agents/model-routing.md`)
 - **Tests first, adversarial.** Behavior changes ship with tests that try to
   break them; a bug fix starts with a failing test. (skills `tdd`,
   `adversarial-tests`)
@@ -90,8 +91,7 @@ evidence.
   holds copies (a linked folder shows up empty there).
 - `.agents/commands/`: one-keystroke commands. `.claude/commands` points to it;
   `.cursor/commands` holds copies for the same reason.
-- codex and muse read this file and `.agents/` directly (no layer); the kit
-  install-tests every preset against every provider.
+- codex and muse read this file and `.agents/` directly (no layer).
 - Subagent `model`: omit it, or `inherit`. Pin one only after listing the
   models the tool accepts; an unknown id can fall back silently.
 - Tailor this file to the repo with the `setup-ai` skill.

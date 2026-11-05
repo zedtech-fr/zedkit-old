@@ -111,9 +111,27 @@ test("drawer copy source lists the namespace step, every companion file and the 
   await adoption.getByRole("tab", { name: "Paste the files" }).click();
   await expect(adoption.locator('[data-adoption-step="dependencies"]')).toContainText("vaul");
   const files = adoption.locator('[data-adoption-step="files"]');
-  await expect(files).toContainText("7 companion files");
+  await expect(files).toContainText("16 companion files");
   await files.locator("summary").click();
-  for (const name of ["drawer", "overlay-modal", "theme-scope", "use-narrow-viewport", "ui-provider", "create-messages-context", "messages", "button"]) {
+  for (const name of [
+    "drawer",
+    "drawer-non-modal",
+    "drawer-panel-classes",
+    "drawer-non-modal-effects",
+    "drawer-parts",
+    "drawer-non-modal-context",
+    "drawer-portal",
+    "drawer-vaul",
+    "drawer-meta",
+    "overlay-modal",
+    "theme-scope",
+    "surface",
+    "use-narrow-viewport",
+    "ui-provider",
+    "create-messages-context",
+    "messages",
+    "button",
+  ]) {
     await expect(files.getByRole("region", { name: new RegExp(`src/components/ui/${name}\\.tsx?$`) })).toHaveCount(1);
   }
 });

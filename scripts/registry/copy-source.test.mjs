@@ -38,12 +38,12 @@ test("bare kit sibling names are rejected for the status family", () => {
 });
 
 /** Card loading placeholder family (#420): composed skeleton + kit Skeleton brick. */
-const CARD_SKELETON_FAMILY = ["card-skeleton", "skeleton"];
+const CARD_SKELETON_FAMILY = ["card-skeleton", "skeleton", "surface"];
 
 test("card-skeleton family uses kit registry slug for skeleton", () => {
   assert.deepEqual(checkCopySourceFamily(registry, CARD_SKELETON_FAMILY), []);
   const cardSkel = registry.items.find((item) => item.name === "card-skeleton");
-  assert.deepEqual(cardSkel.registryDependencies, ["@zedkit/skeleton", "utils"]);
+  assert.deepEqual(cardSkel.registryDependencies, ["@zedkit/skeleton", "utils", "@zedkit/surface"]);
 });
 
 test("card-skeleton family ships cssVars for copy-only theme", () => {
@@ -53,7 +53,7 @@ test("card-skeleton family ships cssVars for copy-only theme", () => {
 });
 
 /** Confirm dialog family (#420): kit Button + Dialog, not upstream shadcn. */
-const CONFIRM_DIALOG_FAMILY = ["confirm-dialog", "button", "dialog"];
+const CONFIRM_DIALOG_FAMILY = ["confirm-dialog", "button", "dialog", "surface"];
 
 test("confirm-dialog family uses kit registry slugs for button and dialog", () => {
   assert.deepEqual(checkCopySourceFamily(registry, CONFIRM_DIALOG_FAMILY), []);
@@ -62,12 +62,25 @@ test("confirm-dialog family uses kit registry slugs for button and dialog", () =
 });
 
 /** Drawer family (#420): kit Button for Radix drawer chrome. */
-const DRAWER_FAMILY = ["drawer", "button"];
+const DRAWER_FAMILY = ["drawer", "button", "surface"];
 
 test("drawer family uses kit registry slug for button", () => {
   assert.deepEqual(checkCopySourceFamily(registry, DRAWER_FAMILY), []);
   const drawer = registry.items.find((item) => item.name === "drawer");
-  assert.deepEqual(drawer.registryDependencies, ["@zedkit/button", "utils"]);
+  assert.deepEqual(drawer.registryDependencies, ["@zedkit/button", "utils", "@zedkit/surface"]);
+  const paths = drawer.files.map((file) => file.path);
+  for (const leaf of [
+    "drawer-non-modal.tsx",
+    "drawer-panel-classes.ts",
+    "drawer-non-modal-effects.ts",
+    "drawer-parts.tsx",
+    "drawer-non-modal-context.tsx",
+    "drawer-portal.tsx",
+    "drawer-vaul.tsx",
+    "drawer-meta.tsx",
+  ]) {
+    assert.ok(paths.some((path) => path.endsWith(leaf)), `drawer item missing ${leaf}`);
+  }
 });
 
 test("copy theme item matches styles.css motion and semantic tokens", () => {

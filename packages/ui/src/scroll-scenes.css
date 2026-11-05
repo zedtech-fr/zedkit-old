@@ -28,6 +28,7 @@
 
 @media (prefers-reduced-motion: no-preference) and (min-height: 34rem) {
   @supports (animation-timeline: view()) {
+    :root:not([data-motion="reduce"]) {
     [data-scroll-scenes][data-scene-count] {
       --zk-top: var(--zk-scenes-top, 6rem);
       --zk-bottom: var(--zk-scenes-bottom, 1rem);
@@ -169,6 +170,7 @@
       animation-range:
         contain calc(var(--zk-scene-index) * 100% / var(--zk-scenes-count))
         contain calc((var(--zk-scene-index) + 1) * 100% / var(--zk-scenes-count));
+    }
     }
   }
 }

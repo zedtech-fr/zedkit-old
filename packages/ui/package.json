@@ -86,6 +86,7 @@
     "@radix-ui/react-tabs": "catalog:",
     "@radix-ui/react-tooltip": "catalog:",
     "@tanstack/react-table": "catalog:",
+    "@zedtech/zedkit-core": "workspace:*",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
     "downshift": "catalog:",
@@ -99,7 +100,6 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "catalog:",
-    "@zedtech/zedkit-core": "workspace:*",
     "@zedtech/zedkit-quality": "workspace:*",
     "@testing-library/react": "catalog:",
     "@testing-library/user-event": "catalog:",
