@@ -12,6 +12,8 @@ import { DetectedLinks } from "@/components/identity-detected-links";
 import type { Unavailable } from "@/lib/identity-assistant";
 import type { Proposal, SessionState } from "@/lib/identity-creator-session";
 
+export type { View } from "@/components/identity-assistant-parts";
+
 /** The assistant's first word, where the exchange will continue. Shown until the first exchange replaces it. */
 function AssistantGreeting() {
   return (
@@ -35,6 +37,8 @@ export function ConversationMessages(props: {
   brief: string;
   busy: boolean;
   compact?: boolean;
+  /** When false (home dock), compact panes toggle at every width; when true (editor dock), split from `lg`. */
+  narrowSplit?: boolean;
   onBrief: (brief: string) => void;
   onQuickRefine: (prompt: string) => void;
   off: Unavailable | null;
@@ -47,7 +51,10 @@ export function ConversationMessages(props: {
   return (
     <Stack
       gap={4}
-      className={cn("min-w-0", hidden && (props.compact ? "hidden" : "max-lg:hidden"))}
+      className={cn(
+        "min-w-0",
+        hidden && (props.compact && !props.narrowSplit ? "hidden" : "max-lg:hidden"),
+      )}
       data-assistant-pane="conversation"
     >
       {props.off ? <UnavailableBanner reason={props.off} live={false} /> : null}
@@ -145,6 +152,7 @@ export function PreviewPane(props: {
   domainBrief: string;
   busy: boolean;
   compact?: boolean;
+  narrowSplit?: boolean;
   onUse: (tokens: IdentityTokens) => void;
   onDiscard: () => void;
 }) {
@@ -152,7 +160,7 @@ export function PreviewPane(props: {
   const hidden = compact ? props.view !== "preview" : props.view === "conversation";
   const className = cn(
     "min-w-0",
-    hidden && (compact ? "hidden" : "max-lg:hidden"),
+    hidden && (compact && !props.narrowSplit ? "hidden" : "max-lg:hidden"),
     !compact && !props.proposal && "lg:hidden",
   );
   return (

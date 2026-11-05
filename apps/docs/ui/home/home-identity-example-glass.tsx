@@ -135,7 +135,7 @@ export function HomeIdentityExampleGlass() {
   const [members, setMembers] = useState<Member[]>(() => copy.members.map((member) => ({ ...member })));
   const [message, setMessage] = useState("");
   return (
-    <div className="relative min-w-0 overflow-hidden rounded-xl bg-linear-to-br from-primary/50 via-accent/40 to-background p-3 sm:p-4">
+    <div className="relative min-w-0 rounded-xl bg-linear-to-br from-primary/50 via-accent/40 to-background p-3 sm:p-4">
       <Stack gap={4} className="min-w-0">
         <UsageCard />
         <TeamCard

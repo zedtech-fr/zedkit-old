@@ -91,14 +91,6 @@ function IdentityDockWidget() {
   useEditorDockAutoOpen(onEditor, pathname, setBrief, setExpanded);
   useIdentityDockOpenRequest(setBrief, setExpanded);
 
-  useEffect(() => {
-    if (!expanded) {
-      document.body.style.pointerEvents = "";
-      return;
-    }
-    document.body.style.pointerEvents = "auto";
-  }, [expanded, pathname]);
-
   return (
     <>
       <IdentityDock data-testid="identity-dock">
@@ -128,8 +120,12 @@ function IdentityDockWidget() {
           className="flex min-h-0 flex-col gap-0 p-0 [&>:not([data-slot^=drawer-],[data-vaul-handle],button)]:px-0"
         >
           <DrawerHandle className="mt-2 mb-0 h-1 w-10 shrink-0 bg-border/45" aria-label="Drag to resize" />
-          <Stack data-state="open" className="min-h-0 flex-1 gap-0 overflow-hidden">
-            <IdentityDockAssistantPanel previewTokens={workingTokens} onPreviewTokens={setPreviewTokens} />
+          <Stack data-state="open" className="min-h-0 flex-1 gap-0">
+            <IdentityDockAssistantPanel
+              previewTokens={workingTokens}
+              onPreviewTokens={setPreviewTokens}
+              viewSwitchAlways={!onEditor}
+            />
           </Stack>
         </DrawerContent>
       </Drawer>

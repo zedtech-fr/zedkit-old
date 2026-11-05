@@ -12,6 +12,7 @@ beforeAll(() => {
 import {
   Drawer,
   DrawerBody,
+  DrawerClose,
   DrawerCloseButton,
   DrawerContent,
   DrawerDescription,
@@ -281,6 +282,30 @@ describe("drawer", () => {
     );
     expect(screen.getByRole("dialog", { name: "Delivery details" })).not.toBeNull();
     expect(document.querySelector("[data-vaul-overlay]")).toBeNull();
+  });
+
+  it("omits the vaul overlay when DrawerContent sets modal false on a modal root", () => {
+    render(
+      <Drawer defaultOpen>
+        <DrawerContent modal={false}>
+          <DrawerTitle>Delivery details</DrawerTitle>
+        </DrawerContent>
+      </Drawer>,
+    );
+    expect(screen.getByRole("dialog", { name: "Delivery details" })).not.toBeNull();
+    expect(document.querySelector("[data-vaul-overlay]")).toBeNull();
+  });
+
+  it("forwards content ref callbacks on a modal vaul drawer", () => {
+    const ref = vi.fn();
+    render(
+      <Drawer defaultOpen>
+        <DrawerContent ref={ref}>
+          <DrawerTitle>Delivery details</DrawerTitle>
+        </DrawerContent>
+      </Drawer>,
+    );
+    expect(ref).toHaveBeenCalled();
   });
 
   it("stays open on overlay click when not dismissible", async () => {
@@ -561,6 +586,190 @@ describe("drawer", () => {
     await user.click(trigger);
     expect(screen.getByRole("dialog", { name: "Delivery details" })).not.toBeNull();
     expect(document.activeElement).toBe(trigger);
+  });
+
+  it("allows Tab to reach outside when modal is false", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <button type="button">before</button>
+        <Drawer modal={false}>
+          <DrawerTrigger asChild>
+            <Button>Open drawer</Button>
+          </DrawerTrigger>
+          <DrawerContent modal={false}>
+            <DrawerTitle>Delivery details</DrawerTitle>
+            <button type="button">inside</button>
+          </DrawerContent>
+        </Drawer>
+        <button type="button">after</button>
+      </>,
+    );
+    const after = screen.getByRole("button", { name: "after" });
+    await user.click(screen.getByRole("button", { name: "Open drawer" }));
+    await user.tab();
+    expect(document.activeElement).toBe(after);
+    expect(screen.getByRole("dialog", { name: "Delivery details" }).contains(document.activeElement)).toBe(
+      false,
+    );
+  });
+
+  it("does not aria-hide page content when modal is false", () => {
+    render(
+      <>
+        <main data-testid="page-main">Page</main>
+        <Drawer defaultOpen modal={false}>
+          <DrawerContent modal={false}>
+            <DrawerTitle>Delivery details</DrawerTitle>
+          </DrawerContent>
+        </Drawer>
+      </>,
+    );
+    expect(screen.getByTestId("page-main").getAttribute("aria-hidden")).toBeNull();
+  });
+
+  it("closes on Escape when modal is false and returns focus to the trigger", async () => {
+    const user = userEvent.setup();
+    render(
+      <Drawer modal={false}>
+        <DrawerTrigger asChild>
+          <Button>Open drawer</Button>
+        </DrawerTrigger>
+        <DrawerContent modal={false}>
+          <DrawerTitle>Delivery details</DrawerTitle>
+        </DrawerContent>
+      </Drawer>,
+    );
+    const trigger = screen.getByRole("button", { name: "Open drawer" });
+    await user.click(trigger);
+    expect(screen.getByRole("dialog", { name: "Delivery details" })).not.toBeNull();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it("opens from a plain non-modal trigger in controlled mode", async () => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+    render(
+      <Drawer open={false} onOpenChange={onOpenChange} modal={false}>
+        <DrawerTrigger>Open inline</DrawerTrigger>
+        <DrawerContent modal={false}>
+          <DrawerTitle>Inline panel</DrawerTitle>
+        </DrawerContent>
+      </Drawer>,
+    );
+    await user.click(screen.getByRole("button", { name: "Open inline" }));
+    expect(onOpenChange).toHaveBeenCalledWith(true);
+  });
+
+  it("wires non-modal description, handle, and close chrome", async () => {
+    const user = userEvent.setup();
+    render(
+      <Drawer defaultOpen modal={false} direction="right">
+        <DrawerContent modal={false}>
+          <DrawerHandle />
+          <DrawerTitle>Inline panel</DrawerTitle>
+          <DrawerDescription>Context for the panel.</DrawerDescription>
+          <DrawerCloseButton />
+        </DrawerContent>
+      </Drawer>,
+    );
+    const dialog = screen.getByRole("dialog", { name: "Inline panel" });
+    expect(dialog.getAttribute("aria-describedby")).toBeTruthy();
+    expect(document.querySelector("[data-slot='drawer-handle']")).not.toBeNull();
+    await user.click(screen.getByRole("button", { name: "Close" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("does not open a non-modal drawer when the trigger click is defaultPrevented", async () => {
+    const user = userEvent.setup();
+    render(
+      <Drawer modal={false}>
+        <DrawerTrigger asChild>
+          <Button
+            onClick={(event) => {
+              event.preventDefault();
+            }}
+          >
+            Blocked open
+          </Button>
+        </DrawerTrigger>
+        <DrawerContent modal={false}>
+          <DrawerTitle>Inline panel</DrawerTitle>
+        </DrawerContent>
+      </Drawer>,
+    );
+    await user.click(screen.getByRole("button", { name: "Blocked open" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("forwards ref callbacks on non-modal trigger and content", () => {
+    const triggerRef = vi.fn();
+    const contentRef = vi.fn();
+    render(
+      <Drawer defaultOpen modal={false}>
+        <DrawerTrigger ref={triggerRef}>Open inline</DrawerTrigger>
+        <DrawerContent ref={contentRef} modal={false}>
+          <DrawerTitle>Inline panel</DrawerTitle>
+        </DrawerContent>
+      </Drawer>,
+    );
+    expect(triggerRef).toHaveBeenCalled();
+    expect(contentRef).toHaveBeenCalled();
+  });
+
+  it("forwards object refs on non-modal trigger and content", () => {
+    const triggerRef = { current: null as HTMLButtonElement | null };
+    const contentRef = { current: null as HTMLDivElement | null };
+    render(
+      <Drawer defaultOpen modal={false}>
+        <DrawerTrigger ref={triggerRef}>Open inline</DrawerTrigger>
+        <DrawerContent ref={contentRef} modal={false}>
+          <DrawerTitle>Inline panel</DrawerTitle>
+        </DrawerContent>
+      </Drawer>,
+    );
+    expect(triggerRef.current).not.toBeNull();
+    expect(contentRef.current).not.toBeNull();
+  });
+
+  it("closes from an asChild non-modal close control", async () => {
+    const user = userEvent.setup();
+    render(
+      <Drawer defaultOpen modal={false}>
+        <DrawerContent modal={false}>
+          <DrawerTitle>Inline panel</DrawerTitle>
+          <DrawerClose asChild>
+            <Button>Dismiss</Button>
+          </DrawerClose>
+        </DrawerContent>
+      </Drawer>,
+    );
+    await user.click(screen.getByRole("button", { name: "Dismiss" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("does not close a non-modal drawer when the asChild close click is defaultPrevented", async () => {
+    const user = userEvent.setup();
+    render(
+      <Drawer defaultOpen modal={false}>
+        <DrawerContent modal={false}>
+          <DrawerTitle>Inline panel</DrawerTitle>
+          <DrawerClose asChild>
+            <Button
+              onClick={(event) => {
+                event.preventDefault();
+              }}
+            >
+              Dismiss
+            </Button>
+          </DrawerClose>
+        </DrawerContent>
+      </Drawer>,
+    );
+    await user.click(screen.getByRole("button", { name: "Dismiss" }));
+    expect(screen.getByRole("dialog", { name: "Inline panel" })).not.toBeNull();
   });
 
   it("has no axe violations when open", async () => {

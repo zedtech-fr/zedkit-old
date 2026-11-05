@@ -4,8 +4,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, type RefObject } from 
 import { Stack } from "@zedtech/zedkit-ui";
 
 import { ViewSwitch, type View } from "@/components/identity-assistant-parts";
-import { ConversationComposer } from "@/components/identity-assistant-panes";
 import { IdentityDockAssistantGrid } from "@/components/identity-dock-assistant-grid";
+import { IdentityDockComposerFooter } from "@/components/identity-dock-composer-footer";
 import { IdentityDockExportBlock } from "@/components/identity-dock-export-block";
 import { IdentityDockPanelToolbar } from "@/components/identity-dock-panel-toolbar";
 import { useAssistantSubmitHandlers } from "@/components/use-assistant-submit";
@@ -40,6 +40,7 @@ function acceptProposal(
 
 function IdentityDockPanelScroll(props: {
   scrollRef: RefObject<HTMLDivElement | null>;
+  viewSwitchAlways: boolean;
   view: View;
   setView: (view: View) => void;
   previewRef: RefObject<HTMLButtonElement | null>;
@@ -59,13 +60,13 @@ function IdentityDockPanelScroll(props: {
   onPreviewTokens: (tokens: IdentityTokens) => void;
 }) {
   return (
-    <Stack ref={props.scrollRef} gap={3} className="min-h-0 flex-1 overflow-y-auto px-3 pt-3">
+    <Stack ref={props.scrollRef} gap={3} className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 pt-3 pb-2">
       <ViewSwitch
         view={props.view}
         onView={props.setView}
         waiting={props.session.proposal !== null}
         previewRef={props.previewRef}
-        always
+        always={props.viewSwitchAlways}
       />
       <IdentityDockAssistantGrid
         view={props.view}
@@ -75,6 +76,7 @@ function IdentityDockPanelScroll(props: {
         busy={props.busy}
         previewTokens={props.previewTokens}
         domainBrief={props.domainBrief}
+        narrowSplit={!props.viewSwitchAlways}
         inputRef={props.inputRef}
         onBrief={props.setBrief}
         onSubmit={props.send}
@@ -113,12 +115,22 @@ function useProposalInView(scrollRef: RefObject<HTMLDivElement | null>, requestI
   }, [scrollRef, requestId, view]);
 }
 
+function useIdentityDockBriefAutofocus(panelRef: RefObject<HTMLDivElement | null>) {
+  useEffect(() => {
+    const field = panelRef.current?.querySelector<HTMLTextAreaElement>("#identity-assistant-brief:not([disabled])");
+    if (field && field.offsetParent !== null) field.focus({ preventScroll: true });
+  }, [panelRef]);
+}
+
 export function IdentityDockAssistantPanel({
   previewTokens,
   onPreviewTokens,
+  viewSwitchAlways = true,
 }: {
   previewTokens: IdentityTokens;
   onPreviewTokens: (tokens: IdentityTokens) => void;
+  /** Home dock keeps the phone switch at every width; the editor page shows both panes from `lg`. */
+  viewSwitchAlways?: boolean;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -130,17 +142,15 @@ export function IdentityDockAssistantPanel({
   const { send: sendBrief, quickRefine } = useAssistantSubmitHandlers(brief, submit, busy, off !== null, () => setBrief(""));
   const send = useKeepSentBrief(brief, session, setBrief, sendBrief);
 
-  useEffect(() => {
-    const field = panelRef.current?.querySelector<HTMLTextAreaElement>("#identity-assistant-brief:not([disabled])");
-    if (field && field.offsetParent !== null) field.focus({ preventScroll: true });
-  }, []);
+  useIdentityDockBriefAutofocus(panelRef);
   useProposalInView(scrollRef, session.proposal?.requestId, ui.view);
 
   return (
-    <Stack ref={panelRef} className="min-h-0 flex-1 gap-0 overflow-hidden" data-slot="identity-dock-body">
+    <Stack ref={panelRef} className="min-h-0 flex-1 gap-0" data-slot="identity-dock-body">
       <IdentityDockPanelToolbar onClose={() => setExpanded(false)} />
       <IdentityDockPanelScroll
         scrollRef={scrollRef}
+        viewSwitchAlways={viewSwitchAlways}
         view={ui.view}
         setView={ui.setView}
         previewRef={ui.previewButton}
@@ -160,18 +170,16 @@ export function IdentityDockAssistantPanel({
         onPreviewTokens={onPreviewTokens}
       />
       {acceptedTokens !== null ? <IdentityDockExportBlock tokens={acceptedTokens} /> : null}
-      <Stack gap={2} className="shrink-0 border-t border-border bg-background px-3 py-3">
-        <ConversationComposer
-          session={session}
-          brief={brief}
-          busy={busy}
-          off={off}
-          onBrief={setBrief}
-          onSubmit={send}
-          onCancel={cancel}
-          inputRef={ui.field}
-        />
-      </Stack>
+      <IdentityDockComposerFooter
+        session={session}
+        brief={brief}
+        busy={busy}
+        off={off}
+        onBrief={setBrief}
+        onSubmit={send}
+        onCancel={cancel}
+        inputRef={ui.field}
+      />
     </Stack>
   );
 }
