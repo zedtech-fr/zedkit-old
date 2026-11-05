@@ -10,6 +10,7 @@ import { IdentityDockExportBlock } from "@/components/identity-dock-export-block
 import { IdentityDockPanelToolbar } from "@/components/identity-dock-panel-toolbar";
 import { useAssistantSubmitHandlers } from "@/components/use-assistant-submit";
 import { useAssistantView } from "@/components/use-assistant-view";
+import { useEditorDockFeedbackScroll } from "@/components/use-editor-dock-feedback-scroll";
 import { useIdentityAssistant } from "@/components/use-identity-assistant";
 import { useIdentityAssistantStore } from "@/lib/identity-assistant-store";
 import { applyWidgetSpecimenPreview } from "@/lib/identity-widget-specimen-preview";
@@ -58,6 +59,7 @@ function IdentityDockPanelScroll(props: {
   backToConversation: (action: () => void) => void;
   dispatch: (action: { type: "accept" } | { type: "discard" }) => void;
   onPreviewTokens: (tokens: IdentityTokens) => void;
+  acceptedExportTokens: IdentityTokens | null;
 }) {
   return (
     <Stack ref={props.scrollRef} gap={3} className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 pt-3 pb-2">
@@ -86,6 +88,9 @@ function IdentityDockPanelScroll(props: {
         onDiscard={() => props.backToConversation(() => props.dispatch({ type: "discard" }))}
         hideComposer
       />
+      {props.acceptedExportTokens !== null ? (
+        <IdentityDockExportBlock tokens={props.acceptedExportTokens} />
+      ) : null}
     </Stack>
   );
 }
@@ -111,7 +116,11 @@ function useKeepSentBrief(brief: string, session: SessionState, setBrief: (value
 function useProposalInView(scrollRef: RefObject<HTMLDivElement | null>, requestId: string | undefined, view: View) {
   useLayoutEffect(() => {
     if (!requestId) return;
-    scrollRef.current?.querySelector("[data-assistant-proposal]")?.scrollIntoView({ block: "nearest", behavior: "instant" });
+    const scroller = scrollRef.current;
+    const proposal = scroller?.querySelector<HTMLElement>("[data-assistant-proposal]");
+    if (!scroller || !proposal) return;
+    const top = proposal.offsetTop - scroller.offsetTop;
+    scroller.scrollTop = Math.max(0, top - 8);
   }, [scrollRef, requestId, view]);
 }
 
@@ -136,17 +145,34 @@ export function IdentityDockAssistantPanel({
   const scrollRef = useRef<HTMLDivElement>(null);
   const { brief, setBrief, setExpanded, previewTokens: acceptedTokens } = useIdentityAssistantStore();
   const { session, status, dispatch, submit, cancel } = useIdentityAssistant(previewTokens, true);
-  const ui = useAssistantView({ proposalId: session.proposal?.requestId, onBrief: setBrief, scrollAssistantOnProposal: false });
+  const ui = useAssistantView({
+    proposalId: session.proposal?.requestId,
+    notice: session.notice,
+    onBrief: setBrief,
+    scrollAssistantOnProposal: false,
+  });
   const busy = session.pending !== null;
   const off = status !== null && !status.available ? status.reason : null;
-  const { send: sendBrief, quickRefine } = useAssistantSubmitHandlers(brief, submit, busy, off !== null, () => setBrief(""));
+  const { send: sendBrief, quickRefine } = useAssistantSubmitHandlers(
+    brief,
+    submit,
+    busy,
+    off !== null,
+    () => setBrief(""),
+    session.proposal?.prompt,
+  );
   const send = useKeepSentBrief(brief, session, setBrief, sendBrief);
 
   useIdentityDockBriefAutofocus(panelRef);
   useProposalInView(scrollRef, session.proposal?.requestId, ui.view);
+  useEditorDockFeedbackScroll(
+    panelRef,
+    scrollRef,
+    session.notice?.kind ?? off ?? session.messages?.length ?? 0,
+  );
 
   return (
-    <Stack ref={panelRef} className="min-h-0 flex-1 gap-0" data-slot="identity-dock-body">
+    <Stack ref={panelRef} className="min-h-0 flex-1 gap-0 overflow-hidden" data-slot="identity-dock-body">
       <IdentityDockPanelToolbar onClose={() => setExpanded(false)} />
       <IdentityDockPanelScroll
         scrollRef={scrollRef}
@@ -168,8 +194,8 @@ export function IdentityDockAssistantPanel({
         backToConversation={ui.backToConversation}
         dispatch={dispatch}
         onPreviewTokens={onPreviewTokens}
+        acceptedExportTokens={acceptedTokens}
       />
-      {acceptedTokens !== null ? <IdentityDockExportBlock tokens={acceptedTokens} /> : null}
       <IdentityDockComposerFooter
         session={session}
         brief={brief}

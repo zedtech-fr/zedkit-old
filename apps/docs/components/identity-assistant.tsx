@@ -38,14 +38,25 @@ export function IdentityAssistant({ tokens, onUse }: { tokens: IdentityTokens; o
   const [opened, setOpened] = useState(false);
   const { session, status, dispatch, submit, cancel } = useIdentityAssistant(tokens, opened);
   const { brief, setBrief } = useIdentityAssistantStore();
-  const ui = useAssistantView({ proposalId: session.proposal?.requestId, onBrief: setBrief });
+  const ui = useAssistantView({
+    proposalId: session.proposal?.requestId,
+    notice: session.notice,
+    onBrief: setBrief,
+  });
   usePersistCreatorBrief(brief);
   useEffect(() => {
     if (ui.open) setOpened(true);
   }, [ui.open]);
   const busy = session.pending !== null;
   const off = status !== null && !status.available ? status.reason : null;
-  const { send, quickRefine } = useAssistantSubmitHandlers(brief, submit, busy, off !== null, () => setBrief(""));
+  const { send, quickRefine } = useAssistantSubmitHandlers(
+    brief,
+    submit,
+    busy,
+    off !== null,
+    () => setBrief(""),
+    session.proposal?.prompt,
+  );
   const domainBrief = specimenBriefFromThread(session.thread, session.proposal?.prompt ?? brief);
 
   return (

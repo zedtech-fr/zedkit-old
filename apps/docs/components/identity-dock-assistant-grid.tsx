@@ -80,6 +80,7 @@ export function IdentityDockAssistantGrid(props: {
         onBrief={props.onBrief}
         onQuickRefine={props.onQuickRefine}
         off={props.off}
+        noticeInComposerFooter={props.hideComposer === true}
         {...pane}
       />
       <DockAssistantPreviewColumn

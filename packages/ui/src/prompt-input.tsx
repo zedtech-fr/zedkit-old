@@ -18,6 +18,8 @@ export type PromptInputProps = Omit<
   busy?: boolean;
   /** Blocks sending while the field stays editable (`disabled` blocks both): a draft costs nothing, only sending does. */
   sendDisabled?: boolean;
+  /** When true, an empty field can still submit (the handler supplies the last prompt). */
+  allowEmptySubmit?: boolean;
 };
 
 type PromptInputActionsProps = {
@@ -69,6 +71,7 @@ export function PromptInput({
   cancelLabel,
   busy,
   sendDisabled: sendBlocked,
+  allowEmptySubmit = false,
   className,
   value,
   disabled,
@@ -77,7 +80,7 @@ export function PromptInput({
   ref,
   ...props
 }: PromptInputProps) {
-  const empty = String(value ?? "").trim() === "";
+  const empty = String(value ?? "").trim() === "" && !allowEmptySubmit;
   const blocked = disabled === true || busy === true || sendBlocked === true;
 
   return (
