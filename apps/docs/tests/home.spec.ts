@@ -9,9 +9,10 @@ test("home explains the product and four entry areas", async ({ page }) => {
   page.on("pageerror", (event) => errors.push(String(event)));
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto(BASE, { waitUntil: "networkidle" });
+  await expect(page.locator("[data-home-hero-category]")).toHaveText("UI/AI kit ·");
   await expect(
     page.getByRole("heading", {
-      name: "UI/AI kit · A top-notch AI setup, one prompt away. Only the UI you need.",
+      name: "A top-notch AI setup, one prompt away. Only the UI you need.",
       level: 1,
     }),
   ).toBeVisible();

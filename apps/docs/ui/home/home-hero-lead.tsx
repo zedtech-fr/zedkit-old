@@ -16,11 +16,16 @@ export function HomeHeroLead({ className }: { className?: string }) {
       className={`min-w-0 items-start ${className ?? ""}`}
       data-home-hero-lead=""
     >
-      <Heading level={1} typeRole="display" className="max-w-lg text-balance">
-        {homeCopy.hero.title.split(homeCopy.hero.titleNoBreak)[0]}
-        <span className="whitespace-nowrap">{homeCopy.hero.titleNoBreak}</span>
-        {homeCopy.hero.title.split(homeCopy.hero.titleNoBreak)[1]}
-      </Heading>
+      <Stack gap={2} className="min-w-0 items-start">
+        <Text typeRole="label" className={`text-muted-foreground ${HOME_METADATA_TEXT_CLASS}`} data-home-hero-category="">
+          {homeCopy.hero.titleCategory}
+        </Text>
+        <Heading level={1} typeRole="display" className="max-w-lg text-balance">
+          {homeCopy.hero.title.split(homeCopy.hero.titleNoBreak)[0]}
+          <span className="whitespace-nowrap">{homeCopy.hero.titleNoBreak}</span>
+          {homeCopy.hero.title.split(homeCopy.hero.titleNoBreak)[1]}
+        </Heading>
+      </Stack>
       <Stack gap={2} className="items-start">
         <Text variant="muted" className={HOME_PERSUASION_TEXT_CLASS} data-home-hero-sub="">
           <span className="font-medium text-foreground">
