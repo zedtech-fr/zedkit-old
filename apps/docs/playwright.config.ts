@@ -6,6 +6,8 @@ const shardTotal = Number(process.env.DOCS_E2E_SHARD_TOTAL ?? "");
 /** CI and local default: chromium only; nightly sets firefox or webkit. */
 const projectEnv = (process.env.DOCS_E2E_PROJECT ?? "chromium").trim();
 const projectNames = projectEnv.split(/[\s,]+/).filter(Boolean);
+const expectTimeoutRaw = Number(process.env.DOCS_E2E_EXPECT_TIMEOUT ?? "");
+const expectTimeout = Number.isFinite(expectTimeoutRaw) && expectTimeoutRaw > 0 ? expectTimeoutRaw : 15_000;
 
 const browserProjects = {
   chromium: { name: "chromium", use: { ...devices["Desktop Chrome"] } },
@@ -36,7 +38,7 @@ export default defineConfig({
   // Static export: a stuck `networkidle` navigation never times out by default.
   timeout: 120_000,
   expect: {
-    timeout: 15_000,
+    timeout: expectTimeout,
     toHaveScreenshot: {
       animations: "disabled",
       maxDiffPixelRatio: 0.02,

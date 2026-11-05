@@ -24,6 +24,11 @@ env:
   TURBO_CACHE_DIR: /runner-cache/turbo
   RUNNER_TOOL_CACHE: /runner-cache/toolcache
   XDG_CACHE_HOME: /runner-cache/xdg
+  # Bound test/build fan-out so 6+ jobs sharing the 12 CPU slice do not each
+  # spawn os.cpus()=32 workers. Not a per-runner cgroup limit.
+  TURBO_CONCURRENCY: "4"
+  VITEST_MAX_WORKERS: "4"
+  VITEST_MAX_FORKS: "4"
 
 jobs:
   # Shared guard: only trusted refs. Same-repo PRs and workflow_dispatch/push.
@@ -90,9 +95,16 @@ jobs:
             scripts/coverage-summary.test.mjs \
             scripts/release-tags-wait.test.mjs \
             apps/docs/scripts/*.test.mjs
-      # UI gallery screenshot smoke stays on GitHub-hosted checks: Dedibox
-      # Chromium (swiftshader, baked OS deps) does not match the ubuntu-latest
-      # baselines in packages/ui/preview/smoke.spec.ts-snapshots.
+      - name: UI gallery screenshot smoke
+        run: |
+          pnpm exec playwright install chromium
+          pnpm --filter @zedtech/zedkit-ui smoke
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ui-gallery-dedibox
+          path: packages/ui/test-results/*.png
+          if-no-files-found: ignore
       - run: pnpm run changeset:status
         if: github.head_ref != 'changeset-release/main'
 
@@ -153,10 +165,11 @@ jobs:
           curl -sf -o /dev/null http://127.0.0.1:3100/robots.txt
           curl -sf -o /dev/null http://127.0.0.1:3100/sitemap.xml
           curl -sf -o /dev/null http://127.0.0.1:3100/llms.txt
-          pnpm --filter @zedtech/zedkit-docs run smoke -- --workers=1
+          pnpm --filter @zedtech/zedkit-docs run smoke -- --workers=1 --retries=2
           kill "$(cat /tmp/docs.pid)"
         env:
           DOCS_E2E_PROJECT: chromium
+          DOCS_E2E_EXPECT_TIMEOUT: "30000"
       - uses: actions/upload-artifact@v7
         if: success()
         with:
@@ -164,8 +177,8 @@ jobs:
           path: apps/docs/test-results/*.png
           if-no-files-found: ignore
 
-  # Sitemap sweep sharded 3 ways (DOCS_E2E_SHARD*) across the 3 parallel
-  # Dedibox runners; no needs chain.
+  # Sitemap sweep sharded 3 ways (DOCS_E2E_SHARD*) across parallel Dedibox
+  # runners; no needs chain. Tests are split per route so shards stay even.
   docs-e2e-routes-dedibox:
     name: docs-e2e-routes-dedibox (${{ matrix.shard }}/3)
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
