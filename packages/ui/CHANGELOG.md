@@ -1,5 +1,19 @@
 # @zedtech/zedkit-ui
 
+## 1.9.0
+
+### Minor Changes
+
+- 5c75c01: PromptInput polish: icon-sized send/cancel controls with tap-aligned padding, configurable `maxRows` auto-grow cap with scroll, and clearer busy/disabled send behavior.
+- 5c75c01: Add `ParallaxSection` / `ParallaxLayer` on `@zedtech/zedkit-ui/motion` (CSS scroll-driven, static fallback) and a `Surface` `depth` wrapper.
+
+### Patch Changes
+
+- c32c3b2: Raise identity assistant timeouts so a reference request can finish.
+- 5c75c01: Harden Parallax CSS value parsing against ReDoS (linear-time number/unit regex).
+- 5c75c01: Card, Dialog and Popover compose the shared `Surface` host (same tokens as before). `WidgetButton` still applies `surfaceVariants` on the button host.
+- 5c75c01: ui: first `useNarrowViewport` paint uses `ssrWhenUnknown` so WizardSteps hydrates without a markup mismatch on desktop.
+
 ## 1.8.0
 
 ### Minor Changes

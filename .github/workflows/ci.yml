@@ -174,8 +174,17 @@ jobs:
       # Versioning dry-run only: proves the Changesets metadata is sane.
       # Skipped on the Version PR itself: it consumed the changesets, so
       # `status` always reports "changed packages, no changesets" there.
-      - run: pnpm run changeset:status
+      # Also skipped when packages/apps already match origin/main (a
+      # main→preview back-merge): commit-range status still sees bumps
+      # from the diverged history, with nothing left to publish.
+      - name: Changeset status
         if: github.head_ref != 'changeset-release/main'
+        run: |
+          if git diff --quiet origin/main HEAD -- packages apps; then
+            echo "packages/apps match origin/main; skip changeset status"
+          else
+            pnpm run changeset:status
+          fi
 
   registry-smoke:
     runs-on: ubuntu-latest
