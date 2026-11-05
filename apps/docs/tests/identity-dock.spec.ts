@@ -454,6 +454,10 @@ test.describe("IdentityDock", () => {
     await expect.poll(() =>
       page.locator("html").evaluate((node) => getComputedStyle(node).getPropertyValue("--background").trim()),
     ).toBe("210 40% 96%");
+    await page.getByRole("button", { name: "Remove from the whole site" }).click();
+    await expect.poll(() =>
+      page.evaluate(() => localStorage.getItem("zk-docs-site-identity-opt-in")),
+    ).toBeNull();
   });
 });
 
