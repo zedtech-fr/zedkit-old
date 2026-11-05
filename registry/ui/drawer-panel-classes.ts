@@ -1,6 +1,22 @@
 import { cn } from "@/lib/utils";
 
 type DrawerSize = "sm" | "md" | "lg";
+type DrawerDirection = "top" | "right" | "bottom" | "left";
+type DrawerMobile = "sheet" | "side";
+
+function resolveDrawerDirection(
+  direction: DrawerDirection | undefined,
+  mobile: DrawerMobile | undefined,
+  isMobile: boolean,
+): DrawerDirection | undefined {
+  if (!isMobile || mobile === "side") {
+    return direction;
+  }
+  if (direction === "left" || direction === "right") {
+    return "bottom";
+  }
+  return direction;
+}
 
 const drawerSideRightMaxWidth: Record<DrawerSize, string> = {
   sm: "data-[vaul-drawer-direction=right]:sm:max-w-drawer-side-sm",
@@ -28,5 +44,5 @@ function drawerPanelClassName(size: DrawerSize, className?: string): string {
   );
 }
 
-export { drawerPanelClassName };
+export { drawerPanelClassName, resolveDrawerDirection };
 export type { DrawerSize };
