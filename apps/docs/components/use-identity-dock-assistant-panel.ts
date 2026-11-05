@@ -50,7 +50,7 @@ function useIdentityDockBriefAutofocus(panelRef: RefObject<HTMLDivElement | null
 export function useIdentityDockAssistantPanel(previewTokens: IdentityTokens) {
   const panelRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { brief, setBrief, setExpanded, previewTokens: acceptedTokens } = useIdentityAssistantStore();
+  const { brief, setBrief, setExpanded, previewTokens: acceptedTokens, previewDomain, setPreviewDomain } = useIdentityAssistantStore();
   const { session, status, dispatch, submit, cancel } = useIdentityAssistant(previewTokens, true);
   const ui = useAssistantView({
     proposalId: session.proposal?.requestId,
@@ -93,6 +93,8 @@ export function useIdentityDockAssistantPanel(previewTokens: IdentityTokens) {
     quickRefine,
     cancel,
     acceptedTokens,
+    previewDomain,
+    setPreviewDomain,
     domainBrief: specimenBriefFromThread(session.thread, session.proposal?.prompt ?? brief),
   };
 }
