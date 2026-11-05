@@ -4,6 +4,14 @@ name: ci-dedibox-trial
 # runner. Does not replace required checks (ci-required) or touch release.
 # Fork PRs never use this runner — job `if` requires a same-repo head (or
 # a non-pull_request event such as workflow_dispatch).
+#
+# Persistent host caches (mounted at /runner-cache):
+# - pnpm store (content-addressed) + per-lockfile node_modules tarball
+#   extracted per job (private inodes; not a shared mutable tree)
+# - turbo local cache (TURBO_CACHE_DIR)
+# - TypeScript *.tsbuildinfo rolling archive
+# - ESLint --cache on the host volume
+# Playwright browsers come from the runner image (/opt/ms-playwright).
 
 on:
   pull_request:
@@ -18,7 +26,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PLAYWRIGHT_BROWSERS_PATH: /runner-cache/ms-playwright
+  PLAYWRIGHT_BROWSERS_PATH: /opt/ms-playwright
   npm_config_store_dir: /runner-cache/pnpm
   npm_config_cache: /runner-cache/npm
   TURBO_CACHE_DIR: /runner-cache/turbo
@@ -39,7 +47,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Ensure local cache dirs
-        run: mkdir -p /runner-cache/pnpm /runner-cache/ms-playwright /runner-cache/turbo /runner-cache/npm /runner-cache/toolcache
+        run: bash -c "mkdir -p /runner-cache/{pnpm,nm,tsbuildinfo,eslint,turbo,npm,toolcache,xdg}"
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
@@ -47,12 +55,19 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-      - run: pnpm install --frozen-lockfile --store-dir /runner-cache/pnpm
+      - name: Restore tsbuildinfo
+        run: bash scripts/ci-dedibox-cache.sh restore-ts
+      - name: pnpm install (store + nm archive)
+        run: bash scripts/ci-dedibox-cache.sh install
       - run: bash scripts/check-deps-audit.sh
       - run: node scripts/check-publish-engines.mjs
       - run: bash scripts/check-registry-ui-drift.sh
       - run: pnpm exec turbo run typecheck lint --cache-dir=/runner-cache/turbo
-      - run: pnpm exec eslint .
+      - name: Save tsbuildinfo
+        if: always()
+        run: bash scripts/ci-dedibox-cache.sh save-ts
+      - name: ESLint (persistent cache)
+        run: pnpm exec eslint . --cache --cache-location /runner-cache/eslint/.eslintcache
       - run: pnpm run catalog:check
       - run: pnpm exec turbo run build --cache-dir=/runner-cache/turbo
       - run: bash scripts/check-api-report.sh
@@ -95,10 +110,10 @@ jobs:
             scripts/coverage-summary.test.mjs \
             scripts/release-tags-wait.test.mjs \
             apps/docs/scripts/*.test.mjs
+      - name: Playwright browsers (image)
+        run: bash scripts/ci-dedibox-cache.sh playwright
       - name: UI gallery screenshot smoke
-        run: |
-          pnpm exec playwright install chromium
-          pnpm --filter @zedtech/zedkit-ui smoke
+        run: pnpm --filter @zedtech/zedkit-ui smoke
       - uses: actions/upload-artifact@v7
         if: always()
         with:
@@ -107,6 +122,9 @@ jobs:
           if-no-files-found: ignore
       - run: pnpm run changeset:status
         if: github.head_ref != 'changeset-release/main'
+      - name: Cache disk report
+        if: always()
+        run: bash scripts/ci-dedibox-cache.sh disk-report
 
   registry-smoke-dedibox:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
@@ -114,23 +132,24 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Ensure local cache dirs
-        run: mkdir -p /runner-cache/pnpm /runner-cache/turbo /runner-cache/npm /runner-cache/toolcache
+        run: bash -c "mkdir -p /runner-cache/{pnpm,nm,turbo,npm,toolcache,eslint,tsbuildinfo}"
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-      - run: pnpm install --frozen-lockfile --store-dir /runner-cache/pnpm
+      - name: pnpm install (store + nm archive)
+        run: bash scripts/ci-dedibox-cache.sh install
       - run: pnpm registry:build
       # quickstart-smoke.sh runs playwright install --with-deps when CI is set,
       # which needs sudo. no-new-privileges blocks sudo by design; Chromium OS
-      # deps are already baked into the runner image. Patch the checkout in
-      # place (do not copy to RUNNER_TEMP: the script sets ROOT from dirname
-      # of $0) so ${CI:+--with-deps} is removed, then run the same three
-      # scripts as registry:smoke.
+      # deps and browser binaries are baked into the runner image. Patch the
+      # checkout in place so ${CI:+--with-deps} is removed, then run the same
+      # three scripts as registry:smoke.
+      - name: Playwright browsers (image)
+        run: bash scripts/ci-dedibox-cache.sh playwright
       - name: registry smoke (no --with-deps)
         run: |
-          pnpm exec playwright install chromium
           sed -i 's/${CI:+--with-deps}//' scripts/quickstart-smoke.sh
           bash scripts/registry/smoke-shadcn-add.sh
           bash scripts/registry/smoke-ui-quickstart.sh
@@ -142,15 +161,17 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Ensure local cache dirs
-        run: mkdir -p /runner-cache/pnpm /runner-cache/ms-playwright /runner-cache/turbo /runner-cache/npm /runner-cache/toolcache
+        run: bash -c "mkdir -p /runner-cache/{pnpm,nm,turbo,npm,toolcache,eslint,tsbuildinfo}"
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-      - run: pnpm install --frozen-lockfile --store-dir /runner-cache/pnpm
+      - name: pnpm install (store + nm archive)
+        run: bash scripts/ci-dedibox-cache.sh install
       - run: pnpm exec turbo run build --filter=@zedtech/zedkit-docs --cache-dir=/runner-cache/turbo
-      - run: pnpm exec playwright install chromium
+      - name: Playwright browsers (image)
+        run: bash scripts/ci-dedibox-cache.sh playwright
       - run: |
           pnpm dlx serve@14.2.6 apps/docs/out -l 3100 >/tmp/docs-start.log 2>&1 &
           echo $! > /tmp/docs.pid
@@ -190,15 +211,17 @@ jobs:
         shard: [1, 2, 3]
     steps:
       - name: Ensure local cache dirs
-        run: mkdir -p /runner-cache/pnpm /runner-cache/ms-playwright /runner-cache/turbo /runner-cache/npm /runner-cache/toolcache
+        run: bash -c "mkdir -p /runner-cache/{pnpm,nm,turbo,npm,toolcache,eslint,tsbuildinfo}"
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-      - run: pnpm install --frozen-lockfile --store-dir /runner-cache/pnpm
+      - name: pnpm install (store + nm archive)
+        run: bash scripts/ci-dedibox-cache.sh install
       - run: pnpm exec turbo run build --filter=@zedtech/zedkit-docs --cache-dir=/runner-cache/turbo
-      - run: pnpm exec playwright install chromium
+      - name: Playwright browsers (image)
+        run: bash scripts/ci-dedibox-cache.sh playwright
       - run: |
           pnpm dlx serve@14.2.6 apps/docs/out -l 3100 >/tmp/docs-e2e.log 2>&1 &
           echo $! > /tmp/docs-e2e.pid
