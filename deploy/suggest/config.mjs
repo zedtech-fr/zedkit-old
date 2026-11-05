@@ -16,7 +16,8 @@ export const HARD = Object.freeze({
   maxReferencesTotalChars: 4_000,
   /** `max_tokens` covers reasoning plus the JSON answer. */
   maxOutputTokens: 8_000,
-  maxTimeoutMs: 60_000,
+  /** Provider time: enough for a reference page plus a slow model call. Env cannot exceed this. */
+  maxTimeoutMs: 180_000,
   maxConcurrent: 8,
   /** The most provider calls one request can make: the primary, then the fallback once. No retry loops. */
   maxProviderCalls: 2,
@@ -24,7 +25,7 @@ export const HARD = Object.freeze({
 
 const DEFAULTS = Object.freeze({
   maxOutputTokens: 4_000,
-  timeoutMs: 45_000,
+  timeoutMs: 150_000,
   maxConcurrent: 2,
   ipPerMinute: 3,
   ipPerDay: 20,

@@ -181,7 +181,9 @@ for path, pkg in reports:
     )
     if existed.returncode != 0:
         continue
-    diff = subprocess.check_output(["git", "diff", base, "--", path], text=True)
+    # Compare commits only. `git diff base -- path` includes the working tree,
+    # and api-extractor --local may rewrite the report on disk.
+    diff = subprocess.check_output(["git", "diff", base, "HEAD", "--", path], text=True)
     if not diff.strip():
         continue
     kinds = bumps.get(pkg, set())
