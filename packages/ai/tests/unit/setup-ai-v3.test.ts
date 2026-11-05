@@ -108,6 +108,17 @@ describe("setup-ai v3: domain, identity and nested rules", () => {
     expect(read("templates", "model-routing.template.md")).toMatch(/## Roles in this repo/u);
   });
 
+  it("refreshes the Rule map after phase C, in the skill, the log template and the checklist", () => {
+    const raw = read("SKILL.md");
+    const section = raw.slice(raw.indexOf("### Rule map refresh"), raw.indexOf("### Model routing"));
+    expect(section).toMatch(/written in phase B/u);
+    expect(section).toMatch(/`test -e`/u);
+    expect(section).toContain("rule-map: refreshed after phase C");
+    expect(raw.indexOf("### Nested AGENTS.md")).toBeLessThan(raw.indexOf("### Rule map refresh"));
+    expect(raw).toMatch(/- \[ \] Rule map refreshed after phase C/u);
+    expect(read("templates", "reading-log.template.md")).toContain("rule-map: refreshed after phase C");
+  });
+
   it("the nested template keeps to what differs, links instead of copying, and cites evidence", () => {
     const raw = read("templates", "nested-agents.template.md");
     expect(raw).toMatch(/Only what differs from the root/u);

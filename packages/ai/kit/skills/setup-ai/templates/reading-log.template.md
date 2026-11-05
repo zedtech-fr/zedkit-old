@@ -22,6 +22,8 @@ Every rule or skill file the repo already owns for one provider (Cursor `.cursor
 | `services/billing/.cursor/rules/00-team.mdc` | `services/billing`      | mirrored by pointer   | `services/billing/AGENTS.md`                                   |
 | `.cursor/rules/search.mdc`                   | all                     | not a rule: tool hint | none                                                           |
 
+Refresh after phase C, once the nested files exist: each pointer cell must name a nested `AGENTS.md` that exists and names the rule file. Then add `rule-map: refreshed after phase C ({n} rows changed)` here.
+
 ## Policy docs
 
 Playbooks, ADRs, vision and runbooks that state rules. Each lands in a domain, design or nested file (cite its path), or is marked `not a rule: <reason>`.
