@@ -50,7 +50,16 @@
       "types": "./dist/marketing/index.d.ts",
       "import": "./dist/marketing/index.js"
     },
+    "./motion": {
+      "types": "./dist/motion/index.d.ts",
+      "import": "./dist/motion/index.js"
+    },
+    "./motion/runtime": {
+      "types": "./dist/motion/runtime.d.ts",
+      "import": "./dist/motion/runtime.js"
+    },
     "./styles.css": "./src/styles.css",
+    "./motion.css": "./src/motion-kit.css",
     "./package.json": "./package.json"
   },
   "files": [

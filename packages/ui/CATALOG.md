@@ -178,8 +178,8 @@ import { Card } from "@zedtech/zedkit-ui";
 - Audience: Developers adding appear, scroll, press, longpress, hover or focus motion to any kit element.
 - Purpose: One typed attribute and wrapper API for identity-token motion, with a tiny SSR-safe runtime.
 - When to use: When a card, section or control should move on appear, scroll progress, press, longpress, hover or focus.
-- When not to use: For pinned scene crossfades use `ScrollScenes`. For section snap/smooth-scroll use `SectionScroll`. For first-paint class utilities see `Animate entrances and hover feedback with CSS utilities`.
-- See also: `Animate entrances and hover feedback with CSS utilities`, `Pin a stage and change scene as the page scrolls`, `Stack content and group titled sections`
+- When not to use: For pinned scene crossfades use `ScrollScenes`. For section snap/smooth-scroll use `SectionScroll`. For first-paint class utilities see `Animate entrances and hover feedback with CSS utilities`. For section-shared parallax layers use `ParallaxSection` from `@zedtech/zedkit-ui/motion`.
+- See also: `Animate entrances and hover feedback with CSS utilities`, `Add depth with parallax layers`, `Pin a stage and change scene as the page scrolls`, `Stack content and group titled sections`
 - Examples: Attribute on a card, Wrapper with several triggers, Stagger children
 - A11y: `prefers-reduced-motion: reduce` leaves content visible and in place. Hover is gated to hover-capable pointers. Focus uses `:focus-visible`. Press ignores disabled. Longpress is decorative, never the only action. Appear does not set `aria-hidden`.
 - Troubleshooting: Nothing appears to move — mount `<AnimateObserver />` once near the app root (or call `observeAnimate()`), then check reduced motion and `data-motion` on `<html>`. Content stays visible without JS by design. Scroll parallax needs `animation-timeline: view()` or the runtime fallback. In-app reduce flashes on load — render `<MotionScript />` in `<head>` (same pattern as `IdentityScript`) so `data-motion="reduce"` is set before paint; `useMotionPreference()` is `"reduce"` on the server.
@@ -476,8 +476,8 @@ import { StatusDot } from "@zedtech/zedkit-ui";
 - When not to use: Plain forms with a separate submit row — use `Field` + `Textarea` + `Button`.
 - See also: `Collect multi-line text input`, `Icon-only actions with a visible name`
 - Examples: Simple, Complete
-- A11y: Pass `sendLabel` (and `cancelLabel` when using cancel); the field keeps a visible label via `aria-label` or associated `FieldLabel`.
-- Troubleshooting: Send stays disabled — value is trimmed; whitespace-only counts as empty. Field does not grow — use `field-sizing-content` (Tailwind v4) on the consumer stylesheet.
+- A11y: Pass `sendLabel` (and `cancelLabel` when using cancel); the field keeps a visible label via `aria-label` or associated `FieldLabel`. Send and cancel use `size="icon"` tap targets aligned with `--spacing-control-height`.
+- Troubleshooting: Send stays disabled — value is trimmed; whitespace-only counts as empty. Field does not grow past `maxRows` (default 8) — it scrolls inside the composer. Consumers need `field-sizing-content` (Tailwind v4) on the stylesheet.
 
 ```ts
 import { PromptInput } from "@zedtech/zedkit-ui";
@@ -1435,16 +1435,17 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldSet }
 - Short name: Surface
 - Audience: Developers building floating panels or composing kit overlays.
 - Purpose: One panel surface: solid card, popover or glass, elevation `0`–`3` with token shadows, border, radius and optional padding.
-- When to use: Custom panels that should match Dialog, Drawer, Card, and Popover chrome; floating assistant triggers via `WidgetButton`.
+- When to use: Custom panels that should match Dialog, Drawer, Card, and Popover chrome; floating assistant triggers via `WidgetButton`. Pass `depth` (not with glass) to wrap the panel in a parallax layer.
 - When not to use: Marketing page sections — use `@zedtech/zedkit-ui/marketing` `GlassSurface` instead.
-- See also: `Group content in a card section`, `Slide in a drawer panel`, `Open modal dialogs`
+- See also: `Group content in a card section`, `Slide in a drawer panel`, `Open modal dialogs`, `Add depth with parallax layers`
 - A11y: Presentational wrapper — name regions with headings or `aria-label`. `WidgetButton` is a normal button (outline variant) with pill radius and card elevation.
 - Examples: Solid card panel, Glass popover hook, Widget trigger
+- Registry: surface
+- Troubleshooting: Glass looks solid — frost applies only under the glass identity (`data-identity="glass"`). Dialog, Drawer and Card copy-paste payloads pull this brick in; add `surface` on its own for a custom panel.
 
 ```ts
-import { Surface, WidgetButton } from "@zedtech/zedkit-ui";
+import { Surface } from "@zedtech/zedkit-ui";
 <Surface variant="solid" elevation={2} radius="xl" padding="md">Summary</Surface>
-<WidgetButton aria-label="Open assistant">Ask</WidgetButton>
 ```
 
 ## Group content in a card section
@@ -1811,7 +1812,7 @@ import { ScrollGallery } from "@zedtech/zedkit-ui";
 - Purpose: Main column scrolls; aside sticks under the header until the section ends. Pure CSS, server components, no scroll hijacking.
 - When to use: Long step lists beside a short preview, install instructions beside a rendered example, or any section where reading order is main then aside.
 - When not to use: Pinning a single stage that crossfades through scenes — use `ScrollScenes`. A sticky bar that spans the whole viewport outside a section — use your shell header. Tall aside content without `scrollable` when you need the full block visible at once on small viewports — stack on mobile or shorten the aside.
-- See also: `Stack content and group titled sections`, `Pin a stage and change scene as the page scrolls`
+- See also: `Stack content and group titled sections`, `Pin a stage and change scene as the page scrolls`, `Add depth with parallax layers`
 - Examples: Get started steps with live preview, Doc page with summary card, Pricing tiers with recap
 - A11y: DOM order is always main then aside; use `mobile="before"` only when the aside should appear first visually on phones. Put headings and steps in the main column; label specimen previews (for example with `role="group"` and `aria-label`). In-section links in the main column get `scroll-margin-top` from `--zk-pin-top`. With `scrollable`, the aside scrolls internally — keep focusable controls reachable.
 - Troubleshooting: Aside never sticks — check that `data-from` matches your breakpoint, the section is tall enough to scroll, and no ancestor between this root and the viewport uses `overflow: hidden|auto|scroll` or a transform. Aside hides under the site header — set `--zk-sticky-top` (or `--zk-pin-top` globally) to the header offset. Columns too narrow — pass `ratio="1/2"` or `--zk-sticky-cols`. Aside taller than the window — pass `scrollable` so it keeps sticky with an internal scroll area. Snap fights a long section — parent sections that contain `StickyAside` disable scroll-snap when `SectionScroll` is active.
@@ -1853,6 +1854,48 @@ import { Card, CardContent, StickyAside, Text } from "@zedtech/zedkit-ui";
   <div data-sticky-aside-main>…</div>
   <aside data-sticky-aside-aside>…</aside>
 </div>
+```
+
+## Add depth with parallax layers
+
+- Import: `@zedtech/zedkit-ui/motion` — `ParallaxSection`, `ParallaxLayer`, `ParallaxSectionProps`, `ParallaxLayerProps`, `ParallaxDepth`, `ParallaxDepthName`, `ParallaxAxis`, `ParallaxRange`, `ParallaxOff`, `ParallaxFade`, `ParallaxSectionTag`, `PARALLAX_AXES`, `PARALLAX_DEPTH_NAMES`, `PARALLAX_RANGES`, `PARALLAX_OFF`, `PARALLAX_FADES`, `PARALLAX_SECTION_TAGS`, `MotionScript`, `MotionScriptProps`; `@zedtech/zedkit-ui/motion/runtime` — `observeAnimate`
+- CSS import: `@zedtech/zedkit-ui/motion.css`
+- Attributes: `data-parallax`, `data-parallax-layer`, `data-parallax-depth`, `data-parallax-axis`, `data-parallax-range`, `data-parallax-off`, `data-parallax-preset`, `data-parallax-move`, `data-parallax-zoom`, `data-parallax-fade`
+- Wraps: `(none)`
+- Status: alpha
+- Short name: Parallax
+- Audience: Developers adding scroll depth to a hero or section without a JavaScript animation library.
+- Purpose: Section-shared CSS view timeline; layers move with depth, axis, zoom, fade, and range. Static without scroll timelines.
+- When to use: Background and deco layers that should drift as the section scrolls. Keep copy and controls outside a moving layer, or at `depth={0}`.
+- When not to use: Node-local scroll presets on a single element — `data-animate-scroll="parallax"` stays. Pinned scene crossfades — `ScrollScenes`. Sticky columns — `StickyAside`.
+- See also: `Reveal and react with motion on any element`, `Keep a side panel in view`, `Pin a stage and change scene as the page scrolls`
+- Examples: Hero with far background, Named depth layer, HTML attributes
+- A11y: Moving, zooming, or fading layers are `aria-hidden` and `inert`. `prefers-reduced-motion: reduce` and `data-motion="reduce"` leave layers in place. Do not put buttons, links, toasts, or `Surface variant="glass"` in a moving layer. `Surface depth` wraps without `aria-hidden` so a non-interactive visual panel can still sit on a layer.
+- Troubleshooting: Nothing moves — the browser needs `animation-timeline: view()`; otherwise layers stay put (v1 static fallback). Intensity is `--zk-motion-intensity` (0 = no shift). A toast jumps with the section — the toast host was transformed; keep `position: fixed` toasts outside layers. Edges flash — the layer box extends by its travel (`inset-block`). Vanilla observers import `@zedtech/zedkit-ui/motion/runtime`.
+
+```ts
+import { ParallaxLayer, ParallaxSection } from "@zedtech/zedkit-ui/motion";
+
+<ParallaxSection range="page">
+  <ParallaxLayer depth="far" className="absolute inset-0" />
+  <div className="relative"><h1>Title</h1></div>
+  <ParallaxLayer depth="near" className="absolute right-8 top-20" />
+</ParallaxSection>
+```
+
+```ts
+import { ParallaxLayer, ParallaxSection } from "@zedtech/zedkit-ui/motion";
+
+<ParallaxSection axis="y" intensity={0.5} off="below-md">
+  <ParallaxLayer depth={0.25} zoom={[1, 1.08]} />
+</ParallaxSection>
+```
+
+```html
+<section data-parallax data-parallax-axis="y" data-parallax-range="cover">
+  <div data-parallax-layer data-parallax-depth="far" data-parallax-move></div>
+  <div>Copy stays still</div>
+</section>
 ```
 
 ## Pin a stage and change scene as the page scrolls

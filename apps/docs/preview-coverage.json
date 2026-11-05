@@ -19,7 +19,9 @@
     "Localize kit chrome in English or French::French bundle": "App-root provider wrap; no visual host of its own.",
     "Localize kit chrome in English or French::Override one string": "ConfirmDialog already has live previews on its own need.",
     "Compose a public marketing page::Brief specimen": "Brief specimens need a scoped identity preview (D1); not a standalone docs demo.",
-    "Reset scroll on route change::Next.js root": "Renders nothing; the docs site itself runs it on every page change."
+    "Reset scroll on route change::Next.js root": "Renders nothing; the docs site itself runs it on every page change.",
+    "Add depth with parallax layers::Hero with far background": "Scroll-driven CSS needs a real viewport; covered by package tests until the docs lot.",
+    "Add depth with parallax layers::Named depth layer": "Scroll-driven CSS needs a real viewport; covered by package tests until the docs lot."
   },
   "pending": []
 }

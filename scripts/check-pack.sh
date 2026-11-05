@@ -110,7 +110,7 @@ for dir in packages/*/; do
   fi
 
   # ESM-only packages: ignore CJS/node10. CSS subpaths have no types.
-  attw_out="$(pnpm exec attw --profile esm-only --exclude-entrypoints ./styles.css \
+  attw_out="$(pnpm exec attw --profile esm-only --exclude-entrypoints ./styles.css --exclude-entrypoints ./motion.css \
       --no-emoji --format ascii "$tgz" 2>&1)" || {
     echo "$name: attw failed"
     echo "$attw_out"
@@ -151,7 +151,9 @@ size_budget() {
 # Raised to 56000 on 4 Nov 2026 (measured 54172 in CI): approved by the maintainers
 # raising size budgets now and optimising later; trim tracked in issue 1398
 # (identity-tokens, splitting the Animate runtime).
-size_budget ui 56000
+# Raised to 58000 on 5 Nov 2026 (measured 57331 in CI on ship #1446): ParallaxSection/
+# ParallaxLayer on the motion subpath; trim still tracked in issue 1398.
+size_budget ui 58000
 # Marketing entry (separate from the main budget); measured 785 with GlassSurface only;
 # 9865 with L2 domain specimens plus goal/reference marketing sections (Hero, Pricing, …);
 # 10020 after specimen-primitives barrel; tokenized keyword routing measured 10084 gzip.

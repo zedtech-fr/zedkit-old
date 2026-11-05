@@ -14,11 +14,14 @@ import {
   useExitUnmountFallback,
 } from "@/components/ui/overlay-modal";
 import { OverlayMountContext, ScopePortal } from "@/components/ui/theme-scope";
-import { surfaceVariants } from "@/components/ui/surface";
+import { Surface } from "@/components/ui/surface";
 import { useUiMessages } from "@/components/ui/ui-provider";
 
 /** Air between the panel and the visual viewport edge (same 16px as the docs search sheet). */
 const VIEWPORT_GUTTER_PX = 16;
+
+const dialogContentClass =
+  "fixed dialog-center z-dialog grid max-h-dialog-max-height w-full max-w-dialog-mobile gap-4 overflow-y-auto overscroll-y-contain outline-none focus:outline-none sm:max-w-lg motion-safe:data-[state=open]:animate-[zk-zoom-in_var(--motion-base)_var(--ease-enter)] motion-safe:data-[state=closed]:animate-[zk-zoom-out_var(--motion-base)_var(--ease-exit)]";
 
 function useDialogViewportFit<T extends HTMLElement>(): React.RefCallback<T> {
   const nodeRef = React.useRef<T | null>(null);
@@ -152,27 +155,29 @@ function DialogContent({
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Content
-        data-slot="dialog-content"
         ref={setRef}
         tabIndex={-1}
         onOpenAutoFocus={(event) => {
           event.preventDefault();
           focusOverlayInitial(contentRef.current, initialFocus);
         }}
-        className={cn(
-          "fixed dialog-center z-dialog grid max-h-dialog-max-height w-full max-w-dialog-mobile gap-4 overflow-y-auto overscroll-y-contain outline-none focus:outline-none sm:max-w-lg",
-          surfaceVariants({ variant: "solid", elevation: 3, radius: "lg", padding: "dialog" }),
-          "motion-safe:data-[state=open]:animate-[zk-zoom-in_var(--motion-base)_var(--ease-enter)]",
-          "motion-safe:data-[state=closed]:animate-[zk-zoom-out_var(--motion-base)_var(--ease-exit)]",
-          className,
-        )}
         {...props}
+        asChild
       >
-        <OverlayMountContext.Provider value={mount}>{children}</OverlayMountContext.Provider>
-        <DialogPrimitive.Close className={overlayDialogCloseClass}>
-          <X className="size-4" />
-          <span className="sr-only">{closeLabel ?? messages.close}</span>
-        </DialogPrimitive.Close>
+        <Surface
+          data-slot="dialog-content"
+          variant="solid"
+          elevation={3}
+          radius="lg"
+          padding="dialog"
+          className={cn(dialogContentClass, className)}
+        >
+          <OverlayMountContext.Provider value={mount}>{children}</OverlayMountContext.Provider>
+          <DialogPrimitive.Close className={overlayDialogCloseClass}>
+            <X className="size-4" />
+            <span className="sr-only">{closeLabel ?? messages.close}</span>
+          </DialogPrimitive.Close>
+        </Surface>
       </DialogPrimitive.Content>
     </DialogPortal>
   );

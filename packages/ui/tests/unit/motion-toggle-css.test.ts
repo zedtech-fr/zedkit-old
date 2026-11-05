@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 const src = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "src");
 const read = (file: string): string => readFileSync(join(src, file), "utf8");
 
-const SHEETS = ["motion.css", "scroll-scenes.css", "signature-motion.css", "styles.css"] as const;
+const SHEETS = ["motion.css", "scroll-scenes.css", "signature-motion.css", "styles.css", "parallax.css"] as const;
 
 describe("in-app motion toggle CSS", () => {
   it.each(SHEETS)("gates %s with :root:not([data-motion=reduce])", (file) => {

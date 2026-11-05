@@ -8,6 +8,7 @@
 @import "./surface.css";
 @import "./motion.css";
 @import "./motion-tokens.css";
+@import "./parallax.css";
 @import "./signature-motion.css";
 @import "./type-roles.css";
 @import "./section-scroll.css";
@@ -289,6 +290,9 @@
   --spacing-control-block: var(--spacing);
   --spacing-control-block-lg: calc(var(--spacing) * 2);
   --spacing-textarea-min-height: 3.75rem;
+  --spacing-prompt-input-max-height: calc(8 * 1lh + var(--spacing-control-block) * 2);
+  --spacing-prompt-input-max-height-sm: calc(4 * 1lh + var(--spacing-control-block) * 2);
+  --spacing-prompt-input-max-height-lg: calc(12 * 1lh + var(--spacing-control-block) * 2);
   --spacing-alert-inline: 1rem;
   --spacing-alert-block: 0.75rem;
   --spacing-alert-icon-offset: 1rem;
@@ -489,6 +493,18 @@ ol[data-sonner-toaster] {
     outline: var(--ring-width-control) solid hsl(var(--ring));
     outline-offset: var(--ring-offset-width);
   }
+}
+
+@utility max-h-prompt-input {
+  max-height: var(--spacing-prompt-input-max-height);
+}
+
+@utility max-h-prompt-input-sm {
+  max-height: var(--spacing-prompt-input-max-height-sm);
+}
+
+@utility max-h-prompt-input-lg {
+  max-height: var(--spacing-prompt-input-max-height-lg);
 }
 
 /* Playwright focus-ring checks call element.focus(); :focus-visible alone would miss the outline. */

@@ -2,7 +2,7 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./preview",
-  testMatch: "smoke.spec.ts",
+  testMatch: /(smoke|parallax)\.spec\.ts/,
   fullyParallel: false,
   reporter: "list",
   expect: {

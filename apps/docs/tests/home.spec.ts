@@ -9,9 +9,10 @@ test("home explains the product and four entry areas", async ({ page }) => {
   page.on("pageerror", (event) => errors.push(String(event)));
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto(BASE, { waitUntil: "networkidle" });
+  await expect(page.locator("[data-home-hero-category]")).toHaveText("UI/AI kit ·");
   await expect(
     page.getByRole("heading", {
-      name: "UI/AI kit · A top-notch AI setup, one prompt away. Only the UI you need.",
+      name: "A top-notch AI setup, one prompt away. Only the UI you need.",
       level: 1,
     }),
   ).toBeVisible();
@@ -45,8 +46,14 @@ test("home hero offers get started first with catalog and demo links (#1038)", a
 
   await expect(page.locator("[data-home-hero-sub]")).toHaveText("Play with it yourself");
   await expect(page.locator("[data-home-hero-lead]")).toContainText("Everything in this app is a zedkit component.");
-  // Nothing above the title: the page header already says what this is.
-  await expect(page.locator("[data-home-hero-lead] > :first-child")).toHaveJSProperty("tagName", "H1");
+  // Category cue (label role) sits above the display H1 inside the lead stack (#1441).
+  await expect(page.locator("[data-home-hero-lead] [data-home-hero-category]")).toHaveText("UI/AI kit ·");
+  await expect(
+    page.locator("[data-home-hero-lead]").getByRole("heading", {
+      name: "A top-notch AI setup, one prompt away. Only the UI you need.",
+      level: 1,
+    }),
+  ).toBeVisible();
   await expect(page.getByText(/theme everything with one of six identities/)).toHaveCount(0);
   await expect(page.getByText(/linked maturity badges/)).toHaveCount(0);
   await expect(page.locator("[data-home-hero-lead]").getByText(/Latest in v/)).toHaveCount(0);

@@ -33,6 +33,7 @@ entries=(
   "storage|dist/index.d.ts|zedkit-storage.api.md"
   "ui|dist/index.d.ts|zedkit-ui.api.md"
   "ui|dist/marketing/index.d.ts|zedkit-ui-marketing.api.md"
+  "ui|dist/motion/index.d.ts|zedkit-ui-motion.api.md"
 )
 
 write_config() {
@@ -155,6 +156,7 @@ reports = [
     ("packages/server/etc/zedkit-server.api.md", "@zedtech/zedkit-server"),
     ("packages/storage/etc/zedkit-storage.api.md", "@zedtech/zedkit-storage"),
     ("packages/ui/etc/zedkit-ui.api.md", "@zedtech/zedkit-ui"),
+    ("packages/ui/etc/zedkit-ui-motion.api.md", "@zedtech/zedkit-ui"),
 ]
 
 bumps: dict[str, set[str]] = {}

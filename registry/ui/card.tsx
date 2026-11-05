@@ -1,15 +1,18 @@
 import type * as React from "react";
 
-import { surfaceVariants } from "@/components/ui/surface";
+import { Surface } from "@/components/ui/surface";
 import { cn } from "@/lib/utils";
 
 export type CardProps = React.ComponentProps<"div">;
 
 function Card({ className, ...props }: CardProps) {
   return (
-    <div
+    <Surface
       data-slot="card"
-      className={cn(surfaceVariants({ variant: "solid", elevation: 2, radius: "xl" }), className)}
+      variant="solid"
+      elevation={2}
+      radius="xl"
+      className={className}
       {...props}
     />
   );
