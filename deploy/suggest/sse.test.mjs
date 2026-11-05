@@ -16,7 +16,7 @@ describe("extractJsonString", () => {
   it("reads a summary as the object grows, including escaped quotes", () => {
     assert.equal(extractJsonString('{"summary":'), "");
     assert.equal(extractJsonString('{"summary":"A calm'), "A calm");
-    assert.equal(extractJsonString('{"summary":"A calm \\\"newsroom\\\"."}'), 'A calm "newsroom".');
+    assert.equal(extractJsonString('{"summary":"A calm \\"newsroom\\"."}'), 'A calm "newsroom".');
   });
 });
 
