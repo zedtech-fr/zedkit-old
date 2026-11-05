@@ -11,6 +11,9 @@ import { IdentityDockPanelToolbar } from "@/components/identity-dock-panel-toolb
 import { useIdentityDockAssistantPanel } from "@/components/use-identity-dock-assistant-panel";
 import { applyWidgetSpecimenPreview } from "@/lib/identity-widget-specimen-preview";
 import { dispatchIdentityEditorDraftApply } from "@/lib/identity-editor-draft-apply";
+import { repairContrast } from "@/lib/identity-contrast-repair";
+import { useDocsSiteIdentityApply } from "@/lib/use-docs-site-identity-apply";
+import type { ApplySiteTokenHandlers } from "@/components/identity-apply-site-row";
 import { IDENTITY_EDITOR_HREF } from "@/lib/site-links.mjs";
 import type { Unavailable } from "@/lib/identity-assistant";
 import type { SessionState } from "@/lib/identity-creator-session";
@@ -34,6 +37,25 @@ function acceptProposal(
   });
 }
 
+
+function DockViewSwitch(props: {
+  view: View;
+  setView: (view: View) => void;
+  waiting: boolean;
+  previewRef: RefObject<HTMLButtonElement | null>;
+  always: boolean;
+}) {
+  return (
+    <ViewSwitch
+      view={props.view}
+      onView={props.setView}
+      waiting={props.waiting}
+      previewRef={props.previewRef}
+      always={props.always}
+    />
+  );
+}
+
 function IdentityDockPanelScroll(props: {
   scrollRef: RefObject<HTMLDivElement | null>;
   viewSwitchAlways: boolean;
@@ -55,12 +77,13 @@ function IdentityDockPanelScroll(props: {
   dispatch: (action: { type: "accept" } | { type: "discard" }) => void;
   onPreviewTokens: (tokens: IdentityTokens) => void;
   acceptedExportTokens: IdentityTokens | null;
+  siteApply: ApplySiteTokenHandlers;
 }) {
   return (
     <Stack ref={props.scrollRef} gap={3} className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 pt-3 pb-2">
-      <ViewSwitch
+      <DockViewSwitch
         view={props.view}
-        onView={props.setView}
+        setView={props.setView}
         waiting={props.session.proposal !== null}
         previewRef={props.previewRef}
         always={props.viewSwitchAlways}
@@ -82,6 +105,7 @@ function IdentityDockPanelScroll(props: {
         onUse={(next) => acceptProposal(props.backToConversation, props.onPreviewTokens, props.dispatch, props.setBrief, next)}
         onDiscard={() => props.backToConversation(() => props.dispatch({ type: "discard" }))}
         hideComposer
+        siteApply={props.siteApply}
       />
       {props.acceptedExportTokens !== null ? (
         <IdentityDockExportBlock tokens={props.acceptedExportTokens} />
@@ -101,6 +125,12 @@ export function IdentityDockAssistantPanel({
   viewSwitchAlways?: boolean;
 }) {
   const panel = useIdentityDockAssistantPanel(previewTokens);
+  const site = useDocsSiteIdentityApply();
+  const siteApply = {
+    appliedSite: site.appliedSite,
+    onApplySite: (tokens: IdentityTokens) => site.applySite(repairContrast(tokens).tokens),
+    onRemoveFromSite: site.removeFromSite,
+  };
 
   return (
     <Stack ref={panel.panelRef} className="min-h-0 flex-1 gap-0 overflow-hidden" data-slot="identity-dock-body">
@@ -126,6 +156,7 @@ export function IdentityDockAssistantPanel({
         dispatch={panel.dispatch}
         onPreviewTokens={onPreviewTokens}
         acceptedExportTokens={panel.acceptedTokens}
+        siteApply={siteApply}
       />
       <IdentityDockComposerFooter
         session={panel.session}
