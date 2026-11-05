@@ -152,8 +152,8 @@ export function useHeroTour({
       cursor.dataset.press = "";
       tourPressing = true;
       act();
-      tourPressing = false;
       await beat(160);
+      tourPressing = false;
       delete cursor.dataset.press;
     };
 
