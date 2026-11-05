@@ -168,7 +168,8 @@ test("limits cannot be raised past the ceilings compiled into the service", asyn
     await new Promise((done) => s.server.close(done));
     return s;
   });
-  assert.equal(config.limits.timeoutMs, 60_000);
+  assert.equal(loadConfig(configured()).limits.timeoutMs, 150_000);
+  assert.equal(config.limits.timeoutMs, 180_000);
   assert.equal(config.limits.maxConcurrent, 8);
 });
 
