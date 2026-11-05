@@ -24,8 +24,13 @@ export function useIdentityDockKeyboard(expanded: boolean, setExpanded: (open: b
     return () => window.removeEventListener("keydown", onKey);
   }, [expanded, setExpanded]);
 
+  // Focus goes back to the trigger only when the dock closes, never on mount: hydration lands late on the home
+  // page, and a mount-time focus() takes the focus from whatever the visitor already reached.
+  const wasExpanded = useRef(false);
   useEffect(() => {
-    if (expanded) return;
+    const closed = wasExpanded.current && !expanded;
+    wasExpanded.current = expanded;
+    if (!closed) return;
     const id = requestAnimationFrame(() => triggerRef.current?.focus());
     return () => cancelAnimationFrame(id);
   }, [expanded]);

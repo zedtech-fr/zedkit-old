@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { HomeLink } from "@/ui/home/home-link";
 import { Button, Section, Stack, Text } from "@zedtech/zedkit-ui";
 import { DocsActionLabel } from "@/components/docs-action-label";
 import type { HomeEntryPoint } from "@/content/home-entry-points";
@@ -26,9 +26,9 @@ function HomeSecondaryEntryLinks({ entryPoints }: { entryPoints: HomeEntryPoint[
             </Text>
           </Stack>
           <Button asChild variant="ghost" size="sm" className="w-fit shrink-0">
-            <Link href={entry.href}>
+            <HomeLink href={entry.href}>
               <DocsActionLabel>{entry.linkLabel}</DocsActionLabel>
-            </Link>
+            </HomeLink>
           </Button>
         </Stack>
       ))}

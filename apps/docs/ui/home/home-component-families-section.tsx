@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { HomeLink } from "@/ui/home/home-link";
 import { Button, Heading, Section, Stack, Text } from "@zedtech/zedkit-ui";
 import { CatalogActionLabel } from "@/components/docs-action-label";
 import {
@@ -12,13 +12,13 @@ function FamilyExampleLinks({ examples }: { examples: readonly { label: string; 
   return (
     <Stack direction="horizontal" gap={2} className="flex-wrap">
       {examples.map((item) => (
-        <Link
+        <HomeLink
           key={item.href}
           href={item.href}
           className={`inline-flex min-h-11 items-center text-sm underline-offset-4 hover:underline md:min-h-6`}
         >
           {item.label}
-        </Link>
+        </HomeLink>
       ))}
     </Stack>
   );
@@ -62,9 +62,9 @@ export function HomeComponentFamiliesSection({
           ))}
         </Stack>
         <Button asChild variant="outline" className="w-fit">
-          <Link href="/catalog?area=ui">
+          <HomeLink href="/catalog?area=ui">
             <CatalogActionLabel>{homeCopy.componentFamilies.section.browseAll}</CatalogActionLabel>
-          </Link>
+          </HomeLink>
         </Button>
       </Stack>
     </Section>

@@ -1,9 +1,7 @@
-import dynamic from "next/dynamic";
 import { SectionScroll } from "@zedtech/zedkit-ui";
 import type { HomeEntryPoint } from "@/content/home-entry-points";
 import { HomeBelowHero } from "@/ui/home/home-below-hero";
-
-const HomeHero = dynamic(() => import("@/ui/home/home-hero").then((mod) => ({ default: mod.HomeHero })));
+import { HomeHero } from "@/ui/home/home-hero";
 
 export function HomeView({
   featuredPackage,

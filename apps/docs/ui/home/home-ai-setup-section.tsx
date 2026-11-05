@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { HomeLink } from "@/ui/home/home-link";
 import { Animate, Button, Heading, SecretField, Section, Stack, StickyAside, Text } from "@zedtech/zedkit-ui";
 import { DocsActionLabel } from "@/components/docs-action-label";
 import { AI_SETUP_DOCS_PATH, AI_SETUP_KIT, AI_SETUP_MINI_PROMPT } from "@/lib/ai-setup-onboarding.generated";
@@ -99,9 +99,9 @@ export function HomeAiSetupSection() {
           </Text>
           <Stack direction="horizontal" className="flex-wrap" data-docs-ctas="">
             <Button asChild variant="outline" className="w-fit">
-              <Link href={AI_SETUP_DOCS_PATH}>
+              <HomeLink href={AI_SETUP_DOCS_PATH}>
                 <DocsActionLabel>{homeAiSetupCopy.cta.guide}</DocsActionLabel>
-              </Link>
+              </HomeLink>
             </Button>
           </Stack>
         </Stack>

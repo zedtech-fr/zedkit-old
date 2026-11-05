@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { HomeLink } from "@/ui/home/home-link";
 import { useCallback, useState, useSyncExternalStore, type ComponentType } from "react";
 import { useTheme } from "next-themes";
 import { Button, Stack, TabsContent, Text, ThemeScope } from "@zedtech/zedkit-ui";
@@ -94,7 +94,7 @@ function HomeIdentityLooksFrame({
             identity={identity}
             mode={mode}
             data-home-identity-stage=""
-            className="min-w-0 rounded-xl bg-background p-2 sm:p-4"
+            className="min-w-0 rounded-xl bg-background p-2 pb-[max(4.5rem,env(safe-area-inset-bottom))] sm:p-4 sm:pb-4"
           >
             <div data-identity-example="" key={identity}>
               <Example />
@@ -126,13 +126,13 @@ function HomeIdentityLooksLinks() {
   return (
     <Stack direction="horizontal" gap={2} className="flex-wrap">
       <Button asChild variant="outline" size="sm" className="w-fit">
-        <Link href={`${IDENTITY_EDITOR_HREF}#create`}>{homeIdentityLooksCopy.openEditor}</Link>
+        <HomeLink href={`${IDENTITY_EDITOR_HREF}#create`}>{homeIdentityLooksCopy.openEditor}</HomeLink>
       </Button>
       <Button asChild variant="link" size="sm" className="w-fit">
-        <Link href="/features/identity-kit-demos">{homeIdentityLooksCopy.seeInComponents}</Link>
+        <HomeLink href="/features/identity-kit-demos">{homeIdentityLooksCopy.seeInComponents}</HomeLink>
       </Button>
       <Button asChild variant="link" size="sm" className="w-fit">
-        <Link href="/docs/start-without-writing-code">{homeIdentityLooksCopy.startWithoutCode}</Link>
+        <HomeLink href="/docs/start-without-writing-code">{homeIdentityLooksCopy.startWithoutCode}</HomeLink>
       </Button>
     </Stack>
   );

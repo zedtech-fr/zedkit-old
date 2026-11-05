@@ -74,6 +74,7 @@ export function useHeroTour({
   onTakeover,
   onLook,
   agent,
+  intro = false,
 }: {
   rootRef: RefObject<HTMLElement | null>;
   enabled: boolean;
@@ -81,22 +82,36 @@ export function useHeroTour({
   onTakeover: () => void;
   onLook: (id: string) => void;
   agent: HeroTourAgent;
+  /** While the window is still assembling, the lap waits so the home CLS guard is not fighting the tour. */
+  intro?: boolean;
 }) {
   const lookRef = useRef(onLook);
   const agentRef = useRef(agent);
   const takeoverRef = useRef(onTakeover);
+  const introRef = useRef(intro);
   /** True once a lap has begun: a replay then starts at the first page instead of resuming the load animation. */
   const started = useRef(false);
   useEffect(() => {
     lookRef.current = onLook;
     agentRef.current = agent;
     takeoverRef.current = onTakeover;
+    introRef.current = intro;
   });
   useEffect(() => {
     const root = rootRef.current;
-    if (!enabled || !root) return;
+    if (!root) return;
     const cursor = root.querySelector<HTMLElement>("[data-hero-cursor]");
     if (!cursor) return;
+    if (!enabled) {
+      // The window narrowed (a phone, or reduced motion): an invisible cursor left at its desktop offset would still
+      // widen the page, so it goes back to the corner at once, with no glide.
+      delete root.dataset.tour;
+      cursor.style.transition = "none";
+      cursor.style.translate = "";
+      void cursor.offsetWidth;
+      cursor.style.transition = "";
+      return;
+    }
     if (!playing) {
       root.dataset.tour = "off";
       return;
@@ -189,7 +204,9 @@ export function useHeroTour({
       await press(open);
       const field = await waitFor(() => root.querySelector("[data-hero-agent-panel] textarea"), 15000);
       if (!field || stopped) return;
-      await press(field, () => agentRef.current.paste(AI_SETUP_MINI_PROMPT));
+      agentRef.current.paste(AI_SETUP_MINI_PROMPT);
+      await beat(100);
+      await press(field);
       await beat(900);
       const send = root.querySelector("[data-hero-agent-panel] [data-slot='prompt-input'] button[type='submit']");
       if (!send || stopped) return;
@@ -208,6 +225,9 @@ export function useHeroTour({
       await beat(START_MS);
       if (stopped) return;
       park();
+      root.dataset.tour = "on";
+      while (!stopped && introRef.current) await beat(100);
+      if (stopped) return;
       let first = !started.current;
       started.current = true;
       while (!stopped) {
@@ -216,7 +236,6 @@ export function useHeroTour({
           const nav = root.querySelector(`[data-tour-nav='${step.page}']`);
           // The sidebar is gone when the window narrows below md: nothing left to point at.
           if (!nav || nav.getBoundingClientRect().width === 0) return;
-          root.dataset.tour = "on";
           // The first Overview is the page shown on load; every later one is a real press (a replay starts here).
           if (step.page !== "overview" || cursor.dataset.placed !== undefined) await press(nav);
           cursor.dataset.placed = "";
