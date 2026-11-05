@@ -16,12 +16,12 @@ const json = (status, body, headers = {}) => ({
 });
 
 function streamResponse(text) {
-  const bytes = new TextEncoder().encode(text);
+  const bytes = new globalThis.TextEncoder().encode(text);
   return {
     status: 200,
     ok: true,
     headers: new globalThis.Headers({ "content-type": "text/event-stream" }),
-    body: new ReadableStream({
+    body: new globalThis.ReadableStream({
       start(controller) {
         controller.enqueue(bytes);
         controller.close();
@@ -90,9 +90,9 @@ test("a stream that dies after starting does not retry", async () => {
       status: 200,
       ok: true,
       headers: new globalThis.Headers({ "content-type": "text/event-stream" }),
-      body: new ReadableStream({
+      body: new globalThis.ReadableStream({
         start(controller) {
-          controller.enqueue(new TextEncoder().encode('event: status\ndata: {"stage":"picking-palette"}\n\n'));
+          controller.enqueue(new globalThis.TextEncoder().encode('event: status\ndata: {"stage":"picking-palette"}\n\n'));
           controller.error(new Error("cut"));
         },
       }),
