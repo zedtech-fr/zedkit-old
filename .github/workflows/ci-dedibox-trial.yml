@@ -40,12 +40,52 @@ env:
   VITEST_MAX_FORKS: "4"
 
 jobs:
+  # Scope (scripts/ci-affected.mjs): this workflow only triggers on PRs into
+  # dev, so it takes the affected-only path; workflow_dispatch runs in full.
+  # Gated jobs report `skipped`. Same outputs as ci.yml.
+  changes:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      full: ${{ steps.detect.outputs.full }}
+      workflow_only: ${{ steps.detect.outputs.workflow_only }}
+      docs: ${{ steps.detect.outputs.docs }}
+      registry: ${{ steps.detect.outputs.registry }}
+      ui: ${{ steps.detect.outputs.ui }}
+      filter: ${{ steps.detect.outputs.filter }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Detect scope
+        id: detect
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" = "pull_request" ]; then
+            git fetch origin "$BASE_REF"
+            base="origin/$BASE_REF"
+          else
+            base="HEAD~1"
+          fi
+          git diff --name-only --no-renames "$base"...HEAD 2>/dev/null |
+            node scripts/ci-affected.mjs --event "$EVENT" --base-ref "$BASE_REF" | tee -a "$GITHUB_OUTPUT"
+
   # Shared guard: only trusted refs. Same-repo PRs and workflow_dispatch/push.
   # github.repository is "zedtech-fr/zedkit"; a fork PR has a different head.
   checks-dedibox:
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    needs: changes
+    if: needs.changes.outputs.workflow_only != 'true'
     runs-on: [self-hosted, dedibox]
     timeout-minutes: 30
+    env:
+      FILTER: ${{ needs.changes.outputs.filter }}
+      BASE_REF: ${{ github.base_ref }}
+      FULL: ${{ needs.changes.outputs.full }}
+      DOCS: ${{ needs.changes.outputs.docs }}
     steps:
       - name: Ensure local cache dirs
         run: bash -c "mkdir -p /runner-cache/{pnpm,nm,tsbuildinfo,eslint,turbo,npm,xdg}"
@@ -64,33 +104,44 @@ jobs:
       - run: bash scripts/check-deps-audit.sh
       - run: node scripts/check-publish-engines.mjs
       - run: bash scripts/check-registry-ui-drift.sh
-      - run: pnpm exec turbo run typecheck lint --cache-dir=/runner-cache/turbo
+      - run: pnpm exec turbo run typecheck lint ${FILTER:+"$FILTER"} --cache-dir=/runner-cache/turbo
       - name: Save tsbuildinfo
         if: always()
         run: bash scripts/ci-dedibox-cache.sh save-ts
-      - name: ESLint (persistent cache)
-        run: pnpm exec eslint . --cache --cache-location /runner-cache/eslint/.eslintcache
+      - name: ESLint (persistent cache; changed files off the full path)
+        run: bash scripts/ci-eslint.sh --cache --cache-location /runner-cache/eslint/.eslintcache
       - run: pnpm run catalog:check
-      - run: pnpm exec turbo run build --cache-dir=/runner-cache/turbo
+      # The docs build (the slowest) only runs when the docs site is affected.
+      - name: Build
+        run: |
+          if [ "$DOCS" = "true" ]; then
+            pnpm exec turbo run build --cache-dir=/runner-cache/turbo
+          else
+            pnpm exec turbo run build --filter='!@zedtech/zedkit-docs' --cache-dir=/runner-cache/turbo
+          fi
       - run: bash scripts/check-api-report.sh
       - name: Docs static export SEO check
+        if: env.DOCS == 'true'
         run: node apps/docs/scripts/check-seo-export.mjs
       - name: Docs home first-load JS budget
+        if: env.DOCS == 'true'
         run: node apps/docs/scripts/check-first-load-budget.mjs
       - run: bash scripts/check-pack.sh
       - run: bash scripts/check-e2e-registered.sh
-      - run: pnpm exec turbo run test --cache-dir=/runner-cache/turbo
+      - run: pnpm exec turbo run test ${FILTER:+"$FILTER"} --cache-dir=/runner-cache/turbo
       - name: Kit markdown prettier
         run: pnpm --filter @zedtech/zedkit-ai run kit:md
+      # Workspace-wide thresholds, and it reruns every test: full path only.
       - name: Coverage (vitest v8)
+        if: env.FULL == 'true'
         run: pnpm test:coverage
       - name: Coverage summary
-        if: always()
+        if: always() && env.FULL == 'true'
         run: |
           test -f coverage/coverage-summary.json || exit 0
           node scripts/coverage-summary.mjs coverage/coverage-summary.json >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v7
-        if: always()
+        if: always() && env.FULL == 'true'
         with:
           name: coverage-dedibox
           path: coverage/
@@ -111,13 +162,16 @@ jobs:
             scripts/adoption-shown-commands.test.mjs \
             scripts/coverage-summary.test.mjs \
             scripts/release-tags-wait.test.mjs \
+            scripts/ci-affected.test.mjs \
             apps/docs/scripts/*.test.mjs
       - name: Playwright browsers (image)
+        if: needs.changes.outputs.ui == 'true'
         run: bash scripts/ci-dedibox-cache.sh playwright
       - name: UI gallery screenshot smoke
+        if: needs.changes.outputs.ui == 'true'
         run: pnpm --filter @zedtech/zedkit-ui smoke
       - uses: actions/upload-artifact@v7
-        if: always()
+        if: always() && needs.changes.outputs.ui == 'true'
         with:
           name: ui-gallery-dedibox
           path: packages/ui/test-results/*.png
@@ -129,7 +183,8 @@ jobs:
         run: bash scripts/ci-dedibox-cache.sh disk-report
 
   registry-smoke-dedibox:
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    needs: changes
+    if: needs.changes.outputs.registry == 'true' && needs.changes.outputs.workflow_only != 'true'
     runs-on: [self-hosted, dedibox]
     timeout-minutes: 15
     steps:
@@ -153,13 +208,16 @@ jobs:
         run: bash scripts/ci-dedibox-cache.sh playwright
       - name: registry smoke (no --with-deps)
         run: |
+          # the sed pattern is literal text
+          # shellcheck disable=SC2016
           sed -i 's/${CI:+--with-deps}//' scripts/quickstart-smoke.sh
           bash scripts/registry/smoke-shadcn-add.sh
           bash scripts/registry/smoke-ui-quickstart.sh
           bash scripts/quickstart-smoke.sh
 
   docs-smoke-dedibox:
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    needs: changes
+    if: needs.changes.outputs.docs == 'true' && needs.changes.outputs.workflow_only != 'true'
     runs-on: [self-hosted, dedibox]
     timeout-minutes: 20
     steps:
@@ -206,7 +264,8 @@ jobs:
   # runners; no needs chain. Tests are split per route so shards stay even.
   docs-e2e-routes-dedibox:
     name: docs-e2e-routes-dedibox (${{ matrix.shard }}/3)
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    needs: changes
+    if: needs.changes.outputs.docs == 'true' && needs.changes.outputs.workflow_only != 'true'
     runs-on: [self-hosted, dedibox]
     timeout-minutes: 25
     strategy:

@@ -14,6 +14,8 @@ export type ZedkitUiMessages = {
   /** Template with `{step}`, `{stepCount}`, and `{title}` (WizardSteps mobile summary). */
   wizardStepOf: string;
   copyToClipboard: string;
+  copied: string;
+  copyFailed: string;
   live: string;
   idle: string;
   options: string;
@@ -70,6 +72,8 @@ export const zedkitUiMessagesEn: ZedkitUiMessages = {
   pageOf: "Page {page} of {pageCount}",
   wizardStepOf: "Step {step} of {stepCount} · {title}",
   copyToClipboard: "Copy to clipboard",
+  copied: "Copied",
+  copyFailed: "Could not copy",
   live: "Live",
   idle: "Idle",
   options: "Options",
@@ -117,6 +121,8 @@ export const zedkitUiMessagesFr: ZedkitUiMessages = {
   pageOf: "Page {page} sur {pageCount}",
   wizardStepOf: "Étape {step} sur {stepCount} · {title}",
   copyToClipboard: "Copier dans le presse-papiers",
+  copied: "Copié",
+  copyFailed: "Impossible de copier",
   live: "En direct",
   idle: "Inactif",
   options: "Choix",
