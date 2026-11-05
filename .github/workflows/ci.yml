@@ -148,9 +148,9 @@ jobs:
       # the config itself changed.
       - name: ESLint
         run: bash scripts/ci-eslint.sh
-      - run: pnpm run catalog:check
-      # Package builds feed the API report and pack checks; the docs build
-      # (the slowest) only runs when the docs site is affected.
+      # Package builds must precede catalog:check: docs check.mjs builds
+      # seo/ai/ui and needs workspace dist (i18n types). Affected-only
+      # typecheck/lint can skip those packages entirely.
       - name: Build
         run: |
           if [ "$DOCS" = "true" ]; then
@@ -158,6 +158,7 @@ jobs:
           else
             pnpm exec turbo run build --filter='!@zedtech/zedkit-docs'
           fi
+      - run: pnpm run catalog:check
       - run: bash scripts/check-api-report.sh
       - name: Docs static export SEO check
         if: env.DOCS == 'true'

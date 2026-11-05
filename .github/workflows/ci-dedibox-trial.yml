@@ -97,10 +97,12 @@ jobs:
         with:
           node-version: 22
           package-manager-cache: false
-      - name: Restore tsbuildinfo
-        run: bash scripts/ci-dedibox-cache.sh restore-ts
       - name: pnpm install (store + nm archive)
         run: bash scripts/ci-dedibox-cache.sh install
+      # After install: stale tsbuildinfo must not precede package postinstall tsc
+      # (incremental no-op would skip emit while dist/ is absent from nm archive).
+      - name: Restore tsbuildinfo
+        run: bash scripts/ci-dedibox-cache.sh restore-ts
       - run: bash scripts/check-deps-audit.sh
       - run: node scripts/check-publish-engines.mjs
       - run: bash scripts/check-registry-ui-drift.sh
