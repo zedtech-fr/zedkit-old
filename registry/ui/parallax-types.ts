@@ -17,7 +17,8 @@ export type ParallaxFade = (typeof PARALLAX_FADES)[number];
 export const PARALLAX_SECTION_TAGS = ["section", "div", "article", "header"] as const;
 export type ParallaxSectionTag = (typeof PARALLAX_SECTION_TAGS)[number];
 
-const SAFE_CSS_VALUE = /^-?\d*\.?\d+([a-z%]+)?$/i;
+// Linear-time number + optional unit (avoids \d*\.?\d+ backtracking / ReDoS).
+const SAFE_CSS_VALUE = /^-?(?:\d+(?:\.\d+)?|\.\d+)(?:[a-z%]{1,16})?$/i;
 
 export function isMovingDepth(depth: ParallaxDepth | undefined): depth is ParallaxDepth {
   return depth != null && depth !== 0 && depth !== "0";
@@ -35,7 +36,11 @@ export function motionVarClass(
   clamp?: boolean,
 ): string | undefined {
   if (value == null || value === "") return undefined;
-  const raw = typeof value === "number" ? formatNumber(value, clamp === true) : value.trim();
+  if (typeof value === "number") {
+    const raw = formatNumber(value, clamp === true);
+    return raw ? `[${name}:${raw}]` : undefined;
+  }
+  const raw = value.trim();
   if (!raw || !SAFE_CSS_VALUE.test(raw)) return undefined;
   return `[${name}:${raw}]`;
 }
