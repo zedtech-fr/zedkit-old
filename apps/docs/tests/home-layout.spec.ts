@@ -60,7 +60,7 @@ test.describe("home layout rhythm (#387)", () => {
       const sections = sectionIds
         .map((id) => document.getElementById(id))
         .filter((el): el is HTMLElement => el !== null);
-      const familyRows = [...document.querySelectorAll("[data-home-component-families] [data-slot='stack'].py-6, [data-home-component-families] .py-6")];
+      const familyRows = [...document.querySelectorAll("[data-home-component-families] > div > div")];
       return {
         sectionPads: sections.map((el) => padding(el)),
         familyPads: familyRows.map((el) => padding(el)),
