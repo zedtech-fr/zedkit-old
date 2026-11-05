@@ -63,6 +63,16 @@ function PromptInputActions({
   );
 }
 
+function promptInputTrySubmit(
+  event: { preventDefault: () => void },
+  empty: boolean,
+  blocked: boolean,
+  onSubmit: () => void,
+) {
+  event.preventDefault();
+  if (!empty && !blocked) onSubmit();
+}
+
 /** Chat-style composer: one rounded surface, auto-growing field, send affordance inside at bottom-right. */
 export function PromptInput({
   sendLabel,
@@ -90,10 +100,7 @@ export function PromptInput({
         "relative w-full rounded-md border border-input bg-background shadow-sm focus-within:focus-ring-control",
         className,
       )}
-      onSubmit={(event) => {
-        event.preventDefault();
-        if (!empty && !blocked) onSubmit();
-      }}
+      onSubmit={(event) => promptInputTrySubmit(event, empty, blocked, onSubmit)}
     >
       <textarea
         ref={ref}
@@ -108,10 +115,7 @@ export function PromptInput({
           busy && onCancel ? "pr-20" : "pr-12",
         )}
         onKeyDown={(event) => {
-          if (event.key === "Enter" && !event.shiftKey) {
-            event.preventDefault();
-            if (!empty && !blocked) onSubmit();
-          }
+          if (event.key === "Enter" && !event.shiftKey) promptInputTrySubmit(event, empty, blocked, onSubmit);
           onKeyDown?.(event);
         }}
         {...props}
