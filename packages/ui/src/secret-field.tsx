@@ -32,21 +32,30 @@ export interface SecretFieldProps {
 
 /**
  * Shown-once secret with a copy button: read-only value, clipboard
- * on click, check feedback for 2s. Falls back to no-op when the
- * clipboard API is unavailable (insecure contexts).
+ * on click, check feedback for 2s. Announces success and failure
+ * (including a missing clipboard API) through a polite live region.
  */
 function SecretField({ id, value, copyLabel, multiline = false, "aria-label": ariaLabel }: SecretFieldProps) {
   const messages = useUiMessages();
   const [copied, setCopied] = React.useState(false);
+  const [copyFailed, setCopyFailed] = React.useState(false);
   const copy = (): void => {
     const clipboard = navigator.clipboard;
-    if (!clipboard) return;
+    if (!clipboard) {
+      setCopied(false);
+      setCopyFailed(true);
+      return;
+    }
     clipboard.writeText(value).then(
       () => {
+        setCopyFailed(false);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       },
-      () => {},
+      () => {
+        setCopied(false);
+        setCopyFailed(true);
+      },
     );
   };
   return (
@@ -71,6 +80,9 @@ function SecretField({ id, value, copyLabel, multiline = false, "aria-label": ar
       <Button type="button" variant="outline" size="icon" aria-label={copyLabel ?? messages.copyToClipboard} onClick={copy}>
         {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
       </Button>
+      <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {copied ? messages.copied : copyFailed ? messages.copyFailed : ""}
+      </span>
     </div>
   );
 }
