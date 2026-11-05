@@ -191,6 +191,8 @@ The kit ships the full policy (every `model` is `inherit`) and reads it from the
 
 `validate` also fails when a model name is written outside `tokenomics.md`: in a skill, subagent, command, top-level `.agents/*.md`, root `AGENTS.md` / `CLAUDE.md` or a `.cursor/rules/*.mdc` file. It matches id-shaped names (`claude-…`, `gpt-…`, `gemini-…`, `sonnet 4`, and so on), every id-shaped model your cells pin, and your own `hardcode.extra_patterns`; the bare words "sonnet" or "opus", `claude-code` and `GEMINI.md` stay clean. Each hit prints `path:line`, one per file and name. To keep a name on purpose, put `<!-- zk:model-ok -->` on the same line or the line above, or list the file under `hardcode.allow_paths` (globs, relative to the project root or to `.agents/`). `*.kit.md` sidecars, the setup log and `.agents/model-routing.md` (a legacy file that holds real ids until its migration ships) are not scanned; nested `AGENTS.md` files are scanned only with `hardcode.scan_nested: true`. Commands always run on the session model, so a `model:` other than `inherit` in a command is an error too.
 
+Each agent's role, default needs (`reasoning` and `context`, which a call may override) and optional `kinds` allowlist and `default_kind` hint live in `agents.meta.json`: the kit ships one for its agents, yours goes next to `tokenomics.md` and wins per agent. They are never in agent frontmatter, because some tools silently skip an agent with a key they do not know; `validate` rejects those keys in an agent file, and rejects `needs` or `kind` in an entry (`kind` is per call, never an agent property). A kit agent without an entry uses the shipped table, so existing installs need no refresh. Routing from these headers comes next.
+
 ## What you get
 
 ```
@@ -288,6 +290,12 @@ of the context window and shortens descriptions past it). With `starter`,
   no adapter either. It ignores the `.claude/` and `.cursor/` links. This is
   how the `readonly:` ban above was found: files setting it never appear in
   its agent list.
+- Agent headers (`role`, `default_needs`, `kinds`, `default_kind`) live in
+  `agents.meta.json`, not in agent frontmatter. Checked 2026-11-05: one tool
+  loaded agents with those keys (a nested mapping and a list included) and one
+  silently dropped any agent with a key outside its fixed set; a third could
+  not be tested here. One failing tool is enough, so no tool gets the keys in
+  frontmatter.
 - Symlinks need a filesystem that supports them (Windows: developer mode or
   WSL).
 

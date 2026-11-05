@@ -1,0 +1,152 @@
+{
+  "a11y-auditor": {
+    "role": "accessibility audit",
+    "default_needs": {
+      "reasoning": "medium",
+      "context": "medium"
+    },
+    "default_kind": "check"
+  },
+  "architect": {
+    "role": "implementation planner",
+    "default_needs": {
+      "reasoning": "high",
+      "context": "large"
+    },
+    "default_kind": "design"
+  },
+  "console-architecture": {
+    "role": "layer review",
+    "default_needs": {
+      "reasoning": "medium",
+      "context": "medium"
+    },
+    "default_kind": "check"
+  },
+  "copywriter": {
+    "role": "microcopy writer",
+    "default_needs": {
+      "reasoning": "medium",
+      "context": "small"
+    },
+    "default_kind": "check"
+  },
+  "dependency-auditor": {
+    "role": "dependency audit",
+    "default_needs": {
+      "reasoning": "medium",
+      "context": "medium"
+    },
+    "default_kind": "check"
+  },
+  "docs-writer": {
+    "role": "docs author",
+    "default_needs": {
+      "reasoning": "medium",
+      "context": "medium"
+    },
+    "default_kind": "build"
+  },
+  "explorer": {
+    "role": "codebase lookup",
+    "default_needs": {
+      "reasoning": "low",
+      "context": "small"
+    },
+    "kinds": ["check"],
+    "default_kind": "check"
+  },
+  "improver": {
+    "role": "findings fixer",
+    "default_needs": {
+      "reasoning": "medium",
+      "context": "medium"
+    },
+    "default_kind": "build"
+  },
+  "orchestrator": {
+    "role": "task coordinator",
+    "default_needs": {
+      "reasoning": "high",
+      "context": "large"
+    },
+    "kinds": ["decide", "design", "check"],
+    "default_kind": "decide"
+  },
+  "product-director": {
+    "role": "delivery brief",
+    "default_needs": {
+      "reasoning": "medium",
+      "context": "large"
+    },
+    "default_kind": "decide"
+  },
+  "release-manager": {
+    "role": "release gate",
+    "default_needs": {
+      "reasoning": "medium",
+      "context": "medium"
+    },
+    "default_kind": "check"
+  },
+  "researcher": {
+    "role": "reuse finder",
+    "default_needs": {
+      "reasoning": "medium",
+      "context": "large"
+    },
+    "kinds": ["check", "design", "decide"],
+    "default_kind": "design"
+  },
+  "security-reviewer": {
+    "role": "security audit",
+    "default_needs": {
+      "reasoning": "high",
+      "context": "medium"
+    },
+    "kinds": ["check", "design", "decide"],
+    "default_kind": "check"
+  },
+  "seo-auditor": {
+    "role": "seo audit",
+    "default_needs": {
+      "reasoning": "medium",
+      "context": "medium"
+    },
+    "default_kind": "check"
+  },
+  "skeptic": {
+    "role": "pre-mortem",
+    "default_needs": {
+      "reasoning": "high",
+      "context": "medium"
+    },
+    "kinds": ["check", "decide"],
+    "default_kind": "check"
+  },
+  "test-writer": {
+    "role": "adversarial tests",
+    "default_needs": {
+      "reasoning": "medium",
+      "context": "medium"
+    },
+    "default_kind": "build"
+  },
+  "ui-designer": {
+    "role": "ui designer",
+    "default_needs": {
+      "reasoning": "medium",
+      "context": "medium"
+    },
+    "default_kind": "design"
+  },
+  "verifier": {
+    "role": "quality gate",
+    "default_needs": {
+      "reasoning": "high",
+      "context": "medium"
+    },
+    "kinds": ["check", "decide"],
+    "default_kind": "check"
+  }
+}

@@ -4,7 +4,8 @@ import { dirname, join, relative, sep } from "node:path";
 import { tryCatch } from "@zedtech/zedkit-core";
 import { adoptRel, kitDir, kitUniverse, readManifest } from "./kit.js";
 import { parseFrontmatter } from "./frontmatter.js";
-import { checkTokenomics } from "./tokenomics.js";
+import { HEADER_KEYS, KIT_HEADERS, SIDECAR, parseAgentHeader, readSidecar } from "./agent-header.js";
+import { checkTokenomics, parseTokenomics } from "./tokenomics.js";
 import { lensClosureIssues } from "./lenses.js";
 import { danglingKitRefs, skillRefFiles } from "./skill-refs.js";
 import { resolveConditionals, withoutMarkers, type Availability } from "./conditional.js";
@@ -83,6 +84,68 @@ function checkSkill(root: string, name: string, issues: Issue[]): void {
   // for agent/command lists shown by naive parsers. See #484.
 }
 
+// `strict_headers: true` in the project's tokenomics.md: every agent needs a full header.
+function strictHeaders(root: string): boolean {
+  const file = join(root, "tokenomics.md");
+  if (!existsSync(file)) return false;
+  const layer = parseTokenomics(read(file));
+  return layer.ok && layer.value.strict_headers === true;
+}
+
+function toolList(value: unknown): string[] {
+  const items = Array.isArray(value) ? value : typeof value === "string" ? value.split(",") : [];
+  return items.map((item) => String(item).trim());
+}
+
+const WRITE_TOOLS = ["Write", "Edit", "NotebookEdit"];
+
+// The header contract lives in `agents.meta.json`, never in agent frontmatter:
+// a tool drops (silently) an agent whose frontmatter has a key it does not know.
+function checkNoHeaderKeys(data: Record<string, unknown>, path: string, issues: Issue[]): void {
+  const found = [...HEADER_KEYS, "needs", "kind"].filter((key) => data[key] !== undefined);
+  if (found.length > 0) {
+    issues.push({ path, message: `${found.join(", ")} must not be in the agent file (some tools skip agents with unknown keys); put the header in ${SIDECAR}` });
+  }
+}
+
+// The sidecar (role, default_needs, kinds, default_kind per agent). A missing
+// entry is fine unless strict: kit-name agents fall back to the shipped
+// table. An agent that cannot be invoked as `build` must also deny the write
+// tools in its own file, the one enforcement every tool honors.
+function checkSidecar(root: string, strict: boolean, issues: Issue[]): void {
+  const sidecar = readSidecar(root);
+  if (!sidecar.ok) {
+    issues.push({ path: SIDECAR, message: sidecar.error.message.replace(`${SIDECAR}: `, "") });
+    return;
+  }
+  const dir = join(root, "agents");
+  const installed = new Set(existsSync(dir) ? mdFiles(dir).map((file) => file.replace(/\.md$/, "")) : []);
+  for (const [name, entry] of Object.entries(sidecar.value)) {
+    const path = SIDECAR;
+    if (!installed.has(name) && !KIT_HEADERS[name]) {
+      issues.push({ path, message: `${name}: no agents/${name}.md in this directory` });
+    }
+    for (const message of parseAgentHeader(entry, true).issues) issues.push({ path, message: `${name}: ${message}` });
+    const kinds = entry.kinds;
+    if (Array.isArray(kinds) && kinds.length > 0 && !kinds.includes("build") && installed.has(name)) {
+      const denied = toolList(readDenied(join(dir, `${name}.md`)));
+      if (!WRITE_TOOLS.every((tool) => denied.includes(tool))) {
+        issues.push({ path: join("agents", `${name}.md`), message: `kinds has no build in ${SIDECAR}, so the file must set disallowedTools: ${WRITE_TOOLS.join(", ")}` });
+      }
+    }
+  }
+  if (strict) {
+    for (const name of installed) {
+      if (sidecar.value[name] === undefined) issues.push({ path: SIDECAR, message: `${name}: no header (strict_headers is on)` });
+    }
+  }
+}
+
+function readDenied(file: string): unknown {
+  const front = parseFrontmatter(read(file));
+  return front.ok ? front.value.data.disallowedTools : undefined;
+}
+
 function checkAgent(root: string, file: string, issues: Issue[]): void {
   const path = join("agents", file);
   const front = parseText(path, read(join(root, path)), issues);
@@ -104,6 +167,7 @@ function checkAgent(root: string, file: string, issues: Issue[]): void {
   if (data.readonly !== undefined) {
     issues.push({ path, message: "readonly is not portable: some tools skip agent files that set it (use disallowedTools instead)" });
   }
+  checkNoHeaderKeys(data, path, issues);
 }
 
 function checkCommand(root: string, file: string, skills: Set<string>, issues: Issue[]): void {
@@ -296,6 +360,7 @@ function collect(root: string, kit: string): Issue[] {
       checkAgent(root, file, issues);
     }
   }
+  checkSidecar(root, strictHeaders(root), issues);
   const commandsDir = join(root, "commands");
   if (existsSync(commandsDir)) {
     for (const file of mdFiles(commandsDir)) {
