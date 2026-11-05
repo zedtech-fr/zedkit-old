@@ -377,6 +377,12 @@ function installContent(ctx: Ctx, content: ReturnType<typeof plan>): Map<string,
   if (content.personas) {
     copyFile(ctx, content.personas, join(".agents", "personas.md"));
   }
+  // The policy file is meant to be edited, so it is never adopted: no
+  // sidecar, an existing file is left alone. Policy defaults come from the
+  // package at runtime, not from this stub.
+  if (existsSync(join(ctx.kit, "tokenomics.template.md"))) {
+    copyFile(ctx, join(ctx.kit, "tokenomics.template.md"), join(".agents", "tokenomics.md"));
+  }
   for (const name of content.agents) {
     copyFile(ctx, join(ctx.kit, "agents", `${name}.md`), join(".agents", "agents", `${name}.md`));
   }

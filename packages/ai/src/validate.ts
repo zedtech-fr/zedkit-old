@@ -4,6 +4,7 @@ import { dirname, join, relative, sep } from "node:path";
 import { tryCatch } from "@zedtech/zedkit-core";
 import { adoptRel, kitDir, kitUniverse, readManifest } from "./kit.js";
 import { parseFrontmatter } from "./frontmatter.js";
+import { checkTokenomics } from "./tokenomics.js";
 import { lensClosureIssues } from "./lenses.js";
 import { danglingKitRefs, skillRefFiles } from "./skill-refs.js";
 import { resolveConditionals, withoutMarkers, type Availability } from "./conditional.js";
@@ -298,12 +299,22 @@ function collect(root: string, kit: string): Issue[] {
     }
   }
   checkManifest(root, issues);
+  checkPolicy(root, issues);
   checkLadder(root, issues);
   checkLineEndings(root, issues);
   checkSkillRefs(root, skills, kit, issues);
   checkLenses(root, skills, issues);
   checkLinks(root, kit, issues);
   return issues;
+}
+
+// The project policy file, when present. The shipped defaults and the stub
+// (`tokenomics.defaults.md`, `tokenomics.template.md`) are kit data, not a
+// project file, so only `tokenomics.md` is checked here.
+function checkPolicy(root: string, issues: Issue[]): void {
+  const file = join(root, "tokenomics.md");
+  if (!existsSync(file)) return;
+  for (const message of checkTokenomics(read(file))) issues.push({ path: "tokenomics.md", message });
 }
 
 function checkLenses(root: string, skills: Set<string>, issues: Issue[]): void {
@@ -514,7 +525,7 @@ export function checkPlaceholders(projectRoot: string, source: string): Issue[] 
     for (const name of ["AGENTS.md", "CLAUDE.md"]) scan(join(projectRoot, name), name);
     if (existsSync(source)) {
       for (const entry of readdirSync(source, { recursive: true, encoding: "utf8" })) {
-        if (!entry.endsWith(".md") || entry.endsWith(".kit.md") || entry.endsWith(".template.md")) continue;
+        if (!entry.endsWith(".md") || entry.endsWith(".kit.md") || entry.endsWith(".template.md") || entry.endsWith(".defaults.md")) continue;
         scan(join(source, entry), relative(projectRoot, join(source, entry)));
       }
     }
