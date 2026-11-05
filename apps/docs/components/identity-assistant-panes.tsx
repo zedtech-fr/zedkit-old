@@ -12,6 +12,7 @@ import { IdentityRefinementChips } from "@/components/identity-refinement-chips"
 import { DetectedLinks } from "@/components/identity-detected-links";
 import type { Unavailable } from "@/lib/identity-assistant";
 import type { Proposal, SessionState } from "@/lib/identity-creator-session";
+import { specimenDomainFromBrief, type SpecimenDomain } from "@/lib/brief-specimen-domain";
 
 export type { View } from "@/components/identity-assistant-parts";
 
@@ -199,6 +200,7 @@ export function PreviewPane(props: {
   proposal: Proposal | null;
   tokens: IdentityTokens;
   domainBrief: string;
+  previewDomain?: SpecimenDomain;
   busy: boolean;
   compact?: boolean;
   narrowSplit?: boolean;
@@ -233,7 +235,7 @@ export function PreviewPane(props: {
           <Text variant="muted" typeRole="label">
             {copy.views.draftNow}
           </Text>
-          <IdentityMiniPreview tokens={props.tokens} id="draft-now" />
+          <IdentityMiniPreview tokens={props.tokens} id="draft-now" domain={props.previewDomain ?? specimenDomainFromBrief(props.domainBrief)} />
         </Stack>
       )}
     </Stack>

@@ -49,10 +49,34 @@ test("previewTokens round-trip through encode and parse", () => {
     ...initialSession,
     thread: [{ role: "user", text: "A calm shop" }, { role: "assistant", text: "Softer corners." }],
   };
-  const encoded = encodeIdentityDockPersist({ session, brief: "refine", previewTokens });
+  const encoded = encodeIdentityDockPersist({
+    session,
+    brief: "refine",
+    previewTokens,
+    previewDomain: "editorial",
+  });
   const parsed = JSON.parse(encoded);
   assert.equal(parsed.previewTokens.radius, "0.875rem");
+  assert.equal(parsed.previewDomain, "editorial");
   assert.equal(parsed.brief, "refine");
+});
+
+test("previewDomain survives when encode drops oldest thread turns", () => {
+  const longText = "word ".repeat(4000);
+  const thread = [
+    { role: "user", text: "I run a daily newspaper" },
+    ...Array.from({ length: 30 }, () => ({ role: "user", text: longText })),
+  ];
+  const session = { ...initialSession, thread };
+  const encoded = encodeIdentityDockPersist({
+    session,
+    brief: "",
+    previewTokens: identityPresets.mist,
+    previewDomain: "editorial",
+  });
+  assert.ok(encoded.length <= IDENTITY_DOCK_MAX_BYTES);
+  const parsed = JSON.parse(encoded);
+  assert.equal(parsed.previewDomain, "editorial");
 });
 
 test("clearIdentityDockPersist removes the v2 storage key", () => {
