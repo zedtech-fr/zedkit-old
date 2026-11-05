@@ -41,7 +41,6 @@ export function IdentityMiniPreview({
         <IdentitySpecimenCard
           dark={false}
           label={identityAssistantCopy.proposal.lightLabel}
-          id={`${id}-light`}
           proposal={id}
           copy={copy}
         />
@@ -50,14 +49,12 @@ export function IdentityMiniPreview({
           <IdentitySpecimenCard
             dark={false}
             label={identityAssistantCopy.proposal.lightLabel}
-            id={`${id}-light`}
             proposal={id}
             copy={copy}
           />
           <IdentitySpecimenCard
             dark
             label={identityAssistantCopy.proposal.darkLabel}
-            id={`${id}-dark`}
             proposal={id}
             copy={copy}
           />
