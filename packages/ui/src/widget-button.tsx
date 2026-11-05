@@ -13,6 +13,7 @@ function WidgetButton({ className, variant: _variant, size, ...props }: WidgetBu
   return (
     <Button
       data-slot="widget-button"
+      data-widget-button=""
       variant="outline"
       size={size}
       className={cn(

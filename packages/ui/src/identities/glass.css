@@ -249,6 +249,12 @@
   backdrop-filter: var(--zk-glass-filter);
 }
 
+/* The floating pill sits over any content, so its label cannot rely on what is behind it: near-solid in every theme. */
+:root[data-identity="glass"] [data-widget-button],
+[data-identity-scope][data-identity="glass"] [data-widget-button] {
+  --zk-glass-alpha: 0.94;
+}
+
 /*
  * Glass bar: the sticky marketing header. One element carries the blur; its
  * children stay clear, because a blurred ancestor is the backdrop root of a

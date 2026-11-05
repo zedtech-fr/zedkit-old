@@ -224,14 +224,17 @@ function ProposalApplyRow({
   tokens,
   onUse,
   onDiscard,
+  pinned,
 }: {
   busy: boolean;
   tokens: IdentityTokens;
   onUse: (tokens: IdentityTokens) => void;
   onDiscard: () => void;
+  /** Inside a capped, scrolling card the actions stay at its bottom edge, so the primary one is never below the fold. */
+  pinned?: boolean;
 }) {
   return (
-    <Stack direction="horizontal" gap={2} className="flex-wrap">
+    <Stack direction="horizontal" gap={2} className={cn("flex-wrap", pinned && "sticky bottom-0 z-10 bg-background/95 py-2 backdrop-blur")}>
       <Button type="button" onClick={() => onUse(tokens)} disabled={busy}>
         {copy.proposal.apply}
       </Button>
@@ -251,6 +254,7 @@ export function ProposalCard({
   onUse,
   onDiscard,
   className,
+  pinApply,
 }: {
   proposal: Proposal;
   current: IdentityTokens;
@@ -259,6 +263,8 @@ export function ProposalCard({
   onUse: (tokens: IdentityTokens) => void;
   onDiscard: () => void;
   className?: string;
+  /** Pin the apply row to the bottom of the card; set when the card scrolls inside a height cap. */
+  pinApply?: boolean;
 }) {
   // Readable text is a promise of the kit, so a proposal that misses it is nudged by arithmetic, and the page says so.
   const repaired = useMemo(() => repairContrast(proposal.tokens), [proposal.tokens]);
@@ -293,7 +299,7 @@ export function ProposalCard({
           </ul>
         </details>
       ) : null}
-      <ProposalApplyRow busy={busy} tokens={repaired.tokens} onUse={onUse} onDiscard={onDiscard} />
+      <ProposalApplyRow busy={busy} tokens={repaired.tokens} onUse={onUse} onDiscard={onDiscard} pinned={pinApply === true} />
       <Text variant="muted" typeRole="body">
         {copy.proposal.note}
       </Text>
