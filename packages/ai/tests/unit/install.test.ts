@@ -592,7 +592,7 @@ describe("installKit", () => {
 
   it("keeps a Role and style section at the top of the agent template, under the line budget", () => {
     const lines = readFileSync(join(kitRoot(), "AGENTS.template.md"), "utf8").split("\n");
-    expect(lines.length).toBeLessThan(100);
+    expect(lines.length).toBeLessThanOrEqual(76);
     const role = lines.findIndex((l) => l === "## Role and style");
     const nonNegotiables = lines.findIndex((l) => l === "## Non-negotiables");
     expect(role).toBeGreaterThanOrEqual(0);
