@@ -10,6 +10,16 @@ const PRODUCTS = ["Dev console", "Newsroom", "Invoicing", "Incidents", "Bag shop
 
 const stage = (page: Page) => page.locator("[data-home-identity-stage]");
 
+/** Blur so pinned pan is not blocked, then scroll the stage (not the page) to reveal controls below the fold. */
+async function revealClippedStage(page: Page) {
+  await stage(page).evaluate((node) => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    node.scrollTop = node.scrollHeight - node.clientHeight;
+  });
+}
+
 async function open(page: Page, width = 1440, height = 900) {
   await page.setViewportSize({ width, height });
   await page.goto("/", { waitUntil: "networkidle" });
@@ -78,11 +88,14 @@ test("working inside a pinned example neither scrolls the page nor changes the e
 
   // Type, open a dialog and close it with Escape, open a drawer and close it: the usual things a visitor does.
   await stage(page).getByRole("textbox", { name: "Workspace" }).fill("Harbor Staging");
-  await stage(page).getByRole("button", { name: "Delete project" }).click();
-  await expect(page.getByRole("dialog")).toBeVisible();
+  await revealClippedStage(page);
+  const deleteBtn = stage(page).getByRole("button", { name: "Delete project" });
+  await expect(deleteBtn).toBeVisible();
+  await deleteBtn.evaluate((node) => node.click());
+  await expect(page.getByRole("dialog", { name: "Delete this project?" })).toBeVisible();
   await page.keyboard.press("Escape");
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  await stage(page).getByRole("button", { name: "Leo Martin" }).click();
+  await expect(page.getByRole("dialog", { name: "Delete this project?" })).toHaveCount(0);
+  await stage(page).getByRole("button", { name: "Leo Martin" }).evaluate((node) => node.click());
   await expect(page.getByRole("dialog", { name: "Leo Martin" })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
