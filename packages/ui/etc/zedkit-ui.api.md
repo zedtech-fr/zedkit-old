@@ -1923,6 +1923,8 @@ export type ZedkitUiMessages = {
     pageOf: string;
     wizardStepOf: string;
     copyToClipboard: string;
+    copied: string;
+    copyFailed: string;
     live: string;
     idle: string;
     options: string;
