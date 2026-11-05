@@ -354,8 +354,9 @@ test("home get-started opens on the package install command", async ({ page }) =
   await expect(page.locator("#install-or-copy [data-adoption-step='install']").getByRole("region", { name: "Terminal" })).toContainText(
     "pnpm add @zedtech/zedkit-ui",
   );
-  await expect(page.locator("#get-started [data-home-ai-setup] a")).toHaveAttribute("href", "#ai-setup");
-  await expect(page.locator("#get-started [data-home-ai-setup] a")).toHaveText("Set up AI");
+  // asChild puts data-home-ai-setup on the <a> itself.
+  await expect(page.locator("#get-started [data-home-ai-setup]")).toHaveAttribute("href", "#ai-setup");
+  await expect(page.locator("#get-started [data-home-ai-setup]")).toHaveText("Set up AI");
 });
 
 test("home install section has no registry brick grid; catalog link lives in families", async ({ page }) => {
