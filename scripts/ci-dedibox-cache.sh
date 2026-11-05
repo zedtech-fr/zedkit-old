@@ -15,7 +15,7 @@ TURBO_DIR="${CACHE_ROOT}/turbo"
 PLAYWRIGHT_IMAGE_DIR="${PLAYWRIGHT_BROWSERS_PATH:-/opt/ms-playwright}"
 
 mkdir -p "$PNPM_STORE" "$NM_DIR" "$TS_DIR" "$ESLINT_DIR" "$TURBO_DIR" \
-  "${CACHE_ROOT}/npm" "${CACHE_ROOT}/toolcache" "${CACHE_ROOT}/xdg"
+  "${CACHE_ROOT}/npm" "${CACHE_ROOT}/xdg"
 
 lock_hash() {
   sha256sum pnpm-lock.yaml | awk "{print \$1}"
