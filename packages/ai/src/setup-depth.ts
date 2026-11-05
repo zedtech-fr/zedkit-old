@@ -15,50 +15,35 @@ function text(path: string): string | undefined {
 }
 
 // Rules whose meaning hangs on order, atomicity or timing: a citation alone cannot show them.
-const SEQUENCING = /\b(after|before|same transaction|one transaction|atomic(?:ally)?|commits?|retr(?:y|ies)|idempoten\w+|exactly once|at most once|within \d+|only when)\b/iu;
+const SEQUENCING = /\b(after|before|same transaction|one transaction|atomic\w*|commits?|retr(?:y|ies)|idempoten\w+|exactly once|at most once|within \d+|only when)\b/iu;
 const RULE_ID = /^R\d+-\d+$/u;
 
-function cells(line: string): string[] {
-  return line.split("|").slice(1, -1).map((c) => c.trim());
-}
-
-/** The body of a `## <name>` section, heading to the next `## `. */
-function section(body: string, name: string): string | undefined {
-  const at = body.search(new RegExp(`^##+ ${name}\\b`, "mu"));
-  if (at < 0) return undefined;
-  return body.slice(at).split("\n").slice(1).join("\n").split(/^## /mu)[0];
+/** First-column IDs and cells of the table rows in `text`. */
+function ruleRows(text: string): string[][] {
+  return text
+    .split("\n")
+    .filter((l) => l.startsWith("|"))
+    .map((l) => l.split("|").slice(1, -1).map((c) => c.trim()))
+    .filter((c) => RULE_ID.test(c[0] ?? ""));
 }
 
 /** D1: every sequencing rule was checked against the code it cites, and no contradiction is left open. */
 function meaning(body: string, path: string, issues: Issue[]): void {
-  const check = section(body, "Meaning check");
-  if (check === undefined) {
-    issues.push({ path, message: "D1 code reading: no `## Meaning check` section (a second reader checks that each rule says what the cited code does; see templates/rule-check-brief.template.md)" });
+  const at = body.search(/^##+ Meaning check\b/mu);
+  if (at < 0) {
+    issues.push({ path, message: "D1 code reading: no `## Meaning check` (a second reader checks each rule says what its cited code does)" });
     return;
   }
-  const checked = new Map<string, string[]>();
-  for (const line of check.split("\n").filter((l) => l.startsWith("|"))) {
-    const c = cells(line);
-    if (c[0] && RULE_ID.test(c[0])) checked.set(c[0], c);
-  }
-  for (const [id, c] of checked) {
-    const verdict = (c[1] ?? "").toLowerCase();
-    const resolution = (c[3] ?? "").toLowerCase();
-    if ((verdict === "partial" || verdict === "mismatch") && !/^(rewritten|dropped|conflict)\b/u.test(resolution)) {
-      issues.push({ path, message: `D1 code reading: ${id} is ${verdict} in the Meaning check with no resolution (rewritten, dropped or conflict)` });
+  const check = body.slice(at).split("\n").slice(1).join("\n").split(/^## /mu)[0] ?? "";
+  const rows = ruleRows(check);
+  for (const [id, verdict = "", , resolution = ""] of rows) {
+    if (/^(partial|mismatch)$/iu.test(verdict) && !/^(rewritten|dropped|conflict)/iu.test(resolution)) {
+      issues.push({ path, message: `D1 code reading: ${id} is ${verdict} with no resolution (rewritten, dropped or conflict)` });
     }
   }
-  const outside = body.replace(check, "");
-  const missing: string[] = [];
-  for (const line of outside.split("\n").filter((l) => l.startsWith("|"))) {
-    const c = cells(line);
-    if (!c[0] || !RULE_ID.test(c[0]) || checked.has(c[0])) continue;
-    const ruleText = c.length >= 5 ? (c[3] ?? "") : line;
-    if (SEQUENCING.test(ruleText)) missing.push(c[0]);
-  }
-  if (missing.length > 0) {
-    issues.push({ path, message: `D1 code reading: order or atomicity rule(s) ${missing.join(", ")} have no row in the Meaning check (every rule that says after, before, same transaction, retry, idempotent or within <time> is checked, not sampled)` });
-  }
+  const known = new Set(rows.map((c) => c[0]));
+  const missing = ruleRows(body.replace(check, "")).filter((c) => !known.has(c[0]) && SEQUENCING.test(c[3] ?? "")).map((c) => c[0]);
+  if (missing.length > 0) issues.push({ path, message: `D1 code reading: ${missing.join(", ")} have no row in the Meaning check (order, atomicity and timing rules are checked, not sampled)` });
 }
 
 /** D1: the code was read first, by readers scaled to repo size, with file evidence. */

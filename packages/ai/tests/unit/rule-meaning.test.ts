@@ -68,7 +68,7 @@ describe("meaning check (D1)", () => {
   it("a mismatch left without a resolution fails; rewriting it passes", () => {
     const root = repo();
     log(root, "The event is enqueued after the database commit.", "| R1-1 | mismatch | stores the event and the outbox row in one transaction | |\n");
-    expect(depth(root)).toEqual([expect.stringMatching(/R1-1 is mismatch in the Meaning check with no resolution/u)]);
+    expect(depth(root)).toEqual([expect.stringMatching(/R1-1 is mismatch with no resolution/u)]);
     log(
       root,
       "The event and its outbox row are written in one transaction.",
@@ -94,7 +94,7 @@ describe("meaning check (D1)", () => {
   it("a log with no Meaning check section fails once", () => {
     const root = repo();
     put(root, ".agents/setup-log/reading.md", `${HEADER}\n| R1-1 | domain | current | Rule. | \`src/webhooks/ingest.ts:4\` | x |\n`);
-    expect(depth(root)).toEqual([expect.stringContaining("no `## Meaning check` section")]);
+    expect(depth(root)).toEqual([expect.stringContaining("no `## Meaning check`")]);
   });
 });
 

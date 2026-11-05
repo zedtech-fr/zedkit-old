@@ -173,7 +173,10 @@ size_budget ui 10200 marketing
 # Raised to 23850 on 5 Nov 2026: D2 unenforced-ID check (validate --setup
 # flags uninventoried IDs); base tip measured 23486, PR measured 23637
 # after a 70B shave. Budget = measured + ~1%.
-size_budget ai 23850
+# Raised to 24550 on 5 Nov 2026: D1 meaning check (validate --setup flags an
+# unchecked order/atomicity rule and an unresolved mismatch); PR measured
+# 24297 after compacting. Budget = measured + ~1%.
+size_budget ai 24550
 
 if [ -f apps/docs/out/index.html ]; then
   if ! node apps/docs/scripts/check-first-load-budget.mjs; then
