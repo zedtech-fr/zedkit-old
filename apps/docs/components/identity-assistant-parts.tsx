@@ -234,7 +234,11 @@ function ProposalApplyRow({
   pinned?: boolean;
 }) {
   return (
-    <Stack direction="horizontal" gap={2} className={cn("flex-wrap", pinned && "sticky bottom-0 z-10 bg-background/95 py-2 backdrop-blur")}>
+    <Stack
+      direction="horizontal"
+      gap={2}
+      className={cn("flex-wrap overflow-visible", pinned && "sticky bottom-0 z-10 bg-background/95 py-2 backdrop-blur")}
+    >
       <Button type="button" onClick={() => onUse(tokens)} disabled={busy}>
         {copy.proposal.apply}
       </Button>
@@ -271,7 +275,7 @@ export function ProposalCard({
   const rows = useMemo(() => tokenDiff(current, repaired.tokens), [current, repaired.tokens]);
   const domain = useMemo(() => specimenDomainFromBrief(domainBrief), [domainBrief]);
   return (
-    <Stack gap={3} role="region" aria-label={copy.proposal.title} aria-busy={busy || undefined} data-assistant-proposal="" className={cn(busy && "opacity-60", className)}>
+    <Stack gap={3} role="region" aria-label={copy.proposal.title} aria-busy={busy || undefined} data-assistant-proposal="" className={cn("overflow-visible", busy && "opacity-60", className)}>
       <Text as="span" typeRole="label" className="font-semibold text-foreground">
         {copy.proposal.title}
       </Text>

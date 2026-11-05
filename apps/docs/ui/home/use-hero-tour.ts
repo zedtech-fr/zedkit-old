@@ -120,8 +120,9 @@ export function useHeroTour({
     observer.observe(root);
     document.addEventListener("visibilitychange", resume);
 
+    let tourPressing = false;
     const takeover = (event: Event) => {
-      if (stopped) return;
+      if (stopped || tourPressing) return;
       if (event.target instanceof Element && event.target.closest(`[${TOUR_CONTROL_ATTRIBUTE}]`)) return;
       stopped = true;
       root.dataset.tour = "off";
@@ -149,8 +150,10 @@ export function useHeroTour({
       await beat(GLIDE_MS + 40);
       if (stopped) return;
       cursor.dataset.press = "";
+      tourPressing = true;
       act();
       await beat(160);
+      tourPressing = false;
       delete cursor.dataset.press;
     };
 
@@ -184,7 +187,7 @@ export function useHeroTour({
       const open = root.querySelector("[data-hero-agent-open]");
       if (!open) return;
       await press(open);
-      const field = await waitFor(() => root.querySelector("[data-hero-agent-panel] textarea"), 4000);
+      const field = await waitFor(() => root.querySelector("[data-hero-agent-panel] textarea"), 15000);
       if (!field || stopped) return;
       await press(field, () => agentRef.current.paste(AI_SETUP_MINI_PROMPT));
       await beat(900);

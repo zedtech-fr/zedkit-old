@@ -6,5 +6,7 @@ export const identityDockExportCopy = {
   aiPrompt: "AI setup prompt",
   copied: (what: string) => `${what} copied to clipboard`,
   copyFailed: "Copy failed",
-  copyLabel: (what: string) => `Copy this ${what}`,
+  copyInstall: "Copy Install command",
+  copyCss: "Copy this CSS tokens",
+  copyAiPrompt: "Copy AI setup prompt",
 } as const;

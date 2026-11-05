@@ -40,6 +40,7 @@ function useCopyFeedback() {
 
 export function IdentityDockExportCopyRow({
   label,
+  copyLabel,
   value,
   blocked,
   blockedTitle,
@@ -47,6 +48,7 @@ export function IdentityDockExportCopyRow({
   confirmLabel,
 }: {
   label: string;
+  copyLabel: string;
   value: string;
   blocked?: boolean;
   blockedTitle?: string;
@@ -63,7 +65,7 @@ export function IdentityDockExportCopyRow({
       variant="outline"
       size="icon"
       className="shrink-0 focus-visible:-outline-offset-(--ring-width)"
-      aria-label={rowCopy.copyLabel(label)}
+      aria-label={copyLabel}
       onClick={blocked ? undefined : () => runCopy(value)}
     >
       {state === "copied" ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
