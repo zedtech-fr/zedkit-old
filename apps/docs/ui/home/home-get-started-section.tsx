@@ -55,11 +55,18 @@ export function HomeGetStartedSection({ npmPackage }: { npmPackage: string }) {
             </GlassSurface>
           </StickyAside.Aside>
         </StickyAside>
-        <Button asChild variant="ghost" size="sm" className="w-fit" data-home-full-steps="">
-          <HomeLink href={homeCopy.getStarted.quickStart.fullStepsHref}>
-            <DocsActionLabel>{homeCopy.getStarted.quickStart.fullSteps}</DocsActionLabel>
-          </HomeLink>
-        </Button>
+        <Stack direction="horizontal" gap={2} className="flex-wrap items-center">
+          <Button asChild variant="ghost" size="sm" className="w-fit" data-home-full-steps="">
+            <HomeLink href={homeCopy.getStarted.quickStart.fullStepsHref}>
+              <DocsActionLabel>{homeCopy.getStarted.quickStart.fullSteps}</DocsActionLabel>
+            </HomeLink>
+          </Button>
+          <Button asChild variant="ghost" size="sm" className="w-fit" data-home-ai-setup="">
+            <HomeLink href={homeCopy.getStarted.quickStart.aiSetupHref}>
+              <DocsActionLabel>{homeCopy.getStarted.quickStart.aiSetup}</DocsActionLabel>
+            </HomeLink>
+          </Button>
+        </Stack>
       </Stack>
     </Section>
   );
