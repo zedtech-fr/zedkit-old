@@ -84,20 +84,21 @@ function rules(root: string, issues: Issue[]): void {
   if (files.length === 0) {
     issues.push({ path: dir, message: "D2 domain rules: no .agents/domain/*.md (business and invariant rules extracted from the code)" });
   }
-  const unenforced: string[] = [];
+  let rows = text(join(root, ".agents/design.md")) ?? "";
   for (const file of files) {
     const body = text(join(dir, file)) ?? "";
     if (!EVIDENCE.test(body) && !body.includes("source: owner")) {
       issues.push({ path: join(dir, file), message: "D2 domain rules: no file:line or `source: owner` evidence" });
     }
-    for (const m of body.matchAll(/^\|\s*(\w+-\d+)\s*\|\s*current\b.*documented, not enforced/giu)) {
-      if (m[1]) unenforced.push(m[1]);
-    }
+    rows += `\n${body}`;
   }
-  if (unenforced.length > 0) {
-    const inventory = `${text(join(root, "AGENTS.md")) ?? ""}\n${text(join(root, ".agents/setup-log.md")) ?? ""}`;
-    for (const id of unenforced) {
-      if (!inventory.includes(id)) issues.push({ path: dir, message: `D2 domain rules: inventory misses ${id} (current, documented, not enforced)` });
+  const inventory = `${text(join(root, "AGENTS.md")) ?? ""}\n${text(join(root, ".agents/setup-log.md")) ?? ""}`;
+  for (const [, id = ""] of rows.matchAll(/^\|\s*(\w+-\d+)\s*\|\s*current\b.*documented, not enforced/gimu)) {
+    if (!inventory.includes(id)) issues.push({ path: dir, message: `D2 domain rules: inventory misses ${id} (current, documented, not enforced)` });
+  }
+  for (const file of listRepoFiles(root).filter((p) => p.includes("/") && p.endsWith("/AGENTS.md"))) {
+    if (text(join(root, file))?.includes("documented, not enforced") && !inventory.includes(file)) {
+      issues.push({ path: join(root, file), message: `D2 nested rules: inventory misses ${file} (documented, not enforced)` });
     }
   }
   if (!listRepoFiles(root).some((p) => UI_FILE.test(p))) return;
