@@ -35,9 +35,19 @@ Playbooks, ADRs, vision and runbooks that state rules. Each lands in a domain, d
 
 Rules the lead kept after dedupe and spot-checks. These feed `.agents/domain/*.md`, `.agents/design.md`, nested `AGENTS.md` files and `AGENTS.md`.
 
-| ID   | Lane   | Status  | Rule                                       | Evidence                            | Lands in                    |
-| ---- | ------ | ------- | ------------------------------------------ | ----------------------------------- | --------------------------- |
-| R2-1 | domain | current | Refunds are capped at the captured amount. | `packages/billing/src/refund.ts:31` | `.agents/domain/billing.md` |
+| ID   | Lane   | Status  | Rule                                                               | Evidence                            | Lands in                     |
+| ---- | ------ | ------- | ------------------------------------------------------------------ | ----------------------------------- | ---------------------------- |
+| R2-1 | domain | current | Refunds are capped at the captured amount.                         | `packages/billing/src/refund.ts:31` | `.agents/domain/billing.md`  |
+| R3-4 | domain | current | A webhook event and its outbox row are written in one transaction. | `src/webhooks/ingest.ts:86`         | `.agents/domain/webhooks.md` |
+
+## Meaning check
+
+Written after the checkers report (see `templates/rule-check-brief.template.md`). One row per checked rule; every rule about order, atomicity, timing, retries or idempotency is here, the rest are sampled. A `partial` or `mismatch` needs a resolution: `rewritten` (the merged rule now says what the code does), `dropped`, or `conflict` (the doc's claim is kept as a code vs docs conflict). `npx zedkit-ai validate --setup` fails on an unresolved row and on an order or atomicity rule with no row.
+
+| ID   | Verdict  | Code does                                                   | Resolution |
+| ---- | -------- | ----------------------------------------------------------- | ---------- |
+| R2-1 | match    | caps the refund at the captured amount                      |            |
+| R3-4 | mismatch | stores the event and the outbox row in the same transaction | rewritten  |
 
 ## Interview gaps
 

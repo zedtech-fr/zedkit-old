@@ -14,6 +14,53 @@ function text(path: string): string | undefined {
   return raw.ok ? raw.value : undefined;
 }
 
+// Rules whose meaning hangs on order, atomicity or timing: a citation alone cannot show them.
+const SEQUENCING = /\b(after|before|same transaction|one transaction|atomic(?:ally)?|commits?|retr(?:y|ies)|idempoten\w+|exactly once|at most once|within \d+|only when)\b/iu;
+const RULE_ID = /^R\d+-\d+$/u;
+
+function cells(line: string): string[] {
+  return line.split("|").slice(1, -1).map((c) => c.trim());
+}
+
+/** The body of a `## <name>` section, heading to the next `## `. */
+function section(body: string, name: string): string | undefined {
+  const at = body.search(new RegExp(`^##+ ${name}\\b`, "mu"));
+  if (at < 0) return undefined;
+  return body.slice(at).split("\n").slice(1).join("\n").split(/^## /mu)[0];
+}
+
+/** D1: every sequencing rule was checked against the code it cites, and no contradiction is left open. */
+function meaning(body: string, path: string, issues: Issue[]): void {
+  const check = section(body, "Meaning check");
+  if (check === undefined) {
+    issues.push({ path, message: "D1 code reading: no `## Meaning check` section (a second reader checks that each rule says what the cited code does; see templates/rule-check-brief.template.md)" });
+    return;
+  }
+  const checked = new Map<string, string[]>();
+  for (const line of check.split("\n").filter((l) => l.startsWith("|"))) {
+    const c = cells(line);
+    if (c[0] && RULE_ID.test(c[0])) checked.set(c[0], c);
+  }
+  for (const [id, c] of checked) {
+    const verdict = (c[1] ?? "").toLowerCase();
+    const resolution = (c[3] ?? "").toLowerCase();
+    if ((verdict === "partial" || verdict === "mismatch") && !/^(rewritten|dropped|conflict)\b/u.test(resolution)) {
+      issues.push({ path, message: `D1 code reading: ${id} is ${verdict} in the Meaning check with no resolution (rewritten, dropped or conflict)` });
+    }
+  }
+  const outside = body.replace(check, "");
+  const missing: string[] = [];
+  for (const line of outside.split("\n").filter((l) => l.startsWith("|"))) {
+    const c = cells(line);
+    if (!c[0] || !RULE_ID.test(c[0]) || checked.has(c[0])) continue;
+    const ruleText = c.length >= 5 ? (c[3] ?? "") : line;
+    if (SEQUENCING.test(ruleText)) missing.push(c[0]);
+  }
+  if (missing.length > 0) {
+    issues.push({ path, message: `D1 code reading: order or atomicity rule(s) ${missing.join(", ")} have no row in the Meaning check (every rule that says after, before, same transaction, retry, idempotent or within <time> is checked, not sampled)` });
+  }
+}
+
 /** D1: the code was read first, by readers scaled to repo size, with file evidence. */
 function reading(root: string, issues: Issue[]): void {
   const path = join(root, ".agents/setup-log/reading.md");
@@ -31,6 +78,7 @@ function reading(root: string, issues: Issue[]): void {
   if (!EVIDENCE.test(body)) issues.push({ path, message: "D1 code reading: no file:line evidence in the reading log" });
   if (!/^\*\*Budget:\*\*/mu.test(body))
     issues.push({ path, message: "D1 code reading: no **Budget:** line (state the run budget or `none found`; an overrun needs an owner-approved exception)" });
+  meaning(body, path, issues);
 }
 
 const UI_FILE = /\.(tsx|jsx|vue|svelte|css|scss)$/u;
