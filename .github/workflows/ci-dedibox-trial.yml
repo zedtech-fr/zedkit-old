@@ -74,7 +74,22 @@ jobs:
           path: coverage/
           if-no-files-found: ignore
           retention-days: 14
-      - run: pnpm test:registry
+      # deploy/* tests need Docker (Caddyfile/compose) and rsync (deploy/rollback).
+      # The Dedibox runner does not mount docker.sock and drops privileges; those
+      # tests stay on GitHub-hosted `checks`.
+      - name: test:registry (exclude deploy/*)
+        run: |
+          node --test \
+            scripts/registry/*.test.mjs \
+            scripts/dts-api-report.test.mjs \
+            scripts/check-api-report.test.mjs \
+            scripts/catalog-states.test.mjs \
+            scripts/catalog-maturity.test.mjs \
+            scripts/catalog-adoption.test.mjs \
+            scripts/adoption-shown-commands.test.mjs \
+            scripts/coverage-summary.test.mjs \
+            scripts/release-tags-wait.test.mjs \
+            apps/docs/scripts/*.test.mjs
       - run: pnpm exec playwright install chromium
       - run: pnpm --filter @zedtech/zedkit-ui smoke
       - uses: actions/upload-artifact@v7
@@ -98,7 +113,18 @@ jobs:
           node-version: 22
       - run: pnpm install --frozen-lockfile --store-dir /runner-cache/pnpm
       - run: pnpm registry:build
-      - run: pnpm registry:smoke
+      # quickstart-smoke.sh runs playwright install --with-deps when CI is set,
+      # which needs sudo. no-new-privileges blocks sudo by design; Chromium OS
+      # deps are already baked into the runner image. Install browsers here
+      # without --with-deps, then run the same three scripts as registry:smoke
+      # with --with-deps stripped from a temp copy of quickstart-smoke.sh.
+      - name: registry smoke (no --with-deps)
+        run: |
+          pnpm exec playwright install chromium
+          python3 -c 'from pathlib import Path; import os; Path(os.environ["RUNNER_TEMP"], "quickstart-smoke.sh").write_text(Path("scripts/quickstart-smoke.sh").read_text().replace("--with-deps", ""))'
+          bash scripts/registry/smoke-shadcn-add.sh
+          bash scripts/registry/smoke-ui-quickstart.sh
+          bash "${RUNNER_TEMP}/quickstart-smoke.sh"
 
   docs-smoke-dedibox:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
