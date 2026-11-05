@@ -68,12 +68,20 @@ function reading(root: string, issues: Issue[]): void {
 
 const UI_FILE = /\.(tsx|jsx|vue|svelte|css|scss)$/u;
 
-/** The `## Identity rules` section of design.md: heading to the next `## `. */
-function identitySection(design: string): string | undefined {
-  const at = design.search(/^#{2,3} Identity rules\b/mu);
+/** A `## <name>` section of design.md: heading to the next `## `. */
+function sectionOf(design: string, name: string): string | undefined {
+  const at = design.search(new RegExp(`^#{2,3} ${name}\\b`, "mu"));
   if (at < 0) return undefined;
   const rest = design.slice(at).split("\n").slice(1).join("\n");
   return rest.split(/^## /mu)[0];
+}
+
+const STYLE_FILE = /\.s?css$/u;
+
+/** True when a stylesheet defines colour variables and font families: the repo has a visual signature to keep. */
+function hasSignature(root: string): boolean {
+  const css = listRepoFiles(root).filter((p) => STYLE_FILE.test(p)).slice(0, 300).map((p) => text(join(root, p)) ?? "").join("\n");
+  return /font-family\s*:/u.test(css) && /--[\w-]+\s*:\s*(#|hsl|oklch|rgb)/iu.test(css);
 }
 
 /** D2: domain rules (each citing code or the owner), and identity rules when the repo has a UI. */
@@ -103,11 +111,17 @@ function rules(root: string, issues: Issue[]): void {
   }
   if (!listRepoFiles(root).some((p) => UI_FILE.test(p))) return;
   const path = join(root, ".agents/design.md");
-  const identity = identitySection(text(path) ?? "");
+  const design = text(path) ?? "";
+  const identity = sectionOf(design, "Identity rules");
   if (identity === undefined) {
     issues.push({ path, message: "D2 identity rules: the repo has a UI but .agents/design.md has no `## Identity rules` section (brand, voice and naming rules read from the code)" });
   } else if (!EVIDENCE.test(identity) && !identity.includes("source: owner")) {
     issues.push({ path, message: "D2 identity rules: no file:line or `source: owner` evidence in the Identity rules section" });
+  }
+  if (!hasSignature(root)) return;
+  const sig = sectionOf(design, "Signature") ?? "";
+  if (!EVIDENCE.test(sig) || !/\bfont/iu.test(sig) || !/^\W*accent\W*:/imu.test(sig)) {
+    issues.push({ path, message: "D2 identity rules: stylesheets define colours and fonts but design.md has no `## Signature` with colour roles and font families (file:line) and an `Accent:` line" });
   }
 }
 

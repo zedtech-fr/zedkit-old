@@ -100,7 +100,7 @@ Four more axes, scored 0-3 like the others, each measurable from files. **Every 
 
 - 0: No business, domain, invariant or brand rule written down.
 - 1: A traps line or glossary; rules without citations; template text left in.
-- 2: `.agents/domain/<area>.md` per state-, money- or policy-bearing area and an **Identity rules** section in `.agents/design.md` when UI exists, every rule with `file:line` or `source: owner`, from the reading log.
+- 2: `.agents/domain/<area>.md` per state-, money- or policy-bearing area and an **Identity rules** section in `.agents/design.md` when UI exists, every rule with `file:line` or `source: owner`, from the reading log; when stylesheets define colours and fonts, a **Signature** section in `design.md` with colour roles, font families by role, the single accent role and exact alias exceptions, each cited.
 - 3: As 2, plus every policy doc (playbook, ADR, vision, runbook) is landed in a domain, design or nested file or marked `not a rule: <reason>`, **Status** (`current` / `target`) and **Enforced by** are honest (a checker opened, or `documented, not enforced`), and every `current` rule has a test cell or `no test — flag`.
 
 ### D3. Nested rules

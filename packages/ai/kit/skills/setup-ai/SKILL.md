@@ -141,6 +141,10 @@ case "$(tail -1 "$LOG")" in EXIT:[0-9]*) ;; *) echo "bad gate log"; false;; esac
 
 If a log file you referenced is **empty**, or the last line is not **`EXIT:<n>`**, re-run and replace the file before scoring. Table rows in setup-log are a summary only.
 
+**The full gate:** when `package.json` has a `check` script, persist its run (`pnpm check` or the repo's runner) as one gate log, whatever its exit code, or add a Gate outcomes row that says why it did not run (`not run: <cause>`, with the safe alternative you used). A failing full gate is a finding, never a skipped line. `validate --setup` fails when a repo with a `check` script has neither.
+
+**The validate run:** capture the final `npx zedkit-ai validate --setup` the same way into `.agents/setup-log/validate.log` (`CMD:` first, `EXIT:` last) and name that file in the setup-log entry. Replace it on every re-run; a log that ends in a non-zero `EXIT:` is stale and fails the check.
+
 **Ignored logs:** gate logs under an ignored path (check with `git check-ignore <log>`) are invisible evidence — either track the file (`git add -f`, or narrow the ignore rule so `gates/*.log` is tracked) or mark the Gate outcomes row `ignored-locally` so the scorer knows. Do not rename logs to dodge the ignore: `validate --setup` only reads `*.log`.
 
 **Killed gates:** when the wrapper shell itself may be signaled (a timeout or OOM kill aimed at the process group), trap `TERM`/`INT` so the log still ends with a cause and **`EXIT:<code>`** — `validate --setup` accepts extra lines like `CAUSE:` between `END:` and `EXIT:`. Put the trap after `START:`, before the command, and disarm it with `trap - TERM INT` once the command returns:
@@ -231,7 +235,7 @@ Open **`templates/README.md`** in this skill folder (after install: `.agents/ski
 | Design / identity | `.agents/design.md` (with **Identity rules**) | `templates/design.template.md`                       |
 | Glossary          | `GLOSSARY.md` or `.agents/glossary.md`        | `templates/glossary.template.md`                     |
 
-**Rules come from the reading log** (`.agents/setup-log/reading.md`), not from the templates: every merged rule lands in exactly one home (domain file for `domain` and `business` lanes, `design.md` **Identity rules** for `identity`, a nested `AGENTS.md` for folder-specific `architecture` and `convention`, root `AGENTS.md` for repo-wide ones) and keeps its `file:line` and `source: owner` answers. A repo with money, state or policy in its code and no domain file is an incomplete setup.
+**Rules come from the reading log** (`.agents/setup-log/reading.md`), not from the templates: every merged rule lands in exactly one home (domain file for `domain` and `business` lanes, `design.md` **Identity rules** for `identity`, a nested `AGENTS.md` for folder-specific `architecture` and `convention`, root `AGENTS.md` for repo-wide ones) and keeps its `file:line` and `source: owner` answers. A repo with money, state or policy in its code and no domain file is an incomplete setup. **Visual signature:** when the repo's stylesheets or token files define colours and fonts, `design.md` also carries a **Signature** section (`templates/design.template.md`): colour roles with exact variable names and values, font families by role, the one accent role reserved for the primary call to action, and the exact alias exceptions, each with `file:line`. Improve mode keeps those rows as written; changing one needs the owner's word.
 
 Each domain file includes **rules, invariants, edge cases**, sources (`file:line` or `source: owner`), a **Status** column (**`current`** = enforced in code today, **`target`** = planned policy), and a **Test** column. For **Test** paths: **open the test file**, confirm it asserts the rule's behavior (not merely a nearby module); use **`no test — flag`** when nothing applies. **`current`** rules must be verified in code; **`target`** rules must not be written as if already enforced.<!-- if:agent=ui-designer --> Use **`ui-designer`** and **`copywriter`** for `design.md` when UI exists.<!-- /if -->
 
@@ -356,7 +360,7 @@ git diff --name-only
 
 Compare to plan rows in **`PLAN.md`** or **`.agents/setup-log/plan.md`**. **Every changed path needs a matching row.** Any gap goes into the closing report, setup-log **Plan gaps** section, and (if kit-caused) a kit-issue draft — do not treat silent edits as success.
 
-Run **`npx zedkit-ai validate --setup`** (add **`--plan <file>`** if the plan is not **`PLAN.md`** at the repo root or **`.agents/setup-log/plan.md`**) and fix every issue before the closing report; it checks that every **`git status --porcelain -uall`** path is covered by the plan text (a parent folder with a trailing slash counts) and that each **`.agents/setup-log/gates/*.log`** starts with **`CMD:`**, ends with **`EXIT:<code>`**, and is inventoried by name in `.agents/setup-log.md`.
+Run **`npx zedkit-ai validate --setup`** (add **`--plan <file>`** if the plan is not **`PLAN.md`** at the repo root or **`.agents/setup-log/plan.md`**) and fix every issue before the closing report; it checks that every **`git status --porcelain -uall`** path is covered by the plan text (a parent folder with a trailing slash counts) and that each **`.agents/setup-log/gates/*.log`** starts with **`CMD:`**, ends with **`EXIT:<code>`**, and is inventoried by name in `.agents/setup-log.md`, and that a repo with a `check` script logged that gate or says why not.
 
 ## Verify
 
@@ -390,7 +394,7 @@ Then:
 - [ ] Depth: `.agents/setup-log/reading.md` (readers scaled to size), `.agents/domain/*.md` with evidence, nested `AGENTS.md` (or `nested-agents: none`), `.agents/model-routing.md` pointed at from root `AGENTS.md`
 - [ ] Plan rows cover **`git status` / `git diff --name-only`** after Write (or **Plan gaps** documented)
 - [ ] **`npx zedkit-ai validate --setup`** is clean before the closing report (add **`--plan <file>`** when the plan is not **`PLAN.md`** at the repo root or **`.agents/setup-log/plan.md`**)
-- [ ] Gate log files: **`CMD:`** first line, **`EXIT:<code>`** last line (separate files per command)
+- [ ] Gate log files: **`CMD:`** first line, **`EXIT:<code>`** last line (separate files per command); the full `check` gate logged or excused, and `.agents/setup-log/validate.log` (final clean run) named in the setup-log
 - [ ] Repo skill links: from each `.agents/skills/*/`, **`test -e`** every relative markdown link target
 - [ ] One kit-issue draft per friction (or explicit "none"); each **Kit file** **`test -e`** on installed kit or runtime package path, or **`UNVERIFIED`**
 - [ ] **Consistency pass:** domain **Status**, persona **Journey tests**, and **`enforced by`** claims aligned (see phase E step 5)

@@ -178,9 +178,14 @@ size_budget ui 10200 marketing
 # Raised to 24550 on 5 Nov 2026: D1 meaning check (validate --setup flags an
 # unchecked order/atomicity rule and an unresolved mismatch); PR measured
 # 24297 after compacting. Budget = measured + ~1%.
-# Raised to 26400 on 5 Nov 2026: runGate and `zedkit-ai gate` (gate.ts) add
+# Raised to 26400 on 5 Nov 2026: runGate and zedkit-ai gate (gate.ts) add
 # ~1.9KB gzip on top of the D1 check; measured 26151. Budget = measured + ~1%.
-size_budget ai 26400
+# Signature check (validate --setup design.md section) rebased on top of runGate;
+# keep 26400 until re-measure — raise if pack check fails.
+# Raised to 27200 on 5 Nov 2026: validate --setup checks the full-gate log
+# and the persisted validate log; PR measured 26935 on top of the signature
+# check. Budget = measured + ~1%.
+size_budget ai 27200
 
 if [ -f apps/docs/out/index.html ]; then
   if ! node apps/docs/scripts/check-first-load-budget.mjs; then
