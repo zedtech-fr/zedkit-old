@@ -1,29 +1,9 @@
-import dynamic from "next/dynamic";
 import type { HomeEntryPoint } from "@/content/home-entry-points";
 import { HomeAiSetupSection } from "@/ui/home/home-ai-setup-section";
+import { HomeComponentFamiliesSection } from "@/ui/home/home-component-families-section";
+import { HomeGetStartedSection } from "@/ui/home/home-get-started-section";
 import { HomeIdentitiesSection } from "@/ui/home/home-identities-section";
 import { HomeSecondarySection } from "@/ui/home/home-secondary-section";
-
-const HomeGetStartedSection = dynamic(
-  () => import("@/ui/home/home-get-started-section").then((mod) => ({ default: mod.HomeGetStartedSection })),
-  {
-    loading: () => (
-      <section aria-busy="true" className="min-h-96 w-full scroll-mt-24" data-home-section-loading="get-started">
-        <div id="install-or-copy" className="sr-only" />
-      </section>
-    ),
-  },
-);
-
-const HomeComponentFamiliesSection = dynamic(
-  () =>
-    import("@/ui/home/home-component-families-section").then((mod) => ({
-      default: mod.HomeComponentFamiliesSection,
-    })),
-  {
-    loading: () => <section aria-busy="true" className="min-h-48 w-full scroll-mt-24" data-home-section-loading="components" />,
-  },
-);
 
 export type HomeBelowHeroProps = {
   featuredPackage: string;
