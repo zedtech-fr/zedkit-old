@@ -50,6 +50,35 @@ function DockAssistantPreviewColumn(props: {
   );
 }
 
+function DockGridComposer(props: {
+  hideComposer?: boolean;
+  composerRef?: RefObject<HTMLDivElement | null>;
+  session: SessionState;
+  brief: string;
+  busy: boolean;
+  off: Unavailable | null;
+  onBrief: (value: string) => void;
+  onSubmit: () => void;
+  onCancel: () => void;
+  inputRef: RefObject<HTMLTextAreaElement | null>;
+}) {
+  if (props.hideComposer) return null;
+  return (
+    <Stack ref={props.composerRef}>
+      <ConversationComposer
+        session={props.session}
+        brief={props.brief}
+        busy={props.busy}
+        off={props.off}
+        onBrief={props.onBrief}
+        onSubmit={props.onSubmit}
+        onCancel={props.onCancel}
+        inputRef={props.inputRef}
+      />
+    </Stack>
+  );
+}
+
 export function IdentityDockAssistantGrid(props: {
   view: View;
   session: SessionState;
@@ -94,20 +123,18 @@ export function IdentityDockAssistantGrid(props: {
         onUse={props.onUse}
         onDiscard={props.onDiscard}
       />
-      {props.hideComposer ? null : (
-        <Stack ref={props.composerRef}>
-          <ConversationComposer
-            session={props.session}
-            brief={props.brief}
-            busy={props.busy}
-            off={props.off}
-            onBrief={props.onBrief}
-            onSubmit={props.onSubmit}
-            onCancel={props.onCancel}
-            inputRef={props.inputRef}
-          />
-        </Stack>
-      )}
+      <DockGridComposer
+        session={props.session}
+        brief={props.brief}
+        busy={props.busy}
+        off={props.off}
+        onBrief={props.onBrief}
+        onSubmit={props.onSubmit}
+        onCancel={props.onCancel}
+        inputRef={props.inputRef}
+        {...(props.hideComposer === true ? { hideComposer: true } : {})}
+        {...(props.composerRef !== undefined ? { composerRef: props.composerRef } : {})}
+      />
     </Stack>
   );
 }
