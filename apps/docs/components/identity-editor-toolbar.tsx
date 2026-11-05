@@ -14,6 +14,7 @@ import {
   type IdentityOption,
 } from "@zedtech/zedkit-ui";
 import { identityEditorCopy } from "@/components/i18n/identity-editor-copy";
+import { ApplySiteRow } from "@/components/identity-apply-site-row";
 import type { SaveStatus } from "@/lib/identity-save-status";
 
 function LookSelect({
@@ -233,32 +234,6 @@ function LibraryHeading({
   );
 }
 
-/** Apply the current look to this site, or remove it. */
-function ApplySiteRow({
-  appliedSite,
-  onApplySite,
-  onRemoveFromSite,
-}: Pick<KeepBarProps, "appliedSite" | "onApplySite" | "onRemoveFromSite">) {
-  return (
-    <Row>
-      {/* Same clearance as token fields: pinned preview + header above, dock below. */}
-      <Button
-        type="button"
-        variant="outline"
-        className="scroll-mt-28 scroll-mb-24 max-lg:[@media(min-height:48rem)]:scroll-mt-80"
-        onClick={onApplySite}
-      >
-        {identityEditorCopy.toolbar.applySite}
-      </Button>
-      {appliedSite ? (
-        <Button type="button" variant="outline" onClick={onRemoveFromSite}>
-          {identityEditorCopy.library.removeFromSite}
-        </Button>
-      ) : null}
-    </Row>
-  );
-}
-
 /** Name, save, rename or delete a look, and apply it to this site: what you do once you like the card. */
 function IdentityEditorKeepBar({
   name,
@@ -326,10 +301,8 @@ function IdentityEditorKeepBar({
         appliedSite={appliedSite}
         onApplySite={onApplySite}
         onRemoveFromSite={onRemoveFromSite}
+        hint
       />
-      <Text variant="muted" typeRole="label">
-        {copy.applyHint}
-      </Text>
     </Stack>
   );
 }

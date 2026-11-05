@@ -379,6 +379,82 @@ test.describe("IdentityDock", () => {
     await expect(page.locator("[data-assistant-proposal]")).toBeVisible();
     await expect(page.getByRole("button", { name: "Use this look" })).toBeVisible();
   });
+
+  test("Preview and Conversation show Apply to the whole site once a suggestion exists", async ({ page }) => {
+    const proposed = {
+      spacing: "0.25rem",
+      borderWidth: "1px",
+      radius: "1rem",
+      bodyLeading: "1.55",
+      headingLeading: "1.1",
+      headingTracking: "-0.02em",
+      labelTracking: "0.025em",
+      fontSans: '"Inter Variable", Inter, "Inter Variable Fallback", ui-sans-serif, system-ui, sans-serif',
+      fontDisplay: '"Inter Variable", Inter, "Inter Variable Fallback", ui-sans-serif, system-ui, sans-serif',
+      light: {
+        background: "210 40% 96%",
+        foreground: "222 47% 11%",
+        primary: "222 47% 11%",
+        primaryForeground: "210 40% 98%",
+        accent: "215 20% 45%",
+        border: "214 20% 55%",
+        mutedForeground: "215 16% 35%",
+      },
+      dark: {
+        background: "222 47% 11%",
+        foreground: "210 40% 98%",
+        primary: "210 40% 98%",
+        primaryForeground: "222 47% 11%",
+        accent: "217 20% 40%",
+        border: "217 20% 40%",
+        mutedForeground: "215 16% 70%",
+      },
+      shadowSm: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+      shadowMd: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+    };
+    await service(page, (posted, route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        json: {
+          requestId: posted.requestId,
+          summary: "Cooler paper.",
+          changed: ["radius", "light.background"],
+          references: [],
+          tokens: proposed,
+        },
+      }),
+    );
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.keyboard.press("Control+I");
+    await expect(page.getByRole("button", { name: "Apply to the whole site" })).toHaveCount(0);
+    await brief(page).fill("A cool SaaS dashboard");
+    await page.getByRole("button", { name: "Generate", exact: true }).click();
+    await expect(page.locator("[data-assistant-proposal]")).toBeVisible();
+    const previewApply = page.locator("[data-assistant-proposal]").getByRole("button", { name: "Apply to the whole site" });
+    await expect(previewApply).toBeVisible();
+    const before = await page.locator("html").evaluate((node) => getComputedStyle(node).getPropertyValue("--background").trim());
+    await previewApply.click();
+    await expect.poll(() =>
+      page.locator("html").evaluate((node) => getComputedStyle(node).getPropertyValue("--background").trim()),
+    ).toBe("210 40% 96%");
+    expect(await page.evaluate(() => localStorage.getItem("zk-docs-site-identity-opt-in"))).toBe("1");
+    await page.getByRole("button", { name: "Remove from the whole site" }).click();
+    await expect.poll(() =>
+      page.locator("html").evaluate((node) => getComputedStyle(node).getPropertyValue("--background").trim()),
+    ).toBe(before);
+    expect(await page.evaluate(() => localStorage.getItem("zk-docs-site-identity-opt-in"))).toBeNull();
+    await page.getByRole("button", { name: "Conversation", exact: true }).click();
+    const conversationApply = page.locator("[data-slot='identity-apply-site-conversation']").getByRole("button", {
+      name: "Apply to the whole site",
+    });
+    await expect(conversationApply).toBeVisible();
+    await conversationApply.click();
+    await expect.poll(() =>
+      page.locator("html").evaluate((node) => getComputedStyle(node).getPropertyValue("--background").trim()),
+    ).toBe("210 40% 96%");
+  });
 });
 
 test.describe("IdentityDock reduced motion", () => {

@@ -11,6 +11,8 @@ import { IdentityDockPanelToolbar } from "@/components/identity-dock-panel-toolb
 import { useIdentityDockAssistantPanel } from "@/components/use-identity-dock-assistant-panel";
 import { applyWidgetSpecimenPreview } from "@/lib/identity-widget-specimen-preview";
 import { dispatchIdentityEditorDraftApply } from "@/lib/identity-editor-draft-apply";
+import { repairContrast } from "@/lib/identity-contrast-repair";
+import { useDocsSiteIdentityApply } from "@/lib/use-docs-site-identity-apply";
 import { IDENTITY_EDITOR_HREF } from "@/lib/site-links.mjs";
 import type { Unavailable } from "@/lib/identity-assistant";
 import type { SessionState } from "@/lib/identity-creator-session";
@@ -55,6 +57,11 @@ function IdentityDockPanelScroll(props: {
   dispatch: (action: { type: "accept" } | { type: "discard" }) => void;
   onPreviewTokens: (tokens: IdentityTokens) => void;
   acceptedExportTokens: IdentityTokens | null;
+  siteApply: {
+    appliedSite: boolean;
+    onApplySite: (tokens: IdentityTokens) => void;
+    onRemoveFromSite: () => void;
+  };
 }) {
   return (
     <Stack ref={props.scrollRef} gap={3} className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 pt-3 pb-2">
@@ -82,6 +89,7 @@ function IdentityDockPanelScroll(props: {
         onUse={(next) => acceptProposal(props.backToConversation, props.onPreviewTokens, props.dispatch, props.setBrief, next)}
         onDiscard={() => props.backToConversation(() => props.dispatch({ type: "discard" }))}
         hideComposer
+        siteApply={props.siteApply}
       />
       {props.acceptedExportTokens !== null ? (
         <IdentityDockExportBlock tokens={props.acceptedExportTokens} />
@@ -101,6 +109,12 @@ export function IdentityDockAssistantPanel({
   viewSwitchAlways?: boolean;
 }) {
   const panel = useIdentityDockAssistantPanel(previewTokens);
+  const site = useDocsSiteIdentityApply();
+  const siteApply = {
+    appliedSite: site.appliedSite,
+    onApplySite: (tokens: IdentityTokens) => site.applySite(repairContrast(tokens).tokens),
+    onRemoveFromSite: site.removeFromSite,
+  };
 
   return (
     <Stack ref={panel.panelRef} className="min-h-0 flex-1 gap-0 overflow-hidden" data-slot="identity-dock-body">
@@ -126,6 +140,7 @@ export function IdentityDockAssistantPanel({
         dispatch={panel.dispatch}
         onPreviewTokens={onPreviewTokens}
         acceptedExportTokens={panel.acceptedTokens}
+        siteApply={siteApply}
       />
       <IdentityDockComposerFooter
         session={panel.session}

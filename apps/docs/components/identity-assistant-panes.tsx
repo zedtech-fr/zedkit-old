@@ -4,6 +4,7 @@ import type { RefObject } from "react";
 import { Stack, Text, cn, type IdentityTokens } from "@zedtech/zedkit-ui";
 
 import { identityAssistantCopy as copy } from "@/components/i18n/identity-assistant-copy";
+import { ApplySiteRow } from "@/components/identity-apply-site-row";
 import { AssistantNoticeBubble, BriefForm, ProposalCard, Thread, UnavailableBanner, type View } from "@/components/identity-assistant-parts";
 import { ChatLog, PendingAssistant } from "@/components/identity-chat-log";
 import { IdentityMiniPreview } from "@/components/identity-mini-preview";
@@ -44,6 +45,12 @@ export function ConversationMessages(props: {
   off: Unavailable | null;
   /** When true, refusal copy lives in the dock footer only (one on-screen hook, below the pinned preview). */
   noticeInComposerFooter?: boolean;
+  /** Apply to the whole site once a suggestion exists (Conversation tab; hidden on lg when Preview also shows it). */
+  siteApply?: {
+    appliedSite: boolean;
+    onApplySite: () => void;
+    onRemoveFromSite: () => void;
+  };
 }) {
   const refining = props.session.thread.length > 0;
   const chipsVisible = refining && props.session.proposal === null && props.session.pending === null;
@@ -86,6 +93,19 @@ export function ConversationMessages(props: {
         disabled={props.busy || props.off !== null}
         onSelect={props.onQuickRefine}
       />
+      {props.siteApply && props.session.proposal ? (
+        <Stack
+          gap={2}
+          className={cn(props.narrowSplit || !props.compact ? "lg:hidden" : undefined)}
+          data-slot="identity-apply-site-conversation"
+        >
+          <ApplySiteRow
+            appliedSite={props.siteApply.appliedSite}
+            onApplySite={props.siteApply.onApplySite}
+            onRemoveFromSite={props.siteApply.onRemoveFromSite}
+          />
+        </Stack>
+      ) : null}
       <DetectedLinks text={props.brief} onText={props.onBrief} fieldId="identity-assistant-brief" disabled={props.busy} />
     </Stack>
   );
@@ -175,6 +195,11 @@ export function PreviewPane(props: {
   narrowSplit?: boolean;
   onUse: (tokens: IdentityTokens) => void;
   onDiscard: () => void;
+  siteApply?: {
+    appliedSite: boolean;
+    onApplySite: (tokens: IdentityTokens) => void;
+    onRemoveFromSite: () => void;
+  };
 }) {
   const compact = props.compact ?? false;
   const hidden = compact ? props.view !== "preview" : props.view === "conversation";
@@ -193,6 +218,7 @@ export function PreviewPane(props: {
           busy={props.busy}
           onUse={props.onUse}
           onDiscard={props.onDiscard}
+          {...(props.siteApply ? { siteApply: props.siteApply } : {})}
           {...(compact
             ? { className: "max-h-[min(52dvh,28rem)] overflow-y-auto overscroll-y-contain px-1", pinApply: true }
             : {})}

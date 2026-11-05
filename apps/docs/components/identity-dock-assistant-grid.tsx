@@ -21,6 +21,12 @@ function compactPaneProps(narrowSplit: boolean | undefined) {
   };
 }
 
+type DockSiteApply = {
+  appliedSite: boolean;
+  onApplySite: (tokens: IdentityTokens) => void;
+  onRemoveFromSite: () => void;
+};
+
 function DockAssistantPreviewColumn(props: {
   view: View;
   proposal: SessionState["proposal"];
@@ -31,6 +37,7 @@ function DockAssistantPreviewColumn(props: {
   narrowSplit: boolean | undefined;
   onUse: (tokens: IdentityTokens) => void;
   onDiscard: () => void;
+  siteApply?: DockSiteApply;
 }) {
   const pane = compactPaneProps(props.narrowSplit);
   return (
@@ -44,6 +51,7 @@ function DockAssistantPreviewColumn(props: {
         busy={props.busy}
         onUse={props.onUse}
         onDiscard={props.onDiscard}
+        {...(props.siteApply ? { siteApply: props.siteApply } : {})}
         {...pane}
       />
     </Stack>
@@ -97,8 +105,21 @@ export function IdentityDockAssistantGrid(props: {
   onDiscard: () => void;
   composerRef?: RefObject<HTMLDivElement | null>;
   hideComposer?: boolean;
+  siteApply?: DockSiteApply;
 }) {
   const pane = compactPaneProps(props.narrowSplit);
+  const conversationSiteApply =
+    props.siteApply === undefined
+      ? undefined
+      : {
+          appliedSite: props.siteApply.appliedSite,
+          onApplySite: () => {
+            const proposal = props.session.proposal;
+            if (!proposal) return;
+            props.siteApply!.onApplySite(proposal.tokens);
+          },
+          onRemoveFromSite: props.siteApply.onRemoveFromSite,
+        };
   return (
     <Stack gap={4} className="min-w-0">
       <ConversationMessages
@@ -110,6 +131,7 @@ export function IdentityDockAssistantGrid(props: {
         onQuickRefine={props.onQuickRefine}
         off={props.off}
         noticeInComposerFooter={props.hideComposer === true}
+        {...(conversationSiteApply ? { siteApply: conversationSiteApply } : {})}
         {...pane}
       />
       <DockAssistantPreviewColumn
@@ -122,6 +144,7 @@ export function IdentityDockAssistantGrid(props: {
         narrowSplit={props.narrowSplit}
         onUse={props.onUse}
         onDiscard={props.onDiscard}
+        {...(props.siteApply ? { siteApply: props.siteApply } : {})}
       />
       <DockGridComposer
         session={props.session}
