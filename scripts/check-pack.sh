@@ -182,7 +182,10 @@ size_budget ui 10200 marketing
 # ~1.9KB gzip on top of the D1 check; measured 26151. Budget = measured + ~1%.
 # Signature check (validate --setup design.md section) rebased on top of runGate;
 # keep 26400 until re-measure — raise if pack check fails.
-size_budget ai 26500
+# Raised to 27200 on 5 Nov 2026: validate --setup checks the full-gate log
+# and the persisted validate log; PR measured 26935 on top of the signature
+# check. Budget = measured + ~1%.
+size_budget ai 27200
 
 if [ -f apps/docs/out/index.html ]; then
   if ! node apps/docs/scripts/check-first-load-budget.mjs; then
