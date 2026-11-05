@@ -46,10 +46,10 @@ function DockAssistantPreviewColumn(props: {
         proposal={props.proposal}
         tokens={props.previewTokens}
         domainBrief={props.domainBrief}
-        previewDomain={props.previewDomain}
         busy={props.busy}
         onUse={props.onUse}
         onDiscard={props.onDiscard}
+        {...(props.previewDomain !== undefined ? { previewDomain: props.previewDomain } : {})}
         {...(props.siteApply ? { siteApply: props.siteApply } : {})}
         {...pane}
       />
@@ -146,12 +146,12 @@ export function IdentityDockAssistantGrid(props: IdentityDockAssistantGridProps)
         proposal={props.session.proposal}
         previewTokens={props.previewTokens}
         domainBrief={props.domainBrief}
-        previewDomain={props.previewDomain}
         busy={props.busy}
         references={props.session.references}
         narrowSplit={props.narrowSplit}
         onUse={props.onUse}
         onDiscard={props.onDiscard}
+        {...(props.previewDomain !== undefined ? { previewDomain: props.previewDomain } : {})}
         {...(props.siteApply ? { siteApply: props.siteApply } : {})}
       />
       <DockGridComposer

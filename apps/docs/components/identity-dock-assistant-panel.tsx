@@ -102,8 +102,8 @@ function IdentityDockPanelScroll(props: {
         busy={props.busy}
         previewTokens={props.previewTokens}
         domainBrief={props.domainBrief}
-        previewDomain={props.previewDomain ?? undefined}
         narrowSplit={!props.viewSwitchAlways}
+        {...(props.previewDomain != null ? { previewDomain: props.previewDomain } : {})}
         inputRef={props.inputRef}
         onBrief={props.setBrief}
         onSubmit={props.send}
