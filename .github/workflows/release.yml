@@ -17,6 +17,7 @@ permissions:
   contents: write
   pull-requests: write
   id-token: write
+  actions: read
 
 concurrency:
   group: release
@@ -52,6 +53,12 @@ jobs:
           # without the main branch breaks version computation.
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
+      # release.yml and deploy-docs.yml used to start on push to main even
+      # when workflow "ci" on the same commit was red. Wait for ci-required.
+      - name: Require green CI on this commit
+        run: bash scripts/require-green-ci.sh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-node@v7
         with:
           node-version: 22

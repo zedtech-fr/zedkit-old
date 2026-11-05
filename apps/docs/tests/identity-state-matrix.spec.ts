@@ -43,10 +43,10 @@ const VIEWPORTS = [
 ] as const;
 
 const DOMAINS = [
-  { brief: "A ceramics shop with a cart", domain: "commerce" },
-  { brief: "B2B admin dashboard with usage quotas", domain: "saas-dashboard" },
-  { brief: "Independent magazine newsroom", domain: "editorial" },
-  { brief: "Hair salon appointment booking", domain: "service-booking" },
+  { brief: "A ceramics shop with a cart", domain: "commerce", only: "Add to basket", never: "Subscribe" },
+  { brief: "B2B admin dashboard with usage quotas", domain: "saas-dashboard", only: "need attention", never: "Add to basket" },
+  { brief: "Independent magazine newsroom", domain: "editorial", only: "min read", never: "Open dashboard" },
+  { brief: "Hair salon appointment booking", domain: "service-booking", only: "Thursday 14", never: "Add to basket" },
 ] as const;
 
 async function service(page: Page, reply: (posted: { requestId: string }, route: Route) => Promise<void> | void) {
@@ -352,6 +352,9 @@ test.describe("domain compositions", () => {
       const specimens = page.locator(`[data-assistant-proposal-compare] [data-specimen-domain='${row.domain}']`);
       await expect(specimens).toHaveCount(2);
       await expect(specimens.last()).toBeVisible();
+      // Each métier has its own screen, not one layout with swapped copy.
+      await expect(specimens.last()).toContainText(row.only);
+      await expect(specimens.last()).not.toContainText(row.never);
     });
   }
 });

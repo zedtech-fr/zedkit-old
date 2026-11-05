@@ -3455,7 +3455,7 @@
         },
         {
           "need": "Name an operation in progress",
-          "import": "`@zedtech/zedkit-ui` — `StatusLabel`, `StatusLabelProps`, `StatusLabelTone`",
+          "import": "`@zedtech/zedkit-ui` — `StatusLabel`, `StatusLabelProps`, `StatusLabelTone`, `StreamStatus`, `StreamStatusProps`, `StreamText`, `StreamTextProps`, `ASSISTANT_STREAM_STAGES`, `consumeSseStream`, `isAssistantStreamStage`, `pullSseFrames`, `readAssistantStreamEvent`, `AssistantStreamEvent`, `AssistantStreamStage`, `SseFrame`",
           "wraps": "`(none)`",
           "status": "stable",
           "shortName": "StatusLabel",
@@ -3487,7 +3487,19 @@
                 "exports": [
                   "StatusLabel",
                   "StatusLabelProps",
-                  "StatusLabelTone"
+                  "StatusLabelTone",
+                  "StreamStatus",
+                  "StreamStatusProps",
+                  "StreamText",
+                  "StreamTextProps",
+                  "ASSISTANT_STREAM_STAGES",
+                  "consumeSseStream",
+                  "isAssistantStreamStage",
+                  "pullSseFrames",
+                  "readAssistantStreamEvent",
+                  "AssistantStreamEvent",
+                  "AssistantStreamStage",
+                  "SseFrame"
                 ]
               }
             ]
@@ -4292,11 +4304,11 @@
           "whenToUse": "Right after creating a credential the user must store.",
           "whenNotToUse": "For passwords the user typed — use a password Input instead.",
           "derivedFrom": null,
-          "example": "import { Label, SecretField } from \"@zedtech/zedkit-ui\";\n<Label htmlFor=\"key\">API key (shown once)</Label>\n<SecretField id=\"key\" value={key} />",
+          "example": "import { Label, SecretField } from \"@zedtech/zedkit-ui\";\n<Label htmlFor=\"key\">API key (shown once)</Label>\n<SecretField id=\"key\" value=\"zk_live_example_secret\" />",
           "examples": [
             {
               "title": "Simple",
-              "code": "import { Label, SecretField } from \"@zedtech/zedkit-ui\";\n<Label htmlFor=\"key\">API key (shown once)</Label>\n<SecretField id=\"key\" value={key} />"
+              "code": "import { Label, SecretField } from \"@zedtech/zedkit-ui\";\n<Label htmlFor=\"key\">API key (shown once)</Label>\n<SecretField id=\"key\" value=\"zk_live_example_secret\" />"
             }
           ],
           "adoption": {

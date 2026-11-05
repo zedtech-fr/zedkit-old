@@ -5,7 +5,7 @@ import { Stack, Text, cn, type IdentityTokens } from "@zedtech/zedkit-ui";
 
 import { identityAssistantCopy as copy } from "@/components/i18n/identity-assistant-copy";
 import { AssistantNoticeBubble, BriefForm, ProposalCard, Thread, UnavailableBanner, type View } from "@/components/identity-assistant-parts";
-import { ChatLog } from "@/components/identity-chat-log";
+import { ChatLog, PendingAssistant } from "@/components/identity-chat-log";
 import { IdentityMiniPreview } from "@/components/identity-mini-preview";
 import { IdentityRefinementChips } from "@/components/identity-refinement-chips";
 import { DetectedLinks } from "@/components/identity-detected-links";
@@ -62,11 +62,14 @@ export function ConversationMessages(props: {
     >
       {props.off ? <UnavailableBanner reason={props.off} live={false} /> : null}
       {props.session.thread.length > 0 ? (
-        <Thread turns={props.session.thread} />
+        <>
+          <Thread turns={props.session.thread} />
+          {props.session.pending ? <PendingAssistant pending={props.session.pending} /> : null}
+        </>
       ) : messages.length > 0 ? (
         <ChatLog
           messages={messages}
-          pending={props.session.pending !== null}
+          pending={props.session.pending}
           noticeInComposerFooter={props.noticeInComposerFooter === true}
         />
       ) : (

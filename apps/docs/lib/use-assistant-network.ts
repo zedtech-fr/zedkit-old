@@ -28,9 +28,16 @@ export function useAssistantNetwork(
       dispatch({ type: "submit", requestId, prompt });
       const history = live.current.thread;
       // The request code loads on first submit; it stays out of every page's first load.
-      void import("@/lib/identity-assistant")
-        .then(({ requestIdentity }) =>
-          requestIdentity({ requestId, prompt, references, history, current }, { signal: abort.signal }),
+      void import("@/lib/identity-assistant-stream")
+        .then(({ requestIdentityStream }) =>
+          requestIdentityStream(
+            { requestId, prompt, references, history, current },
+            {
+              signal: abort.signal,
+              onStatus: (stage) => dispatch({ type: "stream-status", requestId, stage }),
+              onText: (draft) => dispatch({ type: "stream-text", requestId, draft }),
+            },
+          ),
         )
         .then((result) => {
           if (controller.current === abort) inflight.current = false;

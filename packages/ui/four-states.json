@@ -15,6 +15,7 @@
     "AnimateOn",
     "AnimatePreset",
     "AnimateTrigger",
+    "AssistantStreamStage",
     "AppShell",
     "Badge",
     "BrandLogo",
@@ -149,12 +150,15 @@
     "SelectTrigger",
     "SelectValue",
     "Separator",
+    "SseFrame",
     "Surface",
     "SignatureMotion",
     "Skeleton",
     "Stack",
     "StatusDot",
     "StatusLabel",
+    "StreamStatus",
+    "StreamText",
     "Switch",
     "Table",
     "TableBody",
@@ -198,19 +202,25 @@
       "axe": "packages/ui/tests/unit/four-states.test.tsx"
     },
     "EmptyState": {
-      "states": ["empty"],
+      "states": [
+        "empty"
+      ],
       "fixture": "packages/ui/tests/unit/four-states.fixture.tsx",
       "vitest": "packages/ui/tests/unit/four-states.test.tsx",
       "axe": "packages/ui/tests/unit/four-states.test.tsx"
     },
     "ErrorState": {
-      "states": ["error"],
+      "states": [
+        "error"
+      ],
       "fixture": "packages/ui/tests/unit/four-states.fixture.tsx",
       "vitest": "packages/ui/tests/unit/four-states.test.tsx",
       "axe": "packages/ui/tests/unit/four-states.test.tsx"
     },
     "Spinner": {
-      "states": ["loading"],
+      "states": [
+        "loading"
+      ],
       "fixture": "packages/ui/tests/unit/four-states.fixture.tsx",
       "vitest": "packages/ui/tests/unit/four-states.test.tsx",
       "axe": "packages/ui/tests/unit/four-states.test.tsx"

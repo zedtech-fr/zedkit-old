@@ -46,6 +46,14 @@ export type ZedkitUiMessages = {
   /** Accessible name of the language switch. */
   language: string;
   locale: "en" | "fr";
+  /** Named steps while an assistant answer is still being written. */
+  streamStatus: {
+    "reading-reference": string;
+    "picking-palette": string;
+    "picking-typography": string;
+    "picking-spacing": string;
+    "building-preview": string;
+  };
 };
 
 export const zedkitUiMessagesEn: ZedkitUiMessages = {
@@ -86,6 +94,13 @@ export const zedkitUiMessagesEn: ZedkitUiMessages = {
   mainNavigation: "Main navigation",
   language: "Language",
   locale: "en",
+  streamStatus: {
+    "reading-reference": "Reading the site",
+    "picking-palette": "Choosing a palette",
+    "picking-typography": "Choosing typography",
+    "picking-spacing": "Choosing spacing",
+    "building-preview": "Building the preview",
+  },
 };
 
 export const zedkitUiMessagesFr: ZedkitUiMessages = {
@@ -126,4 +141,11 @@ export const zedkitUiMessagesFr: ZedkitUiMessages = {
   mainNavigation: "Navigation principale",
   language: "Langue",
   locale: "fr",
+  streamStatus: {
+    "reading-reference": "Lecture du site",
+    "picking-palette": "Choix de la palette",
+    "picking-typography": "Choix de la typographie",
+    "picking-spacing": "Choix de l'espacement",
+    "building-preview": "Préparation de l'aperçu",
+  },
 };

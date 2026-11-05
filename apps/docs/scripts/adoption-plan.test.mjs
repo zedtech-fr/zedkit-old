@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -273,4 +274,44 @@ test("a file two bricks share is listed once: the manual copy never repeats a pa
 test("a config file is merged into, never replaced: it holds the reader's own settings", () => {
   const file = mode(plan("Share one strict TypeScript base"), "package").steps.at(-1).blocks[0];
   assert.equal(file.action, "merge");
+});
+
+test("SecretField package example is a complete page that typechecks", () => {
+  const built = plan("Display a shown-once secret with copy");
+  const pkg = mode(built, "package");
+  const page = allBlocks(pkg).find((block) => block.kind === "file" && block.path.endsWith("page.tsx"));
+  assert.ok(page, "package mode writes a page");
+  assert.match(page.code, /export default function Page/);
+  assert.doesNotMatch(page.code, /value=\{key\}/);
+  assert.match(page.code, /value="zk_live_example_secret"/);
+
+  const dir = join(dirname(fileURLToPath(import.meta.url)), "../.tmp-complete-examples");
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, "secret-field-page.tsx"), page.code);
+  writeFileSync(
+    join(dir, "tsconfig.json"),
+    `${JSON.stringify(
+      {
+        files: ["./secret-field-page.tsx"],
+        compilerOptions: {
+          target: "ES2022",
+          lib: ["ES2022", "DOM", "DOM.Iterable"],
+          module: "ESNext",
+          moduleResolution: "bundler",
+          jsx: "react-jsx",
+          noEmit: true,
+          strict: true,
+          skipLibCheck: true,
+          incremental: false,
+        },
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  const result = spawnSync(join(ROOT, "node_modules/.bin/tsc"), ["-p", join(dir, "tsconfig.json"), "--pretty", "false"], {
+    encoding: "utf8",
+  });
+  rmSync(dir, { recursive: true, force: true });
+  assert.equal(result.status, 0, result.stdout + result.stderr);
 });

@@ -38,11 +38,13 @@ test("home hero offers get started first with catalog and demo links (#1038)", a
   await page.goto(BASE, { waitUntil: "networkidle" });
 
   const heroActions = page.locator("[data-home-hero-actions] a");
-  await expect(heroActions).toHaveCount(2);
+  await expect(heroActions).toHaveCount(3);
   await expect(heroActions.nth(0)).toHaveText("Get started");
   await expect(heroActions.nth(0)).toHaveAttribute("href", "#get-started");
-  await expect(heroActions.nth(1)).toHaveText("Browse catalog");
-  await expect(heroActions.nth(1)).toHaveAttribute("href", "/catalog");
+  await expect(heroActions.nth(1)).toHaveText("Set up AI");
+  await expect(heroActions.nth(1)).toHaveAttribute("href", "#ai-setup");
+  await expect(heroActions.nth(2)).toHaveText("Browse catalog");
+  await expect(heroActions.nth(2)).toHaveAttribute("href", "/catalog");
 
   await expect(page.locator("[data-home-hero-sub]")).toHaveText("Play with it yourself");
   await expect(page.locator("[data-home-hero-lead]")).toContainText("Everything in this app is a zedkit component.");
@@ -352,6 +354,9 @@ test("home get-started opens on the package install command", async ({ page }) =
   await expect(page.locator("#install-or-copy [data-adoption-step='install']").getByRole("region", { name: "Terminal" })).toContainText(
     "pnpm add @zedtech/zedkit-ui",
   );
+  // asChild puts data-home-ai-setup on the <a> itself.
+  await expect(page.locator("#get-started [data-home-ai-setup]")).toHaveAttribute("href", "#ai-setup");
+  await expect(page.locator("#get-started [data-home-ai-setup]")).toHaveText("Set up AI");
 });
 
 test("home install section has no registry brick grid; catalog link lives in families", async ({ page }) => {

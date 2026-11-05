@@ -29,6 +29,92 @@ export function parseJson(text) {
     .catch(() => ({ ok: false, value: null }));
 }
 
+function contentTypeOf(res) {
+  const headers = res.headers;
+  if (!headers) return "";
+  if (typeof headers.get === "function") return headers.get("content-type") ?? "";
+  return headers["content-type"] ?? "";
+}
+
+function finishContent(content, usage) {
+  const text = unwrap(content);
+  if (!text) return { ok: false, kind: "shape", billable: true };
+  return { ok: true, content: text, usage };
+}
+
+function interpretJsonReply(text, onDelta) {
+  return parseJson(text).then((outer) => {
+    const content = outer.ok ? contentText(outer.value?.choices?.[0]?.message?.content) : "";
+    if (!content) return { ok: false, kind: "shape", billable: true };
+    onDelta?.(content);
+    return { ok: true, content, usage: outer.value?.usage };
+  });
+}
+
+async function readOpenAiPart(part) {
+  let delta = "";
+  let usage;
+  let done = false;
+  for (const raw of part.split("\n")) {
+    const line = raw.endsWith("\r") ? raw.slice(0, -1) : raw;
+    if (!line.startsWith("data:")) continue;
+    const data = line.slice(5).trim();
+    if (data === "[DONE]") {
+      done = true;
+      continue;
+    }
+    const parsed = await parseJson(data);
+    if (!parsed.ok) continue;
+    const piece = parsed.value?.choices?.[0]?.delta?.content;
+    if (typeof piece === "string") delta += piece;
+    if (parsed.value?.usage) usage = parsed.value.usage;
+  }
+  return { delta, usage, done };
+}
+
+async function consumeOpenAiSse(res, onDelta) {
+  if (!res.body || typeof res.body[Symbol.asyncIterator] !== "function") {
+    return interpretJsonReply(await res.text(), onDelta);
+  }
+  const decoder = new globalThis.TextDecoder();
+  let buffer = "";
+  let content = "";
+  let usage;
+  for await (const chunk of res.body) {
+    buffer += decoder.decode(chunk, { stream: true });
+    const parts = buffer.split("\n\n");
+    buffer = parts.pop() ?? "";
+    for (const part of parts) {
+      const applied = await readOpenAiPart(part);
+      if (applied.delta) {
+        content += applied.delta;
+        onDelta?.(applied.delta);
+      }
+      if (applied.usage) usage = applied.usage;
+      if (applied.done) return finishContent(content, usage);
+    }
+  }
+  if (buffer.trim()) {
+    const applied = await readOpenAiPart(buffer);
+    if (applied.delta) {
+      content += applied.delta;
+      onDelta?.(applied.delta);
+    }
+    if (applied.usage) usage = applied.usage;
+  }
+  return finishContent(content, usage);
+}
+
+function failHttp(res, text) {
+  return { ok: false, kind: "http", status: res.status, detail: text.slice(0, 200), billable: res.status >= 500 || res.status === 408 };
+}
+
+function failCaught(error) {
+  if (error?.name === "TimeoutError") return { ok: false, kind: "timeout", billable: true };
+  if (error?.name === "AbortError") return { ok: false, kind: "aborted", billable: true };
+  return { ok: false, kind: "network", billable: !NEVER_SENT.has(error?.cause?.code) };
+}
+
 /**
  * @returns {Promise<
  *   | { ok: true, content: string, usage: object | undefined }
@@ -53,17 +139,50 @@ export function callProvider(provider, { messages, maxTokens, signal, fetchImpl,
     .then(({ res, text }) => {
       // A gateway can time out after the work was done: a server error (5xx) or a 408 may have been charged. A
       // refusal (4xx, 429) did no work.
-      if (!res.ok) return { ok: false, kind: "http", status: res.status, detail: text.slice(0, 200), billable: res.status >= 500 || res.status === 408 };
+      if (!res.ok) return failHttp(res, text);
       return parseJson(text).then((outer) => {
         const content = outer.ok ? contentText(outer.value?.choices?.[0]?.message?.content) : "";
         if (!content) return { ok: false, kind: "shape", billable: true };
         return { ok: true, content, usage: outer.value?.usage };
       });
     })
-    .catch((error) => {
-      if (error?.name === "TimeoutError") return { ok: false, kind: "timeout", billable: true };
-      if (error?.name === "AbortError") return { ok: false, kind: "aborted", billable: true };
-      // Only failures that happen before a request can have been sent are free; a reset mid-flight may not be.
-      return { ok: false, kind: "network", billable: !NEVER_SENT.has(error?.cause?.code) };
-    });
+    .catch(failCaught);
+}
+
+/** Same contract as `callProvider`, with token deltas as they arrive (or one delta if the origin answers JSON). */
+function streamRejected(res, text) {
+  return res.status === 400 && /stream/i.test(text);
+}
+
+function asStreamed(result, onDelta) {
+  if (result.ok) onDelta?.(result.content);
+  return result;
+}
+
+export function callProviderStream(provider, { messages, maxTokens, signal, fetchImpl, effort, onDelta }) {
+  const args = { messages, maxTokens, signal, fetchImpl, effort };
+  return fetchImpl(chatUrl(provider.base), {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${provider.key}` },
+    body: JSON.stringify({
+      model: provider.model,
+      max_tokens: maxTokens,
+      stream: true,
+      stream_options: { include_usage: true },
+      ...(effort ? { reasoning_effort: effort } : {}),
+      messages,
+    }),
+    signal,
+  })
+    .then((res) => {
+      if (!res.ok) {
+        return res.text().then((text) => (streamRejected(res, text)
+          ? callProvider(provider, args).then((result) => asStreamed(result, onDelta))
+          : failHttp(res, text)));
+      }
+      const type = contentTypeOf(res);
+      if (type.includes("text/event-stream")) return consumeOpenAiSse(res, onDelta);
+      return res.text().then((text) => interpretJsonReply(text, onDelta));
+    })
+    .catch(failCaught);
 }

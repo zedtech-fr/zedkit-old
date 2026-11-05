@@ -17,6 +17,7 @@ export const homeHeroCopy = {
   },
   heroActions: {
     getStarted: "Get started",
+    setupAi: "Set up AI",
     browseCatalog: "Browse catalog",
   },
   /** The hero is one small product. Its pages are the examples; the sidebar is how a visitor moves between them. */
