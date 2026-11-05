@@ -346,7 +346,7 @@ describe("setup-ai v2 kit", () => {
         ),
         "utf8",
       );
-      expect(tmpl, name).toContain("[domain rules](../../domain/booking.md)");
+      expect(tmpl, name).toContain("[domain rules](../../domain/)");
       expect(tmpl, name).toMatch(/\[product\]\(\.\.\/\.\.\/product\.md\)/u);
       expect(tmpl, name).not.toMatch(/\(\.\.\/domain\//u);
     }

@@ -1,30 +1,33 @@
+---
+name: domain-change
+description: "Change a business rule (money, cancel, refund, limits, policy) with a rules check against the domain docs. Use when a change edits what the product promises, not only how it is built."
+---
+
 # Domain change
 
-Template — copy to `.agents/skills/domain-change/SKILL.md` and add YAML frontmatter (`name`, `description`).
+A rule edit can look like a small diff and still change what users were promised. Check the rules before the code.
 
-Before editing code, read the repo's domain and product docs. From this skill folder, link with **`../../`** (not `../`):
+## Before you start
 
-- [domain rules](../../domain/booking.md) — rename `booking` to your area file under `.agents/domain/`
-- [product](../../product.md)
-
-Always read every `.agents/domain/*.md` file that applies. This workflow enforces a **rules check** before merge.
+1. Read the root `AGENTS.md`, [product](../../product.md) and every file in [domain rules](../../domain/) that applies.
+2. Read the glossary (`GLOSSARY.md` or `.agents/glossary.md`) for the terms involved; use them as written.
 
 ## Rules check (required)
 
-1. List every **rule id** affected (from domain docs) or add new ids.
-2. For each change, cite **evidence**: `file:line` in code, test name, or `source: owner` for policy the owner confirmed in setup.
-3. Update `.agents/domain/<area>.md` in the **same PR** as the code (or first, if additive).
-4. Update `.agents/glossary.md` or `GLOSSARY.md` when terms shift.
-5. If no automated test exists, add one or mark the rule row **no test — flag** with reason.
+1. List every rule id the change affects, or add new ids.
+2. For each, cite evidence: `file:line` in code, a test name, or `source: owner` for policy the owner confirmed.
+3. Update the domain doc in the same PR as the code, or first when the change is additive.
+4. Update the glossary when a term shifts.
+5. No automated test for a rule? Add one, or mark the row `no test` with the reason.
 
 ## Steps
 
-1. **Interview diff** — what user-visible behavior changes? who is affected?
-2. **Personas** — run persona review on the UX and copy impact.
-3. **Implement** — smallest change; prefer feature flags if the repo uses them.
-4. **Verify** — run gates; exercise cancel, refund, and limit paths manually if automated coverage is thin.
-5. **Retro** — if setup missed this area, add a line to `.agents/setup-log.md`.
+1. **Diff the promise.** What changes for the user, and who is affected?
+2. **Implement** the smallest change; use a feature flag if the repo already does.
+3. **Verify.** Run the gates, then exercise the limit paths (cancel, refund, edge amounts) by hand where automated coverage is thin.
+4. **Retro.** If setup missed this rule, add a line to `.agents/setup-log.md`.
 
 ## Done when
 
-- Domain tables and code agree; contradictions listed in `product.md` open questions are cleared or explicitly deferred.
+- Domain docs and code agree; contradictions are fixed or listed as open questions.
+- Every changed rule has evidence and a test or a `no test` flag.
