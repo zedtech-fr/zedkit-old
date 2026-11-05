@@ -1,7 +1,8 @@
-import { rmSync } from "node:fs";
+import { readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { main } from "#cli.js";
+import { kitDir } from "#kit.js";
 import { checkDepth } from "#setup-depth.js";
 import { put, tempDir } from "./helpers.js";
 
@@ -101,6 +102,36 @@ describe("checkDepth", () => {
     put(root, ".agents/domain/billing.md", "| B-01 | current (documented, not enforced) | No web token reuse | `src/auth/token.ts:12` |\n");
     expect(checkDepth(root).map((i) => i.message)).toEqual([expect.stringContaining("B-01")]);
     put(root, "AGENTS.md", "# Root\n\n## Model routing\n\nSee `.agents/model-routing.md`.\n\n## Unenforced rules\n\n| B-01 | add token-reuse lint | `src/auth/token.ts:12` |\n");
+    expect(checkDepth(root)).toEqual([]);
+  });
+
+  it("D2: an unenforced domain rule below the first line of the file is still inventoried", () => {
+    const root = tempDir();
+    deep(root);
+    put(root, ".agents/domain/billing.md", "# Billing\n\n| ID | Status | Rule | Source |\n| B-01 | current | Refunds capped | `src/refund.ts:31` |\n| B-02 | current (documented, not enforced) | One refund per order | `src/refund.ts:40` |\n");
+    expect(checkDepth(root).map((i) => i.message)).toEqual([expect.stringContaining("B-02")]);
+  });
+
+  it("D2: a current (documented, not enforced) identity rule in design.md must be cited in the inventory", () => {
+    const root = tempDir();
+    deep(root);
+    put(root, "src/Button.tsx", "x\n");
+    put(root, ".agents/design.md", "## Identity rules\n\n| I-04 | current (documented, not enforced) | Buttons use verbs | `src/Button.tsx:3` |\n");
+    expect(checkDepth(root).map((i) => i.message)).toEqual([expect.stringContaining("I-04")]);
+    put(root, ".agents/setup-log.md", "## Unenforced rules\n\n| I-04 | add a copy lint | `src/Button.tsx:3` |\n");
+    expect(checkDepth(root)).toEqual([]);
+  });
+
+  it("D2: a nested AGENTS.md with documented, not enforced rules must be named in the inventory", () => {
+    const root = tempDir();
+    deep(root);
+    put(root, "src/AGENTS.md", "# src rules\n\nDomain: ../.agents/domain/billing.md\n\n1. **No I/O in the domain layer.** documented, not enforced (`src/refund.ts:31`)\n");
+    expect(checkDepth(root).map((i) => i.message)).toEqual([expect.stringContaining("src/AGENTS.md")]);
+    expect(tags(root)).toEqual(["D2"]);
+    put(root, ".agents/setup-log.md", "## Unenforced rules\n\n| src/AGENTS.md rule 1 | add an import-boundary lint | `src/refund.ts:31` |\n");
+    expect(checkDepth(root)).toEqual([]);
+    put(root, "src/AGENTS.md", "# src rules\n\nDomain: ../.agents/domain/billing.md\n\n1. **Caps.** enforced by `eslint.config.js` (`src/refund.ts:31`)\n");
+    put(root, ".agents/setup-log.md", "");
     expect(checkDepth(root)).toEqual([]);
   });
 
@@ -240,5 +271,16 @@ describe("validate --setup depth", () => {
     deep(root);
     put(root, "PLAN.md", "PLAN.md\nintro-first: printed before any tool call (fresh)\n");
     expect(run("validate", root, "--setup")).toEqual({ code: 0, text: "not a git repository; skipped change coverage\nok" });
+  });
+});
+
+describe("setup-ai prose for the unenforced inventory", () => {
+  it("reconciles nested AGENTS, design identity rules and domain purity, and says validate checks it", () => {
+    const skill = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
+    expect(skill).toContain("every nested `AGENTS.md`");
+    expect(skill).toContain("`design.md` Identity rules");
+    expect(skill).toContain("`I-04`");
+    expect(skill).toMatch(/\*\*Domain purity\*\*/u);
+    expect(skill).toMatch(/named there by path \(`validate --setup` checks both\)/u);
   });
 });
