@@ -7,12 +7,48 @@ import {
   ConversationComposer,
   ConversationMessages,
   PreviewPane,
+  type View,
 } from "@/components/identity-assistant-panes";
 import { ReferenceReportList } from "@/components/identity-references";
 import type { Unavailable } from "@/lib/identity-assistant";
 import type { SessionState } from "@/lib/identity-creator-session";
-import type { View } from "@/components/identity-assistant-parts";
 import type { IdentityTokens } from "@zedtech/zedkit-ui";
+
+function compactPaneProps(narrowSplit: boolean | undefined) {
+  return {
+    compact: true as const,
+    ...(narrowSplit !== undefined ? { narrowSplit } : {}),
+  };
+}
+
+function DockAssistantPreviewColumn(props: {
+  view: View;
+  proposal: SessionState["proposal"];
+  previewTokens: IdentityTokens;
+  domainBrief: string;
+  busy: boolean;
+  references: SessionState["references"];
+  narrowSplit: boolean | undefined;
+  onUse: (tokens: IdentityTokens) => void;
+  onDiscard: () => void;
+}) {
+  const pane = compactPaneProps(props.narrowSplit);
+  return (
+    <Stack gap={4} className="min-w-0">
+      <ReferenceReportList report={props.references} />
+      <PreviewPane
+        view={props.view}
+        proposal={props.proposal}
+        tokens={props.previewTokens}
+        domainBrief={props.domainBrief}
+        busy={props.busy}
+        onUse={props.onUse}
+        onDiscard={props.onDiscard}
+        {...pane}
+      />
+    </Stack>
+  );
+}
 
 export function IdentityDockAssistantGrid(props: {
   view: View;
@@ -30,10 +66,10 @@ export function IdentityDockAssistantGrid(props: {
   onCancel: () => void;
   onUse: (tokens: IdentityTokens) => void;
   onDiscard: () => void;
-  /** When set, the composer renders in the footer instead of inside this grid. */
   composerRef?: RefObject<HTMLDivElement | null>;
   hideComposer?: boolean;
 }) {
+  const pane = compactPaneProps(props.narrowSplit);
   return (
     <Stack gap={4} className="min-w-0">
       <ConversationMessages
@@ -41,26 +77,22 @@ export function IdentityDockAssistantGrid(props: {
         session={props.session}
         brief={props.brief}
         busy={props.busy}
-        compact
-        narrowSplit={props.narrowSplit}
         onBrief={props.onBrief}
         onQuickRefine={props.onQuickRefine}
         off={props.off}
+        {...pane}
       />
-      <Stack gap={4} className="min-w-0">
-        <ReferenceReportList report={props.session.references} />
-        <PreviewPane
-          view={props.view}
-          proposal={props.session.proposal}
-          tokens={props.previewTokens}
-          domainBrief={props.domainBrief}
-          busy={props.busy}
-          compact
-          narrowSplit={props.narrowSplit}
-          onUse={props.onUse}
-          onDiscard={props.onDiscard}
-        />
-      </Stack>
+      <DockAssistantPreviewColumn
+        view={props.view}
+        proposal={props.session.proposal}
+        previewTokens={props.previewTokens}
+        domainBrief={props.domainBrief}
+        busy={props.busy}
+        references={props.session.references}
+        narrowSplit={props.narrowSplit}
+        onUse={props.onUse}
+        onDiscard={props.onDiscard}
+      />
       {props.hideComposer ? null : (
         <Stack ref={props.composerRef}>
           <ConversationComposer

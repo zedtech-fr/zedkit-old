@@ -4,8 +4,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, type RefObject } from 
 import { Stack } from "@zedtech/zedkit-ui";
 
 import { ViewSwitch, type View } from "@/components/identity-assistant-parts";
-import { ConversationComposer } from "@/components/identity-assistant-panes";
 import { IdentityDockAssistantGrid } from "@/components/identity-dock-assistant-grid";
+import { IdentityDockComposerFooter } from "@/components/identity-dock-composer-footer";
 import { IdentityDockExportBlock } from "@/components/identity-dock-export-block";
 import { IdentityDockPanelToolbar } from "@/components/identity-dock-panel-toolbar";
 import { useAssistantSubmitHandlers } from "@/components/use-assistant-submit";
@@ -115,6 +115,13 @@ function useProposalInView(scrollRef: RefObject<HTMLDivElement | null>, requestI
   }, [scrollRef, requestId, view]);
 }
 
+function useIdentityDockBriefAutofocus(panelRef: RefObject<HTMLDivElement | null>) {
+  useEffect(() => {
+    const field = panelRef.current?.querySelector<HTMLTextAreaElement>("#identity-assistant-brief:not([disabled])");
+    if (field && field.offsetParent !== null) field.focus({ preventScroll: true });
+  }, [panelRef]);
+}
+
 export function IdentityDockAssistantPanel({
   previewTokens,
   onPreviewTokens,
@@ -135,10 +142,7 @@ export function IdentityDockAssistantPanel({
   const { send: sendBrief, quickRefine } = useAssistantSubmitHandlers(brief, submit, busy, off !== null, () => setBrief(""));
   const send = useKeepSentBrief(brief, session, setBrief, sendBrief);
 
-  useEffect(() => {
-    const field = panelRef.current?.querySelector<HTMLTextAreaElement>("#identity-assistant-brief:not([disabled])");
-    if (field && field.offsetParent !== null) field.focus({ preventScroll: true });
-  }, []);
+  useIdentityDockBriefAutofocus(panelRef);
   useProposalInView(scrollRef, session.proposal?.requestId, ui.view);
 
   return (
@@ -166,18 +170,16 @@ export function IdentityDockAssistantPanel({
         onPreviewTokens={onPreviewTokens}
       />
       {acceptedTokens !== null ? <IdentityDockExportBlock tokens={acceptedTokens} /> : null}
-      <Stack gap={2} className="shrink-0 border-t border-border bg-background px-3 py-3">
-        <ConversationComposer
-          session={session}
-          brief={brief}
-          busy={busy}
-          off={off}
-          onBrief={setBrief}
-          onSubmit={send}
-          onCancel={cancel}
-          inputRef={ui.field}
-        />
-      </Stack>
+      <IdentityDockComposerFooter
+        session={session}
+        brief={brief}
+        busy={busy}
+        off={off}
+        onBrief={setBrief}
+        onSubmit={send}
+        onCancel={cancel}
+        inputRef={ui.field}
+      />
     </Stack>
   );
 }

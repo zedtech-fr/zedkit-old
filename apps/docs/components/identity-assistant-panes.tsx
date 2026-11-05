@@ -12,6 +12,8 @@ import { DetectedLinks } from "@/components/identity-detected-links";
 import type { Unavailable } from "@/lib/identity-assistant";
 import type { Proposal, SessionState } from "@/lib/identity-creator-session";
 
+export type { View } from "@/components/identity-assistant-parts";
+
 /** The assistant's first word, where the exchange will continue. Shown until the first exchange replaces it. */
 function AssistantGreeting() {
   return (
