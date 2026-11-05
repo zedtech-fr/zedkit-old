@@ -57,7 +57,7 @@ at the first rung that holds<!-- if:skill=ponytail-review --> (skill `ponytail-r
   big to review in one sitting, split along seams. Never a broken intermediate
   state.
 - **Done means proven.** Gates run on the final state, no weakened tests, a
-  cold second review. (skill `definition-of-done`, agent `verifier`)
+  cold second review. (skill `definition-of-done`, agent `verifier`)<!-- if:skill=compose-ui --> Before composing UI, run `/compose-ui` (persona chain: client business → personas → the client's customers → their personas → UI choices).<!-- /if -->
 - **Keep this setup true.** When a decision or correction comes up, update the
   rule in the same turn.<!-- if:skill=rules-upkeep --> (skill `rules-upkeep`)<!-- /if -->
 

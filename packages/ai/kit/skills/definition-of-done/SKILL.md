@@ -44,6 +44,12 @@ Done is a claim. This list is the evidence. If one box cannot be ticked, say whi
 Applies when the change is a page, view, component, style or preview.
 Exception: a non-visual change (N/A).
 
+<!-- if:skill=compose-ui -->
+
+- [ ] `/compose-ui` persona-chain brief exists (client business → personas → the client's customers → their personas → UI choices); each UI choice has `because`.
+
+<!-- /if -->
+
 - [ ] Lint, types, axe and screenshot diffs ran on the final state. Necessary, not sufficient.
 - [ ] A rendered-page critique names the strongest remaining weaknesses (composition, hierarchy, type roles, density, rhythm). A self-assigned score is not done.
 - [ ] Screenshots were opened and described (matching content/viewport/identity/mode, before vs after). `UNSEEN` if not looked at. Generated-but-unread shots do not count.

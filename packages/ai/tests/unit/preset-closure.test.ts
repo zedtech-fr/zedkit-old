@@ -103,6 +103,7 @@ describe("preset closure", () => {
       ...(manifest.value.commands ?? []).map((name) => join("commands", `${name}.md`)),
       "AGENTS.template.md",
       "personas.template.md",
+      join("skills", "review", "lenses.md"),
     ];
     const marked: string[] = [];
     for (const rel of candidates) {
@@ -117,12 +118,15 @@ describe("preset closure", () => {
       [
         "AGENTS.template.md",
         "personas.template.md",
+        join("agents", "copywriter.md"),
         join("agents", "orchestrator.md"),
         join("agents", "ui-designer.md"),
         join("agents", "verifier.md"),
         join("skills", "compose-ui", "SKILL.md"),
         join("skills", "definition-of-done", "SKILL.md"),
+        join("skills", "implement", "SKILL.md"),
         join("skills", "review", "SKILL.md"),
+        join("skills", "review", "lenses.md"),
         join("skills", "setup-ai", "SKILL.md"),
         join("skills", "tdd", "SKILL.md"),
       ].sort(),
