@@ -163,7 +163,8 @@ export function IdentityDockAssistantGrid(props: IdentityDockAssistantGridProps)
         onSubmit={props.onSubmit}
         onCancel={props.onCancel}
         inputRef={props.inputRef}
-        {...(props.hideComposer === true ? { hideComposer: true } : {}), ...(props.composerRef !== undefined ? { composerRef: props.composerRef } : {})}
+        {...(props.hideComposer === true ? { hideComposer: true } : {})}
+        {...(props.composerRef !== undefined ? { composerRef: props.composerRef } : {})}
       />
     </Stack>
   );
