@@ -1,25 +1,30 @@
+---
+name: add-migration
+description: "Change a database schema safely: forward and rollback story, backfill, tested up and down. Use when adding, altering or dropping tables, columns, indexes or constraints."
+---
+
 # Add migration
 
-Template — copy to `.agents/skills/add-migration/SKILL.md` and add YAML frontmatter (`name`, `description`).
-
-Repo-specific workflow — replace placeholders with this repo's migration tool and paths.
+A migration is a one-way door until proven otherwise. Prove the way back before shipping the way forward.
 
 ## Before you start
 
-From this skill folder, read [domain rules](../../domain/booking.md) (and sibling `.agents/domain/*.md` files) for invariants migrations must preserve. See [product](../../product.md) when policy affects schema.
-
-Prefer a throwaway worktree or local DB when the main gate writes data.
+1. Find the repo's migration tool and folder: look at existing migration files, the `package.json` scripts, and the root `AGENTS.md`. Do not guess the tool.
+2. Read the last two migrations for naming, ordering and style. Match them.
+3. Read the [domain rules](../../domain/) for invariants the schema must keep, especially money, identity and retention.
+4. Read [product](../../product.md) when policy drives the schema.
+5. Run against a throwaway database or worktree, never a shared one.
 
 ## Steps
 
-1. **Plan** — forward + rollback story; estimate lock time; note tables with money or PII.
-2. **Write migration** — follow existing naming and folder layout under the repo's migrations path.
-3. **Backfill** — idempotent script or staged job; document in the PR if manual steps exist.
-4. **Test** — run migration up/down on a fresh DB in CI or locally; cite the command you ran.
-5. **Deploy note** — order of operations (app vs migration) for operators.
+1. **Plan.** Write the forward step, the rollback step, expected lock time on the largest table, and which columns hold money or personal data.
+2. **Write it small.** One concern per migration. Split a rename into add, backfill, switch, drop across releases when the app and the schema deploy separately.
+3. **Backfill.** Idempotent, resumable, batched. Note any manual step in the PR.
+4. **Test up and down.** Run both on a fresh database with the repo's command, then run the app's tests against the new schema. Quote the command you ran.
+5. **Deploy note.** Say which ships first (app or migration) and what breaks if the order is wrong.
 
 ## Done when
 
-- Migration is reversible or the PR states why not.
-- Domain doc updated if new states or policies appear.
-- Main gate includes migration check if the repo defines one.
+- The migration applies and rolls back cleanly, or the PR says why it cannot roll back.
+- The domain doc matches the new states and constraints.
+- The repo's gate includes the migration check when the repo defines one.

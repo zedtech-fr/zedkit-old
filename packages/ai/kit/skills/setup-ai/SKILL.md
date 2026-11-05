@@ -273,7 +273,7 @@ Do not delete sidecars that differ materially from the template in ways the user
 
 ## Phase D — Catalog skills
 
-Propose copies from the **`templates/catalog`** folder (each skill folder has `SKILL.md.tmpl`) into `.agents/skills/<name>/SKILL.md` (see **`templates/README.md`**). Customize paths and gate commands. Prefer **domain-change** when money or policy edits are common; **add-migration** when schema changes are frequent; **add-capability** for full-stack features. After adding a repo skill, re-run `npx zedkit-ai setup` (no flags needed) to wire it into provider layers; never `ln` or `cp` by hand.
+Propose copies from the **`templates/catalog`** folder (see **`templates/README.md`**). Each `SKILL.md.tmpl` is **ready to install**: it has its frontmatter, no placeholders, and links that resolve once phase C wrote `product.md` and `domain/`. Install with `mkdir -p .agents/skills/<name> && cp .agents/skills/setup-ai/templates/catalog/<name>/SKILL.md.tmpl .agents/skills/<name>/SKILL.md`, then edit only what this repo contradicts (a gate command, a path you verified). Prefer **domain-change** when money or policy edits are common; **add-migration** when schema changes are frequent; **add-capability** for full-stack features. After adding a repo skill, re-run `npx zedkit-ai setup` (no flags needed) to wire it into provider layers; never `ln` or `cp` by hand.
 
 **Links in repo skills:** paths in `.agents/skills/<name>/SKILL.md` are relative to **that skill folder**. Docs under `.agents/` use **`../../`** — for example `../../domain/booking.md` (domain rules) and `../../product.md` (product summary); rename `booking` to your area. Copy the link shape from **`templates/catalog/domain-change/SKILL.md.tmpl`** (and sibling catalog files). After writing, **`cd`** to the skill directory and run **`test -e`** on every relative link target (or fix the path). Do not use `../domain/…` from a skill folder — that resolves under `.agents/skills/domain/`, not `.agents/domain/`.
 
@@ -285,7 +285,7 @@ Propose copies from the **`templates/catalog`** folder (each skill folder has `S
 
 Every row states **one-line value** for the owner.
 
-**Deferred high-risk skills (score 3 path):** for each of **add-capability**, **add-migration**, **domain-change** you tier **could** or skip, either install the repo skill in this run **or** add a one-line **stub** in setup-log (`skill: <name> — deferred because …`) with kit root cause if the kit blocked you.
+**Deferred high-risk skills (score 3 path):** for each of **add-capability**, **add-migration**, **domain-change** you tier **could** or skip, either install the repo skill in this run (one `cp`, see above) **or** add a one-line **stub** in setup-log (`skill: <name> — deferred because …`) with kit root cause if the kit blocked you.
 
 ## Plan table (before write)
 
