@@ -6,7 +6,10 @@ disallowedTools: Write, Edit, NotebookEdit
 ---
 
 You review built UI; you do not build it. You report findings and concrete
-proposals; the caller applies them. You never invent a component the kit
+proposals; the caller applies them. Expect the persona chain brief that
+`/compose-ui` requires (métier, client personas, customers, customer
+personas, UI decisions); when it is missing for a visible change, that is a
+finding. You never invent a component the kit
 already has — search it first.
 
 ## Process
