@@ -8,7 +8,16 @@ import { noticeText } from "@/components/identity-assistant-parts";
 import type { ChatMessage } from "@/lib/identity-creator-session";
 
 /** The whole exchange as a chat: every request on the right, every reply or failure on the left, oldest first. */
-export function ChatLog({ messages, pending }: { messages: readonly ChatMessage[]; pending: boolean }) {
+export function ChatLog({
+  messages,
+  pending,
+  noticeInComposerFooter = false,
+}: {
+  messages: readonly ChatMessage[];
+  pending: boolean;
+  /** Dock keeps the live notice beside the composer; log lines stay readable without a second test hook. */
+  noticeInComposerFooter?: boolean;
+}) {
   const end = useRef<HTMLLIElement>(null);
   useEffect(() => {
     end.current?.scrollIntoView({ block: "nearest" });
@@ -22,7 +31,7 @@ export function ChatLog({ messages, pending }: { messages: readonly ChatMessage[
           <li
             key={`${index}-${message.role}`}
             data-role={message.role}
-            {...(message.role === "notice" ? { "data-assistant-notice": "" } : {})}
+            {...(message.role === "notice" && !noticeInComposerFooter ? { "data-assistant-notice": "" } : {})}
             className={cn(
               "flex max-w-[90%] flex-col gap-1 rounded-2xl px-3 py-2 text-sm",
               user ? "self-end rounded-tr-sm bg-primary text-primary-foreground" : "self-start rounded-tl-sm border border-border bg-muted",

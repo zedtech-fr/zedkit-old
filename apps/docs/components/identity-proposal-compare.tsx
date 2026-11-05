@@ -41,7 +41,7 @@ export function ProposalBeforeAfter({
           <Text typeRole="label" className="text-foreground">
             {copy.proposal.afterLabel}
           </Text>
-          <IdentityMiniPreview tokens={proposed} id={`proposal-${requestId}`} domain={domain} compact />
+          <IdentityMiniPreview tokens={proposed} id={`proposal-${requestId}`} domain={domain} compact={narrow} />
         </Stack>
         <details open={!narrow} className="min-w-0 text-zk-type-body">
           <summary className="flex min-h-11 cursor-pointer items-center focus-ring lg:hidden">{copy.proposal.beforeLabel}</summary>
@@ -49,7 +49,7 @@ export function ProposalBeforeAfter({
             <Text typeRole="label" className="hidden text-foreground lg:block">
               {copy.proposal.beforeLabel}
             </Text>
-            <IdentityMiniPreview tokens={current} id={`before-${requestId}`} domain={domain} compact />
+            <IdentityMiniPreview tokens={current} id={`before-${requestId}`} domain={domain} compact={narrow} />
           </Stack>
         </details>
       </Stack>

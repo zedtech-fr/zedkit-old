@@ -10,14 +10,17 @@ export function useAssistantSubmitHandlers(
   busy: boolean,
   off: boolean,
   clearBrief?: () => void,
+  /** When the composer was cleared after a proposal landed, a second send still uses that prompt. */
+  resendPrompt?: string,
 ) {
   const send = useCallback(() => {
-    const references = linksInText(brief).urls;
-    if (checkInput({ prompt: brief, references }) !== "ok") return;
-    submit(brief, references);
+    const prompt = brief.trim() || resendPrompt?.trim() || "";
+    const references = linksInText(prompt).urls;
+    if (checkInput({ prompt, references }) !== "ok") return;
+    submit(prompt, references);
     // The request now reads as a message in the conversation, so the composer empties like any chat.
     clearBrief?.();
-  }, [brief, submit, clearBrief]);
+  }, [brief, resendPrompt, submit, clearBrief]);
 
   const quickRefine = useCallback(
     (prompt: string) => {

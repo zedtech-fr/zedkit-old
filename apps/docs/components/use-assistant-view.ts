@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import type { View } from "@/components/identity-assistant-parts";
 import { useCreatorHandoff } from "@/components/use-creator-handoff";
+import type { Notice } from "@/lib/identity-creator-session";
 
 type FocusRequest = { n: number; scroll: boolean };
 
@@ -35,10 +36,13 @@ function scrollToAssistant() {
  */
 export function useAssistantView({
   proposalId,
+  notice,
   onBrief,
   scrollAssistantOnProposal = true,
 }: {
   proposalId: string | undefined;
+  /** When a refine fails but the last proposal stays, the visitor must see the word in the conversation pane. */
+  notice?: Notice | null;
   onBrief: (brief: string) => void;
   /** Inline `#create` assistant scrolls the page when a proposal lands; the dock keeps the page still. */
   scrollAssistantOnProposal?: boolean;
@@ -83,6 +87,11 @@ export function useAssistantView({
     const frame = requestAnimationFrame(focusPreview);
     return () => cancelAnimationFrame(frame);
   }, [proposalId, view]);
+
+  useLayoutEffect(() => {
+    if (!proposalId || !notice || notice.kind === "cancelled") return;
+    setView("conversation");
+  }, [notice, proposalId]);
 
   return {
     open,

@@ -42,12 +42,15 @@ export function ConversationMessages(props: {
   onBrief: (brief: string) => void;
   onQuickRefine: (prompt: string) => void;
   off: Unavailable | null;
+  /** When true, refusal copy lives in the dock footer only (one on-screen hook, below the pinned preview). */
+  noticeInComposerFooter?: boolean;
 }) {
   const refining = props.session.thread.length > 0;
   const chipsVisible = refining && props.session.proposal === null && props.session.pending === null;
   const hidden = props.compact ? props.view !== "conversation" : props.view === "preview";
   const notice = props.session.notice;
   const messages = props.session.messages ?? [];
+  const surfaceNotice = props.noticeInComposerFooter !== true;
   return (
     <Stack
       gap={4}
@@ -61,14 +64,18 @@ export function ConversationMessages(props: {
       {props.session.thread.length > 0 ? (
         <Thread turns={props.session.thread} />
       ) : messages.length > 0 ? (
-        <ChatLog messages={messages} pending={props.session.pending !== null} />
+        <ChatLog
+          messages={messages}
+          pending={props.session.pending !== null}
+          noticeInComposerFooter={props.noticeInComposerFooter === true}
+        />
       ) : (
         <>
           <AssistantGreeting />
-          {notice && notice.kind !== "unavailable" ? <AssistantNoticeBubble notice={notice} /> : null}
+          {surfaceNotice && notice && notice.kind !== "unavailable" ? <AssistantNoticeBubble notice={notice} /> : null}
         </>
       )}
-      {props.session.thread.length > 0 && notice && notice.kind !== "unavailable" ? (
+      {surfaceNotice && props.session.thread.length > 0 && notice && notice.kind !== "unavailable" ? (
         <AssistantNoticeBubble notice={notice} />
       ) : null}
       <IdentityRefinementChips
@@ -93,6 +100,10 @@ export function ConversationComposer(props: {
   inputRef: RefObject<HTMLTextAreaElement | null>;
 }) {
   const refining = props.session.thread.length > 0;
+  const resend =
+    props.session.proposal?.prompt !== undefined && props.session.proposal.prompt !== ""
+      ? { resendPrompt: props.session.proposal.prompt }
+      : {};
   return (
     <Stack gap={2} className="min-w-0 shrink-0" data-assistant-composer="">
       <BriefForm
@@ -104,6 +115,7 @@ export function ConversationComposer(props: {
         onSubmit={props.onSubmit}
         onCancel={props.onCancel}
         inputRef={props.inputRef}
+        {...resend}
       />
     </Stack>
   );
@@ -179,7 +191,7 @@ export function PreviewPane(props: {
           onUse={props.onUse}
           onDiscard={props.onDiscard}
           {...(compact
-            ? { className: "max-h-[min(52dvh,28rem)] overflow-y-auto overscroll-y-contain pr-1", pinApply: true }
+            ? { className: "max-h-[min(52dvh,28rem)] overflow-y-auto overscroll-y-contain px-1", pinApply: true }
             : {})}
         />
       ) : (

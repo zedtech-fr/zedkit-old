@@ -87,6 +87,7 @@ export function BriefForm({
   onSubmit,
   onCancel,
   inputRef,
+  resendPrompt,
 }: {
   value: string;
   onValue: (value: string) => void;
@@ -96,6 +97,8 @@ export function BriefForm({
   onSubmit: () => void;
   onCancel: () => void;
   inputRef: Ref<HTMLTextAreaElement>;
+  /** After a proposal is on screen the composer may be empty; send still reuses this prompt. */
+  resendPrompt?: string;
 }) {
   const left = LIMITS.prompt - value.length;
   const placeholder = useRotatingPlaceholder(!refining);
@@ -111,13 +114,15 @@ export function BriefForm({
         value={value}
         busy={busy}
         sendDisabled={blocked}
+        allowEmptySubmit={Boolean(resendPrompt?.trim())}
         sendLabel={refining ? copy.refine : copy.generate}
         {...(busy ? { onCancel, cancelLabel: copy.cancel } : {})}
         aria-label={refining ? copy.followUpLabel : copy.briefLabel}
         aria-describedby={left < 100 ? "identity-assistant-brief-count" : undefined}
         onChange={(event) => onValue(event.target.value)}
         onSubmit={() => {
-          if (!busy && !blocked && value.trim() !== "") onSubmit();
+          if (busy || blocked) return;
+          if (value.trim() !== "" || Boolean(resendPrompt?.trim())) onSubmit();
         }}
       />
       {left < 100 ? (
