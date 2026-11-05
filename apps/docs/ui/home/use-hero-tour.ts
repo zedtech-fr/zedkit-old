@@ -99,9 +99,19 @@ export function useHeroTour({
   });
   useEffect(() => {
     const root = rootRef.current;
-    if (!enabled || !root) return;
+    if (!root) return;
     const cursor = root.querySelector<HTMLElement>("[data-hero-cursor]");
     if (!cursor) return;
+    if (!enabled) {
+      // The window narrowed (a phone, or reduced motion): an invisible cursor left at its desktop offset would still
+      // widen the page, so it goes back to the corner at once, with no glide.
+      delete root.dataset.tour;
+      cursor.style.transition = "none";
+      cursor.style.translate = "";
+      void cursor.offsetWidth;
+      cursor.style.transition = "";
+      return;
+    }
     if (!playing) {
       root.dataset.tour = "off";
       return;
