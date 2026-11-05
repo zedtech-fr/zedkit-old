@@ -2,7 +2,7 @@ name: deploy-dev
 
 on:
   push:
-    branches: ["goal/reference", "dev"]
+    branches: ["main", "goal/reference", "dev"]
   workflow_dispatch:
     inputs:
       ref:
