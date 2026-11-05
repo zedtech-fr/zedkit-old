@@ -117,6 +117,8 @@ describe("setup-ai v2 kit", () => {
     expect(cmd).toContain("before any tool call");
     expect(cmd).toContain("Then run the `setup-ai` skill on `$ARGUMENTS`");
     expect(cmd).toMatch(/Do not end your turn after the intro/);
+    expect(cmd).toMatch(/per session/);
+    expect(cmd).toContain("resumed at phase <X>");
     const skill = readFileSync(
       join(kitDir(), "skills", "setup-ai", "SKILL.md"),
       "utf8",

@@ -18,6 +18,12 @@ holds. Stop and replan any piece where a higher rung holds.
 
 Call the Skill tool with "tdd" where possible, at pre-agreed seams.
 
+<!-- if:skill=compose-ui -->
+If the work composes, restyles or personalises UI, run `/compose-ui` first:
+client business → personas → the client's customers → their personas → UI
+choices. Do not edit UI until that brief exists.
+<!-- /if -->
+
 Run typechecking regularly, single test files regularly, and the full test suite once at the end.
 
 Then pass `definition-of-done`, and call the Skill tool with "review" to review the work.

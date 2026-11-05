@@ -155,6 +155,31 @@ describe("checkSetup", () => {
     put(root, "PLAN.md", "PLAN.md\nintro-first: resumed at phase B\n");
     expect(checkSetup(root).issues).toEqual([]);
   });
+
+  it.each([
+    "- **Intro-first:** printed before any tool call (fresh)",
+    "**Intro-first**: printed before any tool call (fresh)",
+    "* _intro-first_: resumed at phase C",
+    "> `intro-first`: printed before any tool call (improve)",
+    "## Intro-first: printed before any tool call (fresh)",
+  ])("accepts markdown emphasis on the intro-first line: %s", (line) => {
+    const root = tempDir();
+    gitInit(root);
+    put(root, "PLAN.md", `PLAN.md\n${line}\n`);
+    expect(checkSetup(root).issues).toEqual([]);
+  });
+
+  it.each(["Intro-first", "**Intro-first:**", "intro-first is printed first", "see intro-first: later"])(
+    "still flags a plan with no real intro-first value: %s",
+    (line) => {
+      const root = tempDir();
+      gitInit(root);
+      put(root, "PLAN.md", `PLAN.md\n${line}\n`);
+      expect(checkSetup(root).issues.map((i) => i.message)).toEqual([
+        "plan misses the intro-first line; append `intro-first: printed before any tool call` to the appendix",
+      ]);
+    },
+  );
 });
 
 describe("suggestPlanRow", () => {

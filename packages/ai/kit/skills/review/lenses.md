@@ -51,3 +51,10 @@ exists IS a blocker.
    skeletons match the real content shape, retry keeps state. A page or
    example with no wait has no loading state.
    Example refusal: a spinner with no label on a slow save.
+
+<!-- if:skill=compose-ui -->
+
+The `ui` lens also fails when the change is visual and there is no
+`/compose-ui` persona-chain brief (client business → personas → the client's
+customers → their personas → UI choices) with a `because` on each UI decision.
+<!-- /if -->

@@ -105,6 +105,18 @@ describe("cli", () => {
     expect(writes).toEqual([]);
   });
 
+  it("setup re-run does not send the user back to /setup-ai once product.md exists", () => {
+    const dest = tempDir();
+    const first = run("setup", dest, "--provider", "cursor");
+    expect(first.text).toContain("next: run /setup-ai");
+    put(dest, ".agents/product.md", "# Product\n");
+    const again = run("setup", dest, "--provider", "cursor");
+    expect(again.code).toBe(0);
+    expect(again.text).toContain("next: validate, then phase E score");
+    const hints = again.text.split("\n").filter((line) => /^(next|note):/u.test(line));
+    expect(hints.some((line) => line.includes("/setup-ai"))).toBe(false);
+  });
+
   it("setup --preset starter installs starter skills only", () => {
     const dest = tempDir();
     expect(run("setup", dest, "--provider", "cursor", "--preset", "starter").code).toBe(0);

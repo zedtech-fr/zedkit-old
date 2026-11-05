@@ -6,5 +6,7 @@ export const homeGetStartedCopy = {
   quickStart: {
     fullSteps: "Full install steps in the docs",
     fullStepsHref: "/docs/getting-started#install-or-copy",
+    aiSetup: "Set up AI",
+    aiSetupHref: "#ai-setup",
   },
 } as const;

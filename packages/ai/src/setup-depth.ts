@@ -14,6 +14,38 @@ function text(path: string): string | undefined {
   return raw.ok ? raw.value : undefined;
 }
 
+// Rules whose meaning hangs on order, atomicity or timing: a citation alone cannot show them.
+const SEQUENCING = /\b(after|before|same transaction|one transaction|atomic\w*|commits?|retr(?:y|ies)|idempoten\w+|exactly once|at most once|within \d+|only when)\b/iu;
+const RULE_ID = /^R\d+-\d+$/u;
+
+/** First-column IDs and cells of the table rows in `text`. */
+function ruleRows(text: string): string[][] {
+  return text
+    .split("\n")
+    .filter((l) => l.startsWith("|"))
+    .map((l) => l.split("|").slice(1, -1).map((c) => c.trim()))
+    .filter((c) => RULE_ID.test(c[0] ?? ""));
+}
+
+/** D1: every sequencing rule was checked against the code it cites, and no contradiction is left open. */
+function meaning(body: string, path: string, issues: Issue[]): void {
+  const at = body.search(/^##+ Meaning check\b/mu);
+  if (at < 0) {
+    issues.push({ path, message: "D1 code reading: no `## Meaning check` (a second reader checks each rule says what its cited code does)" });
+    return;
+  }
+  const check = body.slice(at).split("\n").slice(1).join("\n").split(/^## /mu)[0] ?? "";
+  const rows = ruleRows(check);
+  for (const [id, verdict = "", , resolution = ""] of rows) {
+    if (/^(partial|mismatch)$/iu.test(verdict) && !/^(rewritten|dropped|conflict)/iu.test(resolution)) {
+      issues.push({ path, message: `D1 code reading: ${id} is ${verdict} with no resolution (rewritten, dropped or conflict)` });
+    }
+  }
+  const known = new Set(rows.map((c) => c[0]));
+  const missing = ruleRows(body.replace(check, "")).filter((c) => !known.has(c[0]) && SEQUENCING.test(c[3] ?? "")).map((c) => c[0]);
+  if (missing.length > 0) issues.push({ path, message: `D1 code reading: ${missing.join(", ")} have no row in the Meaning check (order, atomicity and timing rules are checked, not sampled)` });
+}
+
 /** D1: the code was read first, by readers scaled to repo size, with file evidence. */
 function reading(root: string, issues: Issue[]): void {
   const path = join(root, ".agents/setup-log/reading.md");
@@ -31,6 +63,7 @@ function reading(root: string, issues: Issue[]): void {
   if (!EVIDENCE.test(body)) issues.push({ path, message: "D1 code reading: no file:line evidence in the reading log" });
   if (!/^\*\*Budget:\*\*/mu.test(body))
     issues.push({ path, message: "D1 code reading: no **Budget:** line (state the run budget or `none found`; an overrun needs an owner-approved exception)" });
+  meaning(body, path, issues);
 }
 
 const UI_FILE = /\.(tsx|jsx|vue|svelte|css|scss)$/u;

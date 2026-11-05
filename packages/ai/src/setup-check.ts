@@ -32,6 +32,10 @@ function covers(plan: string, path: string): boolean {
 
 const SETUP_LOCKFILES = ["pnpm-lock.yaml", "package-lock.json", "yarn.lock", "bun.lock"];
 
+// `intro-first: x`, also with list/quote markers and markdown emphasis
+// around the label: `- **Intro-first:** x`, `**Intro-first**: x`, `_intro-first_: x`.
+const INTRO_FIRST = /^[\s>*_`#-]*intro-first[*_`]*\s*:[*_`]*\s*[^\s*_`]/im;
+
 const planRow = (path: string, reason: string): string => `| ${path} | edit | ${reason} |`;
 
 /** Ready-to-paste plan row for a git path the plan does not cover. */
@@ -107,7 +111,7 @@ export function checkSetup(root: string, options: { plan?: string } = {}): Setup
   }
   if (plan) {
     const text = tryCatch(() => readFileSync(plan, "utf8"));
-    if (text.ok && !/^\s*intro-first:\s*\S/im.test(text.value)) {
+    if (text.ok && !INTRO_FIRST.test(text.value)) {
       issues.push({ path: plan, message: "plan misses the intro-first line; append `intro-first: printed before any tool call` to the appendix" });
     }
   }

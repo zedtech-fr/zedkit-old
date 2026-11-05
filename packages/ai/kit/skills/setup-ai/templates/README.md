@@ -16,10 +16,11 @@ These files ship in **this skill folder** at `.agents/skills/setup-ai/templates/
 
 Used in place, never copied to the repo as-is:
 
-| Template                             | Use                                                                                                                |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| `templates/reader-brief.template.md` | Self-contained brief pasted into each read-only reader (one per slice from `npx zedkit-ai scan`)                   |
-| `templates/reading-log.template.md`  | Shape of `.agents/setup-log/reading.md`: reader rows, merged rules, interview gaps (checked by `validate --setup`) |
+| Template                                 | Use                                                                                                                               |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `templates/reader-brief.template.md`     | Self-contained brief pasted into each read-only reader (one per slice from `npx zedkit-ai scan`)                                  |
+| `templates/rule-check-brief.template.md` | Self-contained brief for the second reader that checks each rule says what the code does (order, atomicity, timing)               |
+| `templates/reading-log.template.md`      | Shape of `.agents/setup-log/reading.md`: reader rows, merged rules, meaning check, interview gaps (checked by `validate --setup`) |
 
 ## Score and learn (phase E)
 

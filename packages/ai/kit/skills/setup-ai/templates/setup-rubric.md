@@ -94,7 +94,7 @@ Four more axes, scored 0-3 like the others, each measurable from files. **Every 
 - 0: No reading phase; facts come from docs and the owner only.
 - 1: One agent skimmed the code, or readers ran with no log and no citations.
 - 2: `.agents/setup-log/reading.md` lists one numbered reader row per slice (inside any run budget the repo already sets, such as a cap on files read), scaled to repo size (1-5 small, 6-10 medium, 11-20 large; see `npx zedkit-ai scan`), with `file:line` evidence; the interview asked at most what the code left open.
-- 3: As 2, plus the lead spot-checked citations per reader and dropped the failures, conflicts between code and docs are listed, and every interview question cites the gap it closes (an owner asked something the code answered counts against).
+- 3: As 2, plus the lead spot-checked citations per reader and dropped the failures, a second reader checked that each rule says what the cited code does (every order, atomicity or timing rule, with a `## Meaning check` row and no unresolved `partial` or `mismatch`), conflicts between code and docs are listed, and every interview question cites the gap it closes (an owner asked something the code answered counts against).
 
 ### D2. Domain and identity rules
 

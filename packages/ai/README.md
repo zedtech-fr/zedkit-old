@@ -107,7 +107,9 @@ run one review workflow, and check done-ness without loading the whole kit.
 `domain-modeling`, `persona-review`, `compose-ui`, `code-review`,
 `ponytail-review`, `retro`, `rules-upkeep`, and `writing-for-agents`, and subagents
 `product-director`, `ui-designer`, and `copywriter`. Use this for the
-first-5-minutes path and `/setup-ai` discovery depth.
+first-5-minutes path and `/setup-ai` discovery depth. Before composing,
+restyling or personalising UI, run `/compose-ui`: client business → personas
+→ the client's customers → their personas → UI choices.
 
 **Already on `core`?** Nothing is removed from your tree automatically.
 `zedkit-ai validate` reports drift; add skills with `zedkit-ai init
