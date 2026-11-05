@@ -1,8 +1,18 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
+import { tryCatch, tryCatchAsync } from "@zedtech/zedkit-core";
+import { act } from "react";
+import { hydrateRoot } from "react-dom/client";
+import { renderToString } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 import { OptionCard, OptionCards, Wizard, WizardStep, WizardSteps } from "#index.js";
+
+function hydrationMessages(logs: unknown[][]): string[] {
+  return logs
+    .map((args) => args.map(String).join(" "))
+    .filter((msg) => /hydrat|did not match|#418|#423|#425/i.test(msg));
+}
 
 describe("WizardSteps", () => {
   it("marks the current step and checks off earlier ones", () => {
@@ -39,6 +49,60 @@ describe("WizardSteps", () => {
     render(<WizardSteps steps={["One", "Two", "Three"]} current={1} />);
     expect(screen.getByText("Step 2 of 3 · Two")).toBeTruthy();
     expect(screen.getByRole("progressbar", { name: "Progress" }).getAttribute("aria-valuenow")).toBe("2");
+  });
+
+  it("hydrates a desktop viewport without a markup mismatch", async () => {
+    const tree = <WizardSteps steps={["One", "Two", "Three"]} current={0} />;
+    const windowDesc = Object.getOwnPropertyDescriptor(globalThis, "window");
+    const origError = console.error;
+    const ssr = tryCatch(() => {
+      Object.defineProperty(globalThis, "window", { configurable: true, value: undefined });
+      return renderToString(tree);
+    });
+    if (windowDesc) Object.defineProperty(globalThis, "window", windowDesc);
+    if (!ssr.ok) throw ssr.error;
+
+    expect(ssr.value).toContain("progressbar");
+    expect(ssr.value).not.toContain("data-slot=\"wizard\"");
+
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 1280 });
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      matches: false,
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    const container = document.createElement("div");
+    container.innerHTML = ssr.value;
+    document.body.appendChild(container);
+
+    const recoverable: unknown[] = [];
+    const logs: unknown[][] = [];
+    console.error = (...args: unknown[]) => {
+      logs.push(args);
+      origError.apply(console, args);
+    };
+
+    let root: ReturnType<typeof hydrateRoot> | undefined;
+    const hydrated = tryCatchAsync(async () => {
+      await act(async () => {
+        root = hydrateRoot(container, tree, {
+          onRecoverableError: (error) => recoverable.push(error),
+        });
+      });
+    });
+    const done = await hydrated;
+    console.error = origError;
+    const desktopList = container.querySelector('[data-slot="wizard"]');
+    root?.unmount();
+    container.remove();
+    if (!done.ok) throw done.error;
+
+    expect(hydrationMessages(logs)).toEqual([]);
+    expect(recoverable).toEqual([]);
+    expect(desktopList).not.toBeNull();
   });
 });
 

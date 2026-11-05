@@ -12,11 +12,9 @@ function narrowNow(): boolean {
   return window.innerWidth < 640 || Boolean(q?.matches);
 }
 
-/** Tailwind `sm` breakpoint. `ssrWhenUnknown` is the static-export default when `window` is missing. */
+/** Tailwind `sm` breakpoint. First paint uses `ssrWhenUnknown` so SSR and hydration match; the live viewport applies in layout. */
 export function useNarrowViewport(ssrWhenUnknown = false): boolean {
-  const [narrow, setNarrow] = React.useState(() =>
-    typeof window === "undefined" ? ssrWhenUnknown : narrowNow(),
-  );
+  const [narrow, setNarrow] = React.useState(ssrWhenUnknown);
 
   React.useLayoutEffect(() => {
     const sync = () => setNarrow(narrowNow());
