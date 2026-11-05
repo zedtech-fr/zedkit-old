@@ -64,6 +64,14 @@ test("confirm-dialog family uses kit registry slugs for button and dialog", () =
 /** Drawer family (#420): kit Button for Radix drawer chrome. */
 const DRAWER_FAMILY = ["drawer", "button", "surface"];
 
+test("surface item stages parallax companions after Surface wraps ParallaxLayer", () => {
+  const surface = registry.items.find((item) => item.name === "surface");
+  const paths = surface.files.map((file) => file.path);
+  for (const leaf of ["surface.tsx", "parallax.tsx", "parallax-types.ts"]) {
+    assert.ok(paths.some((path) => path.endsWith(leaf)), `surface item missing ${leaf}`);
+  }
+});
+
 test("drawer family uses kit registry slug for button", () => {
   assert.deepEqual(checkCopySourceFamily(registry, DRAWER_FAMILY), []);
   const drawer = registry.items.find((item) => item.name === "drawer");

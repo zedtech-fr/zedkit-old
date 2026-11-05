@@ -652,6 +652,14 @@
         {
           "path": "registry/ui/surface.tsx",
           "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/parallax.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/parallax-types.ts",
+          "type": "registry:ui"
         }
       ]
     },
