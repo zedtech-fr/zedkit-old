@@ -175,7 +175,7 @@ jobs:
       # Skipped on the Version PR itself: it consumed the changesets, so
       # `status` always reports "changed packages, no changesets" there.
       - run: pnpm run changeset:status
-        if: github.head_ref != 'changeset-release/main'
+        if: github.head_ref != 'changeset-release/main' && !startsWith(github.head_ref, 'backmerge/')
 
   registry-smoke:
     runs-on: ubuntu-latest
