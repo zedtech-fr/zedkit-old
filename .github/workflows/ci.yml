@@ -15,44 +15,50 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # When a PR touches only workflow YAML or .github/*.md, heavy jobs skip and
-  # ci-required accepts that only if this job sets workflow_only=true.
+  # Scope of this run (scripts/ci-affected.mjs). Full CI runs only for pushes
+  # and PRs targeting main. Every other PR, lockfile / root config / workflow
+  # changes included, runs affected-only: turbo filters, plus path gates on
+  # the docs and registry jobs. Gated jobs report `skipped`, which
+  # ci-required accepts.
   changes:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
+      full: ${{ steps.detect.outputs.full }}
       workflow_only: ${{ steps.detect.outputs.workflow_only }}
+      workflows: ${{ steps.detect.outputs.workflows }}
+      docs: ${{ steps.detect.outputs.docs }}
+      registry: ${{ steps.detect.outputs.registry }}
+      ui: ${{ steps.detect.outputs.ui }}
+      filter: ${{ steps.detect.outputs.filter }}
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - name: Detect workflow-only diff
+      - name: Detect scope
         id: detect
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE: ${{ github.event.before }}
         run: |
           set -euo pipefail
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            git fetch origin "${{ github.base_ref }}"
-            base="origin/${{ github.base_ref }}"
-          elif [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
-            base="${{ github.event.before }}"
+          if [ "$EVENT" = "pull_request" ]; then
+            git fetch origin "$BASE_REF"
+            base="origin/$BASE_REF"
+          elif [ -n "$BEFORE" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ]; then
+            base="$BEFORE"
           else
             base="HEAD~1"
           fi
-          mapfile -t files < <(git diff --name-only "$base"...HEAD)
-          workflow_only=true
-          for f in "${files[@]}"; do
-            case "$f" in
-              .github/workflows/*|.github/*.md) ;;
-              *) workflow_only=false; break ;;
-            esac
-          done
-          echo "workflow_only=$workflow_only" >> "$GITHUB_OUTPUT"
+          git diff --name-only --no-renames "$base"...HEAD |
+            node scripts/ci-affected.mjs --event "$EVENT" --base-ref "$BASE_REF" | tee -a "$GITHUB_OUTPUT"
 
   workflow-lint:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: changes
-    if: needs.changes.outputs.workflow_only == 'true'
+    if: needs.changes.outputs.workflows == 'true'
     steps:
       - uses: actions/checkout@v7
         with:
@@ -105,6 +111,13 @@ jobs:
     timeout-minutes: 30
     needs: changes
     if: needs.changes.outputs.workflow_only != 'true'
+    env:
+      # Empty on the full path (pushes, PRs into main); otherwise turbo runs
+      # only the changed packages and their dependents.
+      FILTER: ${{ needs.changes.outputs.filter }}
+      BASE_REF: ${{ github.base_ref }}
+      FULL: ${{ needs.changes.outputs.full }}
+      DOCS: ${{ needs.changes.outputs.docs }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -128,31 +141,46 @@ jobs:
           restore-keys: |
             turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
       # Sequential phases: build output is read by later phases.
-      - run: pnpm exec turbo run typecheck lint
+      - run: pnpm exec turbo run typecheck lint ${FILTER:+"$FILTER"}
       # Smoke-test the shared ESLint config itself: with zero packages turbo
       # runs no lint task, so a broken config would otherwise stay green.
-      - run: pnpm exec eslint .
+      # Affected path: lint the changed files, and the whole repo only when
+      # the config itself changed.
+      - name: ESLint
+        run: bash scripts/ci-eslint.sh
       - run: pnpm run catalog:check
-      - run: pnpm exec turbo run build
+      # Package builds feed the API report and pack checks; the docs build
+      # (the slowest) only runs when the docs site is affected.
+      - name: Build
+        run: |
+          if [ "$DOCS" = "true" ]; then
+            pnpm exec turbo run build
+          else
+            pnpm exec turbo run build --filter='!@zedtech/zedkit-docs'
+          fi
       - run: bash scripts/check-api-report.sh
       - name: Docs static export SEO check
+        if: env.DOCS == 'true'
         run: node apps/docs/scripts/check-seo-export.mjs
       - name: Docs home first-load JS budget
+        if: env.DOCS == 'true'
         run: node apps/docs/scripts/check-first-load-budget.mjs
       - run: bash scripts/check-pack.sh
       - run: bash scripts/check-e2e-registered.sh
-      - run: pnpm exec turbo run test
+      - run: pnpm exec turbo run test ${FILTER:+"$FILTER"}
       - name: Kit markdown prettier
         run: pnpm --filter @zedtech/zedkit-ai run kit:md
+      # Workspace-wide thresholds, and it reruns every test: full path only.
       - name: Coverage (vitest v8)
+        if: env.FULL == 'true'
         run: pnpm test:coverage
       - name: Coverage summary
-        if: always()
+        if: always() && env.FULL == 'true'
         run: |
           test -f coverage/coverage-summary.json || exit 0
           node scripts/coverage-summary.mjs coverage/coverage-summary.json >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v7
-        if: always()
+        if: always() && env.FULL == 'true'
         with:
           name: coverage
           path: coverage/
@@ -162,12 +190,16 @@ jobs:
       # Gallery smoke: real chromium over the built ui gallery (both
       # themes, zero console errors), screenshots kept as artifacts.
       - uses: actions/cache@v6
+        if: needs.changes.outputs.ui == 'true'
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm exec playwright install --with-deps chromium
+        if: needs.changes.outputs.ui == 'true'
       - run: pnpm --filter @zedtech/zedkit-ui smoke
+        if: needs.changes.outputs.ui == 'true'
       - uses: actions/upload-artifact@v7
+        if: needs.changes.outputs.ui == 'true'
         with:
           name: ui-gallery
           path: packages/ui/test-results/*.png
@@ -190,7 +222,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: changes
-    if: needs.changes.outputs.workflow_only != 'true'
+    if: needs.changes.outputs.registry == 'true' && needs.changes.outputs.workflow_only != 'true'
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
@@ -206,7 +238,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: changes
-    if: needs.changes.outputs.workflow_only != 'true'
+    if: needs.changes.outputs.registry == 'true' && needs.changes.outputs.workflow_only != 'true'
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
@@ -227,7 +259,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: changes
-    if: needs.changes.outputs.workflow_only != 'true'
+    if: needs.changes.outputs.registry == 'true' && needs.changes.outputs.workflow_only != 'true'
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
@@ -249,7 +281,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     needs: changes
-    if: needs.changes.outputs.workflow_only != 'true'
+    if: needs.changes.outputs.docs == 'true' && needs.changes.outputs.workflow_only != 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -289,7 +321,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     needs: changes
-    if: needs.changes.outputs.workflow_only != 'true'
+    if: needs.changes.outputs.docs == 'true' && needs.changes.outputs.workflow_only != 'true'
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
@@ -322,7 +354,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: [changes, docs-e2e-shard, docs-e2e-routes]
-    if: always() && needs.changes.outputs.workflow_only != 'true'
+    if: always() && needs.changes.outputs.docs == 'true' && needs.changes.outputs.workflow_only != 'true'
     steps:
       - name: All shards passed
         run: |
@@ -333,7 +365,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: changes
-    if: needs.changes.outputs.workflow_only != 'true'
+    if: needs.changes.outputs.docs == 'true' && needs.changes.outputs.workflow_only != 'true'
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
@@ -346,6 +378,10 @@ jobs:
       # static export (apps/docs/out, same files Caddy serves in prod)
       # and prove the home renders with live demos.
       - run: pnpm exec turbo run build --filter=@zedtech/zedkit-docs
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - run: pnpm exec playwright install --with-deps chromium
       - run: |
           pnpm dlx serve@14.2.6 apps/docs/out -l 3100 >/tmp/docs-start.log 2>&1 &
@@ -375,16 +411,17 @@ jobs:
   # Stable check name for branch protection. Require this one job instead of
   # listing every CI job (and the docs-e2e shard names). The ruleset still
   # lists the old names until an admin applies the settings issue.
+  # Jobs gated off by the scope in `changes` report `skipped`, which passes;
+  # only failed or cancelled jobs fail the gate.
   ci-required:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: [changes, hygiene, workflow-lint, checks, registry-smoke, docs-e2e, docs-smoke]
     if: always()
     steps:
-      - name: All required jobs passed
+      - name: All required jobs passed or were skipped
         env:
           CHANGES: ${{ needs.changes.result }}
-          WORKFLOW_ONLY: ${{ needs.changes.outputs.workflow_only }}
           HYGIENE: ${{ needs.hygiene.result }}
           WORKFLOW_LINT: ${{ needs.workflow-lint.result }}
           CHECKS: ${{ needs.checks.result }}
@@ -392,18 +429,12 @@ jobs:
           DOCS_E2E: ${{ needs.docs-e2e.result }}
           DOCS_SMOKE: ${{ needs.docs-smoke.result }}
         run: |
+          # changes and hygiene always run: they must succeed.
           test "$CHANGES" = "success"
           test "$HYGIENE" = "success"
-          if [ "$WORKFLOW_ONLY" = "true" ]; then
-            test "$WORKFLOW_LINT" = "success"
-            test "$CHECKS" = "skipped"
-            test "$REGISTRY" = "skipped"
-            test "$DOCS_E2E" = "skipped"
-            test "$DOCS_SMOKE" = "skipped"
-          else
-            test "$WORKFLOW_LINT" = "skipped"
-            test "$CHECKS" = "success"
-            test "$REGISTRY" = "success"
-            test "$DOCS_E2E" = "success"
-            test "$DOCS_SMOKE" = "success"
-          fi
+          for result in "$WORKFLOW_LINT" "$CHECKS" "$REGISTRY" "$DOCS_E2E" "$DOCS_SMOKE"; do
+            case "$result" in
+              success | skipped) ;;
+              *) echo "ci-required: a job finished as $result" >&2; exit 1 ;;
+            esac
+          done

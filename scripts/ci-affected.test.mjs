@@ -1,0 +1,72 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { closure, readWorkspace, scope } from "./ci-affected.mjs";
+
+const workspace = readWorkspace();
+const run = (files, baseRef = "dev", event = "pull_request") => scope({ event, baseRef, files, workspace });
+
+test("closure follows workspace dependencies transitively", () => {
+  const dirs = closure(workspace, "@zedtech/zedkit-docs");
+  assert.ok(dirs.includes("apps/docs/"));
+  assert.ok(dirs.includes("packages/ui/"));
+  assert.ok(dirs.includes("packages/i18n/"), "ui -> i18n");
+  assert.ok(!dirs.includes("packages/nest/"));
+});
+
+test("PR to main and pushes are full", () => {
+  assert.equal(run(["README.md"], "main").full, true);
+  assert.equal(run(["README.md"], "main").docs, true);
+  assert.equal(run([], "", "push").full, true);
+  assert.equal(run([], "", "push").filter, "");
+});
+
+test("PR to dev is never full, even for lockfile, root config and workflows", () => {
+  for (const f of ["pnpm-lock.yaml", "package.json", "turbo.json", "tsconfig.base.json", ".github/workflows/ci.yml"]) {
+    const r = run([f]);
+    assert.equal(r.full, false, f);
+    assert.equal(r.filter, "--filter=...[origin/dev]", f);
+  }
+});
+
+test("lockfile and root config still run docs and registry jobs; workflow edits do not", () => {
+  assert.equal(run(["pnpm-lock.yaml"]).docs, true);
+  assert.equal(run(["turbo.json"]).registry, true);
+  const wf = run([".github/workflows/ci.yml"]);
+  assert.deepEqual([wf.docs, wf.registry, wf.workflows, wf.workflow_only], [false, false, true, true]);
+});
+
+test("a package outside the docs closure skips docs and registry", () => {
+  const r = run(["packages/nest/src/index.ts"]);
+  assert.deepEqual([r.docs, r.registry], [false, false]);
+});
+
+test("package docs reach the docs site but not the registry smoke", () => {
+  const r = run(["packages/nest/CATALOG.md"]);
+  assert.deepEqual([r.docs, r.registry], [true, false]);
+});
+
+test("ui reaches docs and registry; seo reaches docs only", () => {
+  assert.deepEqual([run(["packages/ui/src/a.tsx"]).docs, run(["packages/ui/src/a.tsx"]).registry], [true, true]);
+  assert.deepEqual([run(["packages/seo/src/a.ts"]).docs, run(["packages/seo/src/a.ts"]).registry], [true, false]);
+});
+
+test("markdown at the root and .changeset skip heavy jobs", () => {
+  const r = run(["README.md", ".changeset/x.md"]);
+  assert.deepEqual([r.docs, r.registry, r.workflow_only], [false, false, false]);
+});
+
+test("mixed workflow and code diff is not workflow-only", () => {
+  const r = run([".github/workflows/ci.yml", "packages/ui/src/a.tsx"]);
+  assert.deepEqual([r.workflow_only, r.workflows, r.docs], [false, true, true]);
+});
+
+test("an empty diff is not workflow-only", () => {
+  assert.equal(run([]).workflow_only, false);
+});
+
+test("ui gallery smoke follows the ui closure, not the docs app", () => {
+  assert.equal(run(["packages/i18n/src/a.ts"]).ui, true);
+  assert.equal(run(["apps/docs/app/page.tsx"]).ui, false);
+  assert.equal(run(["packages/seo/src/a.ts"]).ui, false);
+  assert.equal(run(["packages/nest/src/a.ts"], "main").ui, true);
+});
