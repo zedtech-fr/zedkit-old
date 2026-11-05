@@ -10,13 +10,11 @@ import * as React from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
 import {
   NonModalDrawerContent,
-  NonModalDrawerDescription,
   NonModalDrawerHandle,
-  NonModalDrawerProvider,
-  NonModalDrawerTitle,
   NonModalDrawerTrigger,
-  useMaybeNonModalDrawer,
 } from "./drawer-non-modal.js";
+import { NonModalDrawerProvider, useMaybeNonModalDrawer } from "./drawer-non-modal-context.js";
+import { DrawerDescription, DrawerTitle } from "./drawer-meta.js";
 import {
   DrawerBody,
   DrawerClose,
@@ -24,23 +22,15 @@ import {
   DrawerFooter,
   DrawerHeader,
 } from "./drawer-parts.js";
-import { drawerPanelClassName, resolveDrawerDirection, type DrawerSize } from "./drawer-panel-classes.js";
-import {
-  focusOverlayInitial,
-  type OverlayInitialFocus,
-  resolveModalMountAutoFocus,
-  useExitUnmountFallback,
-} from "./overlay-modal.js";
+import { resolveDrawerDirection, type DrawerSize } from "./drawer-panel-classes.js";
+import { type OverlayInitialFocus, resolveModalMountAutoFocus } from "./overlay-modal.js";
 import { cn } from "./utils.js";
-import { surfaceVariants } from "./surface.js";
-import { OverlayMountContext, ScopePortal } from "./theme-scope.js";
+import { DrawerPortal } from "./drawer-portal.js";
+import { DrawerVaulContent } from "./drawer-vaul.js";
 import { useNarrowViewport } from "./use-narrow-viewport.js";
 
 type DrawerRootProps = React.ComponentProps<typeof DrawerPrimitive.Root> & {
-  /**
-   * On narrow viewports, map left/right drawers to a bottom sheet (`sheet`) or keep a side panel (`side`,
-   * full height, up to 90% of the width so the dimmed page stays tappable). Defaults to `sheet`.
-   */
+  /** On narrow viewports, map left/right to a bottom sheet (`sheet`) or side panel (`side`). */
   mobile?: "sheet" | "side";
 };
 
@@ -113,43 +103,6 @@ function DrawerTrigger(props: React.ComponentProps<typeof DrawerPrimitive.Trigge
   return <DrawerPrimitive.Trigger data-slot="drawer-trigger" {...props} />;
 }
 
-function DrawerPortal({
-  container,
-  ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Portal>) {
-  // ScopePortal to document.body keeps the overlay above site chrome; see theme-scope.tsx.
-  return <ScopePortal container={container}>{props.children}</ScopePortal>;
-}
-
-function DrawerOverlay({
-  className,
-  ref,
-  ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Overlay>) {
-  const exitRef = useExitUnmountFallback<HTMLDivElement>();
-  const setRef = React.useCallback(
-    (node: HTMLDivElement | null) => {
-      exitRef(node);
-      if (typeof ref === "function") ref(node);
-      else if (ref) ref.current = node;
-    },
-    [exitRef, ref],
-  );
-  return (
-    <DrawerPrimitive.Overlay
-      data-slot="drawer-overlay"
-      ref={setRef}
-      className={cn(
-        "fixed inset-0 z-overlay bg-overlay/50 backdrop-blur-sm",
-        "motion-safe:data-[state=open]:animate-[zk-fade-in_var(--motion-base)_var(--ease-enter)]",
-        "motion-safe:data-[state=closed]:animate-[zk-fade-out_var(--motion-base)_var(--ease-exit)]",
-        className,
-      )}
-      {...props}
-    />
-  );
-}
-
 function DrawerContent({
   className,
   children,
@@ -159,18 +112,8 @@ function DrawerContent({
   ref,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Content> & {
-  /**
-   * Mirror of the `Drawer` root `modal` prop: `false` renders no
-   * overlay so the background stays interactive. Defaults to `true`.
-   */
   modal?: boolean;
-  /** Side-panel width on desktop (`sm` 24rem, `md` 28rem default, `lg` min(600px, 92vw)). */
   size?: DrawerSize;
-  /**
-   * Opt-in field to focus on open (a ref, or a selector resolved inside the
-   * panel). Without it focus lands on the panel itself, never inside a
-   * field; a focused field gets the caret at the end, never a selection.
-   */
   initialFocus?: OverlayInitialFocus;
 }) {
   const inline = useMaybeNonModalDrawer();
@@ -181,42 +124,17 @@ function DrawerContent({
       </NonModalDrawerContent>
     );
   }
-
-  const contentRef = React.useRef<HTMLDivElement | null>(null);
-  const [mount, setMount] = React.useState<HTMLDivElement | null>(null);
-  const exitRef = useExitUnmountFallback<HTMLDivElement>();
-  const setRef = React.useCallback(
-    (node: HTMLDivElement | null) => {
-      contentRef.current = node;
-      setMount(node);
-      exitRef(node);
-      if (typeof ref === "function") ref(node);
-      else if (ref) ref.current = node;
-    },
-    [exitRef, ref],
-  );
   return (
-    <DrawerPortal>
-      {modal ? <DrawerOverlay /> : null}
-      <DrawerPrimitive.Content
-        data-slot="drawer-content"
-        ref={setRef}
-        tabIndex={-1}
-        onOpenAutoFocus={(event) => {
-          if (!modal) return;
-          event.preventDefault();
-          focusOverlayInitial(contentRef.current, initialFocus);
-        }}
-        className={cn(
-          drawerPanelClassName(size, className),
-          "outline-none",
-          surfaceVariants({ variant: "solid", elevation: 3, radius: "none", padding: "none" }),
-        )}
-        {...props}
-      >
-        <OverlayMountContext.Provider value={mount}>{children}</OverlayMountContext.Provider>
-      </DrawerPrimitive.Content>
-    </DrawerPortal>
+    <DrawerVaulContent
+      className={className}
+      modal={modal}
+      size={size}
+      initialFocus={initialFocus}
+      ref={ref}
+      {...props}
+    >
+      {children}
+    </DrawerVaulContent>
   );
 }
 
@@ -239,37 +157,6 @@ function DrawerHandle({ className, ...props }: React.ComponentProps<typeof Drawe
   );
 }
 
-function DrawerTitle({ className, ...props }: React.ComponentProps<typeof DrawerPrimitive.Title>) {
-  const inline = useMaybeNonModalDrawer();
-  if (inline) {
-    return <NonModalDrawerTitle className={className} {...props} />;
-  }
-  return (
-    <DrawerPrimitive.Title
-      data-slot="drawer-title"
-      className={cn("text-lg leading-none font-semibold tracking-tight", className)}
-      {...props}
-    />
-  );
-}
-
-function DrawerDescription({
-  className,
-  ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Description>) {
-  const inline = useMaybeNonModalDrawer();
-  if (inline) {
-    return <NonModalDrawerDescription className={className} {...props} />;
-  }
-  return (
-    <DrawerPrimitive.Description
-      data-slot="drawer-description"
-      className={cn("text-sm text-muted-foreground", className)}
-      {...props}
-    />
-  );
-}
-
 type DrawerProps = DrawerRootProps;
 
 export type { DrawerSize };
@@ -284,8 +171,8 @@ export {
   DrawerFooter,
   DrawerHandle,
   DrawerHeader,
-  DrawerOverlay,
   DrawerPortal,
   DrawerTitle,
   DrawerTrigger,
 };
+export { DrawerOverlay } from "./drawer-vaul.js";

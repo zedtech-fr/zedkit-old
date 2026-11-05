@@ -258,6 +258,22 @@
           "type": "registry:ui"
         },
         {
+          "path": "registry/ui/drawer-non-modal-context.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/drawer-portal.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/drawer-vaul.tsx",
+          "type": "registry:ui"
+        },
+        {
+          "path": "registry/ui/drawer-meta.tsx",
+          "type": "registry:ui"
+        },
+        {
           "path": "registry/ui/overlay-modal.ts",
           "type": "registry:ui"
         },

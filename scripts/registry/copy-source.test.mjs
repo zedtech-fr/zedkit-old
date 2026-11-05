@@ -74,6 +74,10 @@ test("drawer family uses kit registry slug for button", () => {
     "drawer-panel-classes.ts",
     "drawer-non-modal-effects.ts",
     "drawer-parts.tsx",
+    "drawer-non-modal-context.tsx",
+    "drawer-portal.tsx",
+    "drawer-vaul.tsx",
+    "drawer-meta.tsx",
   ]) {
     assert.ok(paths.some((path) => path.endsWith(leaf)), `drawer item missing ${leaf}`);
   }

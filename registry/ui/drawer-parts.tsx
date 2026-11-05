@@ -8,8 +8,8 @@ import { cn } from "@/lib/utils";
 import { useUiMessages } from "@/components/ui/ui-provider";
 import {
   NonModalDrawerClose,
-  useMaybeNonModalDrawer,
 } from "@/components/ui/drawer-non-modal";
+import { useMaybeNonModalDrawer } from "@/components/ui/drawer-non-modal-context";
 
 function DrawerClose(props: React.ComponentProps<typeof DrawerPrimitive.Close>) {
   const inline = useMaybeNonModalDrawer();
