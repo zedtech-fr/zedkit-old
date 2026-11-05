@@ -1,5 +1,4 @@
-# Custom self-hosted runner labels used by trial (and later production) Dedibox runners.
-# See https://github.com/rhysd/actionlint/blob/main/docs/config.md
+# Custom self-hosted runner labels used by zedkit runners.
 self-hosted-runner:
   labels:
-    - dedibox
+    - zedkit

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Dedibox self-hosted runner local caches (host volume /runner-cache).
+# Self-hosted runner local caches (host volume /runner-cache).
 # Safe for concurrent ephemeral runners: archives are extracted per job into
 # the workspace (new inodes). The pnpm store is content-addressed and shared
 # read-mostly; installs use --offline/--prefer-offline against it.
@@ -21,7 +21,7 @@ lock_hash() {
   sha256sum pnpm-lock.yaml | awk "{print \$1}"
 }
 
-cmd="${1:?usage: ci-dedibox-cache.sh <prepare|install|save-nm|restore-ts|save-ts|eslint-args|playwright|disk-report>}"
+cmd="${1:?usage: ci-runner-cache.sh <prepare|install|save-nm|restore-ts|save-ts|eslint-args|playwright|disk-report>}"
 
 case "$cmd" in
   prepare)
