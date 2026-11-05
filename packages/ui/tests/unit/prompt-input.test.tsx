@@ -79,4 +79,69 @@ describe("PromptInput", () => {
     await user.type(field, "{Enter}");
     expect(onSubmit).not.toHaveBeenCalled();
   });
+
+  it("uses icon control height on the send button", () => {
+    render(
+      <PromptInput
+        sendLabel="Generate"
+        value="Hi"
+        onChange={() => {}}
+        onSubmit={() => {}}
+        aria-label="Brief"
+      />,
+    );
+    const send = screen.getByRole("button", { name: "Generate" });
+    expect(send.className).toContain("size-control-height");
+    expect(send.className).not.toContain("size-8");
+  });
+
+  it("blocks send while busy and exposes aria-busy on the send control", () => {
+    const onSubmit = vi.fn();
+    render(
+      <PromptInput
+        sendLabel="Generate"
+        value="Hi"
+        busy
+        onChange={() => {}}
+        onSubmit={onSubmit}
+        aria-label="Brief"
+      />,
+    );
+    const send = screen.getByRole("button", { name: "Generate" });
+    expect(send.getAttribute("aria-busy")).toBe("true");
+    expect((send as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("submits when allowEmptySubmit is set and the field is empty", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    render(
+      <PromptInput
+        sendLabel="Generate"
+        value=""
+        allowEmptySubmit
+        onChange={() => {}}
+        onSubmit={onSubmit}
+        aria-label="Brief"
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Generate" }));
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it("applies maxRows as a max-height cap on the field", () => {
+    render(
+      <PromptInput
+        sendLabel="Generate"
+        value=""
+        maxRows={4}
+        onChange={() => {}}
+        onSubmit={() => {}}
+        aria-label="Brief"
+      />,
+    );
+    const field = screen.getByLabelText("Brief") as HTMLTextAreaElement;
+    expect(field.className).toContain("max-h-prompt-input-sm");
+    expect(field.className).toContain("overflow-y-auto");
+  });
 });

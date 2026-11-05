@@ -20,7 +20,20 @@ export type PromptInputProps = Omit<
   sendDisabled?: boolean;
   /** When true, an empty field can still submit (the handler supplies the last prompt). */
   allowEmptySubmit?: boolean;
+  /** Caps auto-grow height (~line height per row, then scroll). Default 8. */
+  maxRows?: 4 | 8 | 12;
 };
+
+const promptInputFieldPadding = (twoActions: boolean) =>
+  twoActions
+    ? "pr-[calc(var(--spacing)*1.5+var(--spacing-control-height)*2+var(--spacing)*3)]"
+    : "pr-[calc(var(--spacing)*1.5+var(--spacing-control-height))]";
+
+const promptInputCancelPosition =
+  "absolute right-[calc(var(--spacing)*1.5+var(--spacing-control-height)+var(--spacing)*2)] bottom-1.5 shrink-0";
+
+const promptInputMaxHeightClass = (maxRows: 4 | 8 | 12) =>
+  ({ 4: "max-h-prompt-input-sm", 8: "max-h-prompt-input", 12: "max-h-prompt-input-lg" })[maxRows];
 
 type PromptInputActionsProps = {
   sendLabel: string;
@@ -43,16 +56,16 @@ function PromptInputActions({
         <IconButton
           type="button"
           variant="ghost"
-          size="sm"
-          className="absolute right-10 bottom-1.5"
+          size="icon"
+          className={promptInputCancelPosition}
           label={cancelLabel}
           onClick={onCancel}
         />
       ) : null}
       <IconButton
         type="submit"
-        size="sm"
-        className="absolute right-1.5 bottom-1.5 size-8 shrink-0 rounded-full"
+        size="icon"
+        className="absolute right-1.5 bottom-1.5 shrink-0 rounded-full"
         label={sendLabel}
         disabled={sendDisabled}
         aria-busy={busy || undefined}
@@ -82,6 +95,7 @@ export function PromptInput({
   busy,
   sendDisabled: sendBlocked,
   allowEmptySubmit = false,
+  maxRows = 8,
   className,
   value,
   disabled,
@@ -92,6 +106,7 @@ export function PromptInput({
 }: PromptInputProps) {
   const empty = String(value ?? "").trim() === "" && !allowEmptySubmit;
   const blocked = disabled === true || busy === true || sendBlocked === true;
+  const showCancel = busy === true && onCancel !== undefined && cancelLabel !== undefined;
 
   return (
     <form
@@ -110,9 +125,10 @@ export function PromptInput({
         disabled={disabled}
         readOnly={busy}
         className={cn(
-          "field-sizing-content max-h-40 min-h-textarea-min-height w-full min-w-0 resize-none border-0 bg-transparent py-2 pl-3 text-control shadow-none placeholder:text-muted-foreground",
-          "focus-ring-control disabled:cursor-not-allowed disabled:opacity-50",
-          busy && onCancel ? "pr-20" : "pr-12",
+          "field-sizing-content min-h-textarea-min-height w-full min-w-0 resize-none overflow-y-auto border-0 bg-transparent py-2 pl-3 text-control shadow-none placeholder:text-muted-foreground",
+          "disabled:cursor-not-allowed disabled:opacity-50",
+          promptInputMaxHeightClass(maxRows),
+          promptInputFieldPadding(showCancel),
         )}
         onKeyDown={(event) => {
           if (event.key === "Enter" && !event.shiftKey) promptInputTrySubmit(event, empty, blocked, onSubmit);

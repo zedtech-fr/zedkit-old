@@ -476,8 +476,8 @@ import { StatusDot } from "@zedtech/zedkit-ui";
 - When not to use: Plain forms with a separate submit row — use `Field` + `Textarea` + `Button`.
 - See also: `Collect multi-line text input`, `Icon-only actions with a visible name`
 - Examples: Simple, Complete
-- A11y: Pass `sendLabel` (and `cancelLabel` when using cancel); the field keeps a visible label via `aria-label` or associated `FieldLabel`.
-- Troubleshooting: Send stays disabled — value is trimmed; whitespace-only counts as empty. Field does not grow — use `field-sizing-content` (Tailwind v4) on the consumer stylesheet.
+- A11y: Pass `sendLabel` (and `cancelLabel` when using cancel); the field keeps a visible label via `aria-label` or associated `FieldLabel`. Send and cancel use `size="icon"` tap targets aligned with `--spacing-control-height`.
+- Troubleshooting: Send stays disabled — value is trimmed; whitespace-only counts as empty. Field does not grow past `maxRows` (default 8) — it scrolls inside the composer. Consumers need `field-sizing-content` (Tailwind v4) on the stylesheet.
 
 ```ts
 import { PromptInput } from "@zedtech/zedkit-ui";

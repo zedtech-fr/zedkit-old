@@ -77,7 +77,6 @@ const PROBE_STYLE: Record<string, string> = {
   boxShadow: "var(--zk-shadow-md)",
   borderTopWidth: "var(--zk-border-width)",
   lineHeight: "var(--zk-body-leading, 1.6)",
-  transitionDuration: "var(--motion-base)",
   fontFamily: "var(--font-sans)",
   backgroundImage: "var(--zk-bg-pattern)",
 };
