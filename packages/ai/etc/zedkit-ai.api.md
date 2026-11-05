@@ -19,7 +19,7 @@ export function checkDrift(projectRoot: string, source: string): Issue[];
 // @public
 export type GateCause = "timeout" | "signal" | "out-of-memory";
 
-// @public
+// @public (undocumented)
 export type GateOptions = {
     cmd: string;
     log: string;
@@ -29,7 +29,7 @@ export type GateOptions = {
     env?: Readonly<Record<string, string | undefined>>;
 };
 
-// @public
+// @public (undocumented)
 export type GateResult = {
     code: number;
     cause?: GateCause;

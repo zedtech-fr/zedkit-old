@@ -8,21 +8,17 @@ import { err, ok, tryCatch, type Result } from "@zedtech/zedkit-core";
 /** Why a gate did not end with its own exit code. */
 export type GateCause = "timeout" | "signal" | "out-of-memory";
 
-/** Options for {@link runGate}. */
 export type GateOptions = {
-  /** Shell line to run, recorded verbatim on the `CMD:` line. */
-  cmd: string;
-  /** Log file to create or replace, for example `.agents/setup-log/gates/test.log`. */
-  log: string;
+    cmd: string;
+    log: string;
   cwd?: string;
-  /** V8 heap cap in MB added to `NODE_OPTIONS` unless it already sets one. Default 4096; 0 leaves the env alone. */
+  /** Heap cap in MB for `NODE_OPTIONS` (default 4096, 0 = off). */
   heapMb?: number;
-  /** Kill the command after this many ms (SIGTERM, then SIGKILL after 5s). Exit recorded as 124. */
+  /** Kill after this many ms; recorded as EXIT:124. */
   timeoutMs?: number;
   env?: Readonly<Record<string, string | undefined>>;
 };
 
-/** Exit code recorded in the log, the cause when the gate did not end by itself, and the log path. */
 export type GateResult = { code: number; cause?: GateCause; log: string };
 
 const DEFAULT_HEAP_MB = 4096;
@@ -49,14 +45,7 @@ function classify(code: number, signal: NodeJS.Signals | null, text: string): Ga
   return signal === null ? undefined : "signal";
 }
 
-/**
- * Run one gate command and persist it in the setup-log contract: `CMD:` first,
- * `START:`, the output, `END:`, an optional `CAUSE:`, and `EXIT:<code>` as the
- * last line. Output goes straight to the file (never buffered in memory), so a
- * heavy gate cannot take the wrapper down with it. A TERM or INT aimed at the
- * wrapper stops the command and still closes the log. Resolves with the exit
- * code; never rejects.
- */
+/** Run one gate command into `options.log` (CMD, START, output, END, CAUSE?, EXIT last). Never rejects. */
 export function runGate(options: GateOptions): Promise<Result<GateResult>> {
   const stamp = (): string => new Date().toISOString();
   const opened = tryCatch(() => {
@@ -98,8 +87,8 @@ export function runGate(options: GateOptions): Promise<Result<GateResult>> {
         const exit = forced === "timeout" ? 124 : code;
         const lines = [`END: ${stamp()}`];
         if (cause === "timeout") lines.push(`CAUSE: timeout after ${options.timeoutMs}ms`);
-        else if (cause === "signal") lines.push(`CAUSE: killed by signal${signal ? ` ${signal}` : ""}`);
-        else if (cause === "out-of-memory") lines.push("CAUSE: out of memory (heap limit or kill); rerun smaller, for example --concurrency=2");
+        else if (cause === "signal") lines.push("CAUSE: killed by signal");
+        else if (cause === "out-of-memory") lines.push("CAUSE: out of memory");
         if (note) lines.push(`CAUSE: ${note}`);
         lines.push(`EXIT:${exit}`);
         const lead = text === "" || text.endsWith("\n") ? "" : "\n";
@@ -118,12 +107,10 @@ export function runGate(options: GateOptions): Promise<Result<GateResult>> {
 
 const quote = (word: string): string => (/^[\w@%+=:,./-]+$/u.test(word) ? word : `'${word.replace(/'/gu, "'\\''")}'`);
 
-/** `zedkit-ai gate <log> [--] <command...>`: run a gate into a log, exit with its code. */
 export async function gateMain(args: string[], sinks: { out: (line: string) => void; err: (line: string) => void }): Promise<number> {
   const rest = args[0] === "--" ? args.slice(1) : args;
   const [log, ...words] = rest;
   const argv = words[0] === "--" ? words.slice(1) : words;
-  // One word is already a shell line; several are argv, so quote what the shell would split.
   const cmd = argv.length === 1 ? (argv[0] ?? "") : argv.map(quote).join(" ");
   if (!log || cmd === "") {
     sinks.err("error: usage: zedkit-ai gate <log> [--] <command...>");
