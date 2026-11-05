@@ -60,7 +60,7 @@ export function HomeIdentityExampleMistMembers() {
         member={current}
         open={open}
         onOpenChange={setOpen}
-        onRestoreFocus={() => opener.current?.focus()}
+        onRestoreFocus={() => opener.current?.focus({ preventScroll: true })}
         onSaveRole={(role) =>
           setMembers((list) => list.map((item) => (item.member === current.member ? { ...item, role } : item)))
         }

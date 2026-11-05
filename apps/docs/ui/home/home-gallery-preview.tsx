@@ -34,7 +34,6 @@ function PreviewScope({ children, ...props }: ComponentProps<"div">) {
   return (
     <div
       data-home-gallery-preview=""
-      data-demo-specimen=""
       data-identity-scope=""
       data-identity={DEFAULT_IDENTITY}
       className={HOME_GALLERY_PREVIEW_SHELL_CLASS}

@@ -83,12 +83,13 @@ const PROBE_STYLE: Record<string, string> = {
 };
 
 /** Renders a scoped mist subtree in <main> and reads what it resolves to. */
-async function readScopedMist(page: Page) {
-  return page.evaluate((style) => {
+async function readScopedMist(page: Page, theme: "light" | "dark") {
+  return page.evaluate(
+    ({ style, theme: mode }) => {
     const scope = document.createElement("div");
     scope.setAttribute("data-identity-scope", "");
     scope.setAttribute("data-identity", "mist");
-    if (document.documentElement.classList.contains("dark")) scope.classList.add("dark");
+    if (mode === "dark") scope.classList.add("dark");
     const probe = document.createElement("div");
     Object.assign(probe.style, style, { borderStyle: "solid" });
     const heading = document.createElement("h2");
@@ -108,7 +109,9 @@ async function readScopedMist(page: Page) {
     };
     scope.remove();
     return out;
-  }, PROBE_STYLE);
+  },
+    { style: PROBE_STYLE, theme },
+  );
 }
 
 test.describe("scoped mist under another page identity", () => {
@@ -116,10 +119,10 @@ test.describe("scoped mist under another page identity", () => {
     test(`renders like a mist page under every identity, ${theme}`, async ({ page }) => {
       await page.goto(HOME, { waitUntil: "networkidle" });
       await useIdentity(page, "mist", theme);
-      const reference = await readScopedMist(page);
+      const reference = await readScopedMist(page, theme);
       for (const identity of ["press", "tide", "volt", "maison", "glass"]) {
         await useIdentity(page, identity, theme);
-        expect({ identity, ...(await readScopedMist(page)) }).toEqual({ identity, ...reference });
+        expect({ identity, ...(await readScopedMist(page, theme)) }).toEqual({ identity, ...reference });
       }
     });
   }
