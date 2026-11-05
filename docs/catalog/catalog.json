@@ -3455,7 +3455,7 @@
         },
         {
           "need": "Name an operation in progress",
-          "import": "`@zedtech/zedkit-ui` — `StatusLabel`, `StatusLabelProps`, `StatusLabelTone`",
+          "import": "`@zedtech/zedkit-ui` — `StatusLabel`, `StatusLabelProps`, `StatusLabelTone`, `StreamStatus`, `StreamStatusProps`, `StreamText`, `StreamTextProps`, `ASSISTANT_STREAM_STAGES`, `consumeSseStream`, `isAssistantStreamStage`, `pullSseFrames`, `readAssistantStreamEvent`, `AssistantStreamEvent`, `AssistantStreamStage`, `SseFrame`",
           "wraps": "`(none)`",
           "status": "stable",
           "shortName": "StatusLabel",
@@ -3487,7 +3487,19 @@
                 "exports": [
                   "StatusLabel",
                   "StatusLabelProps",
-                  "StatusLabelTone"
+                  "StatusLabelTone",
+                  "StreamStatus",
+                  "StreamStatusProps",
+                  "StreamText",
+                  "StreamTextProps",
+                  "ASSISTANT_STREAM_STAGES",
+                  "consumeSseStream",
+                  "isAssistantStreamStage",
+                  "pullSseFrames",
+                  "readAssistantStreamEvent",
+                  "AssistantStreamEvent",
+                  "AssistantStreamStage",
+                  "SseFrame"
                 ]
               }
             ]

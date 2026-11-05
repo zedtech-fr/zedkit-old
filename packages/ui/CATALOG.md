@@ -629,7 +629,7 @@ import { CardSkeleton } from "@zedtech/zedkit-ui";
 
 ## Name an operation in progress
 
-- Import: `@zedtech/zedkit-ui` — `StatusLabel`, `StatusLabelProps`, `StatusLabelTone`
+- Import: `@zedtech/zedkit-ui` — `StatusLabel`, `StatusLabelProps`, `StatusLabelTone`, `StreamStatus`, `StreamStatusProps`, `StreamText`, `StreamTextProps`, `ASSISTANT_STREAM_STAGES`, `consumeSseStream`, `isAssistantStreamStage`, `pullSseFrames`, `readAssistantStreamEvent`, `AssistantStreamEvent`, `AssistantStreamStage`, `SseFrame`
 - Wraps: `(none)`
 - Status: stable
 - Short name: StatusLabel
