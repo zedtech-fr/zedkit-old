@@ -106,6 +106,8 @@ gates:
     distinct_model: true
     human: required
 
+agents: {}
+
 hardcode:
   allow_paths: []
   extra_patterns: []

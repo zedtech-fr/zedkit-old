@@ -7,7 +7,15 @@ import { checkHardcodedModels } from "./hardcode.js";
 import { ALL_PROVIDERS, installKit, type Provider } from "./install.js";
 import { installNextStepLines, prettierHintLines } from "./install-next-step.js";
 import { kitDir, readManifest } from "./kit.js";
+import { loadAgent, loadPolicy, resolveRoute, type Route } from "./route.js";
 import { scanRepo } from "./scan.js";
+import {
+  CONTEXT_SIZES,
+  KINDS,
+  POLICY_PROVIDERS,
+  REASONING,
+  STAKES,
+} from "./tokenomics.js";
 import { checkDepth } from "./setup-depth.js";
 import { checkSetup } from "./setup-check.js";
 import { checkDrift, checkKitDocs, checkPlaceholders, validateKit } from "./validate.js";
@@ -37,9 +45,23 @@ const VALIDATE_OPTIONS = {
   plan: { type: "string" },
 } as const;
 
+const ROUTE_OPTIONS = {
+  kind: { type: "string" },
+  stakes: { type: "string" },
+  reasoning: { type: "string" },
+  context: { type: "string" },
+  provider: { type: "string" },
+  dir: { type: "string" },
+  json: { type: "boolean" },
+} as const;
+
 function parse(
   args: string[],
-  options: Record<string, never> | typeof OPTIONS | typeof VALIDATE_OPTIONS,
+  options:
+    | Record<string, never>
+    | typeof OPTIONS
+    | typeof VALIDATE_OPTIONS
+    | typeof ROUTE_OPTIONS,
   maxPositionals: number,
 ): Result<Parsed> {
   const parsed = tryCatch(() => parseArgs({ args, allowPositionals: true, options }));
@@ -128,6 +150,109 @@ function runValidate(args: string[], sinks: Sinks): number {
   return issues.length === 0 ? 0 : 1;
 }
 
+function oneOf<T extends string>(
+  list: readonly T[],
+  value: unknown,
+  flag: string,
+): Result<T | undefined> {
+  if (value === undefined) return ok(undefined);
+  const found = list.find((item) => item === value);
+  return found === undefined
+    ? err(
+        new Error(
+          `${flag} must be one of ${list.join(", ")} (got "${String(value)}")`,
+        ),
+      )
+    : ok(found);
+}
+
+function routeLines(agent: string, stakes: string, route: Route): string[] {
+  const needs = (field: "reasoning" | "context"): string =>
+    `${field}=${route.needs[field]} (${route.needsSource[field]})`;
+  const gate = route.gates;
+  const lines = [
+    `agent: ${agent}`,
+    `provider: ${route.provider}`,
+    `kind: ${route.kind} (${route.kindSource})`,
+    `stakes: ${stakes}, column ${route.column}`,
+    `needs: ${needs("reasoning")}, ${needs("context")}`,
+    `model: ${route.model}`,
+    `effort: ${route.effort}`,
+    `context window: ${route.contextWindow ?? "unmapped"}`,
+    `gates: review=${gate.review}${gate.second_review === "independent" ? ", second review independent" : ""}${gate.human === "required" ? ", human validation" : ""}`,
+    `read-only: ${route.readOnly ? "yes" : "no"}`,
+  ];
+  const second = route.secondReview;
+  if (second)
+    lines.push(
+      `second review: ${second.provider} model ${second.model} effort ${second.effort}`,
+    );
+  if (second?.warning) lines.push(`warning: ${second.warning}`);
+  if (route.unrouted) lines.push("unrouted: yes");
+  for (const note of route.notes) lines.push(`note: ${note}`);
+  return lines;
+}
+
+function runRoute(args: string[], sinks: Sinks): number {
+  const parsed = parse(args, ROUTE_OPTIONS, 1);
+  if (!parsed.ok) return fail(parsed.error.message, sinks);
+  const { values, positionals } = parsed.value;
+  const name = positionals[0];
+  if (name === undefined)
+    return fail(
+      "route needs an agent name (zedkit-ai route <agent> --stakes <s> ...)",
+      sinks,
+    );
+  const kind = oneOf(KINDS, values.kind, "--kind");
+  const stakes = oneOf(STAKES, values.stakes, "--stakes");
+  const reasoning = oneOf(REASONING, values.reasoning, "--reasoning");
+  const context = oneOf(CONTEXT_SIZES, values.context, "--context");
+  const provider = oneOf(POLICY_PROVIDERS, values.provider, "--provider");
+  for (const flag of [kind, stakes, reasoning, context, provider])
+    if (!flag.ok) return fail(flag.error.message, sinks);
+  if (!stakes.ok || stakes.value === undefined)
+    return fail(
+      "route needs --stakes trivial|standard|sensitive|critical",
+      sinks,
+    );
+  const agentsDir = join(
+    resolve(typeof values.dir === "string" ? values.dir : "."),
+    ".agents",
+  );
+  const policy = loadPolicy(agentsDir);
+  if (!policy.ok) return fail(policy.error.message, sinks);
+  const agent = loadAgent(agentsDir, name);
+  if (!agent.ok) return fail(agent.error.message, sinks);
+  const needs = {
+    ...(reasoning.ok &&
+      reasoning.value !== undefined && { reasoning: reasoning.value }),
+    ...(context.ok &&
+      context.value !== undefined && { context: context.value }),
+  };
+  const route = resolveRoute(policy.value, {
+    ...(kind.ok && kind.value !== undefined && { kind: kind.value }),
+    stakes: stakes.value,
+    needs,
+    agent: { name, header: agent.value.header },
+    ...(provider.ok &&
+      provider.value !== undefined && { provider: provider.value }),
+  });
+  if (!route.ok) return fail(route.error.message, sinks);
+  if (agent.value.note !== undefined) route.value.notes.push(agent.value.note);
+  if (values.json === true)
+    sinks.out(
+      JSON.stringify(
+        { agent: name, stakes: stakes.value, ...route.value },
+        null,
+        2,
+      ),
+    );
+  else
+    for (const line of routeLines(name, stakes.value, route.value))
+      sinks.out(line);
+  return 0;
+}
+
 function runScan(args: string[], sinks: Sinks): number {
   const parsed = parse(args, {}, 1);
   if (!parsed.ok) return fail(parsed.error.message, sinks);
@@ -161,6 +286,7 @@ export function main(argv: string[], sinks: Sinks): number {
   if (command === "init") return runInstall(rest, sinks, "init");
   if (command === "validate") return runValidate(rest, sinks);
   if (command === "scan") return runScan(rest, sinks);
+  if (command === "route") return runRoute(rest, sinks);
   if (command === "list") return runList(rest, sinks);
   const help = command === undefined || command === "--help" || command === "-h";
   (help ? sinks.out : sinks.err)(usage());

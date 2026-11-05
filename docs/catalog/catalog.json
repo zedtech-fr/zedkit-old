@@ -126,6 +126,65 @@
           "seeAlso": [
             "Check that skills, subagents, commands and provider copies are valid"
           ]
+        },
+        {
+          "need": "Route an agent call to a model and effort from a policy file",
+          "import": "`@zedtech/zedkit-ai` — `resolveRoute`, `RouteInput`, `Route`, `SecondReview`, `KindSource`, `NeedsSource`, `AgentHeader`, `Tokenomics`, `Kind`, `Stakes`, `Effort`, `Needs`, `Reasoning`, `ContextSize`, `Review`, `Cell`, `PolicyProvider`, `ProviderPolicy`, `AgentFloor`, `HardcodeConfig`, `KINDS`, `STAKES`, `EFFORTS`, `REASONING`, `CONTEXT_SIZES`, `REVIEWS`, `POLICY_PROVIDERS`",
+          "wraps": "`(none)`",
+          "status": "beta",
+          "shortName": "Agent routing",
+          "audience": "Agents and maintainers who pick a model per subagent call from one policy instead of hardcoding it.",
+          "purpose": "Resolve kind (how the agent is used for this call) times stakes (how much is at risk) and the call's needs to a provider's model and effort, with the gates of those stakes and the second review route for critical work.",
+          "whenToUse": "Before spawning a subagent, when the project keeps its model policy in `.agents/tokenomics.md`.",
+          "whenNotToUse": "When one session model is fine for everything, leave every cell on `inherit`.",
+          "derivedFrom": null,
+          "example": "import { resolveRoute } from \"@zedtech/zedkit-ai\";\n// `policy` is the project's tokenomics.md merged over the shipped defaults.\nconst route = resolveRoute(policy, {\n  kind: \"check\",\n  stakes: \"standard\",\n  provider: \"cursor\",\n});\nif (!route.ok) throw route.error;\nconsole.log(route.value.model, route.value.effort, route.value.gates.review);",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "import { resolveRoute } from \"@zedtech/zedkit-ai\";\n// `policy` is the project's tokenomics.md merged over the shipped defaults.\nconst route = resolveRoute(policy, {\n  kind: \"check\",\n  stakes: \"standard\",\n  provider: \"cursor\",\n});\nif (!route.ok) throw route.error;\nconsole.log(route.value.model, route.value.effort, route.value.gates.review);"
+            }
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ai",
+                "exports": [
+                  "resolveRoute",
+                  "RouteInput",
+                  "Route",
+                  "SecondReview",
+                  "KindSource",
+                  "NeedsSource",
+                  "AgentHeader",
+                  "Tokenomics",
+                  "Kind",
+                  "Stakes",
+                  "Effort",
+                  "Needs",
+                  "Reasoning",
+                  "ContextSize",
+                  "Review",
+                  "Cell",
+                  "PolicyProvider",
+                  "ProviderPolicy",
+                  "AgentFloor",
+                  "HardcodeConfig",
+                  "KINDS",
+                  "STAKES",
+                  "EFFORTS",
+                  "REASONING",
+                  "CONTEXT_SIZES",
+                  "REVIEWS",
+                  "POLICY_PROVIDERS"
+                ]
+              }
+            ]
+          },
+          "seeAlso": [
+            "Set up AI agent instructions, skills, subagents and commands in a repo"
+          ]
         }
       ]
     },

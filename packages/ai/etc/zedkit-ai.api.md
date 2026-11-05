@@ -13,8 +13,51 @@ export type Action = {
     note?: string;
 };
 
+// @public (undocumented)
+export type AgentFloor = {
+    min_stakes?: Stakes;
+    min_effort?: Effort;
+};
+
+// @public
+export type AgentHeader = {
+    role: string;
+    default_needs: Needs;
+    kinds?: Kind[];
+    default_kind?: Kind;
+    min_stakes?: Stakes;
+    min_effort?: Effort;
+};
+
+// @public (undocumented)
+export type Cell = {
+    model: string;
+    effort: Effort;
+};
+
 // @public
 export function checkDrift(projectRoot: string, source: string): Issue[];
+
+// @public (undocumented)
+export const CONTEXT_SIZES: readonly ["small", "medium", "large"];
+
+// @public (undocumented)
+export type ContextSize = (typeof CONTEXT_SIZES)[number];
+
+// @public (undocumented)
+export type Effort = (typeof EFFORTS)[number];
+
+// @public
+export const EFFORTS: readonly ["low", "medium", "high", "max"];
+
+// @public (undocumented)
+export type Gate = {
+    review: Review;
+    second_review?: "none" | "independent";
+    distinct_model?: boolean;
+    human?: "none" | "required";
+    second_review_provider?: PolicyProvider;
+};
 
 // @public
 export type GateCause = "timeout" | "signal" | "out-of-memory";
@@ -34,6 +77,13 @@ export type GateResult = {
     code: number;
     cause?: GateCause;
     log: string;
+};
+
+// @public (undocumented)
+export type HardcodeConfig = {
+    allow_paths?: string[];
+    extra_patterns?: string[];
+    scan_nested?: boolean;
 };
 
 // @public
@@ -56,14 +106,114 @@ export type Issue = {
     message: string;
 };
 
+// @public (undocumented)
+export type Kind = (typeof KINDS)[number];
+
+// @public
+export const KINDS: readonly ["decide", "design", "build", "check"];
+
+// @public (undocumented)
+export type KindSource = "call" | "hint" | "default";
+
+// @public (undocumented)
+export type Needs = {
+    reasoning: Reasoning;
+    context: ContextSize;
+};
+
+// @public (undocumented)
+export type NeedsSource = "call" | "agent" | "default";
+
+// @public
+export const POLICY_PROVIDERS: readonly ["cursor", "claude", "codex", "muse"];
+
+// @public (undocumented)
+export type PolicyProvider = (typeof POLICY_PROVIDERS)[number];
+
 // @public
 export type Provider = "claude" | "cursor" | "codex";
+
+// @public (undocumented)
+export type ProviderPolicy = Record<Kind, Record<Stakes, Cell>> & {
+    context_windows?: Partial<Record<ContextSize, string | number>>;
+};
+
+// @public (undocumented)
+export const REASONING: readonly ["low", "medium", "high"];
+
+// @public (undocumented)
+export type Reasoning = (typeof REASONING)[number];
+
+// @public
+export function resolveRoute(policy: Tokenomics, input: RouteInput): Result<Route>;
+
+// @public (undocumented)
+export type Review = (typeof REVIEWS)[number];
+
+// @public
+export const REVIEWS: readonly ["none", "optional", "recommended", "required"];
+
+// @public (undocumented)
+export type Route = {
+    provider: PolicyProvider;
+    model: string;
+    effort: Effort;
+    contextWindow: string | number | undefined;
+    kind: Kind;
+    kindSource: KindSource;
+    needs: Needs;
+    needsSource: Record<keyof Needs, NeedsSource>;
+    column: Stakes;
+    gates: Gate;
+    readOnly: boolean;
+    unrouted: boolean;
+    secondReview?: SecondReview;
+    notes: string[];
+};
+
+// @public (undocumented)
+export type RouteInput = {
+    kind?: Kind;
+    stakes: Stakes;
+    needs?: Partial<Needs>;
+    agent?: {
+        name: string;
+        header?: AgentHeader | undefined;
+    };
+    provider?: PolicyProvider;
+};
 
 // @public
 export function runGate(options: GateOptions): Promise<Result<GateResult>>;
 
+// @public
+export type SecondReview = {
+    provider: PolicyProvider;
+    model: string;
+    effort: Effort;
+    warning?: string;
+};
+
+// @public
+export const STAKES: readonly ["trivial", "standard", "sensitive", "critical"];
+
+// @public (undocumented)
+export type Stakes = (typeof STAKES)[number];
+
 // @public @deprecated (undocumented)
 export type Target = Provider;
+
+// @public
+export type Tokenomics = {
+    schema: 1;
+    default_provider?: PolicyProvider;
+    default_needs: Needs;
+    strict_headers: boolean;
+    providers: Record<PolicyProvider, ProviderPolicy>;
+    gates: Record<Stakes, Gate>;
+    agents: Record<string, AgentFloor>;
+    hardcode: HardcodeConfig;
+};
 
 // @public
 export function validateKit(root: string, kit?: string): Issue[];
