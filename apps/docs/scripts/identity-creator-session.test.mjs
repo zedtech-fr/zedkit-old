@@ -108,3 +108,16 @@ test("the visible conversation keeps every request and every reply or failure, i
   ]);
   assert.deepEqual(s.thread, [], "the service history still holds accepted exchanges only");
 });
+
+test("stream status and draft attach to the pending request only", () => {
+  const submitted = run({ type: "submit", requestId: "a", prompt: "calm" });
+  const status = sessionReducer(submitted, { type: "stream-status", requestId: "a", stage: "reading-reference" });
+  assert.equal(status.pending.stage, "reading-reference");
+  const draft = sessionReducer(status, { type: "stream-text", requestId: "a", draft: "From " });
+  assert.equal(draft.pending.draft, "From ");
+  assert.equal(draft.pending.stage, "reading-reference");
+  assert.equal(sessionReducer(draft, { type: "stream-status", requestId: "other", stage: "picking-palette" }), draft);
+  const done = sessionReducer(draft, { type: "result", requestId: "a", result: ok("a") });
+  assert.equal(done.pending, null);
+  assert.equal(done.proposal.summary, "Rounder.");
+});

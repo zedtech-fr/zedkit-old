@@ -36,6 +36,8 @@ function withMessage(state: SessionState, message: ChatMessage): ChatMessage[] {
   return [...(state.messages ?? []), message].slice(-MAX_MESSAGES);
 }
 
+export type PendingRequest = { requestId: string; prompt: string; stage?: string; draft?: string };
+
 export type SessionState = {
   thread: Turn[];
   /**
@@ -44,7 +46,7 @@ export type SessionState = {
    * persisted before it existed still loads.
    */
   messages?: ChatMessage[];
-  pending: { requestId: string; prompt: string } | null;
+  pending: PendingRequest | null;
   proposal: Proposal | null;
   notice: Notice | null;
   /** What the last answer reported about each reference page: used (text only) or failed, and why. */
@@ -53,6 +55,8 @@ export type SessionState = {
 
 export type SessionAction =
   | { type: "submit"; requestId: string; prompt: string }
+  | { type: "stream-status"; requestId: string; stage: string }
+  | { type: "stream-text"; requestId: string; draft: string }
   | { type: "result"; requestId: string; result: AssistantResult }
   | { type: "cancel" }
   | { type: "accept" }
@@ -60,6 +64,11 @@ export type SessionAction =
   | { type: "reset" };
 
 export const initialSession: SessionState = { thread: [], messages: [], pending: null, proposal: null, notice: null, references: [] };
+
+function withPending(state: SessionState, requestId: string, patch: Partial<PendingRequest>): SessionState {
+  if (!state.pending || state.pending.requestId !== requestId) return state;
+  return { ...state, pending: { ...state.pending, ...patch } };
+}
 
 export function sessionReducer(state: SessionState, action: SessionAction): SessionState {
   switch (action.type) {
@@ -72,6 +81,10 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
         notice: null,
         messages: withMessage(state, { role: "user", text: action.prompt.trim() }),
       };
+    case "stream-status":
+      return withPending(state, action.requestId, { stage: action.stage });
+    case "stream-text":
+      return withPending(state, action.requestId, { draft: action.draft });
     case "result": {
       if (!state.pending || state.pending.requestId !== action.requestId) return state;
       const { result } = action;

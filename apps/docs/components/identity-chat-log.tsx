@@ -1,11 +1,38 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Text, cn } from "@zedtech/zedkit-ui";
+import { StreamStatus, StreamText, Text, cn, isAssistantStreamStage } from "@zedtech/zedkit-ui";
 
 import { identityAssistantCopy as copy } from "@/components/i18n/identity-assistant-copy";
 import { noticeText } from "@/components/identity-assistant-parts";
 import type { ChatMessage } from "@/lib/identity-creator-session";
+
+export type PendingWork = { stage?: string; draft?: string };
+
+function PendingBody({ pending }: { pending: PendingWork }) {
+  const stage = pending.stage && isAssistantStreamStage(pending.stage) ? pending.stage : undefined;
+  return (
+    <>
+      <Text as="span" className="font-medium text-foreground">
+        {copy.assistant}
+      </Text>
+      <StreamStatus stage={stage} label={stage ? undefined : copy.working} live={false} className="mt-1" />
+      {pending.draft ? (
+        <StreamText text={pending.draft} live={false} className="mt-1 block whitespace-pre-wrap" />
+      ) : null}
+    </>
+  );
+}
+
+/** Status and growing text while an answer is on its way. The parent already announces. */
+export function PendingAssistant({ pending, as = "div" }: { pending: PendingWork; as?: "div" | "li" }) {
+  const Tag = as;
+  return (
+    <Tag className="self-start text-sm text-muted-foreground" aria-live="polite">
+      <PendingBody pending={pending} />
+    </Tag>
+  );
+}
 
 /** The whole exchange as a chat: every request on the right, every reply or failure on the left, oldest first. */
 export function ChatLog({
@@ -14,7 +41,7 @@ export function ChatLog({
   noticeInComposerFooter = false,
 }: {
   messages: readonly ChatMessage[];
-  pending: boolean;
+  pending: PendingWork | null;
   /** Dock keeps the live notice beside the composer; log lines stay readable without a second test hook. */
   noticeInComposerFooter?: boolean;
 }) {
@@ -50,11 +77,7 @@ export function ChatLog({
           </li>
         );
       })}
-      {pending ? (
-        <li className="self-start text-sm text-muted-foreground" aria-live="polite">
-          {copy.assistant}…
-        </li>
-      ) : null}
+      {pending ? <PendingAssistant pending={pending} as="li" /> : null}
       <li ref={end} aria-hidden="true" className="h-0" />
     </ol>
   );
