@@ -1,0 +1,171 @@
+name: ci-dedibox-trial
+
+# Trial only: same heavy CI work as ci.yml on the Dedibox self-hosted
+# runner. Does not replace required checks (ci-required) or touch release.
+# Fork PRs never use this runner — job `if` requires a same-repo head (or
+# a non-pull_request event such as workflow_dispatch).
+
+on:
+  pull_request:
+    branches: [dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-dedibox-trial-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PLAYWRIGHT_BROWSERS_PATH: /runner-cache/ms-playwright
+  npm_config_store_dir: /runner-cache/pnpm
+  npm_config_cache: /runner-cache/npm
+  TURBO_CACHE_DIR: /runner-cache/turbo
+  RUNNER_TOOL_CACHE: /runner-cache/toolcache
+  XDG_CACHE_HOME: /runner-cache/xdg
+
+jobs:
+  # Shared guard: only trusted refs. Same-repo PRs and workflow_dispatch/push.
+  # github.repository is "zedtech-fr/zedkit"; a fork PR has a different head.
+  checks-dedibox:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, dedibox]
+    timeout-minutes: 30
+    steps:
+      - name: Ensure local cache dirs
+        run: mkdir -p /runner-cache/pnpm /runner-cache/ms-playwright /runner-cache/turbo /runner-cache/npm /runner-cache/toolcache
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: pnpm install --frozen-lockfile --store-dir /runner-cache/pnpm
+      - run: bash scripts/check-deps-audit.sh
+      - run: node scripts/check-publish-engines.mjs
+      - run: bash scripts/check-registry-ui-drift.sh
+      - run: pnpm exec turbo run typecheck lint --cache-dir=/runner-cache/turbo
+      - run: pnpm exec eslint .
+      - run: pnpm run catalog:check
+      - run: pnpm exec turbo run build --cache-dir=/runner-cache/turbo
+      - run: bash scripts/check-api-report.sh
+      - name: Docs static export SEO check
+        run: node apps/docs/scripts/check-seo-export.mjs
+      - name: Docs home first-load JS budget
+        run: node apps/docs/scripts/check-first-load-budget.mjs
+      - run: bash scripts/check-pack.sh
+      - run: bash scripts/check-e2e-registered.sh
+      - run: pnpm exec turbo run test --cache-dir=/runner-cache/turbo
+      - name: Kit markdown prettier
+        run: pnpm --filter @zedtech/zedkit-ai run kit:md
+      - name: Coverage (vitest v8)
+        run: pnpm test:coverage
+      - name: Coverage summary
+        if: always()
+        run: |
+          test -f coverage/coverage-summary.json || exit 0
+          node scripts/coverage-summary.mjs coverage/coverage-summary.json >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: coverage-dedibox
+          path: coverage/
+          if-no-files-found: ignore
+          retention-days: 14
+      - run: pnpm test:registry
+      - run: pnpm exec playwright install chromium
+      - run: pnpm --filter @zedtech/zedkit-ui smoke
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ui-gallery-dedibox
+          path: packages/ui/test-results/*.png
+      - run: pnpm run changeset:status
+        if: github.head_ref != 'changeset-release/main'
+
+  registry-smoke-dedibox:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, dedibox]
+    timeout-minutes: 15
+    steps:
+      - name: Ensure local cache dirs
+        run: mkdir -p /runner-cache/pnpm /runner-cache/turbo /runner-cache/npm /runner-cache/toolcache
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: pnpm install --frozen-lockfile --store-dir /runner-cache/pnpm
+      - run: pnpm registry:build
+      - run: pnpm registry:smoke
+
+  docs-smoke-dedibox:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, dedibox]
+    timeout-minutes: 20
+    steps:
+      - name: Ensure local cache dirs
+        run: mkdir -p /runner-cache/pnpm /runner-cache/ms-playwright /runner-cache/turbo /runner-cache/npm /runner-cache/toolcache
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: pnpm install --frozen-lockfile --store-dir /runner-cache/pnpm
+      - run: pnpm exec turbo run build --filter=@zedtech/zedkit-docs --cache-dir=/runner-cache/turbo
+      - run: pnpm exec playwright install chromium
+      - run: |
+          pnpm dlx serve@14.2.6 apps/docs/out -l 3100 >/tmp/docs-start.log 2>&1 &
+          echo $! > /tmp/docs.pid
+          for _ in $(seq 1 24); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 http://127.0.0.1:3100/ || true)
+            [ "$code" = "200" ] && break
+            sleep 5
+          done
+          curl -sf http://127.0.0.1:3100/ | grep -q "one prompt away"
+          curl -sf -o /dev/null http://127.0.0.1:3100/docs
+          curl -sf -o /dev/null http://127.0.0.1:3100/api/search
+          curl -sf -o /dev/null http://127.0.0.1:3100/robots.txt
+          curl -sf -o /dev/null http://127.0.0.1:3100/sitemap.xml
+          curl -sf -o /dev/null http://127.0.0.1:3100/llms.txt
+          pnpm --filter @zedtech/zedkit-docs run smoke
+          kill "$(cat /tmp/docs.pid)"
+        env:
+          DOCS_E2E_PROJECT: chromium
+      - uses: actions/upload-artifact@v7
+        if: success()
+        with:
+          name: docs-home-smoke-dedibox
+          path: apps/docs/test-results/*.png
+          if-no-files-found: ignore
+
+  # Typical GitHub-hosted wall-clock setter (~10 min). One routes job, not
+  # the 3 e2e shards — a single runner would serialize those.
+  docs-e2e-routes-dedibox:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, dedibox]
+    timeout-minutes: 25
+    steps:
+      - name: Ensure local cache dirs
+        run: mkdir -p /runner-cache/pnpm /runner-cache/ms-playwright /runner-cache/turbo /runner-cache/npm /runner-cache/toolcache
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: pnpm install --frozen-lockfile --store-dir /runner-cache/pnpm
+      - run: pnpm exec turbo run build --filter=@zedtech/zedkit-docs --cache-dir=/runner-cache/turbo
+      - run: pnpm exec playwright install chromium
+      - run: |
+          pnpm dlx serve@14.2.6 apps/docs/out -l 3100 >/tmp/docs-e2e.log 2>&1 &
+          echo $! > /tmp/docs-e2e.pid
+          for _ in $(seq 1 24); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 http://127.0.0.1:3100/ || true)
+            [ "$code" = "200" ] && break
+            sleep 5
+          done
+          pnpm --filter @zedtech/zedkit-docs run e2e:routes
+          kill "$(cat /tmp/docs-e2e.pid)"
+        env:
+          DOCS_E2E_PROJECT: chromium
