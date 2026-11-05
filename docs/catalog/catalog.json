@@ -90,6 +90,42 @@
           "seeAlso": [
             "Set up AI agent instructions, skills, subagents and commands in a repo"
           ]
+        },
+        {
+          "need": "Run one gate command and keep a log that setup validation accepts",
+          "import": "`@zedtech/zedkit-ai` — `runGate`, `GateOptions`, `GateResult`, `GateCause`",
+          "wraps": "`(none)`",
+          "status": "stable",
+          "shortName": "Gate log",
+          "audience": "Agents and maintainers who run lint, test or build gates and need the result as evidence.",
+          "purpose": "Run a shell command and write a gate log in the `CMD:` / `START:` / `END:` / `EXIT:<code>` shape that `zedkit-ai validate --setup` checks, with the V8 heap capped and a `CAUSE:` line when the command times out, is killed or runs out of memory.",
+          "whenToUse": "When a setup run, a handoff or a PR cites a gate and the log must outlive the chat.",
+          "whenNotToUse": "For interactive commands or when a CI job already stores its own log.",
+          "derivedFrom": null,
+          "example": "import { runGate } from \"@zedtech/zedkit-ai\";\nconst result = await runGate({\n  cmd: \"pnpm exec turbo run test --concurrency=2\",\n  log: \".agents/setup-log/gates/test.log\",\n  timeoutMs: 20 * 60_000,\n});\nif (!result.ok) throw result.error;\nprocess.exitCode = result.value.code;",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "import { runGate } from \"@zedtech/zedkit-ai\";\nconst result = await runGate({\n  cmd: \"pnpm exec turbo run test --concurrency=2\",\n  log: \".agents/setup-log/gates/test.log\",\n  timeoutMs: 20 * 60_000,\n});\nif (!result.ok) throw result.error;\nprocess.exitCode = result.value.code;"
+            }
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ai",
+                "exports": [
+                  "runGate",
+                  "GateOptions",
+                  "GateResult",
+                  "GateCause"
+                ]
+              }
+            ]
+          },
+          "seeAlso": [
+            "Check that skills, subagents, commands and provider copies are valid"
+          ]
         }
       ]
     },

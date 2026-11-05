@@ -17,6 +17,26 @@ export type Action = {
 export function checkDrift(projectRoot: string, source: string): Issue[];
 
 // @public
+export type GateCause = "timeout" | "signal" | "out-of-memory";
+
+// @public
+export type GateOptions = {
+    cmd: string;
+    log: string;
+    cwd?: string;
+    heapMb?: number;
+    timeoutMs?: number;
+    env?: Readonly<Record<string, string | undefined>>;
+};
+
+// @public
+export type GateResult = {
+    code: number;
+    cause?: GateCause;
+    log: string;
+};
+
+// @public
 export function installKit(options: InstallOptions): Result<Action[]>;
 
 // @public (undocumented)
@@ -38,6 +58,9 @@ export type Issue = {
 
 // @public
 export type Provider = "claude" | "cursor" | "codex";
+
+// @public
+export function runGate(options: GateOptions): Promise<Result<GateResult>>;
 
 // @public @deprecated (undocumented)
 export type Target = Provider;

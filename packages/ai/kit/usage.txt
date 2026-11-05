@@ -23,5 +23,10 @@ zedkit-ai <command>
       Size the repo and cut it into slices, one per read-only reader:
       1-5 readers on a small repo, 6-10 medium, 11-20 large. Run it
       before the setup-ai code-reading phase.
+  gate <log> [--] <command...>
+      Run one gate command and persist it as a setup-log gate log: CMD:,
+      START:, output, END:, CAUSE: when killed or out of memory, and
+      EXIT:<code> as the last line. Caps the V8 heap at 4096 MB unless
+      NODE_OPTIONS sets one; exits with the command's code.
   list
       Show presets, subagents and commands.
