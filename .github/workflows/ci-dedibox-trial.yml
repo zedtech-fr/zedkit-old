@@ -90,12 +90,9 @@ jobs:
             scripts/coverage-summary.test.mjs \
             scripts/release-tags-wait.test.mjs \
             apps/docs/scripts/*.test.mjs
-      - run: pnpm exec playwright install chromium
-      - run: pnpm --filter @zedtech/zedkit-ui smoke
-      - uses: actions/upload-artifact@v7
-        with:
-          name: ui-gallery-dedibox
-          path: packages/ui/test-results/*.png
+      # UI gallery screenshot smoke stays on GitHub-hosted checks: Dedibox
+      # Chromium (swiftshader, baked OS deps) does not match the ubuntu-latest
+      # baselines in packages/ui/preview/smoke.spec.ts-snapshots.
       - run: pnpm run changeset:status
         if: github.head_ref != 'changeset-release/main'
 
@@ -115,16 +112,17 @@ jobs:
       - run: pnpm registry:build
       # quickstart-smoke.sh runs playwright install --with-deps when CI is set,
       # which needs sudo. no-new-privileges blocks sudo by design; Chromium OS
-      # deps are already baked into the runner image. Install browsers here
-      # without --with-deps, then run the same three scripts as registry:smoke
-      # with --with-deps stripped from a temp copy of quickstart-smoke.sh.
+      # deps are already baked into the runner image. Patch the checkout in
+      # place (do not copy to RUNNER_TEMP: the script sets ROOT from dirname
+      # of $0) so ${CI:+--with-deps} is removed, then run the same three
+      # scripts as registry:smoke.
       - name: registry smoke (no --with-deps)
         run: |
           pnpm exec playwright install chromium
-          python3 -c 'from pathlib import Path; import os; Path(os.environ["RUNNER_TEMP"], "quickstart-smoke.sh").write_text(Path("scripts/quickstart-smoke.sh").read_text().replace("--with-deps", ""))'
+          sed -i 's/${CI:+--with-deps}//' scripts/quickstart-smoke.sh
           bash scripts/registry/smoke-shadcn-add.sh
           bash scripts/registry/smoke-ui-quickstart.sh
-          bash "${RUNNER_TEMP}/quickstart-smoke.sh"
+          bash scripts/quickstart-smoke.sh
 
   docs-smoke-dedibox:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
@@ -155,7 +153,7 @@ jobs:
           curl -sf -o /dev/null http://127.0.0.1:3100/robots.txt
           curl -sf -o /dev/null http://127.0.0.1:3100/sitemap.xml
           curl -sf -o /dev/null http://127.0.0.1:3100/llms.txt
-          pnpm --filter @zedtech/zedkit-docs run smoke
+          pnpm --filter @zedtech/zedkit-docs run smoke -- --workers=1
           kill "$(cat /tmp/docs.pid)"
         env:
           DOCS_E2E_PROJECT: chromium
