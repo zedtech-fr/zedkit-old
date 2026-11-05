@@ -1,5 +1,31 @@
 # @zedtech/zedkit-ai
 
+## 0.21.0
+
+### Minor Changes
+
+- be11e7d: `/setup-ai` v3. Phase B now reads the code first: read-only subagents, one per slice of the repo (1-5 on a small repo, up to 20 on a big one), report the domain, business, identity, architecture and convention rules already in place with `file:line` evidence, and the interview asks only what the code could not answer. The merged rules land in `.agents/domain/`, an identity table in `.agents/design.md`, and a nested `AGENTS.md` per folder that differs. The run routes models by tier (scout reads, worker drafts, lead decides) on the provider it runs on and writes `.agents/model-routing.md` plus a short rule in the generated `AGENTS.md`. New `zedkit-ai scan [dir]` sizes the repo and cuts the slices; `validate --setup` now also fails a setup with no reading log, no domain rules, no nested `AGENTS.md` (or stated reason) or no model routing. The rubric gains depth axes D1-D4.
+- be11e7d: Opt-in `zedkit-ai validate --setup [--plan file]`: the PLAN must name every git-changed path, and setup-log gate logs must be well-formed. Plain `validate` is unchanged.
+
+### Patch Changes
+
+- be11e7d: Setup-log write order: the normal path captures every gate's persisted output first, writes the setup-log entry in one atomic write (no stub grown by appends), and runs `validate --setup` only against the finished file — validation reads whatever is on disk. No checker change: a half-written log is procedural, and no mtime heuristic belongs in the checker.
+- be11e7d: Rubric D4 reaches 3 on small repos with zero fan-out: the setup-log states `no fan-out: lead read inline`, which satisfies the fan-out record. Personas allow code-path journeys (`import → call → assert`) with unit tests, not only routes with e2e — the whole-journey rule still applies.
+- be11e7d: Scope the `evidence-grounded-analysis` skill to customer and user material. A technical audit inventories the files and answers without the three-source quota or a wait-for-question stop.
+- be11e7d: Gate inventory completeness: the setup-log template requires one Gate outcomes row per persisted gate log file (named, killed logs included), and `validate --setup` issues when a file in `.agents/setup-log/gates/` has no mention in `.agents/setup-log.md`.
+- be11e7d: `validate --setup` now requires an `intro-first:` line in the plan appendix, so a skipped intro fails mechanically instead of passing silently. The setup-ai skill also makes the resume intro resume-aware: on a resume it opens with `resumed at phase <X>` instead of the fresh-start phase-A wording.
+- be11e7d: Setup-ai gate logs: document a `TERM`/`INT` trap so a signaled wrapper shell still writes the cause and `EXIT:` tail instead of leaving a shapeless killed log. A `SIGKILL`ed wrapper cannot trap — re-run smaller and replace the file.
+- be11e7d: `zedkit-ai scan` now prints the `prettier:` hint (kit paths missing from `.prettierignore`) so the run sees it in phase A, before planning — not after. `validate --setup` requires the `.prettierignore` plan row whenever the hint fires.
+- be11e7d: `validate --setup` D1 now requires a `**Budget:**` line in `.agents/setup-log/reading.md`: the run states the repo's read budget (or `none found`), and the only allowed overrun is an owner-approved exception line. The setup-ai skill and reader brief say the same: batch smaller and read entry points first rather than exceed the budget.
+- be11e7d: Root length vs inventories: the Unenforced rules inventory lives in setup-log by default, with a one-line pointer in root `AGENTS.md` — no longer inlined in root against the ~100-line target. The too-long audit flag points at the same remedy.
+- be11e7d: Setup-ai templates: the domain rules table gains an `Enforced by` column (the checker that makes the rule true, or `documented, not enforced`), matching what the D2 depth axis scores; the personas table gains a `Partial coverage` column so a `no test — flag` row can say what the nearest test does cover.
+- be11e7d: Unenforced-rule reconciliation: the skill and rubric require walking every `current` rule in root/nested `AGENTS.md` and `.agents/domain/*.md` so each genuinely unenforced rule lands in the Unenforced rules inventory (domain rows cited by ID). `validate --setup` flags a `current (documented, not enforced)` domain row whose ID appears in neither root `AGENTS.md` nor `.agents/setup-log.md`.
+- be11e7d: Add the `use-signature` skill (full preset): follow a project's visual signature and identity state matrix when changing type, motion, composition, or identity UI. Kit primitives that wear their own look skip it.
+- be11e7d: Install hints detect a pnpm workspace without `node_modules` and suggest `pnpm install`. The setup-ai skill warns that git-ignored gate logs are invisible evidence: track the file or mark the Gate outcomes row `ignored-locally` (logs stay `*.log` — renaming dodges the checker).
+- be11e7d: Clarify nested AGENTS.md signature links in setup-ai (audit table stays on goal).
+- be11e7d: Sample-2 setup-ai: repo-skill links, intro-before-tools, T3a capabilities, PLAN.md ladder rows, kit file verification steps, 8-axis pass mean with owner-dependent axes reported apart.
+- be11e7d: Validate now checks relative markdown links in every skill directory, including repo-authored skills the kit does not ship (previously only kit skills were scanned, so broken links in agent-written skills passed silently). Also skips `mailto:` links, and the post-setup hint points past phase C once `.agents/product.md` exists instead of repeating the phase C note.
+
 ## 0.20.2
 
 ### Patch Changes

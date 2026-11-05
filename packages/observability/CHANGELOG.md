@@ -1,5 +1,40 @@
 # @zedtech/zedkit-observability
 
+## 0.3.12
+
+### Patch Changes
+
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+- Updated dependencies [a266a42]
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+- Updated dependencies [be11e7d]
+  - @zedtech/zedkit-ui@1.7.0
+
 ## 0.3.11
 
 ### Patch Changes
