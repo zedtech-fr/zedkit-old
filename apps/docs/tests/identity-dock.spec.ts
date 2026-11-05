@@ -184,6 +184,16 @@ test.describe("IdentityDock", () => {
     await expect(trigger).toBeFocused();
   });
 
+  test("the dock does not take focus when the page loads", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    const trigger = dock(page).locator("[data-slot='identity-dock-trigger']");
+    await expect(trigger).toBeVisible();
+    // Give the late mount effect more than the frame it would use to move focus.
+    await page.waitForTimeout(500);
+    expect(await page.evaluate(() => document.activeElement?.tagName)).toBe("BODY");
+  });
+
   test("the widget is a chat: greeting first, multiline composer with send, and no New conversation control", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(BASE, { waitUntil: "networkidle" });

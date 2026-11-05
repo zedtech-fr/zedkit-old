@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
 /** Within a step the example rests at the top, pans to its bottom, then rests there: the share of the step where it moves. */
-const PAN_FROM = 0.3;
+const PAN_FROM = 0.1;
 const PAN_TO = 0.8;
 
 const smooth = (t: number) => t * t * (3 - 2 * t);

@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { HomeLink } from "@/ui/home/home-link";
 import { Button, Section, Stack, StickyAside, Text } from "@zedtech/zedkit-ui";
 import { GlassSurface } from "@zedtech/zedkit-ui/marketing";
 
@@ -57,9 +56,9 @@ export function HomeGetStartedSection({ npmPackage }: { npmPackage: string }) {
           </StickyAside.Aside>
         </StickyAside>
         <Button asChild variant="ghost" size="sm" className="w-fit" data-home-full-steps="">
-          <Link href={homeCopy.getStarted.quickStart.fullStepsHref}>
+          <HomeLink href={homeCopy.getStarted.quickStart.fullStepsHref}>
             <DocsActionLabel>{homeCopy.getStarted.quickStart.fullSteps}</DocsActionLabel>
-          </Link>
+          </HomeLink>
         </Button>
       </Stack>
     </Section>

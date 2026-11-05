@@ -11,6 +11,7 @@ import { purgeLegacyIdentityStorage } from "@/lib/site-identity-storage";
 import { SiteChromeA11yPatch, SiteHeaderSurfacePatch } from "@/ui/site-chrome-a11y";
 import { ThemeColorMeta } from "@/ui/theme-color-meta";
 import { RouteScrollReset } from "@/ui/route-scroll-reset";
+import { DocsAppLink } from "@/ui/docs-app-link";
 
 /** Scroll-reveal runtime runs after hydration; it stays out of the first load. */
 const AnimateObserver = dynamic(() => import("@zedtech/zedkit-ui").then((mod) => ({ default: mod.AnimateObserver })), {
@@ -29,7 +30,7 @@ export function Provider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <RootProvider search={{ SearchDialog: StaticSearchDialog, preload: false }}>
+    <RootProvider search={{ SearchDialog: StaticSearchDialog, preload: false }} components={{ Link: DocsAppLink }}>
       <SiteChromeA11yPatch />
       <SiteHeaderSurfacePatch />
       <ThemeColorMeta />
