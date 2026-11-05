@@ -3,8 +3,9 @@
 import dynamic from "next/dynamic";
 import { MousePointer2 } from "lucide-react";
 import { useId, useRef, useState } from "react";
-import { Stack } from "@zedtech/zedkit-ui";
+import { flushSync } from "react-dom";
 import type { PreviewMode } from "@/components/admin-dashboard-demo-app";
+import { HomeAdminDashboardDemo } from "@/components/demos/home-admin-dashboard-demo";
 import { projectTrackerDemoCopy } from "@/components/i18n/project-tracker-demo-copy";
 import { SEED_TASKS } from "@/components/project-tracker-demo-data";
 import { HERO_FIRST_DAY } from "@/ui/home/home-hero-data";
@@ -18,11 +19,6 @@ import type { HeroPageId } from "@/ui/home/i18n/home-hero-copy";
 import { useHeroAgent } from "@/ui/home/use-hero-agent";
 import { useHeroTour } from "@/ui/home/use-hero-tour";
 import { useMotionOk } from "@/ui/home/use-motion-ok";
-
-const HomeAdminDashboardDemo = dynamic(
-  () => import("@/components/demos/home-admin-dashboard-demo").then((mod) => ({ default: mod.HomeAdminDashboardDemo })),
-  { loading: () => <Stack className="min-h-32 flex-1" aria-hidden="true" /> },
-);
 
 /** The agent panel is its own chunk: fetched when the tour is about to use it or the visitor first opens it. */
 const loadAgentPanel = () => import("@/ui/home/home-hero-agent-panel");
@@ -95,7 +91,12 @@ export function HomeHeroApp({ page, onPage, intro, preview, onPreviewChange, onL
     playing: tour.playing,
     onTakeover: tour.onTakeover,
     onLook,
-    agent: { preload: () => void loadAgentPanel(), reset: agent.reset, paste: agent.setDraft },
+    intro,
+    agent: {
+      preload: () => void loadAgentPanel(),
+      reset: agent.reset,
+      paste: (text) => flushSync(() => agent.setDraft(text)),
+    },
   });
   return (
     <div ref={root} role="region" aria-label={copy.label} data-hero-window="" data-intro={intro ? "" : undefined} className="relative min-w-0">

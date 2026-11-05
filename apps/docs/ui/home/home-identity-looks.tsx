@@ -94,7 +94,7 @@ function HomeIdentityLooksFrame({
             identity={identity}
             mode={mode}
             data-home-identity-stage=""
-            className="min-w-0 rounded-xl bg-background p-2 sm:p-4"
+            className="min-w-0 rounded-xl bg-background p-2 pb-[max(4.5rem,env(safe-area-inset-bottom))] sm:p-4 sm:pb-4"
           >
             <div data-identity-example="" key={identity}>
               <Example />
