@@ -13,6 +13,7 @@ import { applyWidgetSpecimenPreview } from "@/lib/identity-widget-specimen-previ
 import { dispatchIdentityEditorDraftApply } from "@/lib/identity-editor-draft-apply";
 import { repairContrast } from "@/lib/identity-contrast-repair";
 import { useDocsSiteIdentityApply } from "@/lib/use-docs-site-identity-apply";
+import type { ApplySiteTokenHandlers } from "@/components/identity-apply-site-row";
 import { IDENTITY_EDITOR_HREF } from "@/lib/site-links.mjs";
 import type { Unavailable } from "@/lib/identity-assistant";
 import type { SessionState } from "@/lib/identity-creator-session";
@@ -36,6 +37,25 @@ function acceptProposal(
   });
 }
 
+
+function DockViewSwitch(props: {
+  view: View;
+  setView: (view: View) => void;
+  waiting: boolean;
+  previewRef: RefObject<HTMLButtonElement | null>;
+  always: boolean;
+}) {
+  return (
+    <ViewSwitch
+      view={props.view}
+      onView={props.setView}
+      waiting={props.waiting}
+      previewRef={props.previewRef}
+      always={props.always}
+    />
+  );
+}
+
 function IdentityDockPanelScroll(props: {
   scrollRef: RefObject<HTMLDivElement | null>;
   viewSwitchAlways: boolean;
@@ -57,17 +77,13 @@ function IdentityDockPanelScroll(props: {
   dispatch: (action: { type: "accept" } | { type: "discard" }) => void;
   onPreviewTokens: (tokens: IdentityTokens) => void;
   acceptedExportTokens: IdentityTokens | null;
-  siteApply: {
-    appliedSite: boolean;
-    onApplySite: (tokens: IdentityTokens) => void;
-    onRemoveFromSite: () => void;
-  };
+  siteApply: ApplySiteTokenHandlers;
 }) {
   return (
     <Stack ref={props.scrollRef} gap={3} className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 pt-3 pb-2">
-      <ViewSwitch
+      <DockViewSwitch
         view={props.view}
-        onView={props.setView}
+        setView={props.setView}
         waiting={props.session.proposal !== null}
         previewRef={props.previewRef}
         always={props.viewSwitchAlways}

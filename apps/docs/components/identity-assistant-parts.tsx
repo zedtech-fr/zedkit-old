@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, type Ref, type RefObject } from "react";
 import { Button, PromptInput, Stack, Text, cn, type IdentityTokens } from "@zedtech/zedkit-ui";
 
 import { identityAssistantCopy as copy } from "@/components/i18n/identity-assistant-copy";
-import { ApplySiteRow } from "@/components/identity-apply-site-row";
+import { ProposalSiteApply, type ApplySiteTokenHandlers } from "@/components/identity-apply-site-row";
 import { ProposalBeforeAfter } from "@/components/identity-proposal-compare";
 import { ReferenceReportList } from "@/components/identity-references";
 import type { Unavailable, Turn } from "@/lib/identity-assistant";
@@ -255,6 +255,37 @@ function ProposalApplyRow({
   );
 }
 
+
+function ProposalChangeList({ rows }: { rows: readonly { path: string; from: string; to: string }[] }) {
+  if (rows.length === 0) return null;
+  return (
+    <details className="text-zk-type-body">
+      <summary className="flex min-h-11 cursor-pointer items-center focus-ring">{copy.proposal.showChanges}</summary>
+      <ul className="m-0 flex list-none flex-col gap-1 p-0 font-mono text-zk-type-small">
+        {rows.map((row) => (
+          <li key={row.path} className="break-words">
+            {row.path}: {row.from} → {row.to}
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
+type ProposalCardProps = {
+  proposal: Proposal;
+  current: IdentityTokens;
+  domainBrief: string;
+  busy: boolean;
+  onUse: (tokens: IdentityTokens) => void;
+  onDiscard: () => void;
+  className?: string;
+  /** Pin the apply row to the bottom of the card; set when the card scrolls inside a height cap. */
+  pinApply?: boolean;
+  /** When set, show Apply to the whole site under Use this look (dock Preview tab). */
+  siteApply?: ApplySiteTokenHandlers;
+};
+
 /** A proposal to look at, in light and dark, with what changed and why. Using it is the only thing that changes the draft. */
 export function ProposalCard({
   proposal,
@@ -266,23 +297,7 @@ export function ProposalCard({
   className,
   pinApply,
   siteApply,
-}: {
-  proposal: Proposal;
-  current: IdentityTokens;
-  domainBrief: string;
-  busy: boolean;
-  onUse: (tokens: IdentityTokens) => void;
-  onDiscard: () => void;
-  className?: string;
-  /** Pin the apply row to the bottom of the card; set when the card scrolls inside a height cap. */
-  pinApply?: boolean;
-  /** When set, show Apply to the whole site under Use this look (dock Preview tab). */
-  siteApply?: {
-    appliedSite: boolean;
-    onApplySite: (tokens: IdentityTokens) => void;
-    onRemoveFromSite: () => void;
-  };
-}) {
+}: ProposalCardProps) {
   // Readable text is a promise of the kit, so a proposal that misses it is nudged by arithmetic, and the page says so.
   const repaired = useMemo(() => repairContrast(proposal.tokens), [proposal.tokens]);
   const rows = useMemo(() => tokenDiff(current, repaired.tokens), [current, repaired.tokens]);
@@ -304,26 +319,9 @@ export function ProposalCard({
         {copy.proposal.changes(rows.length)}. {contrastNote(repaired)}
       </Text>
       <ProposalBeforeAfter current={current} proposed={repaired.tokens} requestId={proposal.requestId} domain={domain} />
-      {rows.length > 0 ? (
-        <details className="text-zk-type-body">
-          <summary className="flex min-h-11 cursor-pointer items-center focus-ring">{copy.proposal.showChanges}</summary>
-          <ul className="m-0 flex list-none flex-col gap-1 p-0 font-mono text-zk-type-small">
-            {rows.map((row) => (
-              <li key={row.path} className="break-words">
-                {row.path}: {row.from} → {row.to}
-              </li>
-            ))}
-          </ul>
-        </details>
-      ) : null}
+      <ProposalChangeList rows={rows} />
       <ProposalApplyRow busy={busy} tokens={repaired.tokens} onUse={onUse} onDiscard={onDiscard} pinned={pinApply === true} />
-      {siteApply ? (
-        <ApplySiteRow
-          appliedSite={siteApply.appliedSite}
-          onApplySite={() => siteApply.onApplySite(repaired.tokens)}
-          onRemoveFromSite={siteApply.onRemoveFromSite}
-        />
-      ) : null}
+      {siteApply ? <ProposalSiteApply siteApply={siteApply} tokens={repaired.tokens} /> : null}
       <Text variant="muted" typeRole="body">
         {copy.proposal.note}
       </Text>
