@@ -40,6 +40,7 @@ function acceptProposal(
 
 function IdentityDockPanelScroll(props: {
   scrollRef: RefObject<HTMLDivElement | null>;
+  viewSwitchAlways: boolean;
   view: View;
   setView: (view: View) => void;
   previewRef: RefObject<HTMLButtonElement | null>;
@@ -59,13 +60,13 @@ function IdentityDockPanelScroll(props: {
   onPreviewTokens: (tokens: IdentityTokens) => void;
 }) {
   return (
-    <Stack ref={props.scrollRef} gap={3} className="min-h-0 flex-1 overflow-y-auto px-3 pt-3">
+    <Stack ref={props.scrollRef} gap={3} className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 pt-3 pb-2">
       <ViewSwitch
         view={props.view}
         onView={props.setView}
         waiting={props.session.proposal !== null}
         previewRef={props.previewRef}
-        always
+        always={props.viewSwitchAlways}
       />
       <IdentityDockAssistantGrid
         view={props.view}
@@ -75,6 +76,7 @@ function IdentityDockPanelScroll(props: {
         busy={props.busy}
         previewTokens={props.previewTokens}
         domainBrief={props.domainBrief}
+        narrowSplit={!props.viewSwitchAlways}
         inputRef={props.inputRef}
         onBrief={props.setBrief}
         onSubmit={props.send}
@@ -116,9 +118,12 @@ function useProposalInView(scrollRef: RefObject<HTMLDivElement | null>, requestI
 export function IdentityDockAssistantPanel({
   previewTokens,
   onPreviewTokens,
+  viewSwitchAlways = true,
 }: {
   previewTokens: IdentityTokens;
   onPreviewTokens: (tokens: IdentityTokens) => void;
+  /** Home dock keeps the phone switch at every width; the editor page shows both panes from `lg`. */
+  viewSwitchAlways?: boolean;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -137,10 +142,11 @@ export function IdentityDockAssistantPanel({
   useProposalInView(scrollRef, session.proposal?.requestId, ui.view);
 
   return (
-    <Stack ref={panelRef} className="min-h-0 flex-1 gap-0 overflow-hidden" data-slot="identity-dock-body">
+    <Stack ref={panelRef} className="min-h-0 flex-1 gap-0" data-slot="identity-dock-body">
       <IdentityDockPanelToolbar onClose={() => setExpanded(false)} />
       <IdentityDockPanelScroll
         scrollRef={scrollRef}
+        viewSwitchAlways={viewSwitchAlways}
         view={ui.view}
         setView={ui.setView}
         previewRef={ui.previewButton}

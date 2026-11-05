@@ -22,6 +22,7 @@ export function IdentityDockAssistantGrid(props: {
   busy: boolean;
   previewTokens: IdentityTokens;
   domainBrief: string;
+  narrowSplit?: boolean;
   inputRef: RefObject<HTMLTextAreaElement | null>;
   onBrief: (brief: string) => void;
   onSubmit: () => void;
@@ -41,6 +42,7 @@ export function IdentityDockAssistantGrid(props: {
         brief={props.brief}
         busy={props.busy}
         compact
+        narrowSplit={props.narrowSplit}
         onBrief={props.onBrief}
         onQuickRefine={props.onQuickRefine}
         off={props.off}
@@ -54,6 +56,7 @@ export function IdentityDockAssistantGrid(props: {
           domainBrief={props.domainBrief}
           busy={props.busy}
           compact
+          narrowSplit={props.narrowSplit}
           onUse={props.onUse}
           onDiscard={props.onDiscard}
         />

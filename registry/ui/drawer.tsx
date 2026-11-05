@@ -119,13 +119,20 @@ function DrawerContent({
   const inline = useMaybeNonModalDrawer();
   if (inline) {
     return (
-      <NonModalDrawerContent className={className} size={size} ref={ref as React.Ref<HTMLDivElement>} {...props}>
+      <NonModalDrawerContent
+        data-slot="drawer-content"
+        className={className}
+        size={size}
+        ref={ref as React.Ref<HTMLDivElement>}
+        {...props}
+      >
         {children}
       </NonModalDrawerContent>
     );
   }
   return (
     <DrawerVaulContent
+      data-slot="drawer-content"
       className={className}
       modal={modal}
       size={size}
