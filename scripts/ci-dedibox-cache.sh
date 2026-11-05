@@ -42,20 +42,27 @@ case "$cmd" in
       echo "node_modules cache MISS (${hash:0:12})"
     fi
     export npm_config_store_dir="$PNPM_STORE"
+    # Stale *.tsbuildinfo must not survive into package postinstall tsc: incremental
+    # would no-op while dist/ is absent (nm archive only stores node_modules).
+    find . -name "*.tsbuildinfo" -not -path "./node_modules/*" -delete 2>/dev/null || true
     if [[ "$hit" -eq 1 ]]; then
-      # Relink against the shared store; should be near-instant when store matches.
-      if ! pnpm install --frozen-lockfile --store-dir "$PNPM_STORE" --offline; then
-        echo "offline install failed after nm restore; falling back to prefer-offline"
+      if ! pnpm install --frozen-lockfile --store-dir "$PNPM_STORE" --prefer-offline; then
+        echo "nm archive install failed; invalidating archive and reinstalling"
+        rm -f "$archive"
+        rm -rf node_modules
+        find apps packages -type d -name node_modules -prune -exec rm -rf {} + 2>/dev/null || true
+        hit=0
         pnpm install --frozen-lockfile --store-dir "$PNPM_STORE" --prefer-offline
       fi
     else
       pnpm install --frozen-lockfile --store-dir "$PNPM_STORE" --prefer-offline
+    fi
+    if [[ "$hit" -eq 0 ]]; then
       # Atomic save under flock so concurrent cold jobs do not clobber.
       (
         flock 9
         if [[ ! -f "$archive" ]]; then
           echo "saving node_modules archive ${hash:0:12}"
-          # pnpm workspace: root node_modules holds .pnpm; package dirs are mostly symlinks.
           {
             printf "%s\0" node_modules
             find apps packages -type d -name node_modules -prune -print0 2>/dev/null || true
@@ -67,7 +74,6 @@ case "$cmd" in
     echo "NM_HASH=${hash}" >> "${GITHUB_ENV:-/dev/null}"
     echo "hash=${hash}" >> "${GITHUB_OUTPUT:-/dev/null}"
     ;;
-
   restore-ts)
     # Rolling latest archive: stale buildinfo is safe (tsc regenerates).
     latest="${TS_DIR}/latest.tar.gz"
