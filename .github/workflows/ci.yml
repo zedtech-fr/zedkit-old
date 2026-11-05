@@ -180,7 +180,7 @@ jobs:
       - name: Changeset status
         if: github.head_ref != 'changeset-release/main'
         run: |
-          if git diff --quiet origin/main -- packages apps; then
+          if git diff --quiet origin/main HEAD -- packages apps; then
             echo "packages/apps match origin/main; skip changeset status"
           else
             pnpm run changeset:status
