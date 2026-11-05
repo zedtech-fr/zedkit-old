@@ -58,6 +58,7 @@ import {
   PopoverContent,
   PopoverTrigger,
   ProgressBar,
+  PromptInput,
   Spinner,
   SecretField,
   Select,
@@ -378,6 +379,26 @@ export function Gallery() {
 
         <GallerySection id="forms" title="Forms">
           <FormDemo />
+          <div className="max-w-sm space-y-3" data-testid="gallery-prompt-input">
+            <PromptInput
+              sendLabel="Send"
+              value="Ask about your catalog"
+              onChange={() => {}}
+              onSubmit={() => {}}
+              aria-label="Message"
+              placeholder="Ask anything"
+            />
+            <PromptInput
+              sendLabel="Send"
+              value="Working…"
+              busy
+              onCancel={() => {}}
+              cancelLabel="Stop"
+              onChange={() => {}}
+              onSubmit={() => {}}
+              aria-label="Message while busy"
+            />
+          </div>
           <Select>
             <SelectTrigger className="max-w-sm">
               <SelectValue placeholder="Pick a region" />
