@@ -1,3 +1,4 @@
+import { resetStreamSupport } from "./provider.mjs";
 import assert from "node:assert/strict";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import http from "node:http";
@@ -796,4 +797,27 @@ test("a stream with a reference announces reading-reference before the model run
     assert.ok(stages.includes("picking-palette"));
     assert.ok(frames.some((frame) => frame.event === "complete"));
   });
+});
+
+test("an origin that refuses streaming is retried without it, remembered, and still streams status and text", async () => {
+  resetStreamSupport();
+  const p = provider((call) =>
+    call.body.stream
+      ? { ok: false, status: 400, text: () => Promise.resolve('{"error":{"type":"invalid_request","message":"stream is not supported"}}') }
+      : reply(PATCH),
+  );
+  await withServer({ env: configured(), fetchImpl: p.fetchImpl }, async ({ port }) => {
+    const first = sseEvents(await (await post(port, body(), { accept: "text/event-stream" })).text());
+    assert.ok(first.some((frame) => frame.event === "status"));
+    assert.ok(first.some((frame) => frame.event === "text"));
+    assert.match(first.find((frame) => frame.event === "complete").data.summary, /Rounder corners/);
+    assert.equal(p.calls.length, 2);
+    assert.equal(p.calls[0].body.stream, true);
+    assert.equal(p.calls[1].body.stream, undefined);
+    const second = sseEvents(await (await post(port, body(), { accept: "text/event-stream" })).text());
+    assert.ok(second.some((frame) => frame.event === "complete"));
+    assert.equal(p.calls.length, 3);
+    assert.equal(p.calls[2].body.stream, undefined);
+  });
+  resetStreamSupport();
 });

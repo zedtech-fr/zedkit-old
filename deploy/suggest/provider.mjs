@@ -149,8 +149,40 @@ export function callProvider(provider, { messages, maxTokens, signal, fetchImpl,
     .catch(failCaught);
 }
 
-/** Same contract as `callProvider`, with token deltas as they arrive (or one delta if the origin answers JSON). */
-export function callProviderStream(provider, { messages, maxTokens, signal, fetchImpl, effort, onDelta }) {
+/** Origins (base + model) that answered 400 "stream is not supported"; later calls skip the streaming attempt. */
+const NO_STREAM = new Set();
+
+/** True for an origin that refuses `stream: true` outright (a 4xx that did no work). */
+export function refusesStream(result) {
+  return !result.ok && result.kind === "http" && result.status === 400 && /stream[^"]*not supported/i.test(result.detail ?? "");
+}
+
+/** Forget learned no-stream origins (tests). */
+export function resetStreamSupport() {
+  NO_STREAM.clear();
+}
+
+/**
+ * Same contract as `callProvider`, with token deltas as they arrive (or one delta if the origin answers JSON).
+ * An origin that refuses streaming is retried once without it and remembered, so the client still gets
+ * status events and the summary text; only the token-by-token pacing is lost.
+ */
+export function callProviderStream(provider, args) {
+  const origin = `${provider.base}|${provider.model}`;
+  const plain = () =>
+    callProvider(provider, args).then((result) => {
+      if (result.ok) args.onDelta?.(result.content);
+      return result;
+    });
+  if (NO_STREAM.has(origin)) return plain();
+  return streamOnce(provider, args).then((result) => {
+    if (!refusesStream(result)) return result;
+    NO_STREAM.add(origin);
+    return plain();
+  });
+}
+
+function streamOnce(provider, { messages, maxTokens, signal, fetchImpl, effort, onDelta }) {
   return fetchImpl(chatUrl(provider.base), {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${provider.key}` },
