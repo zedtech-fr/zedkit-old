@@ -7,15 +7,15 @@ import type { AssistantStreamStage } from "./assistant-stream.js";
 
 export interface StreamStatusProps {
   /** A named step; worded from the UI messages when `label` is omitted. */
-  stage?: AssistantStreamStage;
+  stage?: AssistantStreamStage | undefined;
   /** Override the named step's wording, or stand in before the first stage arrives. */
-  label?: string;
+  label?: string | undefined;
   /**
    * When true (default), this node is its own polite live region.
    * Set false when a parent already announces (`aria-live="polite"`).
    */
-  live?: boolean;
-  className?: string;
+  live?: boolean | undefined;
+  className?: string | undefined;
 }
 
 /**

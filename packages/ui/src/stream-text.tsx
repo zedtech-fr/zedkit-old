@@ -4,8 +4,8 @@ export interface StreamTextProps {
    * When true (default), this node is a polite live region that announces additions
    * without re-reading the whole text. Set false when a parent already announces.
    */
-  live?: boolean;
-  className?: string;
+  live?: boolean | undefined;
+  className?: string | undefined;
 }
 
 /**

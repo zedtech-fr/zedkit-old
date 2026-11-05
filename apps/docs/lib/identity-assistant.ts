@@ -166,7 +166,7 @@ export function resultFromBody(res: Response, body: Record<string, unknown>, req
  * Sends one brief. The identity in an `ok` answer has passed `parseIdentityTokens`, the same schema the service
  * and the saved library use; an answer that does not is `invalid-output`, whatever else it says.
  */
-export function requestIdentity(input: AssistantInput, { fetchImpl = globalThis.fetch.bind(globalThis), signal }: { fetchImpl?: FetchLike; signal?: AbortSignal } = {}): Promise<AssistantResult> {
+export function requestIdentity(input: AssistantInput, { fetchImpl = globalThis.fetch.bind(globalThis), signal }: { fetchImpl?: FetchLike | undefined; signal?: AbortSignal | undefined } = {}): Promise<AssistantResult> {
   const checked = checkInput(input);
   if (checked !== "ok") return Promise.resolve({ kind: "invalid-input", field: checked === "too-many-references" ? "references" : "prompt" });
   return fetchImpl(ASSISTANT_URL, {
@@ -189,7 +189,7 @@ export function requestIdentity(input: AssistantInput, { fetchImpl = globalThis.
 export type AssistantStatus = { available: true } | { available: false; reason: Unavailable };
 
 /** Free: asks whether generation is on. Never starts any paid work, so a page may call it at any time. */
-export function fetchAssistantStatus({ fetchImpl = globalThis.fetch.bind(globalThis), signal }: { fetchImpl?: FetchLike; signal?: AbortSignal } = {}): Promise<AssistantStatus> {
+export function fetchAssistantStatus({ fetchImpl = globalThis.fetch.bind(globalThis), signal }: { fetchImpl?: FetchLike | undefined; signal?: AbortSignal | undefined } = {}): Promise<AssistantStatus> {
   return fetchImpl(`${ASSISTANT_URL}/status`, { ...(signal ? { signal } : {}), headers: { accept: "application/json" } })
     .then((res) => (res.ok ? readJson(res) : Promise.resolve<Record<string, unknown> | null>(null)))
     .then((body): AssistantStatus => {

@@ -1641,10 +1641,10 @@ export function StreamStatus(input: StreamStatusProps): JSX.Element | null;
 // @public (undocumented)
 export interface StreamStatusProps {
     // (undocumented)
-    className?: string;
-    label?: string;
-    live?: boolean;
-    stage?: AssistantStreamStage;
+    className?: string | undefined;
+    label?: string | undefined;
+    live?: boolean | undefined;
+    stage?: AssistantStreamStage | undefined;
 }
 
 // @public
@@ -1653,8 +1653,8 @@ export function StreamText(input: StreamTextProps): JSX.Element | null;
 // @public (undocumented)
 export interface StreamTextProps {
     // (undocumented)
-    className?: string;
-    live?: boolean;
+    className?: string | undefined;
+    live?: boolean | undefined;
     // (undocumented)
     text: string;
 }

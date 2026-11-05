@@ -18,8 +18,8 @@ import {
 } from "./identity-assistant.ts";
 
 export type StreamHandlers = {
-  onStatus?: (stage: AssistantStreamStage) => void;
-  onText?: (draft: string) => void;
+  onStatus?: ((stage: AssistantStreamStage) => void) | undefined;
+  onText?: ((draft: string) => void) | undefined;
 };
 
 function isEventStream(res: Response): boolean {
@@ -78,7 +78,7 @@ export function requestIdentityStream(
     signal,
     onStatus,
     onText,
-  }: { fetchImpl?: FetchLike; signal?: AbortSignal } & StreamHandlers = {},
+  }: { fetchImpl?: FetchLike | undefined; signal?: AbortSignal | undefined } & StreamHandlers = {},
 ): Promise<AssistantResult> {
   const checked = checkInput(input);
   if (checked !== "ok") {
