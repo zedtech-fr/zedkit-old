@@ -111,7 +111,7 @@ test("drawer copy source lists the namespace step, every companion file and the 
   await adoption.getByRole("tab", { name: "Paste the files" }).click();
   await expect(adoption.locator('[data-adoption-step="dependencies"]')).toContainText("vaul");
   const files = adoption.locator('[data-adoption-step="files"]');
-  await expect(files).toContainText("16 companion files");
+  await expect(files).toContainText("18 companion files");
   await files.locator("summary").click();
   for (const name of [
     "drawer",
@@ -126,6 +126,8 @@ test("drawer copy source lists the namespace step, every companion file and the 
     "overlay-modal",
     "theme-scope",
     "surface",
+    "parallax",
+    "parallax-types",
     "use-narrow-viewport",
     "ui-provider",
     "create-messages-context",
