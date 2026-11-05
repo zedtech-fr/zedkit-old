@@ -1,5 +1,47 @@
 # @zedtech/zedkit-ui
 
+## 1.7.0
+
+### Minor Changes
+
+- be11e7d: Add `PromptInput`: chat-style composer with in-field send control (Enter to send, Shift+Enter for newline).
+- be11e7d: Add four brief-routed domain specimens (commerce, SaaS dashboard, editorial, service booking) and `selectSpecimenDomain` on `@zedtech/zedkit-ui/marketing`.
+- be11e7d: Add signature type-role utilities, named motion tokens (`motion-reveal` … `motion-feedback`), and decouple `Heading` visual role from semantic level. Document the language in `docs/design/signature.md`.
+- be11e7d: Add `StickyAside` (CSS-only sticky two-column layout), snap opt-out for sections that contain it, docs and home Get started migration.
+- be11e7d: Add `Surface`, `surfaceVariants`, `surfaceGlassPanelClass`, and `applySurfaceGlassPanel` as the shared panel chrome (solid, popover, and glass via `data-surface="glass"`; elevation 0–3; radius and padding tokens). `Card`, `Dialog`, `Popover`, `Drawer`, and `WidgetButton` compose it. `DrawerContent` accepts `size="sm" | "md" | "lg"` (`lg` about min(600px, 92vw) on desktop). The docs site applies glass panels through the kit helpers instead of site CSS overrides.
+- be11e7d: Add a unified `data-animate` / `<Animate>` motion API (appear, scroll, press, longpress, hover, focus) with identity tokens, a tiny SSR-safe runtime, and reduced-motion off.
+- be11e7d: Harden `observeAnimate` (one listener set, late nodes, purge, reduced-motion toggle) and add `MotionScript` / `useMotionPreference` so an in-app reduce choice applies before paint.
+- be11e7d: Add motion knobs (`--zk-motion-intensity`, derived parallax amplitude, `--zk-pin-top`, mobile factor) as `var(--zk-…, fallback)` reads, with no new identity tokens.
+- be11e7d: Floor marketing section rhythm on phones, and add `SectionScroll` plus a Section `snap` prop for proximity scroll-snap (opt out long or sticky bands).
+
+### Patch Changes
+
+- be11e7d: Small `size="sm"` buttons (including `asChild` links) use `py-control-block` so computed block padding matches other controls and home CTAs pass the header-controls consistency spec.
+- be11e7d: `Drawer` with `modal={false}` renders a kit inline panel (Surface + portal) instead of Vaul/Radix Dialog, so focus and pointer events reach the page; Escape still closes and focus returns to the trigger.
+- a266a42: Drawer: stop remounting the Vaul root when the narrow viewport flag settles, so controlled `open` is not dropped on the first paint.
+- be11e7d: Side drawers (left/right) now drag from their handle only by default, so pressing and dragging inside the panel selects text instead of moving or closing it (`handleOnly` still overrides). Buttons, icon buttons included, show the pointer cursor on hover.
+- be11e7d: Side drawers (left/right) swipe shut from anywhere on the panel again. Pass `handleOnly` on a panel that is a text surface, where a press-and-drag must select text instead.
+- be11e7d: Glass identity: sticky headers are translucent frosted glass. New `--zk-glass-bar-*` tokens (alpha, filter, luminous bottom edge, inset relief highlights; no drop shadow) style `MarketingHeader`, with a near-solid fallback when backdrop-filter is unsupported or less transparency is requested.
+
+  `PageHeader` takes a `back` slot above the title, spaced by the new `--spacing-page-header-back-gap` token.
+
+  `Badge` gains a `meta` variant: caption-size muted mono label with tabular numerals and no surface, for versions and counts.
+
+- be11e7d: New reusable `data-surface="glass"` panel surface: a solid popover panel in every identity, frosted under the glass identity with the same overlay tokens as drawer/dialog panels (tinted wash, 24px blur with saturate, soft shadow, translucent edge; light and dark). Near-solid `@supports` fallback when `backdrop-filter` is unavailable, opaque under forced colors.
+- be11e7d: Raise glass overlay panel alpha slightly so site chrome menus meet the documented 0.75 minimum in e2e contrast checks.
+- be11e7d: Glass identity: the floating widget pill is near-solid in every theme, so its label keeps AA contrast over busy content.
+- be11e7d: Button roots expose `data-variant` and `data-size` for identity chrome. Button-styled anchors from `asChild` keep control padding via size fallbacks; link variants no longer zero horizontal padding before size compounds apply.
+- be11e7d: Add `ScrollGallery` for single-row horizontal scroll regions with snap, edge fade, and focus scroll-into-view.
+- be11e7d: Drawer and Dialog focus the panel itself on open — never a field, never a text selection — through a shared `focusOverlayInitial` helper. New opt-in `initialFocus` prop (a ref or a selector resolved inside the panel, typed `OverlayInitialFocus`) moves focus to a field with the caret at the end.
+- be11e7d: PromptInput: optional `allowEmptySubmit` so a host can resend the last prompt when the field was cleared after a proposal landed.
+- be11e7d: PromptInput textarea uses the same focus-ring-control outline as other fields so keyboard focus is visible.
+- be11e7d: `PromptInput` gains `sendDisabled`: it blocks sending while the field stays editable, so a draft can be typed (and kept) while the service is off. `disabled` still blocks both.
+- be11e7d: Fix `ScrollGallery` row spacing: `--zk-gap-md` track and chip gaps, non-shrinking snap peers, content-sized tab chips with inner padding, and label/sublabel rhythm inside the gallery.
+- be11e7d: Declare `@zedtech/zedkit-core` as a runtime dependency: the overlay initial-focus helper imports it, so installs of the package alone failed to resolve it.
+- be11e7d: Restore pointer, text, and not-allowed cursors on interactive controls via base CSS and component classes.
+- be11e7d: Fix drawer/dialog rendering under the sticky site header: add a z-index token scale (`--z-header` < `--z-dropdown` < `--z-overlay` < `--z-drawer`/`--z-dialog` < `--z-toast`, with `z-*` Tailwind utilities), mount dialog/drawer portals to `document.body` with a scope-look mirror so no consumer stacking context can trap them, and mount dropdown panels opened inside an overlay into that panel.
+- be11e7d: Fix abrupt dialog/drawer close: the portals now use a Presence-free `createPortal` mount, so the overlay and panel inner Presences own the exit lifecycle again (closed state, exit animation, unmount on animation end, instant close under reduced motion).
+
 ## 1.6.2
 
 ### Patch Changes
