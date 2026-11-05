@@ -58,14 +58,19 @@ export function ConversationMessages(props: {
       data-assistant-pane="conversation"
     >
       {props.off ? <UnavailableBanner reason={props.off} live={false} /> : null}
-      {messages.length > 0 ? (
+      {props.session.thread.length > 0 ? (
+        <Thread turns={props.session.thread} />
+      ) : messages.length > 0 ? (
         <ChatLog messages={messages} pending={props.session.pending !== null} />
       ) : (
         <>
-          {refining ? <Thread turns={props.session.thread} /> : <AssistantGreeting />}
+          <AssistantGreeting />
           {notice && notice.kind !== "unavailable" ? <AssistantNoticeBubble notice={notice} /> : null}
         </>
       )}
+      {props.session.thread.length > 0 && notice && notice.kind !== "unavailable" ? (
+        <AssistantNoticeBubble notice={notice} />
+      ) : null}
       <IdentityRefinementChips
         visible={chipsVisible}
         disabled={props.busy || props.off !== null}

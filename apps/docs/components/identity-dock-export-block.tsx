@@ -27,16 +27,25 @@ export function IdentityDockExportBlock({ tokens }: { tokens: IdentityTokens }) 
       <Heading level={3} className="text-sm font-medium">
         {exportCopy.heading}
       </Heading>
-      <IdentityDockExportCopyRow label={exportCopy.install} value={IDENTITY_UI_INSTALL_COMMAND} />
+      <IdentityDockExportCopyRow
+        label={exportCopy.install}
+        copyLabel={exportCopy.copyInstall}
+        value={IDENTITY_UI_INSTALL_COMMAND}
+      />
       <IdentityDockExportCopyRow
         label={exportCopy.css}
+        copyLabel={exportCopy.copyCss}
         value={css}
         blocked={blocked}
         blockedTitle={editorExport.contrastTitle}
         blockedDescription={editorExport.contrastDescription}
         confirmLabel={editorExport.confirmLabel}
       />
-      <IdentityDockExportCopyRow label={exportCopy.aiPrompt} value={AI_SETUP_MINI_PROMPT} />
+      <IdentityDockExportCopyRow
+        label={exportCopy.aiPrompt}
+        copyLabel={exportCopy.copyAiPrompt}
+        value={AI_SETUP_MINI_PROMPT}
+      />
     </Stack>
   );
 }
