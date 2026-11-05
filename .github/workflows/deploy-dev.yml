@@ -2,13 +2,13 @@ name: deploy-dev
 
 on:
   push:
-    branches: ["integration/visual", "integration/visual-followup"]
+    branches: ["main", "dev"]
   workflow_dispatch:
     inputs:
       ref:
         description: "Branch, tag, or commit to publish to the dev site"
         required: true
-        default: "integration/visual"
+        default: "dev"
 
 permissions:
   contents: read
@@ -16,23 +16,16 @@ permissions:
 concurrency:
   group: deploy-dev
   cancel-in-progress: false
-  queue: max
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.sha }}
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-      - run: corepack enable
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @zedtech/zedkit-docs build
-      - name: Record build info
+      - name: Record target sha
         run: |
           echo "DEV_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
           echo "DEV_BRANCH=${{ inputs.ref || github.ref_name }}" >> "$GITHUB_ENV"
@@ -52,62 +45,58 @@ jobs:
         run: |
           umask 077
           trim() { printf '%s' "$1" | tr -d '\r\n'; }
-          : > deploy/suggest-dev.env
-          printf '%s=%s\n' IDENTITY_AI_BASE_URL "$(trim "$IDENTITY_AI_BASE_URL")" >> deploy/suggest-dev.env
-          printf '%s=%s\n' IDENTITY_AI_API_KEY "$(trim "$IDENTITY_AI_API_KEY")" >> deploy/suggest-dev.env
-          printf '%s=%s\n' IDENTITY_AI_MODEL "$(trim "$IDENTITY_AI_MODEL")" >> deploy/suggest-dev.env
-          printf '%s=%s\n' IDENTITY_AI_REASONING_EFFORT "$(trim "$IDENTITY_AI_REASONING_EFFORT")" >> deploy/suggest-dev.env
-          printf '%s=%s\n' IDENTITY_AI_ENABLED "$IDENTITY_AI_DEV_ENABLED" >> deploy/suggest-dev.env
-          printf '%s=%s\n' IDENTITY_AI_BUDGET_DAILY_USD "$IDENTITY_AI_DEV_BUDGET_DAILY_USD" >> deploy/suggest-dev.env
-          printf '%s=%s\n' IDENTITY_AI_BUDGET_MONTHLY_USD "$IDENTITY_AI_DEV_BUDGET_MONTHLY_USD" >> deploy/suggest-dev.env
-          printf '%s=%s\n' IDENTITY_AI_PRICE_INPUT_USD_PER_MTOK "$IDENTITY_AI_DEV_PRICE_INPUT_USD_PER_MTOK" >> deploy/suggest-dev.env
-          printf '%s=%s\n' IDENTITY_AI_PRICE_OUTPUT_USD_PER_MTOK "$IDENTITY_AI_DEV_PRICE_OUTPUT_USD_PER_MTOK" >> deploy/suggest-dev.env
+          {
+            printf '%s=%s\n' IDENTITY_AI_BASE_URL "$(trim "$IDENTITY_AI_BASE_URL")"
+            printf '%s=%s\n' IDENTITY_AI_API_KEY "$(trim "$IDENTITY_AI_API_KEY")"
+            printf '%s=%s\n' IDENTITY_AI_MODEL "$(trim "$IDENTITY_AI_MODEL")"
+            printf '%s=%s\n' IDENTITY_AI_REASONING_EFFORT "$(trim "$IDENTITY_AI_REASONING_EFFORT")"
+            printf '%s=%s\n' IDENTITY_AI_ENABLED "$IDENTITY_AI_DEV_ENABLED"
+            printf '%s=%s\n' IDENTITY_AI_BUDGET_DAILY_USD "$IDENTITY_AI_DEV_BUDGET_DAILY_USD"
+            printf '%s=%s\n' IDENTITY_AI_BUDGET_MONTHLY_USD "$IDENTITY_AI_DEV_BUDGET_MONTHLY_USD"
+            printf '%s=%s\n' IDENTITY_AI_PRICE_INPUT_USD_PER_MTOK "$IDENTITY_AI_DEV_PRICE_INPUT_USD_PER_MTOK"
+            printf '%s=%s\n' IDENTITY_AI_PRICE_OUTPUT_USD_PER_MTOK "$IDENTITY_AI_DEV_PRICE_OUTPUT_USD_PER_MTOK"
+          } > deploy/suggest-dev.env
           chmod 600 deploy/suggest-dev.env
-      - name: Configure SSH
+      - name: Configure SSH to Dedibox
+        # Reuse DOCS_DEPLOY_KEY (the docs-ci pubkey is authorized on dedibox).
+        # Do not use DOCS_DEPLOY_HOST / DOCS_DEPLOY_USER / DOCS_DEPLOY_KNOWN_HOSTS:
+        # those still point at the production docs VM (zedkit.app).
         env:
           DEPLOY_KEY: ${{ secrets.DOCS_DEPLOY_KEY }}
-          KNOWN_HOSTS: ${{ secrets.DOCS_DEPLOY_KNOWN_HOSTS }}
         run: |
           install -m 700 -d ~/.ssh
           printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
-          printf 'Host *\n  IdentityFile ~/.ssh/deploy_key\n  IdentitiesOnly yes\n' > ~/.ssh/config
-      - name: Deploy
-        env:
-          TARGET: ${{ secrets.DOCS_DEPLOY_USER }}@${{ secrets.DOCS_DEPLOY_HOST }}
-        run: deploy/deploy.sh --dev "$TARGET"
-      - name: Make the dev suggest release stamp readable
-        # deploy.sh writes release.json from mktemp (0600, owned by the deploy user); suggest-dev runs as root with
-        # cap_drop ALL (no DAC override), so the server cannot read it and crash-loops. Make it 0644 and restart.
-        env:
-          TARGET: ${{ secrets.DOCS_DEPLOY_USER }}@${{ secrets.DOCS_DEPLOY_HOST }}
+          printf '%s\n' '195.154.208.75 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDPESq5xmwyuPt3alDGhEe9fE3oOmCDPBt70I8hhylnE' > ~/.ssh/known_hosts
+          printf 'Host dedibox-dev\n  HostName 195.154.208.75\n  User zed\n  IdentityFile ~/.ssh/deploy_key\n  IdentitiesOnly yes\n' > ~/.ssh/config
+      - name: Publish docs on Dedibox
         run: |
-          ssh "$TARGET" 'cd /srv/app && f=suggest-dev/code/release.json && if [ -f "$f" ]; then chmod 644 "$f" && docker compose -f compose.yaml -f compose.override.yaml -f compose.dev.yaml restart suggest-dev; fi'
+          scp deploy/suggest-dev.env dedibox-dev:/data/work/secrets/zedkit-suggest-dev.env
+          ssh dedibox-dev 'chmod 600 /data/work/secrets/zedkit-suggest-dev.env'
+          # Client-side expansion of DEV_SHA is intentional (GHA env -> remote argv).
+          # shellcheck disable=SC2029
+          ssh dedibox-dev "/data/work/infra/deploy-zedkit-dev.sh $DEV_SHA"
+          ssh dedibox-dev 'cd /data/work/infra && docker compose up -d --force-recreate zedkit-suggest-dev'
       - name: Verify dev build stamp
         run: |
-          for _ in $(seq 1 5); do
+          for _ in $(seq 1 8); do
             if curl -sf https://dev.zedkit.app/dev-build.txt | grep -qx "commit=$DEV_SHA"; then
               exit 0
             fi
             sleep 6
           done
           echo "dev-build.txt does not show commit $DEV_SHA" >&2
+          curl -sS https://dev.zedkit.app/dev-build.txt >&2 || true
           exit 1
       - name: Dev suggest diagnostics
-        # Read-only: container state, its startup line (it names missing settings, never values) and what Caddy gets.
         if: always()
-        env:
-          TARGET: ${{ secrets.DOCS_DEPLOY_USER }}@${{ secrets.DOCS_DEPLOY_HOST }}
         run: |
-          ssh "$TARGET" 'cd /srv/app && docker compose -f compose.yaml -f compose.override.yaml -f compose.dev.yaml ps -a suggest-dev; docker compose -f compose.yaml -f compose.override.yaml -f compose.dev.yaml logs --no-color --tail 30 suggest-dev; docker inspect -f "{{json .NetworkSettings.Networks}}" $(docker compose ps -q caddy) | tr , "\n" | grep -E "NetworkID|Aliases" ; docker network inspect -f "{{range .Containers}}{{.Name}} {{end}}" app_default; docker compose exec -T caddy wget -qO- -S http://suggest-dev:3001/api/identity/suggest/status 2>&1 | head -5' || true
+          ssh dedibox-dev 'cd /data/work/infra && docker compose ps -a zedkit-suggest-dev && docker compose logs --no-color --tail 30 zedkit-suggest-dev' || true
           curl -s -w ' [%{http_code}]\n' https://dev.zedkit.app/api/identity/suggest/status || true
       - name: Refuse deploy when suggest-dev rejects the provider key
         if: success()
-        env:
-          TARGET: ${{ secrets.DOCS_DEPLOY_USER }}@${{ secrets.DOCS_DEPLOY_HOST }}
         run: |
-          if ssh "$TARGET" 'cd /srv/app && docker compose -f compose.yaml -f compose.override.yaml -f compose.dev.yaml logs --no-color --tail 200 suggest-dev' | grep -q 'invalid_api_key'; then
+          if ssh dedibox-dev 'cd /data/work/infra && docker compose logs --no-color --tail 200 zedkit-suggest-dev' | grep -q 'invalid_api_key'; then
             echo "suggest-dev logs show invalid_api_key: fix repository secret IDENTITY_AI_DEV_API_KEY (and matching IDENTITY_AI_BASE_URL) then redeploy." >&2
             exit 1
           fi
