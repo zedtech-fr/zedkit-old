@@ -62,6 +62,10 @@ Playbooks (skills you apply by dispatching work shaped like them):
 
 | Research | `research` |
 <!-- /if -->
+<!-- if:skill=compose-ui -->
+
+| Compose UI | `compose-ui` (persona chain brief, then edits) |
+<!-- /if -->
 
 Specialists (subagents):
 
@@ -90,7 +94,7 @@ Specialists (subagents):
 <!-- /if -->
 <!-- if:agent=ui-designer -->
 
-| UI | `ui-designer` |
+| UI review | `ui-designer`<!-- if:skill=compose-ui --> (expects the `/compose-ui` brief)<!-- /if --> |
 <!-- /if -->
 <!-- if:agent=copywriter -->
 
