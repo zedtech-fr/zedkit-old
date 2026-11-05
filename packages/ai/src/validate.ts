@@ -119,6 +119,10 @@ function checkCommand(root: string, file: string, skills: Set<string>, issues: I
   if (!isSingleLineDescription(front.raw)) {
     issues.push({ path, message: "description must be a single line (no `>` or `|` block, no continuation lines)" });
   }
+  // Commands have no routing path: they always run on the session model.
+  if (front.data.model !== undefined && front.data.model !== "inherit") {
+    issues.push({ path, message: 'model must be omitted or "inherit" (commands always use the session model)' });
+  }
   // A command runs a skill by name: it must name at least one installed one.
   const names = [...skills].filter((name) => text.includes(`\`${name}\``));
   if (names.length === 0) {
