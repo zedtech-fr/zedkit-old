@@ -1,29 +1,9 @@
-import dynamic from "next/dynamic";
 import type { HomeEntryPoint } from "@/content/home-entry-points";
 import { HomeAiSetupSection } from "@/ui/home/home-ai-setup-section";
+import { HomeComponentFamiliesSection } from "@/ui/home/home-component-families-section";
+import { HomeGetStartedSection } from "@/ui/home/home-get-started-section";
 import { HomeIdentitiesSection } from "@/ui/home/home-identities-section";
 import { HomeSecondarySection } from "@/ui/home/home-secondary-section";
-
-const HomeGetStartedSection = dynamic(
-  () => import("@/ui/home/home-get-started-section").then((mod) => ({ default: mod.HomeGetStartedSection })),
-  {
-    loading: () => (
-      <section aria-busy="true" className="min-h-96 w-full scroll-mt-24" data-home-section-loading="get-started">
-        <div id="install-or-copy" className="sr-only" />
-      </section>
-    ),
-  },
-);
-
-const HomeComponentFamiliesSection = dynamic(
-  () =>
-    import("@/ui/home/home-component-families-section").then((mod) => ({
-      default: mod.HomeComponentFamiliesSection,
-    })),
-  {
-    loading: () => <section aria-busy="true" className="min-h-48 w-full scroll-mt-24" data-home-section-loading="components" />,
-  },
-);
 
 export type HomeBelowHeroProps = {
   featuredPackage: string;
@@ -32,8 +12,9 @@ export type HomeBelowHeroProps = {
 };
 
 /**
- * Marketing sections below the hero, code-split from the first home payload (#618), in the order a visitor
- * decides: the proof is above, then the one-prompt AI setup, then the same task in six looks, then how to adopt, then where to look next.
+ * Marketing sections below the hero, in the order a visitor decides: the proof is above,
+ * then the one-prompt AI setup, then the same task in six looks, then how to adopt, then where to look next.
+ * Kept in the main home payload (not dynamically imported) so section anchors stay in the live layout on first paint.
  */
 export function HomeBelowHero({
   featuredPackage,
