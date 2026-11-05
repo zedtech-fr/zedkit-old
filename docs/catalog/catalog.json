@@ -2842,7 +2842,7 @@
           "audience": "Developers adding appear, scroll, press, longpress, hover or focus motion to any kit element.",
           "purpose": "One typed attribute and wrapper API for identity-token motion, with a tiny SSR-safe runtime.",
           "whenToUse": "When a card, section or control should move on appear, scroll progress, press, longpress, hover or focus.",
-          "whenNotToUse": "For pinned scene crossfades use `ScrollScenes`. For section snap/smooth-scroll use `SectionScroll`. For first-paint class utilities see `Animate entrances and hover feedback with CSS utilities`.",
+          "whenNotToUse": "For pinned scene crossfades use `ScrollScenes`. For section snap/smooth-scroll use `SectionScroll`. For first-paint class utilities see `Animate entrances and hover feedback with CSS utilities`. For section-shared parallax layers use `ParallaxSection` from `@zedtech/zedkit-ui/motion`.",
           "derivedFrom": null,
           "example": "import { AnimateObserver, Card } from \"@zedtech/zedkit-ui\";\n\n<AnimateObserver />\n<Card data-animate=\"fade-up\" data-animate-delay=\"100\" data-animate-press=\"scale-down\">\n  Invoice\n</Card>",
           "examples": [
@@ -2891,6 +2891,7 @@
           "troubleshooting": "Nothing appears to move — mount `<AnimateObserver />` once near the app root (or call `observeAnimate()`), then check reduced motion and `data-motion` on `<html>`. Content stays visible without JS by design. Scroll parallax needs `animation-timeline: view()` or the runtime fallback. In-app reduce flashes on load — render `<MotionScript />` in `<head>` (same pattern as `IdentityScript`) so `data-motion=\"reduce\"` is set before paint; `useMotionPreference()` is `\"reduce\"` on the server.",
           "seeAlso": [
             "Animate entrances and hover feedback with CSS utilities",
+            "Add depth with parallax layers",
             "Pin a stage and change scene as the page scrolls",
             "Stack content and group titled sections"
           ]
@@ -4626,7 +4627,7 @@
           "shortName": "Surface",
           "audience": "Developers building floating panels or composing kit overlays.",
           "purpose": "One panel surface: solid card, popover or glass, elevation `0`–`3` with token shadows, border, radius and optional padding.",
-          "whenToUse": "Custom panels that should match Dialog, Drawer, Card, and Popover chrome; floating assistant triggers via `WidgetButton`.",
+          "whenToUse": "Custom panels that should match Dialog, Drawer, Card, and Popover chrome; floating assistant triggers via `WidgetButton`. Pass `depth` (not with glass) to wrap the panel in a parallax layer.",
           "whenNotToUse": "Marketing page sections — use `@zedtech/zedkit-ui/marketing` `GlassSurface` instead.",
           "derivedFrom": null,
           "example": "import { Surface, WidgetButton } from \"@zedtech/zedkit-ui\";\n<Surface variant=\"solid\" elevation={2} radius=\"xl\" padding=\"md\">Summary</Surface>\n<WidgetButton aria-label=\"Open assistant\">Ask</WidgetButton>",
@@ -4657,7 +4658,8 @@
           "seeAlso": [
             "Group content in a card section",
             "Slide in a drawer panel",
-            "Open modal dialogs"
+            "Open modal dialogs",
+            "Add depth with parallax layers"
           ]
         },
         {
@@ -5245,6 +5247,58 @@
           "troubleshooting": "Aside never sticks — check that `data-from` matches your breakpoint, the section is tall enough to scroll, and no ancestor between this root and the viewport uses `overflow: hidden|auto|scroll` or a transform. Aside hides under the site header — set `--zk-sticky-top` (or `--zk-pin-top` globally) to the header offset. Columns too narrow — pass `ratio=\"1/2\"` or `--zk-sticky-cols`. Aside taller than the window — pass `scrollable` so it keeps sticky with an internal scroll area. Snap fights a long section — parent sections that contain `StickyAside` disable scroll-snap when `SectionScroll` is active.",
           "seeAlso": [
             "Stack content and group titled sections",
+            "Pin a stage and change scene as the page scrolls",
+            "Add depth with parallax layers"
+          ]
+        },
+        {
+          "need": "Add depth with parallax layers",
+          "import": "`@zedtech/zedkit-ui/motion` — `ParallaxSection`, `ParallaxLayer`, `ParallaxSectionProps`, `ParallaxLayerProps`, `ParallaxDepth`, `ParallaxDepthName`, `ParallaxAxis`, `ParallaxRange`, `ParallaxOff`, `ParallaxFade`, `ParallaxSectionTag`, `PARALLAX_AXES`, `PARALLAX_DEPTH_NAMES`, `PARALLAX_RANGES`, `PARALLAX_OFF`, `PARALLAX_FADES`, `PARALLAX_SECTION_TAGS`, `MotionScript`, `MotionScriptProps`; `@zedtech/zedkit-ui/motion/runtime` — `observeAnimate`",
+          "wraps": "`(none)`",
+          "status": "alpha",
+          "shortName": "Parallax",
+          "audience": "Developers adding scroll depth to a hero or section without a JavaScript animation library.",
+          "purpose": "Section-shared CSS view timeline; layers move with depth, axis, zoom, fade, and range. Static without scroll timelines.",
+          "whenToUse": "Background and deco layers that should drift as the section scrolls. Keep copy and controls outside a moving layer, or at `depth={0}`.",
+          "whenNotToUse": "Node-local scroll presets on a single element — `data-animate-scroll=\"parallax\"` stays. Pinned scene crossfades — `ScrollScenes`. Sticky columns — `StickyAside`.",
+          "derivedFrom": null,
+          "example": "import { ParallaxLayer, ParallaxSection } from \"@zedtech/zedkit-ui/motion\";\n\n<ParallaxSection range=\"page\">\n  <ParallaxLayer depth=\"far\" className=\"absolute inset-0\" />\n  <div className=\"relative\"><h1>Title</h1></div>\n  <ParallaxLayer depth=\"near\" className=\"absolute right-8 top-20\" />\n</ParallaxSection>",
+          "examples": [
+            {
+              "title": "Hero with far background",
+              "code": "import { ParallaxLayer, ParallaxSection } from \"@zedtech/zedkit-ui/motion\";\n\n<ParallaxSection range=\"page\">\n  <ParallaxLayer depth=\"far\" className=\"absolute inset-0\" />\n  <div className=\"relative\"><h1>Title</h1></div>\n  <ParallaxLayer depth=\"near\" className=\"absolute right-8 top-20\" />\n</ParallaxSection>"
+            },
+            {
+              "title": "Named depth layer",
+              "code": "import { ParallaxLayer, ParallaxSection } from \"@zedtech/zedkit-ui/motion\";\n\n<ParallaxSection axis=\"y\" intensity={0.5} off=\"below-md\">\n  <ParallaxLayer depth={0.25} zoom={[1, 1.08]} />\n</ParallaxSection>"
+            }
+          ],
+          "adoption": {
+            "kind": "css",
+            "imports": [
+              "@zedtech/zedkit-ui/motion.css"
+            ],
+            "directives": [],
+            "install": [],
+            "utilities": [],
+            "attributes": [
+              "data-parallax",
+              "data-parallax-layer",
+              "data-parallax-depth",
+              "data-parallax-axis",
+              "data-parallax-range",
+              "data-parallax-off",
+              "data-parallax-preset",
+              "data-parallax-move",
+              "data-parallax-zoom",
+              "data-parallax-fade"
+            ]
+          },
+          "a11y": "Moving, zooming, or fading layers are `aria-hidden` and `inert`. `prefers-reduced-motion: reduce` and `data-motion=\"reduce\"` leave layers in place. Do not put buttons, links, toasts, or `Surface variant=\"glass\"` in a moving layer. `Surface depth` wraps without `aria-hidden` so a non-interactive visual panel can still sit on a layer.",
+          "troubleshooting": "Nothing moves — the browser needs `animation-timeline: view()`; otherwise layers stay put (v1 static fallback). Intensity is `--zk-motion-intensity` (0 = no shift). A toast jumps with the section — the toast host was transformed; keep `position: fixed` toasts outside layers. Edges flash — the layer box extends by its travel (`inset-block`). Vanilla observers import `@zedtech/zedkit-ui/motion/runtime`.",
+          "seeAlso": [
+            "Reveal and react with motion on any element",
+            "Keep a side panel in view",
             "Pin a stage and change scene as the page scrolls"
           ]
         },

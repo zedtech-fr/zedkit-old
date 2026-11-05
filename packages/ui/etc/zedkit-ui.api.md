@@ -161,7 +161,7 @@ export interface ButtonProps extends React_2.ComponentProps<"button">, VariantPr
 
 // @public (undocumented)
 export const buttonVariants: (props?: ({
-    variant?: "link" | "default" | "destructive" | "secondary" | "outline" | "ghost" | null | undefined;
+    variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | null | undefined;
     size?: "default" | "sm" | "lg" | "icon" | null | undefined;
 } & ClassProp) | undefined) => string;
 
@@ -522,13 +522,13 @@ export function discardCustomIdentity(storageKey?: string): void;
 export function Drawer(input: DrawerRootProps): React_2.JSX.Element;
 
 // @public (undocumented)
-export function DrawerBody(input: React_2.ComponentProps<"div">): React_2.JSX.Element;
+export function DrawerBody(input: React.ComponentProps<"div">): JSX.Element;
 
 // @public (undocumented)
-export function DrawerClose(input: React_2.ComponentProps<typeof Drawer_2.Close>): React_2.JSX.Element;
+export function DrawerClose(props: React.ComponentProps<typeof Drawer_2.Close>): JSX.Element;
 
 // @public (undocumented)
-export function DrawerCloseButton(input: React_2.ComponentProps<typeof DrawerClose>): React_2.JSX.Element;
+export function DrawerCloseButton(input: React.ComponentProps<typeof DrawerClose>): JSX.Element;
 
 // @public (undocumented)
 export function DrawerContent(input: React_2.ComponentProps<typeof Drawer_2.Content> & {
@@ -541,19 +541,22 @@ export function DrawerContent(input: React_2.ComponentProps<typeof Drawer_2.Cont
 export function DrawerDescription(input: React_2.ComponentProps<typeof Drawer_2.Description>): React_2.JSX.Element;
 
 // @public (undocumented)
-export function DrawerFooter(input: React_2.ComponentProps<"div">): React_2.JSX.Element;
+export function DrawerFooter(input: React.ComponentProps<"div">): JSX.Element;
 
 // @public (undocumented)
 export function DrawerHandle(input: React_2.ComponentProps<typeof Drawer_2.Handle>): React_2.JSX.Element;
 
 // @public (undocumented)
-export function DrawerHeader(input: React_2.ComponentProps<"div">): React_2.JSX.Element;
+export function DrawerHeader(input: React.ComponentProps<"div">): JSX.Element;
 
 // @public (undocumented)
 export function DrawerOverlay(input: React_2.ComponentProps<typeof Drawer_2.Overlay>): React_2.JSX.Element;
 
 // @public (undocumented)
-export function DrawerPortal(input: React_2.ComponentProps<typeof Drawer_2.Portal>): React_2.JSX.Element;
+export function DrawerPortal(input: {
+    container?: HTMLElement | null;
+    children?: React_2.ReactNode;
+}): React_2.JSX.Element;
 
 // @public (undocumented)
 export type DrawerProps = DrawerRootProps;
@@ -565,7 +568,7 @@ export type DrawerSize = "sm" | "md" | "lg";
 export function DrawerTitle(input: React_2.ComponentProps<typeof Drawer_2.Title>): React_2.JSX.Element;
 
 // @public (undocumented)
-export function DrawerTrigger(input: React_2.ComponentProps<typeof Drawer_2.Trigger>): React_2.JSX.Element;
+export function DrawerTrigger(props: React_2.ComponentProps<typeof Drawer_2.Trigger>): React_2.JSX.Element;
 
 // @public (undocumented)
 export function DropdownMenu(input: DropdownMenuProps): React_2.JSX.Element;
@@ -1316,6 +1319,7 @@ export type PromptInputProps = Omit<React_2.ComponentProps<"textarea">, "onSubmi
     cancelLabel?: string;
     busy?: boolean;
     sendDisabled?: boolean;
+    allowEmptySubmit?: boolean;
 };
 
 // @public
@@ -1596,16 +1600,24 @@ export function Surface(input: SurfaceProps): React_2.JSX.Element;
 export function surfaceGlassPanelClass(options?: Pick<VariantProps<typeof surfaceVariants>, "elevation" | "radius" | "padding">): string;
 
 // @public (undocumented)
-export type SurfaceProps = React_2.ComponentProps<"div"> & VariantProps<typeof surfaceVariants> & {
+export type SurfaceProps = React_2.ComponentProps<"div"> & Omit<VariantProps<typeof surfaceVariants>, "variant"> & {
     as?: "div" | "section" | "article" | undefined;
-};
+} & ({
+    variant?: "solid" | "popover" | undefined;
+    depth?: "far" | "back" | "mid" | "near" | "0" | number | undefined;
+    layerClassName?: string | undefined;
+} | {
+    variant: "glass";
+    depth?: never;
+    layerClassName?: never;
+});
 
 // @public (undocumented)
 export const surfaceVariants: (props?: ({
-    variant?: "popover" | "solid" | "glass" | null | undefined;
-    elevation?: 0 | 1 | 2 | 3 | null | undefined;
-    radius?: "none" | "sm" | "lg" | "full" | "md" | "xl" | "2xl" | null | undefined;
-    padding?: "dialog" | "none" | "sm" | "md" | "card" | null | undefined;
+    variant?: "solid" | "popover" | "glass" | null | undefined;
+    elevation?: 0 | 2 | 1 | 3 | null | undefined;
+    radius?: "none" | "sm" | "md" | "lg" | "xl" | "2xl" | "full" | null | undefined;
+    padding?: "none" | "sm" | "md" | "card" | "dialog" | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public (undocumented)

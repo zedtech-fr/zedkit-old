@@ -1,0 +1,239 @@
+/*
+ * ParallaxSection / ParallaxLayer: CSS scroll-driven layers, 0 JS.
+ * Motion only under no-preference + :root:not([data-motion=reduce]) +
+ * @supports (animation-timeline: view()). Elsewhere the layout is static.
+ *
+ * Animated properties are only translate, scale, and opacity.
+ * Tune with --zk-motion-intensity, --zk-parallax-amplitude, --zk-depth.
+ */
+
+[data-parallax] {
+  overflow: clip;
+  isolation: isolate;
+  min-width: 0;
+}
+
+[data-parallax-layer] {
+  position: relative;
+  min-width: 0;
+}
+
+[data-parallax-depth="far"] {
+  --zk-depth: 0.6;
+}
+
+[data-parallax-depth="back"] {
+  --zk-depth: 0.3;
+}
+
+[data-parallax-depth="mid"] {
+  --zk-depth: 0.15;
+}
+
+[data-parallax-depth="near"] {
+  --zk-depth: -0.2;
+}
+
+[data-parallax-depth="0"] {
+  --zk-depth: 0;
+}
+
+@keyframes zk-parallax-y {
+  from {
+    translate: 0 calc(var(--zk-shift) * var(--zk-from, -1));
+  }
+  to {
+    translate: 0 calc(var(--zk-shift) * var(--zk-to, 1));
+  }
+}
+
+@keyframes zk-parallax-x {
+  from {
+    translate: calc(var(--zk-shift) * var(--zk-from, -1)) 0;
+  }
+  to {
+    translate: calc(var(--zk-shift) * var(--zk-to, 1)) 0;
+  }
+}
+
+@keyframes zk-parallax-zoom {
+  from {
+    scale: var(--zk-zoom-from, 1);
+  }
+  to {
+    scale: var(--zk-zoom-to, 1);
+  }
+}
+
+@keyframes zk-parallax-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    :root:not([data-motion="reduce"]) {
+      [data-parallax]:not([data-parallax-range="page"]) {
+        view-timeline-name: --zk-tl;
+        view-timeline-axis: block;
+        view-timeline-inset: var(--zk-parallax-inset, 0);
+      }
+
+      [data-parallax][data-parallax-axis="x"]:not([data-parallax-range="page"]) {
+        view-timeline-axis: inline;
+      }
+
+      [data-parallax-move] {
+        --zk-shift: calc(
+          var(--zk-depth, 0) *
+            var(
+              --zk-parallax-amplitude,
+              min(calc(var(--zk-reveal-distance, 0.75rem) * 8), var(--zk-parallax-max-shift, 120px))
+            ) * var(--zk-motion-intensity, 1) * var(--zk-motion-mobile, 1)
+        );
+        --zk-travel: max(var(--zk-shift), calc(var(--zk-shift) * -1));
+        --zk-from: -1;
+        --zk-to: 1;
+        inset-block: calc(var(--zk-travel) * -1);
+        animation-name: zk-parallax-y;
+        animation-duration: 1ms;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+        animation-timeline: --zk-tl;
+        animation-range: cover;
+      }
+
+      [data-parallax][data-parallax-axis="x"] [data-parallax-move]:not([data-parallax-axis="y"]),
+      [data-parallax-move][data-parallax-axis="x"] {
+        --zk-shift: calc(
+          var(--zk-depth, 0) *
+            var(
+              --zk-parallax-amplitude-x,
+              min(calc(var(--zk-reveal-distance, 0.75rem) * 8), var(--zk-parallax-max-shift, 12vw))
+            ) * var(--zk-motion-intensity, 1) * var(--zk-motion-mobile, 1) * var(--zk-dir, 1)
+        );
+        --zk-travel: max(var(--zk-shift), calc(var(--zk-shift) * -1));
+        inset-block: auto;
+        inset-inline: calc(var(--zk-travel) * -1);
+        animation-name: zk-parallax-x;
+      }
+
+      [data-parallax][data-parallax-range="cover"] [data-parallax-move] {
+        --zk-from: -1;
+        --zk-to: 1;
+        animation-range: cover;
+      }
+
+      [data-parallax][data-parallax-range="exit"] [data-parallax-move] {
+        --zk-from: 0;
+        --zk-to: 2;
+        animation-range: exit;
+      }
+
+      [data-parallax][data-parallax-range="entry"] [data-parallax-move] {
+        --zk-from: -2;
+        --zk-to: 0;
+        animation-range: entry;
+      }
+
+      [data-parallax][data-parallax-range="page"] [data-parallax-move] {
+        --zk-from: 0;
+        --zk-to: 2;
+        animation-timeline: scroll();
+        animation-range: normal;
+      }
+
+      [data-parallax-move]:not([data-parallax] *) {
+        animation-timeline: view();
+      }
+
+      [data-parallax-layer][data-parallax-depth="0"] {
+        translate: none;
+      }
+
+      [data-parallax-zoom] {
+        animation-name: zk-parallax-zoom;
+        animation-duration: 1ms;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+        animation-timeline: --zk-tl;
+        animation-range: cover;
+      }
+
+      [data-parallax-move][data-parallax-zoom] {
+        animation-name: zk-parallax-y, zk-parallax-zoom;
+      }
+
+      [data-parallax][data-parallax-axis="x"] [data-parallax-move][data-parallax-zoom]:not([data-parallax-axis="y"]),
+      [data-parallax-move][data-parallax-axis="x"][data-parallax-zoom] {
+        animation-name: zk-parallax-x, zk-parallax-zoom;
+      }
+
+      [data-parallax-layer][data-parallax-fade="entry"],
+      [data-parallax-layer][data-parallax-fade="exit"] {
+        animation-name: zk-parallax-fade;
+        animation-duration: 1ms;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+        animation-timeline: view();
+        translate: none;
+      }
+
+      [data-parallax-layer][data-parallax-fade="entry"] {
+        animation-range: entry;
+      }
+
+      [data-parallax-layer][data-parallax-fade="exit"] {
+        animation-range: exit;
+        animation-direction: reverse;
+      }
+
+      @media (max-width: 40rem) {
+        [data-parallax-layer][data-parallax-depth="far"] {
+          animation: none;
+          translate: none;
+        }
+      }
+
+      @media (max-width: 47.99rem) {
+        [data-parallax-off="below-md"] [data-parallax-layer],
+        [data-parallax-layer][data-parallax-off="below-md"] {
+          animation: none;
+          translate: none;
+          scale: none;
+        }
+      }
+
+      @media (max-width: 63.99rem) {
+        [data-parallax-off="below-lg"] [data-parallax-layer],
+        [data-parallax-layer][data-parallax-off="below-lg"] {
+          animation: none;
+          translate: none;
+          scale: none;
+        }
+      }
+    }
+  }
+}
+
+@media print {
+  [data-parallax],
+  [data-parallax-layer] {
+    animation: none !important;
+    translate: none !important;
+    scale: none !important;
+    opacity: 1 !important;
+    overflow: visible;
+    height: auto;
+    position: static;
+    inset: auto;
+  }
+}
+
+[dir="rtl"] {
+  --zk-dir: -1;
+}

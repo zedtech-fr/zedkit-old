@@ -25,7 +25,7 @@
   }
 
   html:has([data-slot="section-scroll"])
-    [data-slot="section"]:has([data-sticky-aside], [data-scroll-scenes]) {
+    [data-slot="section"]:has([data-sticky-aside], [data-parallax], [data-scroll-scenes]) {
     scroll-snap-align: none;
   }
 }
