@@ -2,13 +2,13 @@ name: deploy-dev
 
 on:
   push:
-    branches: ["main", "goal/reference", "dev"]
+    branches: ["main", "dev"]
   workflow_dispatch:
     inputs:
       ref:
         description: "Branch, tag, or commit to publish to the dev site"
         required: true
-        default: "goal/reference"
+        default: "dev"
 
 permissions:
   contents: read
@@ -16,7 +16,6 @@ permissions:
 concurrency:
   group: deploy-dev
   cancel-in-progress: false
-  queue: max
 
 jobs:
   deploy:
@@ -46,16 +45,17 @@ jobs:
         run: |
           umask 077
           trim() { printf '%s' "$1" | tr -d '\r\n'; }
-          : > deploy/suggest-dev.env
-          printf '%s=%s\n' IDENTITY_AI_BASE_URL "$(trim "$IDENTITY_AI_BASE_URL")" >> deploy/suggest-dev.env
-          printf '%s=%s\n' IDENTITY_AI_API_KEY "$(trim "$IDENTITY_AI_API_KEY")" >> deploy/suggest-dev.env
-          printf '%s=%s\n' IDENTITY_AI_MODEL "$(trim "$IDENTITY_AI_MODEL")" >> deploy/suggest-dev.env
-          printf '%s=%s\n' IDENTITY_AI_REASONING_EFFORT "$(trim "$IDENTITY_AI_REASONING_EFFORT")" >> deploy/suggest-dev.env
-          printf '%s=%s\n' IDENTITY_AI_ENABLED "$IDENTITY_AI_DEV_ENABLED" >> deploy/suggest-dev.env
-          printf '%s=%s\n' IDENTITY_AI_BUDGET_DAILY_USD "$IDENTITY_AI_DEV_BUDGET_DAILY_USD" >> deploy/suggest-dev.env
-          printf '%s=%s\n' IDENTITY_AI_BUDGET_MONTHLY_USD "$IDENTITY_AI_DEV_BUDGET_MONTHLY_USD" >> deploy/suggest-dev.env
-          printf '%s=%s\n' IDENTITY_AI_PRICE_INPUT_USD_PER_MTOK "$IDENTITY_AI_DEV_PRICE_INPUT_USD_PER_MTOK" >> deploy/suggest-dev.env
-          printf '%s=%s\n' IDENTITY_AI_PRICE_OUTPUT_USD_PER_MTOK "$IDENTITY_AI_DEV_PRICE_OUTPUT_USD_PER_MTOK" >> deploy/suggest-dev.env
+          {
+            printf '%s=%s\n' IDENTITY_AI_BASE_URL "$(trim "$IDENTITY_AI_BASE_URL")"
+            printf '%s=%s\n' IDENTITY_AI_API_KEY "$(trim "$IDENTITY_AI_API_KEY")"
+            printf '%s=%s\n' IDENTITY_AI_MODEL "$(trim "$IDENTITY_AI_MODEL")"
+            printf '%s=%s\n' IDENTITY_AI_REASONING_EFFORT "$(trim "$IDENTITY_AI_REASONING_EFFORT")"
+            printf '%s=%s\n' IDENTITY_AI_ENABLED "$IDENTITY_AI_DEV_ENABLED"
+            printf '%s=%s\n' IDENTITY_AI_BUDGET_DAILY_USD "$IDENTITY_AI_DEV_BUDGET_DAILY_USD"
+            printf '%s=%s\n' IDENTITY_AI_BUDGET_MONTHLY_USD "$IDENTITY_AI_DEV_BUDGET_MONTHLY_USD"
+            printf '%s=%s\n' IDENTITY_AI_PRICE_INPUT_USD_PER_MTOK "$IDENTITY_AI_DEV_PRICE_INPUT_USD_PER_MTOK"
+            printf '%s=%s\n' IDENTITY_AI_PRICE_OUTPUT_USD_PER_MTOK "$IDENTITY_AI_DEV_PRICE_OUTPUT_USD_PER_MTOK"
+          } > deploy/suggest-dev.env
           chmod 600 deploy/suggest-dev.env
       - name: Configure SSH to Dedibox
         # Reuse DOCS_DEPLOY_KEY (the docs-ci pubkey is authorized on dedibox).
@@ -73,6 +73,8 @@ jobs:
         run: |
           scp deploy/suggest-dev.env dedibox-dev:/data/work/secrets/zedkit-suggest-dev.env
           ssh dedibox-dev 'chmod 600 /data/work/secrets/zedkit-suggest-dev.env'
+          # Client-side expansion of DEV_SHA is intentional (GHA env -> remote argv).
+          # shellcheck disable=SC2029
           ssh dedibox-dev "/data/work/infra/deploy-zedkit-dev.sh $DEV_SHA"
           ssh dedibox-dev 'cd /data/work/infra && docker compose up -d --force-recreate zedkit-suggest-dev'
       - name: Verify dev build stamp
