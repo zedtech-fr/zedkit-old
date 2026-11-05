@@ -188,7 +188,9 @@ size_budget ui 10200 marketing
 # Raised to 31000 on 5 Nov 2026: tokenomics policy schema, merge and check
 # (tokenomics.ts) plus the validate and install hooks; PR measured 30681.
 # Budget = measured + ~1%.
-size_budget ai 31000
+# Raised to 34900 on 5 Nov 2026: model-name check (hardcode.ts, model-names.ts)
+# in validate; PR measured 34506. Budget = measured + ~1%.
+size_budget ai 34900
 
 if [ -f apps/docs/out/index.html ]; then
   if ! node apps/docs/scripts/check-first-load-budget.mjs; then

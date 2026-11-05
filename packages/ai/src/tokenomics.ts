@@ -255,7 +255,8 @@ function checkLayerShape(data: Obj, issues: string[]): void {
   if (data.agents !== undefined) checkAgents(data.agents, issues);
   if (data.hardcode !== undefined) checkHardcode(data.hardcode, issues);
   for (const [key, value] of Object.entries(data)) {
-    if (key !== "providers") checkModelNames(value, key, issues);
+    // `hardcode` holds scan configuration (allow_paths, extra_patterns) that may legitimately name models.
+    if (key !== "providers" && key !== "hardcode") checkModelNames(value, key, issues);
   }
 }
 

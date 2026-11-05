@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { err, ok, tryCatch, type Result } from "@zedtech/zedkit-core";
+import { checkHardcodedModels } from "./hardcode.js";
 import { ALL_PROVIDERS, installKit, type Provider } from "./install.js";
 import { installNextStepLines, prettierHintLines } from "./install-next-step.js";
 import { kitDir, readManifest } from "./kit.js";
@@ -110,6 +111,7 @@ function runValidate(args: string[], sinks: Sinks): number {
     ...checkDrift(projectRoot, agentsDir),
     ...checkKitDocs(projectRoot, agentsDir),
     ...checkPlaceholders(projectRoot, agentsDir),
+    ...checkHardcodedModels(projectRoot, agentsDir),
   ];
   if (parsed.value.values.setup === true) {
     const plan = parsed.value.values.plan;

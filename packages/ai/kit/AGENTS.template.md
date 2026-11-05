@@ -71,5 +71,5 @@ that holds<!-- if:skill=ponytail-review --> (skill `ponytail-review`)<!-- /if --
 
 - Layout: `.agents/skills/`, `.agents/agents/`, `.agents/commands/`; `.claude/`
   and `.cursor/` mirror them; codex and muse read `.agents/` directly.
-- Subagent `model`: omit it, or `inherit`; an unknown pinned id can fall back silently.
+- Subagent `model`: omit it, or `inherit`; never name a model in a source file, models live in `.agents/tokenomics.md` (an unknown pinned id can fall back silently).
 - Tailor this file with the `setup-ai` skill; validate with `zedkit-ai validate`.

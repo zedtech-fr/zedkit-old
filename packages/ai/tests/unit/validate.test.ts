@@ -346,6 +346,16 @@ describe("validateKit", () => {
     expect(messages(root)).toEqual([expect.stringContaining("model must be omitted")]);
   });
 
+  it("lets a command omit model or set inherit, and flags any other model (commands always inherit)", () => {
+    const root = tempDir();
+    put(root, "skills/alpha/SKILL.md", SKILL("alpha"));
+    put(root, "commands/plain.md", COMMAND("alpha"));
+    put(root, "commands/inherit.md", "---\ndescription: Runs.\nmodel: inherit\n---\n\nRun the `alpha` skill.\n");
+    expect(validateKit(root)).toEqual([]);
+    put(root, "commands/pinned.md", "---\ndescription: Runs.\nmodel: some-made-up-id\n---\n\nRun the `alpha` skill.\n");
+    expect(messages(root)).toEqual([expect.stringContaining('commands/pinned.md: model must be omitted or "inherit"')]);
+  });
+
   it("flags subagents that set readonly", () => {
     const root = tempDir();
     put(root, "agents/beta.md", AGENT("beta", "readonly: true\n"));

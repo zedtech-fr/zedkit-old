@@ -243,10 +243,14 @@ describe("checkTokenomics", () => {
   });
 
   it("rejects a model name anywhere in the frontmatter except providers", () => {
-    const outside = checkTokenomics(doc("hardcode:\n  allow_paths: [docs/claude-opus-9/**]\n  extra_patterns: [acme-\\d+]\n"));
-    expect(outside).toEqual([expect.stringContaining('model name "claude-opus-9" outside providers')]);
+    const outside = checkTokenomics(doc("default_provider: claude-opus-9\n"));
+    expect(outside).toContainEqual(expect.stringContaining('model name "claude-opus-9" outside providers'));
     const comment = checkTokenomics(doc("agents:\n  verifier: { min_effort: gpt-5 }\n"));
     expect(comment).toContainEqual(expect.stringContaining('model name "gpt-5" outside providers'));
+  });
+
+  it("allows model names in hardcode.* (scan configuration, not routing)", () => {
+    expect(checkTokenomics(doc("hardcode:\n  allow_paths: [docs/claude-opus-9/**]\n  extra_patterns: ['gpt-\\d+']\n"))).toEqual([]);
   });
 
   it("allows model names under providers and in the prose body", () => {

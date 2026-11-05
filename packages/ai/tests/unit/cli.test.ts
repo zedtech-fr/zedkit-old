@@ -257,6 +257,20 @@ describe("cli", () => {
     }
   });
 
+  it("validate fails on a model name outside tokenomics.md and passes once it is marked", () => {
+    const root = tempDir();
+    put(root, ".agents/skills/alpha/SKILL.md", SKILL("alpha"));
+    put(root, "AGENTS.md", "# Rules\n\nUse gpt-5 for reviews.\n");
+    for (const dir of [root, join(root, ".agents")]) {
+      const result = run("validate", dir);
+      expect(result.code, dir).toBe(1);
+      expect(result.text, dir).toContain('AGENTS.md:3: model name "gpt-5" outside tokenomics.md');
+      expect(result.text, dir).toContain("1 problem");
+    }
+    put(root, "AGENTS.md", "# Rules\n\nUse gpt-5 for reviews. <!-- zk:model-ok -->\n");
+    expect(run("validate", root)).toEqual({ code: 0, text: "ok", errors: "" });
+  });
+
   it("validate fails on a missing directory and on unexpected arguments", () => {
     const missing = run("validate", "/definitely/not/here");
     expect(missing.code).toBe(2);
