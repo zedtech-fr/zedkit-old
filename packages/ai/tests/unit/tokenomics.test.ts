@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, utimesSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ALL_PROVIDERS } from "#install.js";
@@ -13,6 +13,7 @@ import {
   STAKES,
   type Tokenomics,
 } from "#tokenomics.js";
+import { put, tempDir } from "./helpers.js";
 
 const doc = (frontmatter: string, body = "Body.\n"): string => `---\nschema: 1\n${frontmatter}---\n\n${body}`;
 
@@ -303,5 +304,25 @@ describe("checkTokenomics", () => {
 
   it("lets a project strengthen gates", () => {
     expect(checkTokenomics(doc("gates:\n  trivial: { review: required }\n  standard: { review: required, human: required }\n"))).toEqual([]);
+  });
+});
+
+describe("loadDefaults cache", () => {
+  it("parses the shipped file once per file version and hands out the same policy", () => {
+    const a = loadDefaults();
+    const b = loadDefaults();
+    if (!a.ok || !b.ok) throw new Error("defaults must load");
+    expect(a.value).toBe(b.value);
+  });
+
+  it("re-reads a changed file and reports a missing one", () => {
+    const kit = tempDir();
+    expect(loadDefaults(kit).ok).toBe(false);
+    put(kit, "tokenomics.defaults.md", "---\nschema: 1\nstrict_headers: false\n---\n");
+    const first = loadDefaults(kit);
+    expect(first).toMatchObject({ ok: true, value: { strict_headers: false } });
+    put(kit, "tokenomics.defaults.md", "---\nschema: 1\nstrict_headers: true\n---\n");
+    utimesSync(join(kit, "tokenomics.defaults.md"), new Date(), new Date(Date.now() + 5000));
+    expect(loadDefaults(kit)).toMatchObject({ ok: true, value: { strict_headers: true } });
   });
 });

@@ -1,5 +1,5 @@
 // Original work by the same author.
-import { readFileSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import { err, ok, tryCatch, type Result } from "@zedtech/zedkit-core";
 import { parseFrontmatter } from "./frontmatter.js";
 import { kitDir } from "./kit.js";
@@ -93,13 +93,25 @@ export function parseTokenomics(text: string): Result<TokenomicsLayer> {
   return front.ok ? ok(front.value.data) : err(front.error);
 }
 
+// Parsing the shipped file costs ~7 ms and every validate/install run would
+// repeat it, so the result is kept per file and mtime. Callers get a shared
+// object: merge never mutates it, and nobody else should.
+const defaultsCache = new Map<string, { mtime: number; policy: Tokenomics }>();
+
 /** The policy shipped in the package (`kit/tokenomics.defaults.md`), read at runtime, never copied into a project. */
 export function loadDefaults(kit: string = kitDir()): Result<Tokenomics> {
-  const read = tryCatch(() => readFileSync(`${kit}/tokenomics.defaults.md`, "utf8"));
+  const file = `${kit}/tokenomics.defaults.md`;
+  const stat = tryCatch(() => statSync(file));
+  if (!stat.ok) return err(new Error(`cannot read tokenomics.defaults.md: ${stat.error.message}`));
+  const cached = defaultsCache.get(file);
+  if (cached?.mtime === stat.value.mtimeMs) return ok(cached.policy);
+  const read = tryCatch(() => readFileSync(file, "utf8"));
   if (!read.ok) return err(new Error(`cannot read tokenomics.defaults.md: ${read.error.message}`));
   const layer = parseTokenomics(read.value);
   if (!layer.ok) return err(layer.error);
-  return ok(layer.value as unknown as Tokenomics);
+  const policy = layer.value as unknown as Tokenomics;
+  defaultsCache.set(file, { mtime: stat.value.mtimeMs, policy });
+  return ok(policy);
 }
 
 function unknownKeys(data: Obj, allowed: readonly string[], where: string, issues: string[]): void {
