@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { closure, readWorkspace, scope } from "./ci-affected.mjs";
+import { requiredJobsPass } from "./ci-required.mjs";
 
 const workspace = readWorkspace();
 const run = (files, baseRef = "dev", event = "pull_request") => scope({ event, baseRef, files, workspace });
@@ -55,6 +56,49 @@ test("markdown at the root and .changeset skip heavy jobs", () => {
   assert.deepEqual([r.docs, r.registry, r.workflow_only], [false, false, false]);
 });
 
+test("the #1501 file list versus origin/dev does not start docs browsers", () => {
+  const r = run([
+    ".github/workflows/ci.yml",
+    "docs/ci-branch-protection.md",
+    "docs/publishing.md",
+    "scripts/check-pack.sh",
+    "scripts/ci-affected.mjs",
+    "scripts/ci-affected.test.mjs",
+    "scripts/ci-required.mjs",
+  ]);
+  assert.deepEqual([r.docs, r.registry, r.ui, r.full, r.workflows, r.workflow_only], [
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+  ]);
+});
+
+test("verified maintainer docs do not start the docs browser jobs", () => {
+  for (const f of [
+    "docs/publishing.md",
+    "docs/ci-branch-protection.md",
+    "docs/golden-rule.md",
+    "docs/agents-catalog.md",
+  ]) {
+    const r = run([f]);
+    assert.equal(r.docs, false, f);
+    assert.equal(r.full, false, f);
+  }
+  const pack = run(["docs/publishing.md", "scripts/check-pack.sh"]);
+  assert.deepEqual([pack.docs, pack.registry, pack.ui, pack.full], [false, false, false, false]);
+});
+
+test("docs catalog and unknown docs paths still start the docs browser jobs", () => {
+  assert.equal(run(["docs/catalog/catalog.json"]).docs, true);
+  assert.equal(run(["docs/catalog/README.md"]).docs, true);
+  assert.equal(run(["docs/design/signature.md"]).docs, true);
+  assert.equal(run(["apps/docs/app/page.tsx"]).docs, true);
+  assert.equal(run(["docs/publishing.md", "docs/catalog/catalog.json"]).docs, true);
+});
+
 test("mixed workflow and code diff is not workflow-only", () => {
   const r = run([".github/workflows/ci.yml", "packages/ui/src/a.tsx"]);
   assert.deepEqual([r.workflow_only, r.workflows, r.docs], [false, true, true]);
@@ -69,4 +113,81 @@ test("ui gallery smoke follows the ui closure, not the docs app", () => {
   assert.equal(run(["apps/docs/app/page.tsx"]).ui, false);
   assert.equal(run(["packages/seo/src/a.ts"]).ui, false);
   assert.equal(run(["packages/nest/src/a.ts"], "main").ui, true);
+});
+
+const requiredOk = {
+  changes: "success",
+  hygiene: "success",
+  workflow_lint: "skipped",
+  checks: "success",
+  registry: "skipped",
+  docs_e2e: "skipped",
+  docs_smoke: "skipped",
+};
+const packOnly = { workflows: false, docs: false, registry: false, workflow_only: false };
+
+test("impact-excluded docs jobs may skip; selected docs jobs must succeed", () => {
+  assert.deepEqual(requiredJobsPass({ results: requiredOk, selected: packOnly }), []);
+  assert.ok(
+    requiredJobsPass({
+      results: { ...requiredOk, docs_e2e: "skipped", docs_smoke: "skipped" },
+      selected: { ...packOnly, docs: true },
+    }).some((e) => e.includes("docs_e2e")),
+  );
+  assert.deepEqual(
+    requiredJobsPass({
+      results: { ...requiredOk, docs_e2e: "success", docs_smoke: "success" },
+      selected: { ...packOnly, docs: true },
+    }),
+    [],
+  );
+});
+
+test("fail, cancel, unknown and missing results are not green", () => {
+  for (const result of ["failure", "cancelled", "unknown", ""]) {
+    const errors = requiredJobsPass({
+      results: { ...requiredOk, docs_e2e: result, docs_smoke: "success" },
+      selected: { ...packOnly, docs: true },
+    });
+    assert.ok(errors.length > 0, result);
+  }
+});
+
+test("unselected failure still fails the gate", () => {
+  const errors = requiredJobsPass({
+    results: { ...requiredOk, registry: "failure" },
+    selected: packOnly,
+  });
+  assert.ok(errors.some((e) => e.includes("registry")));
+});
+
+test("workflow-only requires the lint job and skips checks and docs", () => {
+  assert.deepEqual(
+    requiredJobsPass({
+      results: {
+        ...requiredOk,
+        workflow_lint: "success",
+        checks: "skipped",
+        docs_e2e: "skipped",
+        docs_smoke: "skipped",
+      },
+      selected: { workflows: true, docs: false, registry: false, workflow_only: true },
+    }),
+    [],
+  );
+  assert.ok(
+    requiredJobsPass({
+      results: { ...requiredOk, workflow_lint: "skipped", checks: "skipped" },
+      selected: { workflows: true, docs: false, registry: false, workflow_only: true },
+    }).some((e) => e.includes("workflow_lint")),
+  );
+});
+
+test("PR to main keeps docs selected so a skip is not green", () => {
+  const errors = requiredJobsPass({
+    results: requiredOk,
+    selected: { workflows: false, docs: true, registry: true, workflow_only: false },
+  });
+  assert.ok(errors.some((e) => e.includes("docs_e2e")));
+  assert.ok(errors.some((e) => e.includes("registry")));
 });
