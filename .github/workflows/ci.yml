@@ -294,8 +294,9 @@ jobs:
       # main→preview back-merge): commit-range status still sees bumps
       # from the diverged history, with nothing left to publish.
       # And skipped for a Gitflow `dev`→`main` promotion of that same
-      # consumed version delta (package.json + CHANGELOG only). Source
-      # edits without a changeset still run `status` and fail.
+      # consumed version delta (package.json version / internal-dep bumps
+      # + CHANGELOG only). Source edits or package.json script / external
+      # dependency changes without a changeset still run `status` and fail.
       - name: Changeset status
         if: github.head_ref != 'changeset-release/main'
         run: |
