@@ -361,19 +361,17 @@ jobs:
         if: runner.environment == 'self-hosted'
         run: bash scripts/ci-runner-cache.sh install
       - run: pnpm registry:build
-      # quickstart-smoke.sh runs playwright install --with-deps when CI is set,
-      # which needs sudo. Self-hosted no-new-privileges blocks sudo; browsers are
-      # in the runner image. Strip --with-deps on self-hosted only.
-      - name: Playwright browsers (image)
-        if: runner.environment == 'self-hosted'
-        run: bash scripts/ci-runner-cache.sh playwright
+      # Two Next smokes; Vite paths live in the dedicated quickstart-smoke job.
       - name: registry smoke
         run: |
-          if [ "${RUNNER_ENVIRONMENT}" = "self-hosted" ]; then
-            # shellcheck disable=SC2016
-            sed -i 's/${CI:+--with-deps}//' scripts/quickstart-smoke.sh
-          fi
-          pnpm registry:smoke
+          fail=0
+          bash scripts/registry/smoke-shadcn-add.sh &
+          p1=$!
+          bash scripts/registry/smoke-ui-quickstart.sh &
+          p2=$!
+          wait "$p1" || fail=1
+          wait "$p2" || fail=1
+          exit "$fail"
 
   quickstart-smoke:
     runs-on: ${{ (github.event_name == 'pull_request' && github.base_ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","zedkit"]') || 'ubuntu-latest' }}
@@ -429,6 +427,8 @@ jobs:
             sed -i 's/${CI:+--with-deps}//' scripts/quickstart-smoke.sh
           fi
           bash scripts/quickstart-smoke.sh
+        env:
+          QUICKSTART_PREBUILT: "1"
 
   # Follows the adoption instructions the site shows (home, getting-started, component pages), and nothing else,
   # in clean Next.js projects: install Button, copy Button and Drawer by CLI and by hand, Theme, Motion, the

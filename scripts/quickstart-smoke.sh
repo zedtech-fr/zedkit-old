@@ -122,11 +122,22 @@ run_registry_path() {
   echo "quickstart-smoke: registry path ok (Vite build, styled Button rendered)"
 }
 
+echo "quickstart-smoke: eligible for ci-required once stable on main (not in branch protection yet)"
 # The render check needs Chromium; CI runners also need its system libraries.
 (cd "${ROOT}" && pnpm exec playwright install ${CI:+--with-deps} chromium >/dev/null)
-echo "quickstart-smoke: eligible for ci-required once stable on main (not in branch protection yet)"
-(cd "${ROOT}" && pnpm exec turbo run build --filter=@zedtech/zedkit-ui >/dev/null)
-(cd "${ROOT}" && pnpm registry:build >/dev/null)
-run_npm_path
-run_registry_path
+if [[ "${QUICKSTART_PREBUILT:-}" != "1" ]]; then
+  (cd "${ROOT}" && pnpm exec turbo run build --filter=@zedtech/zedkit-ui >/dev/null)
+  (cd "${ROOT}" && pnpm registry:build >/dev/null)
+fi
+fail=0
+(run_npm_path) &
+p1=$!
+(run_registry_path) &
+p2=$!
+wait "$p1" || fail=1
+wait "$p2" || fail=1
+if [ "$fail" -ne 0 ]; then
+  echo "quickstart-smoke: a path failed" >&2
+  exit 1
+fi
 echo "quickstart-smoke: ok"
