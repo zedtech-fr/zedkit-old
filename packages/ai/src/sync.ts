@@ -287,7 +287,7 @@ function prepareDir(ctx: Ctx, dirRel: string): "ready" | "blocked" {
       ctx.actions.push({ kind: "convert", path: dirRel, note: "link to .agents/agents -> real directory of generated files" });
       return "ready";
     }
-    if (isKitAgentsLink(full)) {
+    if (isKitAgentsLink(full) || (target.ok && target.value === "../packages/ai/kit/agents")) {
       if (ctx.write) unlinkSync(full);
       ctx.actions.push({ kind: "convert", path: dirRel, note: "link to kit agents -> real directory of Muse files" });
       return "ready";

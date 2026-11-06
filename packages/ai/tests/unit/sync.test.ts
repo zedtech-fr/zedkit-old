@@ -455,6 +455,22 @@ describe("syncKit: muse native files", () => {
     expect(cursor).not.toContain("write_file");
   });
 
+  it("converts the repo-relative kit symlink without writing into that kit", () => {
+    const root = tempDir();
+    put(root, ".agents/tokenomics.md", POLICY);
+    mkdirSync(join(root, ".agents"), { recursive: true });
+    const kitAgents = join(root, "packages/ai/kit/agents");
+    mkdirSync(kitAgents, { recursive: true });
+    put(kitAgents, "explorer.md", AGENT("explorer", "model: inherit\ndisallowedTools: Write, Edit, NotebookEdit\n"));
+    symlinkSync("../packages/ai/kit/agents", join(root, ".agents/agents"));
+    const before = readFileSync(join(kitAgents, "explorer.md"), "utf8");
+    const actions = sync(root, { providers: ["muse"] });
+    expect(actions.some((a) => a.kind === "convert" && a.path === ".agents/agents")).toBe(true);
+    expect(lstatSync(join(root, ".agents/agents")).isSymbolicLink()).toBe(false);
+    expect(readFileSync(join(kitAgents, "explorer.md"), "utf8")).toBe(before);
+    expect(hasMarker(read(root, ".agents/agents/explorer.md"))).toBe(true);
+  });
+
   it("converts a kit-dir symlink without writing into the kit", () => {
     const root = tempDir();
     put(root, ".agents/tokenomics.md", POLICY);
