@@ -56,6 +56,26 @@ test("markdown at the root and .changeset skip heavy jobs", () => {
   assert.deepEqual([r.docs, r.registry, r.workflow_only], [false, false, false]);
 });
 
+test("the #1501 file list versus origin/dev does not start docs browsers", () => {
+  const r = run([
+    ".github/workflows/ci.yml",
+    "docs/ci-branch-protection.md",
+    "docs/publishing.md",
+    "scripts/check-pack.sh",
+    "scripts/ci-affected.mjs",
+    "scripts/ci-affected.test.mjs",
+    "scripts/ci-required.mjs",
+  ]);
+  assert.deepEqual([r.docs, r.registry, r.ui, r.full, r.workflows, r.workflow_only], [
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+  ]);
+});
+
 test("verified maintainer docs do not start the docs browser jobs", () => {
   for (const f of [
     "docs/publishing.md",
