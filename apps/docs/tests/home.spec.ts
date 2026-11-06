@@ -131,6 +131,21 @@ test("home hero specimen follows the headline within the mobile demo budget (#11
   expect(metrics!).toBeLessThanOrEqual(760);
 });
 
+test("home 'More in the kit' links are tappable on a phone and sit beside their description on desktop", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(BASE, { waitUntil: "networkidle" });
+  const links = page.locator("#entry-points [data-home-secondary-links] a");
+  await expect(links).toHaveCount(4);
+  for (const box of await Promise.all((await links.all()).map((link) => link.boundingBox()))) {
+    expect(box!.height).toBeGreaterThanOrEqual(44);
+  }
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const row = page.locator("#entry-points [data-home-secondary-links] > div").first();
+  const [text, link] = await Promise.all([row.locator("> div").boundingBox(), row.locator("a").boundingBox()]);
+  expect(link!.x).toBeGreaterThan(text!.x + text!.width);
+  expect(Math.abs(link!.y - text!.y)).toBeLessThan(40);
+});
+
 test("home area cards keep a decorative icon at tablet width and up", async ({ page }) => {
   await page.setViewportSize({ width: 768, height: 900 });
   await page.goto(BASE, { waitUntil: "networkidle" });
