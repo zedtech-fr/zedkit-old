@@ -82,24 +82,21 @@ test("home hero proof follows site mode and can override dark (#1072)", async ({
   const scope = proof.locator("[data-identity-scope]");
   const shellIdentity = await page.locator("html").getAttribute("data-identity");
   await expect(scope).toHaveAttribute("data-identity", DEFAULT_IDENTITY);
-  const siteDarkBg = await scope.evaluate((el) => getComputedStyle(el).backgroundColor);
-  const siteChannels = siteDarkBg.match(/\d+/g)!.map(Number);
-  expect(Math.max(...siteChannels.slice(0, 3))).toBeLessThan(70);
+  // The scope repaints after the shell class flips (colour transition, slower under load), so poll the same bar.
+  const brightest = () =>
+    scope.evaluate((el) => Math.max(...getComputedStyle(el).backgroundColor.match(/\d+/g)!.slice(0, 3).map(Number)));
+  await expect.poll(brightest).toBeLessThan(70);
 
   await proof.getByRole("combobox", { name: "Identity for this demo" }).click();
   await page.getByRole("option", { name: "Tide" }).click();
   await expect(scope).toHaveAttribute("data-identity", "tide");
   await proof.getByRole("combobox", { name: "Color mode for this demo" }).click();
   await page.getByRole("option", { name: "Light" }).click();
-  const lightBg = await scope.evaluate((el) => getComputedStyle(el).backgroundColor);
-  const lightChannels = lightBg.match(/\d+/g)!.map(Number);
-  expect(Math.max(...lightChannels.slice(0, 3))).toBeGreaterThan(200);
+  await expect.poll(brightest).toBeGreaterThan(200);
 
   await proof.getByRole("combobox", { name: "Color mode for this demo" }).click();
   await page.getByRole("option", { name: "Dark" }).click();
-  const overrideDarkBg = await scope.evaluate((el) => getComputedStyle(el).backgroundColor);
-  const overrideChannels = overrideDarkBg.match(/\d+/g)!.map(Number);
-  expect(Math.max(...overrideChannels.slice(0, 3))).toBeLessThan(70);
+  await expect.poll(brightest).toBeLessThan(70);
   expect(await page.locator("html").getAttribute("data-identity")).toBe(shellIdentity);
   expect(await page.evaluate(() => document.documentElement.classList.contains("dark"))).toBe(true);
 });
