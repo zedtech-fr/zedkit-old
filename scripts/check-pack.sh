@@ -120,9 +120,11 @@ for dir in packages/*/; do
   echo "$name: ok"
 done
 
-# Client gzip of dist/*.js (ui kit + ai installer): npm tarball size, not what
-# a browser downloads. Docs first-load JS is checked separately from the
+# Client gzip of dist/*.js for the ui kit: npm tarball size, not what a
+# browser downloads. Docs first-load JS is checked separately from the
 # static export (see apps/docs/scripts/check-first-load-budget.mjs).
+# @zedtech/zedkit-ai has no gzip ceiling: it is a CLI and kit installer,
+# not a browser payload. Pack still checks integrity, exports, contents.
 # Optional third argument: a subdirectory of dist/ to measure on its own
 # (ui: dist/marketing). The main budget then leaves that subdirectory out.
 size_budget() {
@@ -160,47 +162,6 @@ size_budget ui 60500
 # 9865 with L2 domain specimens plus goal/reference marketing sections (Hero, Pricing, …);
 # 10020 after specimen-primitives barrel; tokenized keyword routing measured 10084 gzip.
 size_budget ui 10200 marketing
-# 4 Nov 2026: validate --setup completion check (setup-check.ts). Measured
-# 18465; 17400 cannot fit a new module (gzip delta vs 17268 baseline is
-# ~1.2KB). Budget = measured + 2% = 18835.
-# Raised to 19250 on 4 Nov 2026: measured 18869 with plan-row suggestions
-# (suggestPlanRow tailored copy for 7 known setup outputs; ~320B of user-facing
-# strings cannot fit the 291B headroom). Budget = measured + 2%.
-# Raised to 19750 on 4 Nov 2026: main had consumed the headroom
-# (19081/19250); this PR adds ~300B net (placeholder-link check, shared link
-# scan, measured 19381). Budget 19750 is measured + ~2%.
-# Raised to 23600 on 4 Nov 2026: setup-ai v3 adds `scan` (repo sizing and
-# slicing) and the D1-D4 depth checks for validate --setup (scan.ts,
-# setup-depth.ts); baseline 19381, measured 23102. Budget = measured + ~2%.
-# Raised to 23850 on 5 Nov 2026: D2 unenforced-ID check (validate --setup
-# flags uninventoried IDs); base tip measured 23486, PR measured 23637
-# after a 70B shave. Budget = measured + ~1%.
-# Raised to 24550 on 5 Nov 2026: D1 meaning check (validate --setup flags an
-# unchecked order/atomicity rule and an unresolved mismatch); PR measured
-# 24297 after compacting. Budget = measured + ~1%.
-# Raised to 26400 on 5 Nov 2026: runGate and zedkit-ai gate (gate.ts) add
-# ~1.9KB gzip on top of the D1 check; measured 26151. Budget = measured + ~1%.
-# Signature check (validate --setup design.md section) rebased on top of runGate;
-# keep 26400 until re-measure — raise if pack check fails.
-# Raised to 27200 on 5 Nov 2026: validate --setup checks the full-gate log
-# and the persisted validate log; PR measured 26935 on top of the signature
-# check. Budget = measured + ~1%.
-# Raised to 31000 on 5 Nov 2026: tokenomics policy schema, merge and check
-# (tokenomics.ts) plus the validate and install hooks; PR measured 30681.
-# Budget = measured + ~1%.
-# Raised to 34900 on 5 Nov 2026: model-name check (hardcode.ts, model-names.ts)
-# in validate; PR measured 34506. Budget = measured + ~1%.
-# Raised to 37800 on 5 Nov 2026: agent header contract (shipped header reader
-# and validate rules); PR measured 37466. Budget = measured + ~1%.
-# Raised to 41300 on 5 Nov 2026: the route resolver and its CLI (route.ts,
-# cli.ts); PR measured 40853. Budget = measured + ~1%.
-# Raised to 43700 on 5 Nov 2026: the stakes contract and its CLI (stakes.ts,
-# cli.ts); PR measured 43241.
-# Raised to 48300 on 6 Nov 2026: provider file generation and `sync`
-# (generate.ts, provider-keys.ts, sync.ts, cli.ts); PR measured 47785.
-# Raised to 50800 on 6 Nov 2026: `init`, `setup` and `validate` run through
-# `sync` (legacy.ts, sync.ts command links, validate.ts); PR measured 50273.
-size_budget ai 50800
 
 if [ -f apps/docs/out/index.html ]; then
   if ! node apps/docs/scripts/check-first-load-budget.mjs; then
