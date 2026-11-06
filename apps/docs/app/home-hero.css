@@ -114,6 +114,54 @@
   bottom: -3.4rem;
 }
 
+/*
+ * Colour behind the window. Only the Glass look has glass to refract it, so the other looks keep a plain page.
+ * Three soft discs inside the frame's own width (nothing widens the page); the blur is ink, not layout.
+ */
+#home-page [data-hero-shapes] {
+  display: none;
+}
+
+:root[data-identity="glass"] #home-page [data-hero-shapes] {
+  display: block;
+}
+
+#home-page [data-hero-shapes] > span {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(56px);
+}
+
+#home-page [data-hero-shapes] > [data-shape="1"] {
+  top: -3rem;
+  left: 12%;
+  width: 18rem;
+  height: 18rem;
+  background: hsl(var(--primary) / 0.45);
+}
+
+#home-page [data-hero-shapes] > [data-shape="2"] {
+  right: 6%;
+  bottom: -4rem;
+  width: 16rem;
+  height: 16rem;
+  background: hsl(var(--accent) / 0.6);
+}
+
+#home-page [data-hero-shapes] > [data-shape="3"] {
+  top: 38%;
+  left: 0;
+  width: 11rem;
+  height: 11rem;
+  background: hsl(var(--ring) / 0.35);
+}
+
+@media (max-width: 47.999rem) {
+  #home-page [data-hero-shapes] > [data-shape="3"] {
+    display: none;
+  }
+}
+
 /* From lg to xl the window is narrow: the sidebar becomes a rail of icons. */
 @media (min-width: 64rem) and (max-width: 79.999rem) {
   #home-page [data-hero-window] [data-hero-sidebar] {

@@ -546,3 +546,47 @@ for (const width of [1024, 1100]) {
     await expect(control).toHaveAttribute("title", /(pause|play) tour/i);
   });
 }
+
+test("glass has colour behind the window, and the cards over its edge really blur it once they have settled", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(BASE, { waitUntil: "networkidle" });
+  const shapes = page.locator("#demo [data-hero-shapes]");
+  await expect(shapes).toHaveAttribute("aria-hidden", "true");
+  await expect(shapes).toBeVisible();
+  const painted = await shapes.locator("> span").evaluateAll((nodes) =>
+    nodes.filter((node) => getComputedStyle(node).display !== "none").map((node) => getComputedStyle(node).backgroundColor),
+  );
+  expect(painted).toHaveLength(3);
+  for (const colour of painted) expect(colour).not.toBe("rgba(0, 0, 0, 0)");
+
+  // After the entrance: the card blurs what is behind it, and nothing above it is a backdrop root that would stop that
+  // (a running or leftover opacity, filter or mask on an ancestor).
+  await page.waitForTimeout(2500);
+  const state = await page.evaluate(() => {
+    const card = document.querySelector("[data-hero-notice]")!;
+    const blur = getComputedStyle(card).backdropFilter;
+    const roots: string[] = [];
+    for (let node = card.parentElement; node && node !== document.documentElement; node = node.parentElement) {
+      const style = getComputedStyle(node);
+      if (Number(style.opacity) < 1 || (style.filter !== "none" && style.filter !== "") || style.maskImage !== "none") {
+        roots.push(`${node.tagName}.${node.className}`);
+      }
+    }
+    return { blur, roots };
+  });
+  expect(state.blur).toMatch(/blur\(.+\).*saturate\(.+\).*brightness\(.+\)/);
+  expect(state.roots).toEqual([]);
+
+  // Another look on the page: no shapes, no change to the page.
+  await page.evaluate(() => document.documentElement.setAttribute("data-identity", "mist"));
+  await expect(shapes).toBeHidden();
+});
+
+for (const width of [320, 390, 768, 1440]) {
+  test(`${width}px: the colour behind the window does not widen the page`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(1);
+  });
+}
