@@ -1,4 +1,4 @@
-import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readlinkSync, rmSync, symlinkSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readlinkSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { main } from "#cli.js";
@@ -458,6 +458,21 @@ describe("zedkit-ai sync", () => {
     expect(run("sync", join(root, "nope"), "--provider", "cursor").code).toBe(2);
     expect(run("sync", root, "extra", "--provider", "cursor").code).toBe(2);
   });
+
+  it("--check exits 1 when muse is selected but a leftover symlink blocks writes, and 0 when generated files match", () => {
+    const root = project();
+    put(root, ".agents/agents/explorer.md", readFileSync(join(kitDir(), "agents/explorer.md"), "utf8"));
+    expect(run("sync", root, "--provider", "muse").code).toBe(0);
+    expect(run("sync", root, "--provider", "muse", "--check")).toMatchObject({ code: 0, text: "ok" });
+    put(root, ".agents/agents/explorer.md", read(root, ".agents/agents/explorer.md").replace(/disallowedTools:.*\n/, ""));
+    symlinkSync("plain.md", join(root, ".agents/agents/loop.md"));
+    const blocked = run("sync", root, "--provider", "muse", "--check");
+    expect(blocked.code).toBe(1);
+    expect(blocked.text).not.toBe("ok");
+    expect(blocked.text).toContain(".agents/agents");
+    expect(hasMarker(read(root, ".agents/agents/explorer.md"))).toBe(true);
+    expect(lstatSync(join(root, ".agents/agents/loop.md")).isSymbolicLink()).toBe(true);
+  });
 });
 
 describe("syncKit: muse native files", () => {
@@ -479,6 +494,24 @@ describe("syncKit: muse native files", () => {
     expect(read(root, ".cursor/agents/explorer.md")).toBe(custom);
     expect(lstatSync(join(root, ".cursor/agents/explorer.kit.md")).isSymbolicLink()).toBe(true);
     expect(actions.some((a) => a.path === ".cursor/agents/explorer.kit.md" && a.kind === "skip")).toBe(true);
+  });
+
+  it("does not write through an existing sidecar leaf symlink outside the repo", () => {
+    const parent = tempDir();
+    const root = join(parent, "repo");
+    const outside = join(parent, "outside-sentinel");
+    mkdirSync(root, { recursive: true });
+    put(root, ".agents/tokenomics.md", POLICY);
+    const source = AGENT("explorer", "model: inherit\n") + "SOURCE\n";
+    const custom = AGENT("explorer", "model: inherit\n") + "CUSTOM\n";
+    put(root, ".agents/agents/explorer.md", source);
+    put(root, ".cursor/agents/explorer.md", custom);
+    writeFileSync(outside, "OUTSIDE\n");
+    symlinkSync(outside, join(root, ".cursor/agents/explorer.kit.md"));
+    sync(root, { providers: ["cursor"] });
+    expect(readFileSync(outside, "utf8")).toBe("OUTSIDE\n");
+    expect(read(root, ".cursor/agents/explorer.md")).toBe(custom);
+    expect(lstatSync(join(root, ".cursor/agents/explorer.kit.md")).isSymbolicLink()).toBe(true);
   });
 
   it("bare sync --check reports a mutated Muse restriction", () => {
@@ -572,6 +605,29 @@ describe("syncKit: muse native files", () => {
     expect(read(root, ".agents/agents/plain.md")).toBe(before);
   });
 
+  it("muse --check is unchanged when generated files match, and not when a leftover symlink blocks a stale file", () => {
+    const root = project();
+    put(root, ".agents/agents/explorer.md", readFileSync(join(kitDir(), "agents/explorer.md"), "utf8"));
+    sync(root, { providers: ["muse"] });
+    const generated = read(root, ".agents/agents/explorer.md");
+    expect(hasMarker(generated)).toBe(true);
+    const clean = syncKit({ dest: root, providers: ["muse"], check: true });
+    if (!clean.ok) throw clean.error;
+    expect(inSync(clean.value)).toBe(true);
+    put(root, ".agents/agents/explorer.md", generated.replace(/disallowedTools:.*\n/, ""));
+    mkdirSync(join(root, ".agents/agents"), { recursive: true });
+    symlinkSync("plain.md", join(root, ".agents/agents/loop.md"));
+    const stale = read(root, ".agents/agents/explorer.md");
+    const custom = read(root, ".agents/agents/plain.md");
+    const blocked = syncKit({ dest: root, providers: ["muse"], check: true });
+    if (!blocked.ok) throw blocked.error;
+    expect(inSync(blocked.value)).toBe(false);
+    expect(blocked.value.some((a) => (a.note ?? "").includes("would empty the Muse catalog"))).toBe(true);
+    expect(read(root, ".agents/agents/explorer.md")).toBe(stale);
+    expect(read(root, ".agents/agents/plain.md")).toBe(custom);
+    expect(lstatSync(join(root, ".agents/agents/loop.md")).isSymbolicLink()).toBe(true);
+  });
+
   it("cursor generates a lone unmarked accessibility-auditor homonym", () => {
     const root = project();
     const custom = AGENT("accessibility-auditor", "model: inherit\n") + "HOME\n";
@@ -610,5 +666,20 @@ describe("syncKit: muse native files", () => {
     sync(root, { providers: ["muse"] });
     expect(read(root, ".agents/agents/accessibility-auditor.md")).toBe(custom);
     expect(read(root, ".agents/agents/a11y-auditor.md")).toBe(kit);
+  });
+
+  it("cursor emits both files when a11y-auditor and an unmarked accessibility-auditor coexist", () => {
+    const root = project();
+    const kit = readFileSync(join(kitDir(), "agents/a11y-auditor.md"), "utf8");
+    const custom = AGENT("accessibility-auditor", "model: inherit\n") + "MINE\n";
+    put(root, ".agents/agents/a11y-auditor.md", kit);
+    put(root, ".agents/agents/accessibility-auditor.md", custom);
+    sync(root, { providers: ["cursor", "muse"] });
+    expect(read(root, ".agents/agents/a11y-auditor.md")).toBe(kit);
+    expect(read(root, ".agents/agents/accessibility-auditor.md")).toBe(custom);
+    expect(read(root, ".cursor/agents/a11y-auditor.md")).toContain("name: a11y-auditor\n");
+    expect(read(root, ".cursor/agents/a11y-auditor.md")).toContain("readonly: true");
+    expect(read(root, ".cursor/agents/accessibility-auditor.md")).toContain("MINE");
+    expect(existsSync(join(root, ".cursor/agents/accessibility-auditor.md"))).toBe(true);
   });
 });

@@ -5,7 +5,7 @@ import { tryCatch } from "@zedtech/zedkit-core";
 import type { Action } from "./install.js";
 import { hasMarker } from "./generate.js";
 import { loadPolicy } from "./route.js";
-import { availabilityOf, museGenerated, resolvedAgentText, sourceNames, syncAgents } from "./sync.js";
+import { availabilityOf, isCheckedUnchanged, museGenerated, resolvedAgentText, sourceNames, syncAgents } from "./sync.js";
 import { adoptRel, kitDir, kitUniverse, readManifest } from "./kit.js";
 import { parseFrontmatter } from "./frontmatter.js";
 import { HEADER_KEYS, KIT_HEADERS, SIDECAR, parseAgentHeader, readSidecar } from "./agent-header.js";
@@ -539,7 +539,7 @@ function checkGenerated(projectRoot: string, source: string, issues: Issue[]): v
     },
     actions,
   );
-  for (const action of actions.filter((a) => a.kind !== "skip")) {
+  for (const action of actions.filter((a) => !isCheckedUnchanged(a))) {
     issues.push({ path: action.path, message: driftMessage(action) });
   }
 }

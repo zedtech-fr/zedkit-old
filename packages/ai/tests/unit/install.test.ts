@@ -437,13 +437,15 @@ describe("installKit", () => {
 
   it("second install keeps a custom Cursor command link", () => {
     const dest = tempDir();
-    install(dest, { providers: ["cursor"] });
+    install(dest, { preset: "setup", providers: ["cursor"] });
     put(dest, ".agents/commands/custom.md", COMMAND("plan", "Custom."));
     const target = "../../.agents/commands/custom.md";
     symlinkSync(target, join(dest, ".cursor/commands/custom.md"));
-    install(dest, { providers: ["cursor"] });
+    install(dest, { preset: "setup", providers: ["cursor"] });
     expect(readlinkSync(join(dest, ".cursor/commands/custom.md"))).toBe(target);
     expect(readFileSync(join(dest, ".agents/commands/custom.md"), "utf8")).toContain("Custom.");
+    const drift = checkDrift(dest, join(dest, ".agents")).map((i) => `${i.path}: ${i.message}`);
+    expect(drift.some((m) => m.includes("custom.md") && /missing|removed/i.test(m))).toBe(false);
   });
 
   it("never overwrites the cursor copies: edits survive a second run", () => {

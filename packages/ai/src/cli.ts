@@ -9,7 +9,7 @@ import { installNextStepLines, prettierHintLines } from "./install-next-step.js"
 import { kitDir, readManifest } from "./kit.js";
 import { loadAgent, loadPolicy, resolveRoute, type Route } from "./route.js";
 import { scanRepo } from "./scan.js";
-import { inSync, syncKit } from "./sync.js";
+import { inSync, isCheckedUnchanged, syncKit } from "./sync.js";
 import {
   checkCriticalLines,
   checkStakesChange,
@@ -372,7 +372,7 @@ function runSync(args: string[], sinks: Sinks): number {
     noPrune: values["no-prune"] === true,
   });
   if (!result.ok) return fail(result.error.message, sinks);
-  const changes = result.value.filter((action) => action.kind !== "skip");
+  const changes = result.value.filter((action) => !isCheckedUnchanged(action));
   if (check) {
     for (const action of changes) sinks.out(`${action.path}: out of date, run: npx zedkit-ai sync`);
     sinks.out(inSync(result.value) ? "ok" : `${changes.length} out of date`);

@@ -452,9 +452,11 @@ export function syncAgents(input: AgentSync, actions: Action[]): void {
       }
     }
     for (const name of input.names) {
-      if (MUSE_ALIAS_DEST.has(name)) {
+      // Muse dest name is the generated file when the alias source is also
+      // present; Cursor/Claude still generate a legitimate unmarked homonym.
+      if (provider === "muse" && MUSE_ALIAS_DEST.has(name)) {
         const aliasSource = Object.entries(MUSE_NAME_ALIAS).find(([, dest]) => dest === name)?.[0];
-        if (aliasSource !== undefined && known.has(aliasSource) && known.has(name)) continue;
+        if (aliasSource !== undefined && known.has(aliasSource)) continue;
       }
       const agent = loadAgent(input.agentsDir, name);
       if (!agent.ok) {
@@ -581,9 +583,16 @@ export function syncKit(options: SyncOptions): Result<Action[]> {
   return run.ok ? ok(actions) : err(run.error);
 }
 
+/**
+ * True when this action is a real no-op. A Muse catalog-empty skip is unsafe:
+ * the provider was selected but writes were blocked, so `--check` / validate
+ * must not treat it as unchanged.
+ */
+export function isCheckedUnchanged(action: Action): boolean {
+  return action.kind === "skip" && !(action.note ?? "").includes("would empty the Muse catalog");
+}
+
 /** True when `syncKit` found nothing to change: every action is a `skip`. */
 export function inSync(actions: readonly Action[]): boolean {
-  return actions.every(
-    (action) => action.kind === "skip" && !(action.note ?? "").includes("would empty the Muse catalog"),
-  );
+  return actions.every(isCheckedUnchanged);
 }
