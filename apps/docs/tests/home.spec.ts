@@ -370,6 +370,11 @@ test("home get-started opens on the package install command", async ({ page }) =
   // asChild puts data-home-ai-setup on the <a> itself.
   await expect(page.locator("#get-started [data-home-ai-setup]")).toHaveAttribute("href", "#ai-setup");
   await expect(page.locator("#get-started [data-home-ai-setup]")).toHaveText("Set up AI");
+  await expect(page.locator("#get-started [data-home-way]")).toHaveCount(2);
+  await expect(page.locator("#get-started").getByRole("link", { name: "Start without writing code" })).toHaveAttribute(
+    "href",
+    "/docs/start-without-writing-code",
+  );
 });
 
 test("home install section has no registry brick grid; catalog link lives in families", async ({ page }) => {

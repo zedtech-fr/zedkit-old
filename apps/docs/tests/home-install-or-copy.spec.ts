@@ -15,7 +15,7 @@ test.describe("home adoption panel", () => {
 
   test("one choice, not a row of buttons: two tabs, one package-manager select", async ({ page }) => {
     const panel = await openHome(page);
-    await expect(page.getByRole("heading", { name: "Get started", level: 2 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Start your way", level: 2 })).toBeVisible();
     await expect(panel.getByRole("tablist", { name: "How to adopt" }).getByRole("tab")).toHaveText(["Install package", "Copy source"]);
     await expect(panel.getByRole("tab", { name: "Install package" })).toHaveAttribute("aria-selected", "true");
     // No pressed-state buttons standing in for a selector, and exactly one package manager control.

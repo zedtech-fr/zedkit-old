@@ -1,9 +1,8 @@
 export const homeSecondaryCopy = {
   section: {
     title: "More in the kit",
-    description: "Backend, SEO and coding agents, when you need them.",
+    description: "Server helpers, SEO and agent setup. One start page each.",
   },
-  entryNeedsLine: (needCount: number, summaryLead: string) => `${needCount} needs · ${summaryLead}.`,
   identitySpecimen: {
     heading: "Visual example",
     sampleNameLabel: "Name",

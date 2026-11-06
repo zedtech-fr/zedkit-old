@@ -13,6 +13,47 @@ import {
 } from "@/ui/home/home-rhythm";
 import { homeCopy } from "@/ui/home/i18n/home-copy";
 
+const otherWays = homeCopy.getStarted.otherWays;
+
+/** The two ways in that are not the install panel, then the full steps. */
+function HomeOtherWays() {
+  return (
+      <Stack gap={3} className="min-w-0" role="group" aria-label={otherWays.label} data-home-other-ways="">
+        <Text variant="muted" typeRole="label">
+          {otherWays.label}
+        </Text>
+        <Stack className="min-w-0 divide-y divide-border border-y border-border">
+          {([otherWays.agent, otherWays.noCode] as const).map((way) => (
+            <Stack
+              key={way.title}
+              direction="horizontal"
+              gap={3}
+              className="flex-wrap items-center justify-between py-3"
+              data-home-way=""
+            >
+              <Stack gap={1} className="min-w-0">
+                <Text className="font-medium">{way.title}</Text>
+                <Text variant="muted" className={HOME_PERSUASION_TEXT_CLASS}>
+                  {way.body}
+                </Text>
+              </Stack>
+              <Button asChild variant="outline" size="sm" className="min-h-11 w-fit shrink-0 md:min-h-0" {...(way === otherWays.agent ? { "data-home-ai-setup": "" } : {})}>
+                <HomeLink href={way.href}>
+                  <DocsActionLabel>{way.link}</DocsActionLabel>
+                </HomeLink>
+              </Button>
+            </Stack>
+          ))}
+        </Stack>
+        <Button asChild variant="ghost" size="sm" className="w-fit" data-home-full-steps="">
+          <HomeLink href={homeCopy.getStarted.quickStart.fullStepsHref}>
+            <DocsActionLabel>{homeCopy.getStarted.quickStart.fullSteps}</DocsActionLabel>
+          </HomeLink>
+        </Button>
+      </Stack>
+  );
+}
+
 /** Composed quick-start: adoption steps in a reading column, live example beside (V7-D02). */
 export function HomeGetStartedSection({ npmPackage }: { npmPackage: string }) {
   const plan = featuredAdoptionPlan(npmPackage);
@@ -55,18 +96,7 @@ export function HomeGetStartedSection({ npmPackage }: { npmPackage: string }) {
             </GlassSurface>
           </StickyAside.Aside>
         </StickyAside>
-        <Stack direction="horizontal" gap={2} className="flex-wrap items-center">
-          <Button asChild variant="ghost" size="sm" className="w-fit" data-home-full-steps="">
-            <HomeLink href={homeCopy.getStarted.quickStart.fullStepsHref}>
-              <DocsActionLabel>{homeCopy.getStarted.quickStart.fullSteps}</DocsActionLabel>
-            </HomeLink>
-          </Button>
-          <Button asChild variant="ghost" size="sm" className="w-fit" data-home-ai-setup="">
-            <HomeLink href={homeCopy.getStarted.quickStart.aiSetupHref}>
-              <DocsActionLabel>{homeCopy.getStarted.quickStart.aiSetup}</DocsActionLabel>
-            </HomeLink>
-          </Button>
-        </Stack>
+        <HomeOtherWays />
       </Stack>
     </Section>
   );
