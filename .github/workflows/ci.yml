@@ -110,9 +110,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: bash scripts/check-changeset-packages.sh
-      - run: bash scripts/check-pr-lenses.sh
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   checks:
     runs-on: ${{ (github.event_name == 'pull_request' && github.base_ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","zedkit"]') || 'ubuntu-latest' }}
@@ -290,6 +287,7 @@ jobs:
             scripts/release-tags-wait.test.mjs \
             scripts/require-green-ci.test.mjs \
             scripts/ci-affected.test.mjs \
+            scripts/ci-hygiene.test.mjs \
             apps/docs/scripts/*.test.mjs
       # Versioning dry-run only: proves the Changesets metadata is sane.
       # Skipped on the Version PR itself: it consumed the changesets, so

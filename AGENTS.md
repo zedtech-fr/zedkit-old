@@ -72,7 +72,7 @@ Public TypeScript monorepo (pnpm workspaces): small generic packages. See
 - Keep the root minimal (README, LICENSE, AGENTS.md, llms.txt, config);
   docs go under `docs/` or inside the package they concern.
 - Review with the `review` skill (`code-review` + `ponytail-review` + the
-  lenses the diff triggers); merge on green CI and **MERGE-OK**. PR tables
+  lenses the diff triggers); merge on green CI and **MERGE-OK**. PR process
   and versioning: [CONTRIBUTING.md](CONTRIBUTING.md).
 - New modules ship with vitest unit tests; deterministic, no network.
   Repo scripts and `deploy/` use `node:test`.

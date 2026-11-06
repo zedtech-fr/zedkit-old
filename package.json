@@ -32,7 +32,7 @@
     "registry:smoke": "bash scripts/registry/smoke-shadcn-add.sh && bash scripts/registry/smoke-ui-quickstart.sh",
     "quickstart:smoke": "bash scripts/quickstart-smoke.sh",
     "adoption:smoke": "node scripts/adoption-smoke.mjs",
-    "test:registry": "node --test scripts/registry/*.test.mjs scripts/dts-api-report.test.mjs scripts/check-api-report.test.mjs scripts/catalog-states.test.mjs scripts/catalog-maturity.test.mjs scripts/catalog-adoption.test.mjs scripts/adoption-shown-commands.test.mjs scripts/adoption-smoke.test.mjs scripts/changeset-status-needed.test.mjs scripts/coverage-summary.test.mjs scripts/release-tags-wait.test.mjs scripts/require-green-ci.test.mjs scripts/ci-affected.test.mjs scripts/check-e2e-registered.test.mjs apps/docs/scripts/*.test.mjs deploy/*.test.mjs deploy/suggest/*.test.mjs",
+    "test:registry": "node --test scripts/registry/*.test.mjs scripts/dts-api-report.test.mjs scripts/check-api-report.test.mjs scripts/catalog-states.test.mjs scripts/catalog-maturity.test.mjs scripts/catalog-adoption.test.mjs scripts/adoption-shown-commands.test.mjs scripts/adoption-smoke.test.mjs scripts/changeset-status-needed.test.mjs scripts/coverage-summary.test.mjs scripts/release-tags-wait.test.mjs scripts/require-green-ci.test.mjs scripts/ci-affected.test.mjs scripts/check-e2e-registered.test.mjs scripts/ci-hygiene.test.mjs apps/docs/scripts/*.test.mjs deploy/*.test.mjs deploy/suggest/*.test.mjs",
     "knip": "pnpm dlx knip@5",
     "test:coverage": "vitest run --coverage"
   },
