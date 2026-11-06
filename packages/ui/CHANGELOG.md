@@ -1,5 +1,12 @@
 # @zedtech/zedkit-ui
 
+## 1.9.1
+
+### Patch Changes
+
+- 8ee6ff5: Add stream status and incremental text primitives for assistant streaming.
+- b6703dc: SecretField announces copy success and failure through a polite live region, including when the clipboard API is missing or writing to it fails.
+
 ## 1.9.0
 
 ### Minor Changes

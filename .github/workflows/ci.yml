@@ -281,6 +281,7 @@ jobs:
             scripts/catalog-adoption.test.mjs \
             scripts/adoption-shown-commands.test.mjs \
             scripts/adoption-smoke.test.mjs \
+            scripts/changeset-status-needed.test.mjs \
             scripts/coverage-summary.test.mjs \
             scripts/release-tags-wait.test.mjs \
             scripts/require-green-ci.test.mjs \
@@ -292,11 +293,16 @@ jobs:
       # Also skipped when packages/apps already match origin/main (a
       # main→preview back-merge): commit-range status still sees bumps
       # from the diverged history, with nothing left to publish.
+      # And skipped for a Gitflow `dev`→`main` promotion of that same
+      # consumed version delta (package.json + CHANGELOG only). Source
+      # edits without a changeset still run `status` and fail.
       - name: Changeset status
         if: github.head_ref != 'changeset-release/main'
         run: |
           if git diff --quiet origin/main HEAD -- packages apps; then
             echo "packages/apps match origin/main; skip changeset status"
+          elif [ "$(node scripts/changeset-status-needed.mjs)" = "skip-version-delta" ]; then
+            echo "consumed Changesets version delta vs origin/main; skip changeset status"
           else
             pnpm run changeset:status
           fi
