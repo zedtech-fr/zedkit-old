@@ -32,7 +32,7 @@ function CopyPromptButton({ text }: { text: string }) {
     );
   }
 
-  const label = adoptionCopy.copyLabel("Cursor prompt");
+  const label = adoptionCopy.copyLabel("Agent setup prompt");
 
   return (
     <>
@@ -53,7 +53,7 @@ function CopyPromptButton({ text }: { text: string }) {
   );
 }
 
-/** One-line Cursor prompt + copy control; used on the AI setup guide. */
+/** One-line setup prompt + copy control; used on the AI setup guide. */
 export function AiSetupPrompt() {
   return (
     <Stack
@@ -65,7 +65,7 @@ export function AiSetupPrompt() {
       }
     >
       <Text as="p" variant="muted" className="m-0">
-        Paste this as the only message in a new Cursor chat at the repo root (agents should fetch{" "}
+        Paste this as the only message in a new chat at the repo root (Cursor, Muse, Claude Code, or your tool — agents should fetch{" "}
         <a href={AI_SETUP_LLMS_URL} className="underline underline-offset-2">
           {AI_SETUP_LLMS_URL}
         </a>

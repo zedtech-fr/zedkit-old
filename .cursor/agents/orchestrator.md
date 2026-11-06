@@ -77,7 +77,9 @@ context, success criteria, return format, stop rule — use the brief shape in
 the same CHECK agent only when generated from the kit source (marker cites
 it); an unmarked homonym is a different agent. Parallel batches only for
 independent read-only units or disjoint write paths. Shared seams: agree
-interface first, then writers.
+interface first, then writers. On a dispatch failure, record the attempted
+action, the observed cause, the work completed inline, and the outstanding
+independent checks.
 
 ## 5. Aggregate
 
@@ -99,7 +101,9 @@ publish, merge, secrets, deploy) without explicit go — stop and ask.
 
 ## Output
 
-Show the plan table first, then update it as work completes.
+Show the plan table first, then update it as work completes. Close with
+actual spawns, retries, and elapsed time (plus provider-reported usage when
+the tool shows it).
 
 ```
 ## Summary
@@ -114,6 +118,9 @@ Show the plan table first, then update it as work completes.
 
 ## Findings / changes
 - file:line — ...
+
+## Dispatch failures
+- <attempted action — observed cause — completed inline — outstanding checks> (omit when every dispatch succeeded)
 
 ## Risks & not verified
 - ...

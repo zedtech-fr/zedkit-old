@@ -25,4 +25,11 @@ describe("template references", () => {
       }
     });
   }
+
+  it("routes multi-step work through orchestrate and names the starter exception", () => {
+    const raw = readFileSync(join(kitDir(), "AGENTS.template.md"), "utf8");
+    expect(raw).toContain("go through `orchestrate`");
+    expect(raw).toContain("sequential stays sequential");
+    expect(raw).toContain("starter keeps review plus specialists");
+  });
 });

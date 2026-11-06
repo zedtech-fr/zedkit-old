@@ -39,6 +39,7 @@ that holds<!-- if:skill=ponytail-review --> (skill `ponytail-review`)<!-- /if --
 - **Smallest complete change.** No abstraction, option or dependency nobody
   asked for.<!-- if:skill=ponytail --> (skill `ponytail`)<!-- /if -->
 - **Parallelize independent work, route by kind × stakes.** Fan out read-only work; set the model on every spawn. (skill `parallel-work`; `.agents/tokenomics.md`)
+- **Route by shape.** Atomic low-risk change: do it inline and run the relevant check. Multi-step, multi-lens, or cross-area work: go through `orchestrate` (sequential stays sequential; the coordinator never edits). Guided plan and implement playbooks ship with the setup, core and full presets; starter keeps review plus specialists.
 - **Tests first, adversarial; unit and integration tests are primary.** Bug fix starts with a failing test. Contract or Pact tests when a boundary earns them. E2E/browser only for an explicitly justified critical user path — not a default battery or count. (skills `tdd`, `adversarial-tests`)
 - **Small PRs from fresh trunk,** split along seams, never a broken middle.
 - **Done means proven.** Gates run on the final state, no weakened tests, a

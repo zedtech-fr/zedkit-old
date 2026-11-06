@@ -36,7 +36,7 @@ landed in `ci.yml`.
 | Check | Role |
 | --- | --- |
 | `ci-required` | Aggregate gate: hygiene + checks + registry-smoke + docs-build + docs-smoke |
-| `hygiene` | Artifact, tone, private-refs, dependabot, changeset, PR lenses |
+| `hygiene` | Artifact, tone, private-refs, dependabot, changeset |
 | `checks` | typecheck, lint, build, tests, catalog, pack, API reports |
 | `ui-smoke` | UI gallery screenshots on ubuntu-latest |
 | `registry-smoke` | Registry build + smoke |

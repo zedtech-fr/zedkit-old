@@ -187,6 +187,7 @@
     "WizardStepState",
     "WizardSteps",
     "WidgetButton",
+    "WordRoll",
     "ZedkitUiProvider"
   ],
   "withStates": {

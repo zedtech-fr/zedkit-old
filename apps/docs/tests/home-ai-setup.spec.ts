@@ -43,7 +43,18 @@ test.describe("home AI setup section", () => {
   test("the guide route exists", async ({ page }) => {
     const response = await page.goto("/docs/ai/setup", { waitUntil: "networkidle" });
     expect(response?.status()).toBe(200);
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Set up zedkit AI");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Set up zedkit AI in");
+    await expect(page.locator('h1 [data-word-roll]')).toBeVisible();
+    await expect(page.getByText("Give your coding agent one prompt to set up ZedKit AI in your project.")).toBeVisible();
+    await expect(page.locator("[data-slot='text'] p")).toHaveCount(0);
+  });
+
+  test("the guide H1 keeps the same tree under reduced motion (no cycling)", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/docs/ai/setup", { waitUntil: "networkidle" });
+    await expect(page.getByRole("heading", { level: 1, name: "Set up zedkit AI in Cursor, Muse, Claude, or your choice" })).toBeVisible();
+    await expect(page.locator("h1 [data-word-roll='in']")).toHaveText("Cursor");
+    await expect(page.locator("h1 [data-animate]")).toHaveCount(0);
   });
 
   test("terminal region is keyboard reachable and wide screens show it beside the prompt", async ({ page }) => {

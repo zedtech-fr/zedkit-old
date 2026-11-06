@@ -231,6 +231,7 @@ export {
   type TypeRole,
   type SignatureMotion,
 } from "./typography.js";
+export { WordRoll, type WordRollProps } from "./word-roll.js";
 export { cn } from "./utils.js";
 export { CardSkeleton, type CardSkeletonProps } from "./card-skeleton.js";
 export { DataTableSkeleton, type DataTableSkeletonProps } from "./data-table-skeleton.js";

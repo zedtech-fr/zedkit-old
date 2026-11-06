@@ -481,7 +481,7 @@ export function generate(outDir) {
     "",
     "- [Getting started](/docs/getting-started) — choose a package and reach a first result",
     "- [Set up your coding agents](/docs/set-up-your-coding-agents) — zedkit-ai init and validate",
-    "- [Set up zedkit AI in Cursor](/docs/ai/setup) — one paste prompt; agent steps at https://zedkit.app/ai/setup.md",
+    "- [Set up zedkit AI](/docs/ai/setup) — one paste prompt; agent steps at https://zedkit.app/ai/setup.md",
     "- [Maturity and compatibility](/docs/maturity-and-compatibility) — badge legend link and package matrix",
     "- [zedkit and shadcn/ui](/docs/zedkit-and-shadcn) — wraps, registry install, when to use plain shadcn",
     "- [Add SEO to a Next.js app](/docs/add-seo-to-nextjs) — robots, sitemap, metadata, JSON-LD",
@@ -582,7 +582,7 @@ export function generate(outDir) {
   ].join("\n");
   const llmsFull = buildLlmsFull([
     { title: "Install or copy", body: installOrCopyBody },
-    { title: "Set up zedkit AI in Cursor", body: readAgentOnboardingMarkdown() },
+    { title: "Set up zedkit AI", body: readAgentOnboardingMarkdown() },
     { title: "Documentation index", body: llmsBody },
   ]);
   writeFileSync(join(publicDir, "llms-full.txt"), `${llmsFull}\n`);

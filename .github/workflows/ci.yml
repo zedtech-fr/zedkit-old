@@ -110,9 +110,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: bash scripts/check-changeset-packages.sh
-      - run: bash scripts/check-pr-lenses.sh
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   checks:
     runs-on: ${{ (github.event_name == 'pull_request' && github.base_ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","zedkit"]') || 'ubuntu-latest' }}
@@ -248,6 +245,10 @@ jobs:
           pnpm exec turbo run test ${FILTER:+"$FILTER"} "${extra[@]}"
       - name: Kit markdown prettier
         run: pnpm --filter @zedtech/zedkit-ai run kit:md
+      - name: AI generated drift (built CLI)
+        run: |
+          pnpm exec turbo run build --filter=@zedtech/zedkit-ai
+          node packages/ai/dist/bin.js sync --check
       # Workspace-wide thresholds, and it reruns every test: full path only.
       - name: Coverage (vitest v8)
         if: env.FULL == 'true'
@@ -286,6 +287,7 @@ jobs:
             scripts/release-tags-wait.test.mjs \
             scripts/require-green-ci.test.mjs \
             scripts/ci-affected.test.mjs \
+            scripts/ci-hygiene.test.mjs \
             apps/docs/scripts/*.test.mjs
       # Versioning dry-run only: proves the Changesets metadata is sane.
       # Skipped on the Version PR itself: it consumed the changesets, so

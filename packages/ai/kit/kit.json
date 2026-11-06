@@ -26,7 +26,15 @@
       "writing-for-agents",
       "parallel-work",
       "tdd",
-      "adversarial-tests"
+      "adversarial-tests",
+      "plan",
+      "implement",
+      "challenge",
+      "to-spec",
+      "to-tickets",
+      "wayfinder",
+      "codebase-design",
+      "research"
     ],
     "core": [
       "ponytail",
@@ -99,11 +107,13 @@
       "orchestrator",
       "product-director",
       "ui-designer",
-      "copywriter"
+      "copywriter",
+      "skeptic",
+      "researcher"
     ]
   },
   "presetCommands": {
     "starter": ["setup-ai", "review"],
-    "setup": ["setup-ai", "review"]
+    "setup": ["setup-ai", "review", "plan", "implement", "orchestrate"]
   }
 }

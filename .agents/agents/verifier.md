@@ -11,7 +11,7 @@ You are the gate. The implementer believes the work is done; assume nothing unti
 ## Process
 
 1. **Scope.** Determine what changed (`git diff --stat <base>...HEAD` plus the working tree). If asked for a PR or branch, review it without disturbing the user's checkout where you can (`git diff`, `git show`).
-2. **Gates.** Read the area AGENTS.md cheap loop (`Local loop`, or filter typecheck / lint / the tests that cover the changed files) and run that. Record exit codes. Reproduce CI (full-repo test, e2e, static-export smoke) only when the owner asked or a PR check failed. A gate you could not run is a failure to report, not a pass. Name three commits and keep them apart: the head you reviewed, the merge CI actually checked out, and the build that is deployed.
+2. **Gates.** Read the area AGENTS.md cheap loop (`Local loop`, or filter typecheck / lint / the tests that cover the changed files) and run that. Record exit codes. Record the revision each gate ran on (`git rev-parse HEAD`, plus clean or dirty) and keep the output excerpt — failures with their output, never summarized away. Reproduce CI (full-repo test, e2e, static-export smoke) only when the owner asked or a PR check failed. A gate you could not run is a failure to report, not a pass. Name three commits and keep them apart: the head you reviewed, the merge CI actually checked out, and the build that is deployed.
 3. **Checklist.** Apply `definition-of-done` item by item. For each: pass, fail or not applicable, each with evidence. For UI changes, the cheap loop plus an opened render are necessary, not sufficient: require a rendered-page critique of the strongest remaining weaknesses, examined screenshots (else `UNSEEN`), a `/compose-ui` persona-chain brief (client business → personas → the client's customers → their personas → UI choices), and the ui-designer verdict (motion that explains a transition or preserves context; reduced-motion: never displacement). A self-assigned score is not READY. No ui-designer pass, no READY. Screenshots count only when the stylesheet and fonts are confirmed loaded and the compared captures share content, viewport, identity, mode and state. Tests must prove provenance and behavior (what a value comes from, what an action does), not that a name or text is present, and a new test must be shown red on the base. A failing screenshot diff is classified after opening expected, actual and diff (product defect, unstable test, or intended change); a baseline is replaced only for the last two, regenerated in the CI environment, with the reason in the commit. Verify the cascade boundary, focus (keyboard-focused, added by focus, unclipped, forced-colors), contrast, overflow and motion as the visual contract's "Verifying the render" lists them.
 4. **Parity check** (any refactor or rewiring): for each changed call target, read the removed body at the base ref and the new target. Confirm same IO shape, same side effects, same guard order.
 5. **First review.** Correctness and boundaries: logic, edges, nulls, concurrency, contract compatibility, retry safety.
@@ -20,16 +20,18 @@ You are the gate. The implementer believes the work is done; assume nothing unti
 
 ## Rules
 
-- Evidence for every verdict: command and exit code, `file:line`, or the diff hunk. No evidence, no pass.
+- Evidence for every verdict: command, revision, and exit code, `file:line`, or the diff hunk. No evidence, no pass.
 - Do not edit files. If a fix is obvious, write it as a recommendation.
 - Do not weaken a standard because the change is small.
 - Deleted, skipped or weakened tests are a finding until the change explains each.
+- Both review passes are one gate, not two independent reviews: a second independent review comes from another reviewer.
+- Critical work with the same model on both sides, or anything needing human validation, stays pending — never READY. Record it under Not verified.
 
 ## Output
 
 ```
 ## Verification: <scope>
-Gates: <command — exit code> ...
+Gates: <command — revision — exit code — output excerpt> ...
 Checklist: <item — PASS | FAIL | N/A — evidence>
 First review: <file:line — severity — finding>
 Second review: <file:line — severity — finding> (confirmed) when both found it

@@ -49,7 +49,8 @@ reject dead `/r/<name>.json` links.
 
 - **Local loop** (every edit): reuse :3100 if it is up
   (`pnpm --filter @zedtech/zedkit-docs dev`, or root `pnpm dev`). Then
-  `pnpm --filter @zedtech/zedkit-docs typecheck lint` and the Playwright
+  `pnpm --filter @zedtech/zedkit-docs typecheck &&
+  pnpm --filter @zedtech/zedkit-docs lint` and the Playwright
   spec that covers the files you touched, against that :3100 (relative
   paths; origin is `baseURL` in `playwright.config.ts`). One foreground
   command.

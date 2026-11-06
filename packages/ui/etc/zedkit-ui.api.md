@@ -1000,7 +1000,7 @@ export const identityPresets: {
 };
 
 // @public
-export function IdentityScript(input: IdentityScriptProps): React_2.JSX.Element;
+export function IdentityScript(input: IdentityScriptProps): React_2.JSX.Element | null;
 
 // @public (undocumented)
 export type IdentityScriptProps = {
@@ -1907,6 +1907,16 @@ export interface WizardStepsProps {
 
 // @public (undocumented)
 export type WizardStepState = "done" | "current" | "todo";
+
+// @public
+export function WordRoll(input: WordRollProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export type WordRollProps = Omit<React_2.ComponentProps<"span">, "children"> & {
+    words: readonly string[];
+    value: string;
+    dwellMs?: number;
+};
 
 // @public (undocumented)
 export type ZedkitUiMessages = {

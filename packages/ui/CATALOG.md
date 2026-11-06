@@ -212,6 +212,33 @@ import { Animate, Stack, Text } from "@zedtech/zedkit-ui";
 </Animate>
 ```
 
+## Cycle a word in a clipped slot
+
+- Import: `@zedtech/zedkit-ui` — `WordRoll`, `WordRollProps`
+- Attributes: `data-word-roll`, `data-word-roll="exit"` (on the outgoing layer, styled in `motion.css`)
+- Wraps: `(none)` — composes with `data-animate="fade-up"` on the incoming span (mount `AnimateObserver` / `observeAnimate` once for appear)
+- Status: alpha
+- Short name: Word roll
+- Audience: Headlines or inline labels that rotate a single word without remount-only fades.
+- Purpose: Stable-height clipped slot with padded block axis so descenders and underline stay visible; outgoing glides up (`zk-word-roll-exit-up`), incoming uses the standard appear contract (`fade-up` from below).
+- When to use: Cycling provider names, emphasis words, or short tokens next to static copy.
+- When not to use: Full sentences or list carousels — use content-specific layout. For scroll reveal only, use `data-reveal` / `data-animate` without WordRoll.
+- See also: `Reveal and react with motion on any element`
+- Examples: Inline in a heading
+- A11y: Treat the roll as decorative when the full phrase is provided via `aria-label` on the heading; set `aria-hidden` on `WordRoll`. Under reduced motion, prefer a static inclusive string instead of cycling.
+- Troubleshooting: Incoming stays invisible — ensure `observeAnimate()` runs (same as any `data-animate` appear). Exit does not move — check `prefers-reduced-motion` and `data-motion="reduce"`.
+
+```ts
+import { Heading, WordRoll } from "@zedtech/zedkit-ui";
+
+const words = ["Cursor", "Muse", "Claude"] as const;
+
+<Heading level={1} typeRole="title" aria-label={`Set up in ${words.join(", ")}`}>
+  Set up in{" "}
+  <WordRoll words={words} value={words[0]} dwellMs={300} aria-hidden />
+</Heading>
+```
+
 ## Trigger actions with buttons
 
 - Import: `@zedtech/zedkit-ui` — `Button`, `buttonVariants`, `ButtonProps`

@@ -11,9 +11,9 @@ skills and subagents in `packages/ai/kit/` are the single source of truth.
 - `CLAUDE.md` links to `AGENTS.md`.
 - Instructions: root `AGENTS.md`, plus a nested `AGENTS.md` in each package,
   `apps/docs` and `deploy`. `.cursor/rules/*.mdc` only points at them.
-- `personas.md`: the audiences `persona-review` picks from. A PR body fills
-  the Personas table of `.github/pull_request_template.md` instead (its rows
-  differ; CI counts the verdicts).
+- `personas.md`: the audiences `persona-review` picks from. PR bodies follow
+  `.github/pull_request_template.md` (1–3 reviews chosen by risk; no fixed
+  table, no CI prose check).
 - Product / domain / tokenomics / design: `product.md`, `domain/*.md`,
   `tokenomics.md` (kind × stakes cells), `design.md`.
 

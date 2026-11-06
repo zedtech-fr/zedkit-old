@@ -86,6 +86,12 @@ interface AnimateProps extends React.ComponentProps<"div"> {
 Public exports: `Animate`, `AnimateObserver`, `observeAnimate`,
 `ANIMATE_PRESETS`, `ANIMATE_TRIGGERS`, the types above.
 
+**Word roll.** `<WordRoll>` composes two layers: incoming `span`
+`data-animate="fade-up"` (appear) and outgoing `span` `data-word-roll="exit"`.
+The exit animation is `zk-word-roll-exit-up` in `motion.css` (translate up +
+fade out, same duration/ease tokens as reveal). The host is
+`data-word-roll=""`.
+
 ## Attribute grammar
 
 | Attribute                   | Value                | Trigger                           |

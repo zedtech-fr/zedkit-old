@@ -2,37 +2,22 @@
 
 ## What
 
-## Lenses run
+## Reviews (1–3, chosen by risk)
 
-| Lens | Ran? | Evidence |
-|---|---|---|
-| code | | |
-| ponytail | | |
-| persona | | |
-| quality gate | | |
+<!-- 1–3 meaningful reviews, proportionate to the risk of the change: a small
+docs fix needs one; a risky or user-facing change needs up to three from
+different angles. Each review lists its findings with evidence (file:line,
+command output, screenshot) or states its reservations explicitly.
+Code-review tools and lenses are aids only: a pasted tool table with no
+findings is not a review. -->
 
-<!-- Add triggered lenses from packages/ai/kit/skills/review/lenses.md (ui, a11y, copy, security,
-adversarial-tests, dependencies, docs, seo, release, skeptic, research).
-Every lens: ran or skipped + reason. Skipping a mandatory lens blocks. -->
-
-## Personas
-
-<!-- Mandatory for docs/UI/README/registry PRs: one verdict each (OK / reservations /
-blocking — not n/a) with proof (screenshot light/dark/mobile or executed command).
-At least five filled rows. A blocking persona blocks the merge. Other PRs: delete
-the rows that do not apply, keep the rest. -->
-
-| Persona | Verdict | Proof |
-|---|---|---|
-| Senior skeptic (no slop, no unkept promises) | | |
-| First-time dev (component running in <5 min from copy-pasted commands) | | |
-| Lazy/doubtful end user (prefilled, obvious next step) | | |
-| Keyboard / screen reader / color-blind (keyboard, focus, ARIA, contrast, reduced motion) | | |
-| Mobile (readable, no sideways scroll, measured weight) | | |
-| Coding agent (install + use from llms.txt/AGENTS.md/registry alone) | | |
-| Open-source maintainer (readable PR, tests, changelog, stable API) | | |
+- Review 1 (angle): findings with evidence, or reservations:
+- Review 2 (angle, when the risk warrants it):
+- Review 3 (angle, when the risk warrants it):
 
 ## Merge
 
 Squash merge only after **MERGE-OK** on the latest PR head commit and CI is
-green. A blocking lens or persona blocks MERGE-OK.
+green. A real security or correctness blocker blocks the merge; anything
+marked human-pending stays pending until a human clears it. On promotions,
+proofs from the source PR may be reused when they still apply.

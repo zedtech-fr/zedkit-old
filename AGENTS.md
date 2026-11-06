@@ -50,8 +50,8 @@ Public TypeScript monorepo (pnpm workspaces): small generic packages. See
 ## How to work
 
 - After an edit, run that area's **Local loop** (its AGENTS.md), or
-  `pnpm --filter <pkg> typecheck lint test`. CI owns full-repo test, e2e
-  and static-export smoke.
+  `pnpm --filter <pkg> typecheck && pnpm --filter <pkg> lint && pnpm --filter <pkg> test`.
+  CI owns full-repo test, e2e and static-export smoke.
 - Small PRs from fresh `main`, never stacked. One package per PR.
 - Each package PR updates the root README package table, adds a
   Changeset file, records the module's origin in the package README
@@ -72,7 +72,7 @@ Public TypeScript monorepo (pnpm workspaces): small generic packages. See
 - Keep the root minimal (README, LICENSE, AGENTS.md, llms.txt, config);
   docs go under `docs/` or inside the package they concern.
 - Review with the `review` skill (`code-review` + `ponytail-review` + the
-  lenses the diff triggers); merge on green CI and **MERGE-OK**. PR tables
+  lenses the diff triggers); merge on green CI and **MERGE-OK**. PR process
   and versioning: [CONTRIBUTING.md](CONTRIBUTING.md).
 - New modules ship with vitest unit tests; deterministic, no network.
   Repo scripts and `deploy/` use `node:test`.
