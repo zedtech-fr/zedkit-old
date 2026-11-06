@@ -1,8 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { DEFAULT_IDENTITY, HERO_TOUR_LOOK as TOUR_LOOK } from "../lib/default-identity";
 
-const BASE = "http://127.0.0.1:3100";
-
 const PAGES = ["Overview", "Apps", "Calendar", "Team", "Settings"] as const;
 type PageName = (typeof PAGES)[number];
 
@@ -14,7 +12,7 @@ const section = (page: Page, id: string) => page.locator(`#demo [data-hero-page=
 
 test("desktop hero puts the proposition beside one working example and does not pin the page", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
 
   await expect(page.locator("[data-home-hero-lead]")).toBeVisible();
   await expect(windowOf(page)).toBeVisible();
@@ -44,7 +42,7 @@ test("desktop hero puts the proposition beside one working example and does not 
 
 test("the example is a small app: five pages, one on show, chosen by the sidebar with pointer or keyboard", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
 
   await expect(nav(page).getByRole("button")).toHaveText([...PAGES]);
   await expect(nav(page).getByRole("button", { name: "Overview" })).toHaveAttribute("aria-current", "page");
@@ -73,7 +71,7 @@ test("the example is a small app: five pages, one on show, chosen by the sidebar
 
 test("switching pages does not move the page, and the Apps table keeps what the visitor did", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   const heights = new Set<number>();
   const measure = async () => heights.add(Math.round((await page.locator("[data-home-hero-preview]").boundingBox())!.height));
 
@@ -95,7 +93,7 @@ test("switching pages does not move the page, and the Apps table keeps what the 
 
 test("the table state select belongs to the Apps page: it is there for the table and nowhere else", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   const display = page.locator("[data-hero-demo-display]");
   const state = display.getByRole("combobox", { name: "Table preview mode" });
   await expect(state).toHaveCount(0);
@@ -109,7 +107,7 @@ test("the table state select belongs to the Apps page: it is there for the table
 
 test("choosing a day in the calendar page answers with what is due that day", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   await go(page, "Calendar");
   const calendar = section(page, "calendar");
   await expect(calendar.getByText("Due on 4 November")).toBeVisible();
@@ -123,7 +121,7 @@ test("choosing a day in the calendar page answers with what is due that day", as
 
 test("the team page and the settings page answer the visitor", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   await go(page, "Team");
   const team = section(page, "team");
   await team.getByRole("button", { name: /Luca Moretti/ }).click();
@@ -141,7 +139,7 @@ test("the team page and the settings page answer the visitor", async ({ page }) 
 
 test("a toast raised in the example sits in the viewport corner and leaves the new row's actions reachable", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 720 });
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   await go(page, "Apps");
   const demo = page.locator("#demo").getByLabel("Interactive admin dashboard demo in the hero");
 
@@ -176,7 +174,7 @@ test("a toast raised in the example sits in the viewport corner and leaves the n
 
 test("on load the lead rises block by block and the window assembles, then everything settles in place", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(BASE, { waitUntil: "domcontentloaded" });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
 
   // Three blocks (name and title, sentence, actions), each one beat after the one before.
   const beats = await page.evaluate(() =>
@@ -229,7 +227,7 @@ test("on load the lead rises block by block and the window assembles, then every
 
 test("a guided cursor tours the pages by itself, and stops the moment the visitor touches the example", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   const current = () => nav(page).locator("[aria-current='page']").innerText();
 
   // The cursor sets off while the first page is still assembling: nothing waits on screen for seconds.
@@ -257,7 +255,7 @@ test("the tour ends its lap in the Agent panel: it pastes the one prompt, runs t
   test.setTimeout(150_000);
   await page.setViewportSize({ width: 1440, height: 900 });
   const requests: string[] = [];
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   page.on("request", (request) => requests.push(request.url()));
   await expect(windowOf(page)).toHaveAttribute("data-tour", "on", { timeout: 2500 });
   await expect(agentPanel(page)).toHaveCount(0);
@@ -280,7 +278,7 @@ test("the tour ends its lap in the Agent panel: it pastes the one prompt, runs t
 
 test("the Agent panel also works for the visitor, and using it ends the tour", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   const open = page.locator("#demo").getByRole("button", { name: "Agent", exact: true });
   await open.click();
   await expect(windowOf(page)).toHaveAttribute("data-tour", "off");
@@ -298,7 +296,7 @@ test("the Agent panel also works for the visitor, and using it ends the tour", a
 test("the tour also changes the look in the Display row, and a look the visitor leaves in place stays", async ({ page }) => {
   test.setTimeout(45_000);
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   const select = page.locator("#demo [data-hero-look-select]");
   const scope = page.locator("#demo [data-home-hero-visuals]");
   const before = await scope.getAttribute("data-identity");
@@ -325,7 +323,7 @@ const tourControl = (page: Page) => page.locator("#demo").getByRole("button", { 
 test("the tour has a visible Pause control; paused it stays put, and Play starts again from the first page", async ({ page }) => {
   test.setTimeout(45_000);
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   const current = () => nav(page).locator("[aria-current='page']").innerText();
 
   await expect(windowOf(page)).toHaveAttribute("data-tour", "on", { timeout: 2500 });
@@ -351,7 +349,7 @@ test("the tour has a visible Pause control; paused it stays put, and Play starts
 test("touching the example takes it over, and the tour never restarts by itself", async ({ page }) => {
   test.setTimeout(45_000);
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   const current = () => nav(page).locator("[aria-current='page']").innerText();
   await expect(windowOf(page)).toHaveAttribute("data-tour", "on", { timeout: 2500 });
   await go(page, "Calendar");
@@ -370,7 +368,7 @@ test("touching the example takes it over, and the tour never restarts by itself"
 
 test("the tour control can be used from the keyboard", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   await expect(windowOf(page)).toHaveAttribute("data-tour", "on", { timeout: 2500 });
   await tourControl(page).focus();
   await page.keyboard.press("Enter");
@@ -384,7 +382,7 @@ test("the tour control can be used from the keyboard", async ({ page }) => {
 test("with no tour to control (reduced motion, a phone), there is no tour button", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   await expect(tourControl(page)).toHaveCount(0);
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.setViewportSize({ width: 390, height: 800 });
@@ -394,7 +392,7 @@ test("with no tour to control (reduced motion, a phone), there is no tour button
 
 test("the guided tour waits while the example is off screen and carries on when it is back", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   const current = () => nav(page).locator("[aria-current='page']").innerText();
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   await page.waitForTimeout(900); // a step already under way may finish
@@ -407,7 +405,7 @@ test("the guided tour waits while the example is off screen and carries on when 
 
 test("the cards over the window's edge follow the pointer, and are out of reach of keyboard and screen readers", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   const satellite = page.locator("#demo [data-hero-satellite]").first();
   await expect(page.locator("#demo [data-hero-satellite]")).toHaveCount(2);
   await expect(satellite).toHaveAttribute("aria-hidden", "true");
@@ -427,7 +425,7 @@ test("the cards over the window's edge follow the pointer, and are out of reach 
 test("reduced motion: nothing in the hero animates, nothing tours, and the numbers are the final ones", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   await page.waitForTimeout(3500);
   const animated = await page.evaluate(() =>
     document
@@ -445,7 +443,7 @@ test("reduced motion: nothing in the hero animates, nothing tours, and the numbe
 for (const width of [320, 360, 390]) {
   test(`${width}px: the pages and the example fit the screen, nothing scrolls sideways`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     const fit = await page.evaluate(() => {
       const bar = document.querySelector<HTMLElement>("#demo nav.md\\:hidden")!;
       const chips = [...bar.querySelectorAll<HTMLElement>("button")];
@@ -484,7 +482,7 @@ for (const width of [320, 360, 390]) {
 
 test("390px: the Display controls share one row, none stranded alone, on every page", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   for (const name of ["Overview", "Apps"] as const) {
     await go(page, name);
     const rects = await page.locator("[data-hero-demo-display] [role='combobox']").evaluateAll((nodes) =>
@@ -505,7 +503,7 @@ test("390px: the Display controls share one row, none stranded alone, on every p
 for (const width of [1024, 1100]) {
   test(`${width}px: the frame is the same height on every page, because the Pause button never wraps the footer`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     const preview = page.locator("[data-home-hero-preview]");
     const heights = new Set<number>();
     for (const name of ["Overview", "Apps", "Calendar", "Team", "Settings"] as const) {

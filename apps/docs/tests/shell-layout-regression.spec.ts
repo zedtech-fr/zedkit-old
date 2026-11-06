@@ -1,14 +1,13 @@
 import { expect, test } from "@playwright/test";
 import { openHeroPage } from "./hero-helpers";
 
-const BASE = "http://127.0.0.1:3100";
 const DESKTOP_WIDTHS = [1280, 1440] as const;
 
 for (const width of DESKTOP_WIDTHS) {
   test(`header search clears theme toggle at ${width}px light`, async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("theme", "light"));
     await page.setViewportSize({ width, height: 900 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     await page.evaluate(() => document.fonts.ready);
 
     const layout = await page.evaluate(() => {
@@ -42,7 +41,7 @@ for (const width of DESKTOP_WIDTHS) {
   test(`catalog results align with filter row at ${width}px light`, async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("theme", "light"));
     await page.setViewportSize({ width, height: 1000 });
-    await page.goto(`${BASE}/catalog`, { waitUntil: "networkidle" });
+    await page.goto("/catalog", { waitUntil: "networkidle" });
     await page.waitForFunction(() => document.querySelector("[data-catalog-filter-row]"));
     await expect(page.locator("#catalog-results-heading")).toBeVisible();
 
@@ -80,7 +79,7 @@ for (const theme of ["light", "dark"] as const) {
   test(`home hero admin demo shows table and detail at 390px ${theme}`, async ({ page }) => {
     await page.addInitScript((mode) => localStorage.setItem("theme", mode), theme);
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     await openHeroPage(page, "Apps");
 
     const card = page.locator("[data-home-dashboard-card]");
@@ -111,7 +110,7 @@ for (const theme of ["light", "dark"] as const) {
 
 test("install code on a docs page scrolls horizontally with a focusable region", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(`${BASE}/docs/ui/slide-in-a-drawer-panel`, { waitUntil: "networkidle" });
+  await page.goto("/docs/ui/slide-in-a-drawer-panel", { waitUntil: "networkidle" });
   const install = page.locator("#install-or-copy figure.shiki").first();
   await install.scrollIntoViewIfNeeded();
   await expect(install).toBeVisible();
@@ -141,7 +140,7 @@ test("install code on a docs page scrolls horizontally with a focusable region",
 
 test("home get-started install commands scroll horizontally at 390px", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(`${BASE}/#get-started`, { waitUntil: "networkidle" });
+  await page.goto("/#get-started", { waitUntil: "networkidle" });
   const block = page.locator("#install-or-copy [data-adoption-step='install'] figure").first();
   const region = block.getByRole("region", { name: "Terminal", exact: true });
   await block.scrollIntoViewIfNeeded();
@@ -172,7 +171,7 @@ test("home get-started install commands scroll horizontally at 390px", async ({ 
 for (const width of [1280, 1600] as const) {
   test(`home band spacing and width stay consistent at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     await page.waitForFunction(() => {
       const bandIds = ["ai-setup", "identities", "get-started", "components", "entry-points"] as const;
       return bandIds.every((id) => {

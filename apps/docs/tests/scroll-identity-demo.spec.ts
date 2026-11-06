@@ -2,7 +2,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 
 import { assertA11yGate } from "./a11y-helpers";
 
-const BASE = "http://127.0.0.1:3100/docs/ui";
+const BASE = "/docs/ui";
 const IDENTITY_KIT_DEMOS = "/features/identity-kit-demos";
 const IDENTITIES = ["mist", "press", "tide", "volt", "maison", "glass"] as const;
 const SCENES = "pin-a-stage-and-change-scene-as-the-page-scrolls";
@@ -28,7 +28,7 @@ async function openFeatures(page: Page, path: string, identity: string, mode: st
     },
     [identity, mode],
   );
-  await page.goto(`http://127.0.0.1:3100${path}`, { waitUntil: "networkidle" });
+  await page.goto(path, { waitUntil: "networkidle" });
 }
 
 async function noSidewaysScroll(page: Page) {

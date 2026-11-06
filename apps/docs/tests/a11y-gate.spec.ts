@@ -3,8 +3,6 @@ import { expect, test } from "@playwright/test";
 import { DEFAULT_IDENTITY } from "../lib/default-identity";
 import { assertA11yGate, readComputedContrast } from "./a11y-helpers";
 
-const BASE = "http://127.0.0.1:3100";
-
 const A11Y_ROUTES = [
   { path: "/", label: "home" },
   { path: "/docs", label: "docs-index" },
@@ -34,7 +32,7 @@ async function openWithTheme(
   await page.addInitScript((mode) => {
     localStorage.setItem("theme", mode);
   }, theme);
-  await page.goto(`${BASE}${path}`, { waitUntil: "networkidle" });
+  await page.goto(path, { waitUntil: "networkidle" });
   await page.evaluate((mode) => {
     document.documentElement.classList.toggle("dark", mode === "dark");
     document.documentElement.style.colorScheme = mode;
@@ -85,7 +83,7 @@ test.describe("a11y gate (#396)", () => {
 
   test("docs sidebar trigger name matches native tooltip (#396)", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(`${BASE}/docs/getting-started`, { waitUntil: "networkidle" });
+    await page.goto("/docs/getting-started", { waitUntil: "networkidle" });
     const trigger = page.locator("#nd-mobile-nav").getByRole("button", { name: "Open navigation" });
     await expect(trigger).toBeVisible();
     await expect(trigger).toHaveAttribute("title", "Open navigation");
