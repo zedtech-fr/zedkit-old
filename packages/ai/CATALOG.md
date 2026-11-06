@@ -87,3 +87,29 @@ process.exitCode = result.value.code;
 ```
 
 CLI equivalent: `zedkit-ai gate .agents/setup-log/gates/test.log -- pnpm exec turbo run test --concurrency=2` (exits with the command's code, output goes straight to the file).
+
+## Route an agent call to a model and effort from a policy file
+
+- Import: `@zedtech/zedkit-ai` — `resolveRoute`, `RouteInput`, `Route`, `SecondReview`, `KindSource`, `NeedsSource`, `AgentHeader`, `Tokenomics`, `Kind`, `Stakes`, `Effort`, `Needs`, `Reasoning`, `ContextSize`, `Review`, `Cell`, `PolicyProvider`, `ProviderPolicy`, `AgentFloor`, `HardcodeConfig`, `KINDS`, `STAKES`, `EFFORTS`, `REASONING`, `CONTEXT_SIZES`, `REVIEWS`, `POLICY_PROVIDERS`
+- Wraps: `(none)`
+- Status: beta
+- Short name: Agent routing
+- Audience: Agents and maintainers who pick a model per subagent call from one policy instead of hardcoding it.
+- Purpose: Resolve kind (how the agent is used for this call) times stakes (how much is at risk) and the call's needs to a provider's model and effort, with the gates of those stakes and the second review route for critical work.
+- When to use: Before spawning a subagent, when the project keeps its model policy in `.agents/tokenomics.md`.
+- When not to use: When one session model is fine for everything, leave every cell on `inherit`.
+- See also: `Set up AI agent instructions, skills, subagents and commands in a repo`
+
+```ts
+import { resolveRoute } from "@zedtech/zedkit-ai";
+// `policy` is the project's tokenomics.md merged over the shipped defaults.
+const route = resolveRoute(policy, {
+  kind: "check",
+  stakes: "standard",
+  provider: "cursor",
+});
+if (!route.ok) throw route.error;
+console.log(route.value.model, route.value.effort, route.value.gates.review);
+```
+
+CLI equivalent: `zedkit-ai route verifier --kind check --stakes sensitive --provider cursor --json`.

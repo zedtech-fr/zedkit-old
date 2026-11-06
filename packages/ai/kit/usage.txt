@@ -24,6 +24,16 @@ zedkit-ai <command>
       Size the repo and cut it into slices, one per read-only reader:
       1-5 readers on a small repo, 6-10 medium, 11-20 large. Run it
       before the setup-ai code-reading phase.
+  route <agent> --stakes <s> [--kind decide|design|build|check] [--reasoning low|medium|high]
+      [--context small|medium|large] [--provider cursor|claude|codex|muse] [--dir <project>] [--json]
+      Resolve one agent call to a model and effort from .agents/tokenomics.md
+      (merged over the shipped defaults). --kind is how the agent is used for
+      this call; omitted, the agent's default_kind hint is used, else build.
+      --reasoning and --context override the agent's default needs for this
+      call. Prints the cell, the effective needs and where each came from,
+      the gates of the stakes, read-only for check, and the second review
+      route for critical. Exit 2 on a bad flag, an unknown agent or an
+      invalid tokenomics.md.
   gate <log> [--] <command...>
       Run one gate command and persist it as a setup-log gate log: CMD:,
       START:, output, END:, CAUSE: when killed or out of memory, and
