@@ -18,7 +18,9 @@ renaming a leaf job does not need a settings change.
 affected-only path: turbo runs typecheck, lint and tests for the changed
 packages and their dependents, the docs and registry jobs run only when
 `scripts/ci-affected.mjs` finds a relevant path, and the workspace-wide
-coverage run is skipped. Skipped jobs are what `ci-required` accepts.
+coverage run is skipped. `ci-required` accepts a skipped job only when
+the detector excluded it; a selected job that skipped, failed or cancelled
+is not green.
 
 **Same-repo PRs into `dev`** run the heavy jobs (`checks`, `registry-smoke`,
 `quickstart-smoke`, `adoption-smoke`, `docs-e2e-shard`, `docs-e2e-routes`,

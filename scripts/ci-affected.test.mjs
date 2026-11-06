@@ -55,6 +55,29 @@ test("markdown at the root and .changeset skip heavy jobs", () => {
   assert.deepEqual([r.docs, r.registry, r.workflow_only], [false, false, false]);
 });
 
+test("verified maintainer docs do not start the docs browser jobs", () => {
+  for (const f of [
+    "docs/publishing.md",
+    "docs/ci-branch-protection.md",
+    "docs/golden-rule.md",
+    "docs/agents-catalog.md",
+  ]) {
+    const r = run([f]);
+    assert.equal(r.docs, false, f);
+    assert.equal(r.full, false, f);
+  }
+  const pack = run(["docs/publishing.md", "scripts/check-pack.sh"]);
+  assert.deepEqual([pack.docs, pack.registry, pack.ui, pack.full], [false, false, false, false]);
+});
+
+test("docs catalog and unknown docs paths still start the docs browser jobs", () => {
+  assert.equal(run(["docs/catalog/catalog.json"]).docs, true);
+  assert.equal(run(["docs/catalog/README.md"]).docs, true);
+  assert.equal(run(["docs/design/signature.md"]).docs, true);
+  assert.equal(run(["apps/docs/app/page.tsx"]).docs, true);
+  assert.equal(run(["docs/publishing.md", "docs/catalog/catalog.json"]).docs, true);
+});
+
 test("mixed workflow and code diff is not workflow-only", () => {
   const r = run([".github/workflows/ci.yml", "packages/ui/src/a.tsx"]);
   assert.deepEqual([r.workflow_only, r.workflows, r.docs], [false, true, true]);

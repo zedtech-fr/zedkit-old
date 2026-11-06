@@ -23,8 +23,8 @@ jobs:
   # Scope of this run (scripts/ci-affected.mjs). Full CI runs only for pushes
   # and PRs targeting main. Every other PR, lockfile / root config / workflow
   # changes included, runs affected-only: turbo filters, plus path gates on
-  # the docs and registry jobs. Gated jobs report `skipped`, which
-  # ci-required accepts.
+  # the docs and registry jobs. ci-required accepts `skipped` only when
+  # the detector excluded that job.
   changes:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -278,6 +278,7 @@ jobs:
             scripts/release-tags-wait.test.mjs \
             scripts/require-green-ci.test.mjs \
             scripts/ci-affected.test.mjs \
+            scripts/ci-required.test.mjs \
             apps/docs/scripts/*.test.mjs
       # Gallery smoke: real chromium over the built ui gallery (both
       # themes, zero console errors), screenshots kept as artifacts.
@@ -720,15 +721,16 @@ jobs:
   # Stable check name for branch protection. Require this one job instead of
   # listing every CI job (and the docs-e2e shard names). The ruleset still
   # lists the old names until an admin applies the settings issue.
-  # Jobs gated off by the scope in `changes` report `skipped`, which passes;
-  # only failed or cancelled jobs fail the gate.
+  # Selected jobs must succeed. Skipped is allowed only when `changes`
+  # excluded that job. Failure, cancel, unknown and missing never pass.
   ci-required:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: [changes, hygiene, workflow-lint, checks, registry-smoke, docs-e2e, docs-smoke]
     if: always()
     steps:
-      - name: All required jobs passed or were skipped
+      - uses: actions/checkout@v7
+      - name: Selected jobs succeeded; skipped only when excluded
         env:
           CHANGES: ${{ needs.changes.result }}
           HYGIENE: ${{ needs.hygiene.result }}
@@ -737,13 +739,8 @@ jobs:
           REGISTRY: ${{ needs.registry-smoke.result }}
           DOCS_E2E: ${{ needs.docs-e2e.result }}
           DOCS_SMOKE: ${{ needs.docs-smoke.result }}
-        run: |
-          # changes and hygiene always run: they must succeed.
-          test "$CHANGES" = "success"
-          test "$HYGIENE" = "success"
-          for result in "$WORKFLOW_LINT" "$CHECKS" "$REGISTRY" "$DOCS_E2E" "$DOCS_SMOKE"; do
-            case "$result" in
-              success | skipped) ;;
-              *) echo "ci-required: a job finished as $result" >&2; exit 1 ;;
-            esac
-          done
+          WORKFLOWS: ${{ needs.changes.outputs.workflows }}
+          DOCS: ${{ needs.changes.outputs.docs }}
+          REGISTRY_SCOPE: ${{ needs.changes.outputs.registry }}
+          WORKFLOW_ONLY: ${{ needs.changes.outputs.workflow_only }}
+        run: node scripts/ci-required.mjs
