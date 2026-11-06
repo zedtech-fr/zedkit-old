@@ -47,16 +47,22 @@ reject dead `/r/<name>.json` links.
 
 ## Work on it
 
-- `pnpm --filter @zedtech/zedkit-docs dev` (or root `pnpm dev`, :3100).
-- Gates: `typecheck`, `lint`, `build` on the filter, then root
-  `pnpm catalog:check` (`docs: ok (N pages cover N needs)`; needs built
-  sibling packages, see the root Commands).
-- Browser proof in CI is `smoke` only (home, search, catalog, a component
-  page, getting-started). Unit tests, `catalog:check`, the SEO export check
-  and the first-load budget cover the rest. Many specs hard-code
-  `http://127.0.0.1:3100`, so stop `pnpm dev` first: `serve` moves to
-  another port without failing when 3100 is taken (read its
-  "Accepting connections" line):
+- **Local loop** (every edit): reuse :3100 if it is up
+  (`pnpm --filter @zedtech/zedkit-docs dev`, or root `pnpm dev`). Then
+  `pnpm --filter @zedtech/zedkit-docs typecheck lint` and the Playwright
+  spec that covers the files you touched, against that :3100 (relative
+  paths; origin is `baseURL` in `playwright.config.ts`). One foreground
+  command.
+- **PR / CI:** browser proof is `smoke` only (home, search, catalog, a
+  component page, getting-started). Unit tests, `catalog:check`, the SEO
+  export check and the first-load budget cover the rest. `pnpm e2e` is
+  local-only, never a merge gate. A new spec must be listed in the
+  `smoke` or `e2e` script; specs must not embed `127.0.0.1` or
+  `localhost:` (`scripts/check-e2e-registered.sh`). Screenshots land in
+  `test-results/`.
+- **Reproducing a failed `docs-smoke` job:** CI already built `out/`
+  (`docs-build`). Locally, only when :3100 is free — or set
+  `DOCS_E2E_BASE_URL` to the port `serve` actually bound:
 
   ```sh
   pnpm exec turbo run build --filter=@zedtech/zedkit-docs   # writes apps/docs/out
@@ -64,18 +70,13 @@ reject dead `/r/<name>.json` links.
   pnpm exec playwright install chromium
   pnpm --filter @zedtech/zedkit-docs run smoke
   ```
-
-  CI builds that export once (`docs-build`) and the smoke job downloads
-  `apps/docs/out`. A new spec must be listed in the `smoke` or `e2e`
-  script (`scripts/check-e2e-registered.sh`). `pnpm e2e` is local-only.
-  Screenshots land in `test-results/`.
-- Done = gates green + manifest/check in sync + examined screenshots
-  for visual changes + a rendered-page critique (strongest remaining
-  weaknesses) + demo rules respected. Lint/types/axe/screenshot diffs
-  are necessary, not sufficient. A self-assigned score is not done.
-  Playwright `toHaveScreenshot` baselines in git are the linux files
-  (`*-chromium-linux.png`). Darwin captures stay local (gitignored).
-  Reproduce CI exactly with the Playwright image of the lockfile version
+- Done = Local loop green + manifest/check in sync for catalog edits +
+  examined screenshots for visual changes + a rendered-page critique
+  (strongest remaining weaknesses) + demo rules respected. A
+  self-assigned score is not done. Playwright `toHaveScreenshot`
+  baselines in git are the linux files (`*-chromium-linux.png`). Darwin
+  captures stay local (gitignored). Reproduce a screenshot failure with
+  the Playwright image of the lockfile version
   (`docker run --ipc=host -v $PWD:/work -w /work/apps/docs mcr.microsoft.com/playwright:v<version>-noble`
   serving `out/`). Open expected, actual and diff, classify each (defect,
   unstable test, intended change) and only then regenerate, there; a
