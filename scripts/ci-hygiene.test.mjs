@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 const root = fileURLToPath(new URL("..", import.meta.url));
 const workflow = readFileSync(join(root, ".github/workflows/ci.yml"), "utf8");
 // The `hygiene:` job block: from its key to the next two-space job key.
-const hygiene = workflow.split(/^  hygiene:/m)[1]?.split(/^  \S/m)[0] ?? "";
+const hygiene = workflow.split(/^ {2}hygiene:/m)[1]?.split(/^ {2}\S/m)[0] ?? "";
 
 describe("ci hygiene job", () => {
   it("no longer invokes check-pr-lenses", () => {
