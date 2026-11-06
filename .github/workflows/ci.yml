@@ -280,6 +280,7 @@ jobs:
             scripts/catalog-maturity.test.mjs \
             scripts/catalog-adoption.test.mjs \
             scripts/adoption-shown-commands.test.mjs \
+            scripts/adoption-smoke.test.mjs \
             scripts/coverage-summary.test.mjs \
             scripts/release-tags-wait.test.mjs \
             scripts/require-green-ci.test.mjs \

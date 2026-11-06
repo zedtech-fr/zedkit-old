@@ -18,16 +18,24 @@
 // Needs network (create-next-app, npm) and Chromium (pnpm exec playwright install chromium).
 /* global document, getComputedStyle -- page.evaluate callbacks run in the browser. */
 import { execFileSync, spawn } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, appendFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync, appendFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SITE = "https://zedkit.app";
+const SITE_REGISTRY = `${SITE}/r/`;
 const REGISTRY_DIR = join(ROOT, "apps/docs/public/r");
-const SHADCN = process.env.SHADCN_VERSION ?? "4.22.1";
-const NEXT_APP = process.env.CREATE_NEXT_APP_VERSION ?? "16.4.3";
+/** npm version / dist-tag charset: no spaces or shell metacharacters. */
+export function pinVersion(raw, label) {
+  if (!/^[0-9A-Za-z._-]+$/.test(raw)) {
+    throw new Error(`${label} must be a version or dist-tag, got ${JSON.stringify(raw)}`);
+  }
+  return raw;
+}
+const SHADCN = pinVersion(process.env.SHADCN_VERSION ?? "4.22.1", "SHADCN_VERSION");
+const NEXT_APP = pinVersion(process.env.CREATE_NEXT_APP_VERSION ?? "16.4.3", "CREATE_NEXT_APP_VERSION");
 const PACKAGE_SOURCE = process.env.ADOPTION_PACKAGE ?? "local";
 
 const { buildAdoptionPlan, loadRegistry, FEATURED_EXAMPLE } = await import(join(ROOT, "apps/docs/lib/adoption-plan.mjs"));
@@ -145,17 +153,40 @@ function run(file, args, cwd, env = {}) {
   return spawnInherit(file, args, cwd, env);
 }
 
-/** A command exactly as the page shows it to a person: a shell line, because that is what is being tested. */
-function sh(command, cwd, env = {}) {
-  console.log(`\n$ ${command}`);
-  return spawnInherit("bash", ["-c", command], cwd, env);
+/** The packed `.tgz` in `dir`, as a path. No shell glob, so `dir` may contain spaces or metacharacters. */
+export function packedTarball(dir) {
+  const names = readdirSync(dir).filter((name) => name.endsWith(".tgz"));
+  assert(names.length === 1, `expected one tarball in ${dir}, got ${names.join(", ") || "none"}`);
+  return join(dir, names[0]);
 }
 
-/** What differs from a person's terminal, applied to a displayed command. */
-function localize(commandText) {
-  let out = commandText.replaceAll(`${SITE}/r/`, `${REGISTRY_DIR}/`).replaceAll("shadcn@latest", `shadcn@${SHADCN}`);
-  if (/shadcn@\S+ add /.test(out)) out += " --yes --overwrite";
-  return out;
+/**
+ * Displayed command as argv. The local registry path is one argument, not spliced into a shell line.
+ * `shadcn@latest` is pinned; `shadcn … add` gets the same `--yes --overwrite` the page cannot type.
+ */
+export function localizeCommand(commandText, { registryDir, shadcnVersion } = {}) {
+  const dir = registryDir ?? REGISTRY_DIR;
+  const pinned = pinVersion(shadcnVersion ?? SHADCN, "SHADCN_VERSION");
+  const trimmed = commandText.trim();
+  // Whitespace split is not a shell: pipes, quotes and substitution would be silently
+  // passed as arguments. Current shown commands have none of these.
+  if (/[|&;<>()`'"\\*?\n]/.test(trimmed) || trimmed.includes("$")) {
+    throw new Error(`shown command uses shell syntax that argv cannot run: ${JSON.stringify(commandText)}`);
+  }
+  const tokens = trimmed.split(/\s+/).filter(Boolean).map((token) => {
+    if (token.includes(SITE_REGISTRY)) return token.replaceAll(SITE_REGISTRY, `${dir}/`);
+    if (token.startsWith("shadcn@latest")) return `shadcn@${pinned}${token.slice("shadcn@latest".length)}`;
+    return token;
+  });
+  const shadcnAt = tokens.findIndex((token) => /^shadcn@\S+$/.test(token));
+  if (shadcnAt >= 0 && tokens[shadcnAt + 1] === "add") tokens.push("--yes", "--overwrite");
+  return tokens;
+}
+
+/** Run a displayed command as argv so a checkout path cannot inject a shell command. */
+export function runLocalized(commandText, cwd, env = {}, opts = {}) {
+  const argv = localizeCommand(commandText, opts);
+  return run(argv[0], argv.slice(1), cwd, env);
 }
 
 /** The project's own pnpm decides: a packageManager field can switch the version inside it. */
@@ -192,7 +223,7 @@ async function runMode(project, mode) {
   for (const step of mode.steps) {
     console.log(`\n== ${step.id}: ${step.title}`);
     for (const block of step.blocks) {
-      if (block.kind === "command") await sh(localize(block.commands.pnpm), project);
+      if (block.kind === "command") await runLocalized(block.commands.pnpm, project);
       else if (block.kind === "file") applyFile(project, block);
       else throw new Error(`step ${step.id} has a ${block.kind} block, which has no place to be run`);
     }
@@ -238,13 +269,13 @@ async function runShownPackageAdds() {
       const dir = workspacePackageDir(name, ROOT);
       assert(dir, `no packages/* folder for ${name}`);
       await run("pnpm", ["pack", "--pack-destination", dest], dir);
-      tarballs[name] = execFileSync("bash", ["-c", `ls ${dest}/*.tgz`], { encoding: "utf8" }).trim();
+      tarballs[name] = packedTarball(dest);
     }
     overridePackages(project, tarballs);
   }
-  await sh("pnpm install", project);
+  await run("pnpm", ["install"], project);
   for (const command of adds) {
-    await sh(command, project);
+    await runLocalized(command, project);
     for (const name of packagesNamedInAdd(command)) {
       const installed = JSON.parse(readFileSync(join(project, "node_modules", name, "package.json"), "utf8"));
       assert(installed.name === name, `${command} did not install ${name}`);
@@ -289,7 +320,7 @@ function runCaseOnce(name, spec, template, tarball, chromium) {
 async function buildAndCheck(name, spec, project, template, tarball, chromium) {
   cpSync(template, project, { recursive: true });
   if (tarball) overridePackage(project, tarball);
-  await sh("pnpm install", project);
+  await run("pnpm", ["install"], project);
   const built = spec.plan();
   const mode = built.modes.find((item) => item.id === spec.mode);
   if (!mode) throw new Error(`${name}: the plan has no ${spec.mode} mode`);
@@ -299,7 +330,7 @@ async function buildAndCheck(name, spec, project, template, tarball, chromium) {
     const local = JSON.parse(readFileSync(join(ROOT, "packages/ui/package.json"), "utf8")).version;
     assert(installed === local, `the kit resolved to ${installed}, not this checkout's ${local}`);
   }
-  await sh("pnpm exec next build", project);
+  await run("pnpm", ["exec", "next", "build"], project);
   const server = await serve(project);
   const browser = await chromium.launch();
   const inBrowser = async () => {
@@ -336,7 +367,7 @@ async function main() {
     if (PACKAGE_SOURCE === "local") {
       await run("pnpm", ["exec", "turbo", "run", "build", "--filter=@zedtech/zedkit-ui"], ROOT);
       await run("pnpm", ["pack", "--pack-destination", work], join(ROOT, "packages/ui"));
-      tarball = execFileSync("bash", ["-c", `ls ${work}/*.tgz`], { encoding: "utf8" }).trim();
+      tarball = packedTarball(work);
     }
     await run("pnpm", ["dlx", `create-next-app@${NEXT_APP}`, "app", "--ts", "--tailwind", "--eslint", "--app", "--src-dir", "--import-alias", "@/*", "--use-pnpm", "--skip-install", "--yes"], work);
     ({ chromium } = await import("@playwright/test"));
