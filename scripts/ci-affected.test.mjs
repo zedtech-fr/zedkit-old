@@ -38,7 +38,16 @@ test("lockfile and root config still run docs and registry jobs; workflow edits 
 
 test("a package outside the docs closure skips docs and registry", () => {
   const r = run(["packages/nest/src/index.ts"]);
-  assert.deepEqual([r.docs, r.registry], [false, false]);
+  assert.deepEqual([r.docs, r.registry, r.packages], [false, false, true]);
+});
+
+test("docs-only diffs skip API report and pack; package and tsconfig.base do not", () => {
+  assert.equal(run(["apps/docs/app/page.tsx"]).packages, false);
+  assert.equal(run(["docs/catalog/catalog.json"]).packages, false);
+  assert.equal(run(["pnpm-lock.yaml"]).packages, false);
+  assert.equal(run(["packages/core/src/a.ts"]).packages, true);
+  assert.equal(run(["tsconfig.base.json"]).packages, true);
+  assert.equal(run(["README.md"], "main").packages, true);
 });
 
 test("package docs reach the docs site but not the registry smoke", () => {

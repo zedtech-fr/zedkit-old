@@ -105,6 +105,10 @@ export function scope({ event, baseRef, files, workspace }) {
     registry: relevant([...uiDirs, "apps/docs/"], REGISTRY_PREFIXES),
     // The ui gallery smoke only needs ui and what it is built from.
     ui: relevant(uiDirs, []),
+    // API reports / pack / the remaining package builds. tsconfig.base
+    // changes .d.ts emit; a docs-only diff does not.
+    packages:
+      full || files.some((f) => f.startsWith("packages/") || f === "tsconfig.base.json"),
     // Empty on the full path: turbo runs everything.
     filter: full ? "" : `--filter=...[origin/${baseRef}]`,
   };

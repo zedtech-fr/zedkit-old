@@ -36,6 +36,7 @@ jobs:
       docs: ${{ steps.detect.outputs.docs }}
       registry: ${{ steps.detect.outputs.registry }}
       ui: ${{ steps.detect.outputs.ui }}
+      packages: ${{ steps.detect.outputs.packages }}
       filter: ${{ steps.detect.outputs.filter }}
     steps:
       - uses: actions/checkout@v7
@@ -124,6 +125,7 @@ jobs:
       BASE_REF: ${{ github.base_ref }}
       FULL: ${{ needs.changes.outputs.full }}
       DOCS: ${{ needs.changes.outputs.docs }}
+      PACKAGES: ${{ needs.changes.outputs.packages }}
     steps:
       - name: Self-hosted runner env
         if: runner.environment == 'self-hosted'
@@ -171,7 +173,9 @@ jobs:
       - uses: actions/cache@v6
         if: runner.environment != 'self-hosted'
         with:
-          path: .turbo
+          path: |
+            .turbo
+            .eslintcache
           key: turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
           restore-keys: |
             turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
@@ -195,13 +199,14 @@ jobs:
           if [ "${RUNNER_ENVIRONMENT}" = "self-hosted" ]; then
             bash scripts/ci-eslint.sh --cache --cache-location /runner-cache/eslint/.eslintcache
           else
-            bash scripts/ci-eslint.sh
+            bash scripts/ci-eslint.sh --cache --cache-location .eslintcache
           fi
       # catalog:check (docs check.mjs) always builds seo/ai/ui (admin tutorial
       # spawns ui build). Build only those packages; turbo ^build pulls i18n/
       # core/quality. Avoids building all 16 when DOCS=true. Persistent
       # TURBO_CACHE_DIR on self-hosted keeps repeats warm.
       - name: Build (catalog deps)
+        if: env.FULL == 'true' || env.DOCS == 'true'
         run: |
           extra=()
           if [ "${RUNNER_ENVIRONMENT}" = "self-hosted" ]; then
@@ -212,18 +217,26 @@ jobs:
             --filter=@zedtech/zedkit-ai \
             --filter=@zedtech/zedkit-ui \
             "${extra[@]}"
-      - run: pnpm run catalog:check
-      # Remaining package builds feed API report / pack. The docs static
-      # export lives in docs-build (Playwright, SEO, first-load budget).
+      - name: catalog:check
+        if: env.FULL == 'true' || env.DOCS == 'true'
+        run: pnpm run catalog:check
+      # Remaining package builds feed API report / pack. Skip when no
+      # package (or tsconfig.base) changed: the reports cannot drift.
+      # Docs static export lives in docs-build.
       - name: Build
+        if: env.FULL == 'true' || env.PACKAGES == 'true'
         run: |
           extra=()
           if [ "${RUNNER_ENVIRONMENT}" = "self-hosted" ]; then
             extra+=(--cache-dir=/runner-cache/turbo)
           fi
           pnpm exec turbo run build --filter='!@zedtech/zedkit-docs' "${extra[@]}"
-      - run: bash scripts/check-api-report.sh
-      - run: bash scripts/check-pack.sh
+      - name: API report
+        if: env.FULL == 'true' || env.PACKAGES == 'true'
+        run: bash scripts/check-api-report.sh
+      - name: Pack
+        if: env.FULL == 'true' || env.PACKAGES == 'true'
+        run: bash scripts/check-pack.sh
       - run: bash scripts/check-e2e-registered.sh
       - name: test
         run: |
@@ -508,6 +521,13 @@ jobs:
       - name: pnpm install (store + nm archive)
         if: runner.environment == 'self-hosted'
         run: bash scripts/ci-runner-cache.sh install
+      - uses: actions/cache@v6
+        if: runner.environment != 'self-hosted'
+        with:
+          path: .turbo
+          key: turbo-docs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            turbo-docs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
       - name: Build docs
         run: |
           extra=()
@@ -542,7 +562,7 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --filter="@zedtech/zedkit-docs..."
       - uses: actions/download-artifact@v7
         with:
           name: docs-out
