@@ -196,7 +196,9 @@ size_budget ui 10200 marketing
 # cli.ts); PR measured 40853. Budget = measured + ~1%.
 # Raised to 43700 on 5 Nov 2026: the stakes contract and its CLI (stakes.ts,
 # cli.ts); PR measured 43241.
-size_budget ai 43700
+# Raised to 48300 on 6 Nov 2026: provider file generation and `sync`
+# (generate.ts, provider-keys.ts, sync.ts, cli.ts); PR measured 47785.
+size_budget ai 48300
 
 if [ -f apps/docs/out/index.html ]; then
   if ! node apps/docs/scripts/check-first-load-budget.mjs; then

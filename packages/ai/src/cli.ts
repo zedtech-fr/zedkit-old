@@ -9,6 +9,7 @@ import { installNextStepLines, prettierHintLines } from "./install-next-step.js"
 import { kitDir, readManifest } from "./kit.js";
 import { loadAgent, loadPolicy, resolveRoute, type Route } from "./route.js";
 import { scanRepo } from "./scan.js";
+import { inSync, syncKit } from "./sync.js";
 import {
   checkCriticalLines,
   checkStakesChange,
@@ -71,6 +72,15 @@ const STAKES_OPTIONS = {
   json: { type: "boolean" },
 } as const;
 
+const SYNC_OPTIONS = {
+  provider: { type: "string" },
+  check: { type: "boolean" },
+  "dry-run": { type: "boolean" },
+  prune: { type: "boolean" },
+  "no-prune": { type: "boolean" },
+  quiet: { type: "boolean" },
+} as const;
+
 function parse(
   args: string[],
   options:
@@ -78,7 +88,8 @@ function parse(
     | typeof OPTIONS
     | typeof VALIDATE_OPTIONS
     | typeof ROUTE_OPTIONS
-    | typeof STAKES_OPTIONS,
+    | typeof STAKES_OPTIONS
+    | typeof SYNC_OPTIONS,
   maxPositionals: number,
 ): Result<Parsed> {
   const parsed = tryCatch(() => parseArgs({ args, allowPositionals: true, options }));
@@ -341,6 +352,38 @@ function runStakes(args: string[], sinks: Sinks): number {
   return issues.length === 0 ? 0 : 1;
 }
 
+function runSync(args: string[], sinks: Sinks): number {
+  const parsed = parse(args, SYNC_OPTIONS, 1);
+  if (!parsed.ok) return fail(parsed.error.message, sinks);
+  const { values, positionals } = parsed.value;
+  const named = parseProviders(values.provider);
+  if (!named.ok) return fail(named.error.message, sinks);
+  const dest = resolve(positionals[0] ?? ".");
+  if (!existsSync(dest)) return fail(`no such directory: ${dest}`, sinks);
+  const check = values.check === true;
+  const providers = values.provider === undefined ? undefined : (named.value ?? ALL_PROVIDERS);
+  const result = syncKit({
+    dest,
+    ...(providers !== undefined && { providers }),
+    check,
+    dryRun: values["dry-run"] === true,
+    prune: values.prune === true,
+    noPrune: values["no-prune"] === true,
+  });
+  if (!result.ok) return fail(result.error.message, sinks);
+  const changes = result.value.filter((action) => action.kind !== "skip");
+  if (check) {
+    for (const action of changes) sinks.out(`${action.path}: out of date, run: npx zedkit-ai sync`);
+    sinks.out(inSync(result.value) ? "ok" : `${changes.length} out of date`);
+    return inSync(result.value) ? 0 : 1;
+  }
+  for (const action of values.quiet === true ? changes : result.value) {
+    sinks.out(`${action.kind.padEnd(8)} ${action.path}${action.note ? `  (${action.note})` : ""}`);
+  }
+  if (values["dry-run"] === true) sinks.out("dry run: nothing written");
+  return 0;
+}
+
 function runScan(args: string[], sinks: Sinks): number {
   const parsed = parse(args, {}, 1);
   if (!parsed.ok) return fail(parsed.error.message, sinks);
@@ -376,6 +419,7 @@ export function main(argv: string[], sinks: Sinks): number {
   if (command === "scan") return runScan(rest, sinks);
   if (command === "route") return runRoute(rest, sinks);
   if (command === "stakes") return runStakes(rest, sinks);
+  if (command === "sync") return runSync(rest, sinks);
   if (command === "list") return runList(rest, sinks);
   const help = command === undefined || command === "--help" || command === "-h";
   (help ? sinks.out : sinks.err)(usage());

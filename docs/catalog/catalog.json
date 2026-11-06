@@ -185,6 +185,42 @@
           "seeAlso": [
             "Set up AI agent instructions, skills, subagents and commands in a repo"
           ]
+        },
+        {
+          "need": "Write each tool's agent files from one source and a policy",
+          "import": "`@zedtech/zedkit-ai` — `syncKit`, `inSync`, `SyncOptions`, `Action`",
+          "wraps": "`(none)`",
+          "status": "beta",
+          "shortName": "Agent file sync",
+          "audience": "Maintainers who keep subagents in `.agents/agents` and want each tool's copy to carry the model from one policy file.",
+          "purpose": "Generate `.cursor/agents` and `.claude/agents` from `.agents/agents` and `.agents/tokenomics.md`, with the model of each agent's default route and a marker so a later run can tell its own files from yours; never overwrite a file it did not write.",
+          "whenToUse": "After editing an agent or `tokenomics.md`, after upgrading the kit, and as a `--check` step in CI.",
+          "whenNotToUse": "When every agent runs on the session model and no tool needs its own copy; Codex and Muse read `.agents/agents` directly and get nothing generated.",
+          "derivedFrom": null,
+          "example": "import { inSync, syncKit } from \"@zedtech/zedkit-ai\";\nconst actions = syncKit({ dest: \".\", providers: [\"cursor\", \"claude\"], check: true });\nif (!actions.ok) throw actions.error;\nif (!inSync(actions.value)) process.exitCode = 1;",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "import { inSync, syncKit } from \"@zedtech/zedkit-ai\";\nconst actions = syncKit({ dest: \".\", providers: [\"cursor\", \"claude\"], check: true });\nif (!actions.ok) throw actions.error;\nif (!inSync(actions.value)) process.exitCode = 1;"
+            }
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ai",
+                "exports": [
+                  "syncKit",
+                  "inSync",
+                  "SyncOptions",
+                  "Action"
+                ]
+              }
+            ]
+          },
+          "seeAlso": [
+            "Route an agent call to a model and effort from a policy file"
+          ]
         }
       ]
     },

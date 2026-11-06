@@ -115,3 +115,24 @@ console.log(route.value.model, route.value.effort, route.value.gates.review);
 CLI equivalent: `zedkit-ai route verifier --kind check --stakes sensitive --provider cursor --json`.
 
 The stakes come from the task file: `zedkit-ai stakes PLAN.md --base origin/main` reads `Stakes:`, `Kind:` and `Needs:`, prints the gates, and fails when stakes were lowered, raised without a reason, or `critical` lacks its second-review and human-validation lines.
+
+## Write each tool's agent files from one source and a policy
+
+- Import: `@zedtech/zedkit-ai` — `syncKit`, `inSync`, `SyncOptions`, `Action`
+- Wraps: `(none)`
+- Status: beta
+- Short name: Agent file sync
+- Audience: Maintainers who keep subagents in `.agents/agents` and want each tool's copy to carry the model from one policy file.
+- Purpose: Generate `.cursor/agents` and `.claude/agents` from `.agents/agents` and `.agents/tokenomics.md`, with the model of each agent's default route and a marker so a later run can tell its own files from yours; never overwrite a file it did not write.
+- When to use: After editing an agent or `tokenomics.md`, after upgrading the kit, and as a `--check` step in CI.
+- When not to use: When every agent runs on the session model and no tool needs its own copy; Codex and Muse read `.agents/agents` directly and get nothing generated.
+- See also: `Route an agent call to a model and effort from a policy file`
+
+```ts
+import { inSync, syncKit } from "@zedtech/zedkit-ai";
+const actions = syncKit({ dest: ".", providers: ["cursor", "claude"], check: true });
+if (!actions.ok) throw actions.error;
+if (!inSync(actions.value)) process.exitCode = 1;
+```
+
+CLI equivalent: `zedkit-ai sync --provider cursor,claude --check`.

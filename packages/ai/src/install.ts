@@ -52,7 +52,8 @@ export type InstallOptions = {
 };
 
 export type Action = {
-  kind: "copy" | "link" | "write" | "append" | "skip";
+  /** `generate`, `convert` and `prune` come from `syncKit`; the rest from `installKit`. */
+  kind: "copy" | "link" | "write" | "append" | "skip" | "generate" | "convert" | "prune";
   path: string;
   /** Why it was skipped, what was appended, or what a link points to. */
   note?: string;
