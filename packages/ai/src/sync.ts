@@ -10,7 +10,7 @@ import {
   unlinkSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, sep } from "node:path";
 import { err, ok, tryCatch, type Result } from "@zedtech/zedkit-core";
 import { generateAgent, hasMarker } from "./generate.js";
 import { ALL_PROVIDERS, type Action } from "./install.js";
@@ -84,7 +84,25 @@ function commandNames(agentsDir: string): string[] {
   return entries.value.filter((f) => f.endsWith(".md") && !f.endsWith(KIT_SUFFIX)).map((f) => f.slice(0, -3)).sort();
 }
 
+// A prefix of `rel` that is a symlink (or a non-dir). Writes would follow it.
+function throughLink(ctx: Ctx, rel: string): string | undefined {
+  const parts = rel.split(sep);
+  for (let i = 1; i < parts.length; i++) {
+    const parentRel = parts.slice(0, i).join(sep);
+    const st = lstatOf(join(ctx.dest, parentRel));
+    if (st?.isSymbolicLink()) return parentRel;
+    if (st && !st.isDirectory()) return parentRel;
+  }
+  return undefined;
+}
+
 function put(ctx: Ctx, kind: Action["kind"], rel: string, note?: string, text?: string): void {
+  const blocked = throughLink(ctx, rel);
+  if (blocked !== undefined) {
+    const st = lstatOf(join(ctx.dest, blocked));
+    skip(ctx, blocked, st?.isSymbolicLink() ? "link left alone: writing through it would change its target" : "not a directory");
+    return;
+  }
   ctx.actions.push({ kind, path: rel, ...(note !== undefined && { note }) });
   if (!ctx.write || text === undefined) return;
   const full = join(ctx.dest, rel);
@@ -128,13 +146,25 @@ function syncFile(ctx: Ctx, rel: string, name: string, source: string, text: str
   const sidecar = adoptRel(rel);
   skip(ctx, rel, `user file kept; generated version -> ${sidecar}`);
   const beside = readText(join(ctx.dest, sidecar));
-  if (beside === text) skip(ctx, sidecar, "up to date");
-  else put(ctx, "generate", sidecar, `kit version beside your ${rel}`, text);
+  if (beside === undefined) {
+    put(ctx, "generate", sidecar, `kit version beside your ${rel}`, text);
+    return;
+  }
+  if (beside === text) {
+    skip(ctx, sidecar, "up to date");
+    return;
+  }
+  if (hasMarker(beside) || isKitCopy("agents", name, beside, source)) {
+    put(ctx, "generate", sidecar, `kit version beside your ${rel}`, text);
+    return;
+  }
+  skip(ctx, sidecar, "user sidecar kept");
 }
 
 // Marked files whose source agent is gone. Only files that carry the marker
 // are ever removed.
 function pruneOrphans(ctx: Ctx, dirRel: string, names: ReadonlySet<string>, allMarked: boolean): void {
+  if (throughLink(ctx, dirRel) !== undefined) return;
   if (!lstatOf(join(ctx.dest, dirRel))?.isDirectory()) return;
   const files = tryCatch(() => readdirSync(join(ctx.dest, dirRel)));
   if (!files.ok) return;
@@ -308,7 +338,9 @@ export function syncAgents(input: AgentSync, actions: Action[]): void {
   if (input.prune === true) {
     for (const provider of ["cursor", "claude"]) {
       const dirRel = PROVIDER_KEYS[provider]?.agentsDir;
-      if (dirRel !== undefined && !input.providers.includes(provider)) pruneOrphans(ctx, dirRel, known, true);
+      if (dirRel !== undefined && !input.providers.includes(provider) && !layerBlocked(ctx, dirRel)) {
+        pruneOrphans(ctx, dirRel, known, true);
+      }
     }
   }
 }
