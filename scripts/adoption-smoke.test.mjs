@@ -5,7 +5,7 @@ import { join } from "node:path";
 import test from "node:test";
 
 import { commandsFromPlan, shownInstallCommands } from "../apps/docs/lib/adoption-shown-commands.mjs";
-import { CASES, localizeCommand, packedTarball, pinVersion, runLocalized } from "./adoption-smoke.mjs";
+import { CASES, isSiteRegistryToken, localizeCommand, packedTarball, pinVersion, runLocalized } from "./adoption-smoke.mjs";
 
 const MARKER = "pwned-adoption-smoke";
 const HOSTILE = `reg with spaces'" ; touch ${MARKER}; echo $(touch ${MARKER}-cmd)`;
@@ -50,7 +50,7 @@ test("localizeCommand tokenizes every current shown command and rejects shell li
     assert.equal(tokens.length >= original.length, true, command);
     for (let i = 0; i < original.length; i += 1) {
       if (original[i].startsWith("shadcn@latest")) continue;
-      if (original[i].includes("https://zedkit.app/r/")) continue;
+      if (isSiteRegistryToken(original[i])) continue;
       assert.equal(tokens[i], original[i], `${command} token ${i}`);
     }
   }
@@ -76,6 +76,15 @@ test("localizeCommand keeps a registry path with spaces, quotes and metacharacte
     ["npx", "shadcn@4.22.1", "registry", "add", `@zedkit=${registryDir}/{name}.json`],
   );
   assert.deepEqual(localizeCommand("pnpm add @zedtech/zedkit-ui"), ["pnpm", "add", "@zedtech/zedkit-ui"]);
+  const lookalike = "https://evil.com/#https://zedkit.app/r/button.json";
+  assert.equal(isSiteRegistryToken(lookalike), false);
+  assert.deepEqual(
+    localizeCommand(`pnpm dlx shadcn@latest add ${lookalike}`, {
+      registryDir,
+      shadcnVersion: "4.22.1",
+    }),
+    ["pnpm", "dlx", "shadcn@4.22.1", "add", lookalike, "--yes", "--overwrite"],
+  );
 });
 
 test("packedTarball reads a tarball from a directory whose name is a shell command", (t) => {

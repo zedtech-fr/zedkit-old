@@ -27,6 +27,16 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SITE = "https://zedkit.app";
 const SITE_REGISTRY = `${SITE}/r/`;
 const REGISTRY_DIR = join(ROOT, "apps/docs/public/r");
+
+/** Registry URL on https://zedkit.app/r/ — origin + path, not a substring. */
+export function isSiteRegistryToken(token) {
+  const start = token.indexOf("https://");
+  if (start < 0) return false;
+  const urlText = token.slice(start);
+  if (!URL.canParse(urlText)) return false;
+  const url = new URL(urlText);
+  return url.origin === SITE && url.pathname.startsWith("/r/");
+}
 /** npm version / dist-tag charset: no spaces or shell metacharacters. */
 export function pinVersion(raw, label) {
   if (!/^[0-9A-Za-z._-]+$/.test(raw)) {
@@ -174,7 +184,7 @@ export function localizeCommand(commandText, { registryDir, shadcnVersion } = {}
     throw new Error(`shown command uses shell syntax that argv cannot run: ${JSON.stringify(commandText)}`);
   }
   const tokens = trimmed.split(/\s+/).filter(Boolean).map((token) => {
-    if (token.includes(SITE_REGISTRY)) return token.replaceAll(SITE_REGISTRY, `${dir}/`);
+    if (isSiteRegistryToken(token)) return token.replaceAll(SITE_REGISTRY, `${dir}/`);
     if (token.startsWith("shadcn@latest")) return `shadcn@${pinned}${token.slice("shadcn@latest".length)}`;
     return token;
   });
