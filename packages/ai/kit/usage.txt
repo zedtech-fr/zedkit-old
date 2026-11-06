@@ -19,7 +19,7 @@ zedkit-ai <command>
       on problems. --setup (off by default) also checks that the PLAN
       covers every git-changed path, that setup-log gate logs are
       well-formed, and that the setup went deep: a reading log, domain
-      rules, nested AGENTS.md and model routing (the v3 depth axes).
+      rules, nested AGENTS.md and tokenomics (the v3 depth axes).
   scan [dir]
       Size the repo and cut it into slices, one per read-only reader:
       1-5 readers on a small repo, 6-10 medium, 11-20 large. Run it

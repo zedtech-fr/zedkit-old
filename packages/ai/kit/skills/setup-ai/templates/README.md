@@ -10,7 +10,7 @@ These files ship in **this skill folder** at `.agents/skills/setup-ai/templates/
 | `templates/design.template.md`         | `.agents/design.md`                                                                       |
 | `templates/glossary.template.md`       | `GLOSSARY.md` or `.agents/glossary.md`                                                    |
 | `templates/nested-agents.template.md`  | `<folder>/AGENTS.md` for each folder whose rules differ from the root                     |
-| `templates/model-routing.template.md`  | `.agents/model-routing.md` (provider, scout/worker/lead tiers, how a spawn picks a model) |
+| kit `tokenomics.template.md`           | `.agents/tokenomics.md` (already installed; fill `providers.<p>.<kind>.<stakes>.model`, then `zedkit-ai sync`) |
 
 ## Read the code first (phase B)
 

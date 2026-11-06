@@ -38,9 +38,9 @@ that holds<!-- if:skill=ponytail-review --> (skill `ponytail-review`)<!-- /if --
   path or version. (skill `ground-truth`)
 - **Smallest complete change.** No abstraction, option or dependency nobody
   asked for.<!-- if:skill=ponytail --> (skill `ponytail`)<!-- /if -->
-- **Parallelize independent work, route by tier.** Fan out read-only work to
+- **Parallelize independent work, route by kind × stakes.** Fan out read-only work to
   subagents with self-contained briefs on a cheap model, set on every spawn;
-  decisions stay strong. (skill `parallel-work`; `.agents/model-routing.md`)
+  decisions stay strong. (skill `parallel-work`; `.agents/tokenomics.md`)
 - **Tests first, adversarial.** Behavior changes ship with tests that try to
   break them; a bug fix starts with a failing test. (skills `tdd`,
   `adversarial-tests`)

@@ -59,7 +59,7 @@ const issues = [...validateKit(".agents"), ...checkDrift(".", ".agents")];
 for (const issue of issues) console.error(`${issue.path}: ${issue.message}`);
 ```
 
-CLI equivalent: `zedkit-ai validate` (accepts a project root too; reports drift). Opt-in `--setup` / `--plan <file>`: PLAN must cover every git-changed path; setup-log gate logs must be well-formed; and the setup must have gone deep: a reading log (D1), domain rules with evidence, plus Identity rules when there is a UI (D2), a nested `AGENTS.md` that links them or a stated reason (D3), `.agents/model-routing.md` pointed at from `AGENTS.md` (D4).
+CLI equivalent: `zedkit-ai validate` (accepts a project root too; reports drift). Opt-in `--setup` / `--plan <file>`: PLAN must cover every git-changed path; setup-log gate logs must be well-formed; and the setup must have gone deep: a reading log (D1), domain rules with evidence, plus Identity rules when there is a UI (D2), a nested `AGENTS.md` that links them or a stated reason (D3), `.agents/tokenomics.md` with a real model on `build.standard` and `decide.sensitive`, pointed at from `AGENTS.md` (D4).
 
 Need: size a repo and cut it for parallel read-only readers. CLI: `zedkit-ai scan [dir]` prints the size class (small, medium, large), the reader count (1-5, 6-10, 11-20) and one slice per reader.
 
