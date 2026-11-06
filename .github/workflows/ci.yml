@@ -702,7 +702,8 @@ jobs:
           curl -sf -o /dev/null http://127.0.0.1:3100/sitemap.xml
           curl -sf -o /dev/null http://127.0.0.1:3100/llms.txt
           if [ "${RUNNER_ENVIRONMENT}" = "self-hosted" ]; then
-            pnpm --filter @zedtech/zedkit-docs run smoke -- --workers=1 --retries=2
+            # No `--` before flags: Playwright then treats them as test-file filters.
+            pnpm --filter @zedtech/zedkit-docs run smoke --workers=1 --retries=2
           else
             pnpm --filter @zedtech/zedkit-docs run smoke
           fi
