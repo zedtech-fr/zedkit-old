@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { installKit } from "#install.js";
 import { agentsForPreset, commandsForPreset, kitDir, readManifest } from "#kit.js";
 import { checkDrift, validateKit } from "#validate.js";
-import { firstPartySkills, markdownFiles, put, SKILL, tempDir } from "./helpers.js";
+import { COMMAND, firstPartySkills, markdownFiles, put, SKILL, tempDir } from "./helpers.js";
 
 function install(dest: string, options: Parameters<typeof installKit>[0] extends infer O ? Partial<O> : never = {}) {
   const result = installKit({ dest, ...options });
@@ -435,6 +435,17 @@ describe("installKit", () => {
     expect(readFileSync(join(dest, ".cursor/agents/verifier.md"), "utf8")).toContain("verifier");
   });
 
+  it("second install keeps a custom Cursor command link", () => {
+    const dest = tempDir();
+    install(dest, { providers: ["cursor"] });
+    put(dest, ".agents/commands/custom.md", COMMAND("plan", "Custom."));
+    const target = "../../.agents/commands/custom.md";
+    symlinkSync(target, join(dest, ".cursor/commands/custom.md"));
+    install(dest, { providers: ["cursor"] });
+    expect(readlinkSync(join(dest, ".cursor/commands/custom.md"))).toBe(target);
+    expect(readFileSync(join(dest, ".agents/commands/custom.md"), "utf8")).toContain("Custom.");
+  });
+
   it("never overwrites the cursor copies: edits survive a second run", () => {
     const dest = tempDir();
     install(dest, { providers: ["cursor"] });
@@ -444,7 +455,7 @@ describe("installKit", () => {
     expect(readFileSync(join(dest, ".cursor/commands/review.md"), "utf8")).toBe("mine\n");
   });
 
-  it("adds no provider layer for codex and muse: they read the shared source", () => {
+  it("adds no extra provider folder for codex and muse", () => {
     const dest = tempDir();
     const actions = install(dest, { providers: ["codex", "muse"] });
     expect(existsSync(join(dest, "AGENTS.md"))).toBe(true);

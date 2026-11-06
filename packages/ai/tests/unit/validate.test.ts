@@ -428,6 +428,28 @@ describe("validateKit", () => {
     expect(validateKit(root)).toEqual([]);
   });
 
+  it("flags a mutated Muse restriction without --provider", () => {
+    const dest = tempDir();
+    put(dest, ".agents/tokenomics.md", `---
+schema: 1
+providers:
+  muse:
+    build:
+      standard: { model: muse-one }
+    check:
+      sensitive: { model: muse-check }
+---
+`);
+    put(dest, ".agents/agents/explorer.md", readFileSync(join(kitDir(), "agents/explorer.md"), "utf8"));
+    const synced = syncKit({ dest, providers: ["muse"] });
+    if (!synced.ok) throw synced.error;
+    const muse = readFileSync(join(dest, ".agents/agents/explorer.md"), "utf8");
+    expect(muse).toContain("disallowedTools:");
+    put(dest, ".agents/agents/explorer.md", muse.replace(/disallowedTools:.*\n/, ""));
+    const found = checkDrift(dest, join(dest, ".agents"));
+    expect(found.some((issue) => issue.path === ".agents/agents/explorer.md")).toBe(true);
+  });
+
   it("does not treat a kit dir-symlink as missing sources for generated Cursor files", () => {
     const dest = tempDir();
     const installed = installKit({ dest, preset: "starter", providers: ["cursor"] });

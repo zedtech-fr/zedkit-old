@@ -45,16 +45,18 @@ zedkit-ai <command>
   sync [dir] [--provider cursor,claude,codex,muse,all] [--check] [--dry-run] [--prune] [--no-prune] [--quiet]
       Write each tool's agent files from .agents/agents and
       .agents/tokenomics.md: .cursor/agents and .claude/agents get one
-      generated copy per agent, with `model` from the route of the agent's
-      default kind at standard stakes and a marker on line 2. A file with
-      the marker is regenerated, a plain copy of the source is replaced, any
-      other file is kept and the generated version goes beside it as
-      <name>.kit.md. Generated files whose source agent is gone are removed
+      generated copy per agent, and Muse writes native marked files in
+      .agents/agents (unmarked/kit stay the source), with `model` from the
+      route of the agent's default kind at standard stakes and a marker on
+      line 2. A file with the marker is regenerated, a kit-equal unmarked
+      copy is replaced, any other file is kept (Muse does not write a
+      sidecar). Generated files whose source agent is gone are removed
       (--no-prune keeps them); --prune with --provider also removes those of
       a provider left out. --check writes nothing and exits 1 when anything
       is out of date. Without --provider the layers are inferred from
-      non-empty .cursor/ and .claude/; none found is exit 2. A second run
-      prints only skip lines.
+      non-empty .cursor/ and .claude/ and from Muse-native marked files in
+      .agents/agents; none found is exit 2. A second run prints only skip
+      lines.
   gate <log> [--] <command...>
       Run one gate command and persist it as a setup-log gate log: CMD:,
       START:, output, END:, CAUSE: when killed or out of memory, and

@@ -30,8 +30,9 @@ export type SyncOptions = {
   dest: string;
   /**
    * Providers to sync. Omitted: inferred from the non-empty `.cursor/` and
-   * `.claude/` layers; nothing to infer is an error. Naming them is what
-   * allows `prune` to remove generated files of a provider left out.
+   * `.claude/` layers and from Muse-native marked files in `.agents/agents`;
+   * nothing to infer is an error. Naming them is what allows `prune` to
+   * remove generated files of a provider left out.
    */
   providers?: readonly string[];
   /** Report only, write nothing (the caller turns any non-skip action into a failing exit). */
@@ -94,10 +95,30 @@ function nonEmptyDir(path: string): boolean {
   return entries.ok && entries.value.length > 0;
 }
 
+/**
+ * True when this project already has Muse-native generated agents: a real
+ * `.agents/agents` directory (not a kit symlink) containing at least one
+ * marked file. Used so a bare `sync` / `validate` refreshes Muse without
+ * `--provider muse`.
+ */
+export function museGenerated(dest: string): boolean {
+  const dir = join(dest, ".agents", "agents");
+  const st = lstatOf(dir);
+  if (st === undefined || st.isSymbolicLink() || !st.isDirectory()) return false;
+  const files = tryCatch(() => readdirSync(dir));
+  if (!files.ok) return false;
+  return files.value.some((file) => {
+    if (!file.endsWith(".md") || file.endsWith(KIT_SUFFIX)) return false;
+    const text = readText(join(dir, file));
+    return text !== undefined && hasMarker(text);
+  });
+}
+
 function infer(dest: string): string[] {
   const found: string[] = [];
   if (nonEmptyDir(join(dest, ".cursor"))) found.push("cursor");
   if (nonEmptyDir(join(dest, ".claude"))) found.push("claude");
+  if (museGenerated(dest)) found.push("muse");
   return found;
 }
 
@@ -115,6 +136,7 @@ export function sourceNames(agentsDir: string): string[] | undefined {
       const text = readText(join(dir, file));
       const from = text !== undefined ? MARKER_SOURCE.exec(text.split("\n", 3)[1] ?? "") : undefined;
       if (from?.[1] !== undefined) names.add(from[1]);
+      else if (text !== undefined && !hasMarker(text)) names.add(stem);
       continue;
     }
     names.add(stem);
@@ -135,7 +157,13 @@ export function availabilityOf(agentsDir: string, names: readonly string[]): Ava
   }
   return {
     skills,
-    agents: new Set(names.filter((name) => !MUSE_ALIAS_DEST.has(name))),
+    agents: new Set(
+      names.filter((name) => {
+        if (!MUSE_ALIAS_DEST.has(name)) return true;
+        const src = Object.entries(MUSE_NAME_ALIAS).find(([, dest]) => dest === name)?.[0];
+        return src === undefined || !names.includes(src);
+      }),
+    ),
     commands: new Set(commandNames(agentsDir)),
   };
 }
@@ -157,14 +185,15 @@ function commandNames(agentsDir: string): string[] {
   return entries.value.filter((f) => f.endsWith(".md") && !f.endsWith(KIT_SUFFIX)).map((f) => f.slice(0, -3)).sort();
 }
 
-// A prefix of `rel` that is a symlink (or a non-dir). Writes would follow it.
+// A prefix of `rel` that is a symlink (or a non-dir parent). Writes would
+// follow it, including a dangling leaf whose target is outside the repo.
 function throughLink(ctx: Ctx, rel: string): string | undefined {
   const parts = rel.split(sep);
-  for (let i = 1; i < parts.length; i++) {
-    const parentRel = parts.slice(0, i).join(sep);
-    const st = lstatOf(join(ctx.dest, parentRel));
-    if (st?.isSymbolicLink()) return parentRel;
-    if (st && !st.isDirectory()) return parentRel;
+  for (let i = 1; i <= parts.length; i++) {
+    const ancestorRel = parts.slice(0, i).join(sep);
+    const st = lstatOf(join(ctx.dest, ancestorRel));
+    if (st?.isSymbolicLink()) return ancestorRel;
+    if (i < parts.length && st && !st.isDirectory()) return ancestorRel;
   }
   return undefined;
 }
@@ -423,7 +452,10 @@ export function syncAgents(input: AgentSync, actions: Action[]): void {
       }
     }
     for (const name of input.names) {
-      if (MUSE_ALIAS_DEST.has(name)) continue;
+      if (MUSE_ALIAS_DEST.has(name)) {
+        const aliasSource = Object.entries(MUSE_NAME_ALIAS).find(([, dest]) => dest === name)?.[0];
+        if (aliasSource !== undefined && known.has(aliasSource) && known.has(name)) continue;
+      }
       const agent = loadAgent(input.agentsDir, name);
       if (!agent.ok) {
         skip(ctx, join(dirRel, `${name}.md`), `not synced: ${agent.error.message}`);
@@ -486,9 +518,12 @@ export function syncAgents(input: AgentSync, actions: Action[]): void {
   if (input.prune === true) {
     for (const provider of ["cursor", "claude", "muse"]) {
       const dirRel = PROVIDER_KEYS[provider]?.agentsDir;
-      if (dirRel !== undefined && !input.providers.includes(provider) && !layerBlocked(ctx, dirRel)) {
-        pruneOrphans(ctx, dirRel, known, true);
+      // Muse dest is the shared source; dropping muse from --provider must
+      // not delete project agents.
+      if (provider === "muse" || dirRel === undefined || input.providers.includes(provider) || layerBlocked(ctx, dirRel)) {
+        continue;
       }
+      pruneOrphans(ctx, dirRel, known, true);
     }
   }
 }
@@ -548,5 +583,7 @@ export function syncKit(options: SyncOptions): Result<Action[]> {
 
 /** True when `syncKit` found nothing to change: every action is a `skip`. */
 export function inSync(actions: readonly Action[]): boolean {
-  return actions.every((action) => action.kind === "skip");
+  return actions.every(
+    (action) => action.kind === "skip" && !(action.note ?? "").includes("would empty the Muse catalog"),
+  );
 }

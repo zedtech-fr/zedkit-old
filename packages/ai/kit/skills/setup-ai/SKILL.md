@@ -335,12 +335,12 @@ After the owner approves the table, **persist** it as **`PLAN.md`** at the repo 
 
 `zedkit-ai init --provider <names>` does the mechanical part; you do the repo-specific part.
 
-| Provider | Layer on top of `AGENTS.md` + `.agents/`                                                                                                                                   |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cursor` | `.cursor/rules/project.mdc` (skip it when an always-on rule exists), `.cursor/skills` link, agents and commands as real-file copies (a linked folder shows up empty there) |
-| `claude` | `CLAUDE.md` link, `.claude/{skills,agents,commands}` links (per-skill links and file copies when those paths are already real directories)                                 |
-| `codex`  | none: reads `AGENTS.md` and `.agents/skills` directly                                                                                                                      |
-| `muse`   | native marked files in `.agents/agents` (not the kit/unmarked source)                                                                                                      |
+| Provider | Layer on top of `AGENTS.md` + `.agents/`                                                                                                                                |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cursor` | `.cursor/rules/project.mdc` (skip it when an always-on rule exists), `.cursor/skills` link, generated agent files, command links (a linked folder shows up empty there) |
+| `claude` | `CLAUDE.md` link, `.claude/{skills,agents,commands}` links (per-skill links and file copies when those paths are already real directories)                              |
+| `codex`  | none: reads `AGENTS.md` and `.agents/skills` directly                                                                                                                   |
+| `muse`   | native marked files in `.agents/agents` (not the kit/unmarked source)                                                                                                   |
 
 - **Root `AGENTS.md`**: start from the kit template if there is none; when one exists, keep it and add the missing ladder section (the same 7 questions as the template). Replace every `<placeholder>` with a verified fact or delete the line. Non-negotiables say **`documented, not enforced`** or name a checker you opened and verified — never **`enforced by`** without that proof. Link `.agents/product.md` and domain docs from the map section.
 - **Role and style**: fill it from evidence and owner answers, not taste. Tag owner choices `source: owner`.

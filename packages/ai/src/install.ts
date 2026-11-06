@@ -490,8 +490,8 @@ function wireProvider(
 ): void {
   if (provider === "claude") wireClaude(ctx, content, skillDest);
   else if (provider === "cursor") wireCursor(ctx, content, skillDest);
-  // codex and muse read the shared source directly (AGENTS.md plus
-  // .agents/): no per-provider layer to generate.
+  // Codex has no per-provider folder. Muse native files are written by
+  // generateAgents into `.agents/agents`.
 }
 
 // Each tool's agent files are generated from `.agents/agents` and the policy,
@@ -520,7 +520,14 @@ function generateAgents(ctx: Ctx, content: ReturnType<typeof plan>, providers: r
       agentsDir,
       names: [...names].sort(),
       commands: {
-        names: content.commands,
+        names: (() => {
+          const listed = new Set(content.commands);
+          const disk = tryCatch(() => readdirSync(join(agentsDir, "commands")));
+          if (disk.ok) {
+            for (const f of disk.value) if (f.endsWith(".md") && !f.endsWith(".kit.md")) listed.add(f.slice(0, -3));
+          }
+          return [...listed].sort();
+        })(),
         source: (name) => {
           const disk = tryCatch(() => readFileSync(join(agentsDir, "commands", `${name}.md`), "utf8"));
           return disk.ok ? disk.value : undefined;

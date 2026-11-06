@@ -37,9 +37,9 @@ score-and-learn templates), `core`
 (planning and implement entry points), `full` (every skill).
 
 Providers: `cursor` (rules file, skills link or per-skill links inside a
-real `.cursor/skills` dir, agents and commands as real-file copies),
-`claude` (`CLAUDE.md` and folder links, or per-skill links and copies inside pre-existing real dirs), `codex` and `muse` (no
-layer: read the shared source directly; same for other no-layer ids in `--help`).
+real `.cursor/skills` dir, generated agent files, command links),
+`claude` (`CLAUDE.md` and folder links, or per-skill links and copies inside pre-existing real dirs, generated agents), `codex` (no
+layer: reads the shared source directly), `muse` (native marked files in `.agents/agents`; unmarked/kit stay the source).
 
 ## Check that skills, subagents, commands and provider copies are valid
 

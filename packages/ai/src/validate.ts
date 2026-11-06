@@ -5,7 +5,7 @@ import { tryCatch } from "@zedtech/zedkit-core";
 import type { Action } from "./install.js";
 import { hasMarker } from "./generate.js";
 import { loadPolicy } from "./route.js";
-import { availabilityOf, resolvedAgentText, sourceNames, syncAgents } from "./sync.js";
+import { availabilityOf, museGenerated, resolvedAgentText, sourceNames, syncAgents } from "./sync.js";
 import { adoptRel, kitDir, kitUniverse, readManifest } from "./kit.js";
 import { parseFrontmatter } from "./frontmatter.js";
 import { HEADER_KEYS, KIT_HEADERS, SIDECAR, parseAgentHeader, readSidecar } from "./agent-header.js";
@@ -507,6 +507,7 @@ function checkGenerated(projectRoot: string, source: string, issues: Issue[]): v
   const providers = [".cursor", ".claude"]
     .filter((layer) => layerWired(projectRoot, layer))
     .map((layer) => layer.slice(1));
+  if (museGenerated(projectRoot)) providers.push("muse");
   if (providers.length === 0) return;
   // A policy that does not parse is reported by the policy check, not here.
   const policy = loadPolicy(source);
