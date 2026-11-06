@@ -18,9 +18,20 @@ export const identityEditorCopy = {
     importNotJson: "the text is not valid JSON.",
     css: "CSS",
     json: "JSON",
+    install: "Install",
+    fontImports: "Font imports",
+    kitStyles: "Kit styles",
     copyCss: "Copy CSS",
     copyJson: "Copy JSON",
-    copied: (kind: "css" | "json") => `Copied ${kind === "css" ? "CSS" : "JSON"}.`,
+    copyInstall: "Copy install command",
+    copyFontImports: "Copy font imports",
+    copyKitStyles: "Copy kit styles",
+    copied: (kind: "css" | "json" | "install" | "fonts" | "styles") => {
+      const what = { css: "CSS", json: "JSON", install: "install command", fonts: "font imports", styles: "kit styles" }[
+        kind
+      ];
+      return `Copied ${what}.`;
+    },
   },
   fields: {
     scalar: {

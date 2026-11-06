@@ -177,7 +177,7 @@ describe("validateKit", () => {
     put(kit, "skills/duo/SKILL.md", SKILL("duo"));
     const root = tempDir();
     put(root, "skills/alpha/SKILL.md", `${SKILL("alpha")}\nUse skill \`duo\`.\n`);
-    put(root, "skills/zk-duo/SKILL.md", SKILL("duo"));
+    put(root, "skills/zk-duo/SKILL.md", SKILL("zk-duo"));
     expect(validateKit(root, kit)).toEqual([]);
   });
 
@@ -229,7 +229,7 @@ describe("validateKit", () => {
   it("treats a user file shadowing a kit name as user prose, and satisfies refs from the sidecar", () => {
     const root = tempDir();
     put(root, "skills/review/SKILL.md", `${SKILL("review")}\nMy own notes on the \`plan\` phase and ladder.\n`);
-    put(root, "skills/zk-review/SKILL.md", `${SKILL("review")}\nladder\n`);
+    put(root, "skills/zk-review/SKILL.md", `${SKILL("zk-review")}\nladder\n`);
     expect(validateKit(root)).toEqual([]);
   });
 

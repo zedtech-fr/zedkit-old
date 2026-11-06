@@ -97,10 +97,10 @@ export function DarkThemeButton() {
 - Troubleshooting: English still shows — the provider is missing above that host, or a label prop is set. A custom bundle must keep every key (`locale` included) so `UpdatedAgo` can pick `Intl.RelativeTimeFormat`.
 
 ```ts
-import { ZedkitUiProvider, zedkitUiMessagesFr } from "@zedtech/zedkit-ui";
+import { Button, ZedkitUiProvider, zedkitUiMessagesFr } from "@zedtech/zedkit-ui";
 
 <ZedkitUiProvider messages={zedkitUiMessagesFr}>
-  {children}
+  <Button>Enregistrer</Button>
 </ZedkitUiProvider>
 ```
 
@@ -292,9 +292,9 @@ import { Button } from "@zedtech/zedkit-ui";
 import { Archive, RefreshCw, Share2 } from "lucide-react";
 import { IconButton } from "@zedtech/zedkit-ui";
 
-<IconButton label="Refresh tasks" variant="ghost" onClick={refresh}><RefreshCw /></IconButton>
-<IconButton label="Share project" variant="ghost" onClick={share}><Share2 /></IconButton>
-<IconButton label="Archive project" variant="outline" onClick={archive}><Archive /></IconButton>
+<IconButton label="Refresh tasks" variant="ghost" onClick={() => {}}><RefreshCw /></IconButton>
+<IconButton label="Share project" variant="ghost" onClick={() => {}}><Share2 /></IconButton>
+<IconButton label="Archive project" variant="outline" onClick={() => {}}><Archive /></IconButton>
 ```
 
 ```ts
@@ -508,7 +508,7 @@ import { StatusDot } from "@zedtech/zedkit-ui";
 
 ```ts
 import { PromptInput } from "@zedtech/zedkit-ui";
-<PromptInput sendLabel="Send" value={text} onChange={(e) => setText(e.target.value)} onSubmit={send} placeholder="Ask anything" aria-label="Message" />
+<PromptInput sendLabel="Send" defaultValue="Summarize this page" onSubmit={() => {}} placeholder="Ask anything" aria-label="Message" />
 ```
 
 ```ts
@@ -643,9 +643,9 @@ import { Checkmark } from "@zedtech/zedkit-ui";
 
 ```ts
 import { Suspense } from "react";
-import { CardSkeleton } from "@zedtech/zedkit-ui";
+import { Card, CardContent, CardSkeleton } from "@zedtech/zedkit-ui";
 <Suspense fallback={<CardSkeleton label="Loading report" />}>
-  <ReportCard />
+  <Card><CardContent>Annual report.</CardContent></Card>
 </Suspense>
 ```
 
@@ -704,7 +704,7 @@ import { StatusLabel } from "@zedtech/zedkit-ui";
 
 ```ts
 import { UpdatedAgo } from "@zedtech/zedkit-ui";
-<UpdatedAgo date={updatedAt} /> // "Updated 3 minutes ago" via Intl.RelativeTimeFormat
+<UpdatedAgo date={Date.now() - 3 * 60 * 1000} /> {/* "Updated 3 minutes ago" via Intl.RelativeTimeFormat */}
 ```
 
 ```ts
@@ -952,7 +952,7 @@ import { Button, Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader,
 ```ts
 import { Button, ConfirmDialog } from "@zedtech/zedkit-ui";
 <ConfirmDialog trigger={<Button>Delete</Button>} title="Delete item?"
-  description="This cannot be undone." onConfirm={remove} />
+  description="This cannot be undone." onConfirm={() => {}} />
 ```
 
 ```ts
@@ -1333,7 +1333,7 @@ import { AppShell, PageHeader } from "@zedtech/zedkit-ui";
 
 ```ts
 import { AppShell } from "@zedtech/zedkit-ui";
-<AppShell sidebar={<OrgNav />}> // topbar is optional
+<AppShell sidebar={<nav aria-label="Primary"><a href="#">Overview</a></nav>}> {/* topbar is optional */}
   <p>Content.</p>
 </AppShell>
 ```
@@ -1452,6 +1452,7 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldSet }
 <FieldSet><FieldGroup><Field>
 <FieldLabel>Name</FieldLabel><FieldDescription>Public.</FieldDescription>
 <FieldError errors={[{ message: "Too short." }]} />
+</Field></FieldGroup></FieldSet>
 ```
 
 ## Shared panel surface (border, shadow, glass)

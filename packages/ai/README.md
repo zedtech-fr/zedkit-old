@@ -64,7 +64,7 @@ Re-run:
 npx @zedtech/zedkit-ai setup
 ```
 
-That command is `init` with **`--preset setup`** and **`--adopt`**. It does not overwrite your files. On a name collision it keeps your copy and writes the kit version beside it (`review.kit.md` for files, `zk-review` for skill folders). Identical kit copies are skipped. `init` without flags still defaults to **`starter`**.
+That command is `init` with **`--preset setup`** and **`--adopt`**. It does not overwrite your files. On a name collision it keeps your copy and writes the kit version beside it (`review.kit.md` for files, `zk-review` for skill folders). Identical kit copies are skipped. A skill sidecar takes the `zk-<name>` skill name so providers never see two skills with one name; the re-run also refreshes sidecars an older adopt left behind. `init` without flags still defaults to **`starter`**.
 
 Then run **`/setup-ai`** if you want the discovery artifacts (`product.md`, `domain/`, `design.md`, glossary). The CLI install alone does not write those.
 
@@ -149,7 +149,9 @@ existing `AGENTS.md` without the ladder, which gets the ladder section
 appended (reported as `append`). `--adopt` keeps a colliding user file that
 differs from the kit and writes the kit version beside it (`review.kit.md`
 for files, `zk-review` for skill folders); an already-installed kit copy is
-left as-is. It also skips
+left as-is. A skill sidecar's `SKILL.md` is renamed to `zk-<name>` so the
+live skill name stays unique, and `validate` fails a sidecar that still
+claims the base name as a duplicate. It also skips
 `.cursor/rules/project.mdc` (with a skip line naming the rule) when another
 rule in `.cursor/rules/` is already always on (`alwaysApply: true`), instead
 of adding a second one. A real `.cursor/skills` directory is kept; kit skills

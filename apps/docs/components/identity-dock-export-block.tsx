@@ -11,10 +11,11 @@ import { identityDockExportCopy as exportCopy } from "@/components/i18n/identity
 import { identityEditorCopy } from "@/components/i18n/identity-editor-copy";
 import { IdentityDockExportCopyRow } from "@/components/identity-dock-export-copy-row";
 import { AI_SETUP_MINI_PROMPT } from "@/lib/ai-setup-onboarding.generated";
-import { identityExportCss, IDENTITY_UI_INSTALL_COMMAND } from "@/lib/identity-export-css";
+import { IDENTITY_KIT_STYLES_CSS, identityExportCss, identityExportFonts, identityExportInstall } from "@/lib/identity-export-css";
 
 export function IdentityDockExportBlock({ tokens }: { tokens: IdentityTokens }) {
   const css = identityExportCss(tokens);
+  const fonts = identityExportFonts(tokens);
   const blocked = identityContrastWarnings(tokens).length > 0;
   const editorExport = identityEditorCopy.export;
 
@@ -30,8 +31,12 @@ export function IdentityDockExportBlock({ tokens }: { tokens: IdentityTokens }) 
       <IdentityDockExportCopyRow
         label={exportCopy.install}
         copyLabel={exportCopy.copyInstall}
-        value={IDENTITY_UI_INSTALL_COMMAND}
+        value={identityExportInstall(tokens)}
       />
+      {fonts ? (
+        <IdentityDockExportCopyRow label={exportCopy.fonts} copyLabel={exportCopy.copyFonts} value={fonts.imports} />
+      ) : null}
+      <IdentityDockExportCopyRow label={exportCopy.styles} copyLabel={exportCopy.copyStyles} value={IDENTITY_KIT_STYLES_CSS} />
       <IdentityDockExportCopyRow
         label={exportCopy.css}
         copyLabel={exportCopy.copyCss}

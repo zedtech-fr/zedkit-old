@@ -156,6 +156,54 @@ function treesMatch(src: string, dest: string, installed: ReadonlySet<string>, a
   });
 }
 
+// Adopt sidecars must not claim the live skill name: two SKILL.md files with
+// one `name:` read as two live skills sharing it. Only that line is
+// rewritten (line endings normalize to LF, the validated form), so the
+// sidecar stays a faithful kit copy for diffing. Undefined when the file has
+// no frontmatter `name:` line to rewrite, or the rewrite does not re-parse
+// to the sidecar name (a folded `name:` stays untouched for a human).
+function withSidecarSkillName(text: string, sidecarName: string): string | undefined {
+  const lines = text.replace(/\r\n/g, "\n").replace(/^\uFEFF/, "").split("\n");
+  if (lines[0] !== "---") return undefined;
+  const close = lines.findIndex((line, index) => index > 0 && line.trimEnd() === "---");
+  if (close < 0) return undefined;
+  const at = lines.findIndex((line, index) => index > 0 && index < close && /^name:[ \t]*\S/.test(line));
+  if (at < 0) return undefined;
+  lines[at] = `name: ${sidecarName}`;
+  const next = lines.join("\n");
+  const check = parseFrontmatter(next);
+  return check.ok && check.value.data.name === sidecarName ? next : undefined;
+}
+
+function renameFreshSidecarSkill(skillDir: string, base: string): void {
+  const file = join(skillDir, "SKILL.md");
+  const raw = tryCatch(() => readFileSync(file, "utf8"));
+  if (!raw.ok) return;
+  const renamed = withSidecarSkillName(raw.value, `zk-${base}`);
+  if (renamed !== undefined) writeFileSync(file, renamed);
+}
+
+// A pre-fix adopt run left sidecars claiming the base skill name. A re-run
+// rewrites just that line; every other byte (including user margin notes in
+// the sidecar) stays untouched, and the user file is never rewritten.
+function migrateSidecarSkillName(ctx: Ctx, rel: string, base: string): void {
+  const sidecar = adoptRel(rel);
+  const file = join(ctx.dest, sidecar, "SKILL.md");
+  const raw = tryCatch(() => readFileSync(file, "utf8"));
+  if (!raw.ok) return;
+  const front = parseFrontmatter(raw.value);
+  if (!front.ok || front.value.data.name !== base) return;
+  const renamed = withSidecarSkillName(raw.value, `zk-${base}`);
+  if (renamed === undefined) return;
+  ctx.actions.push({
+    kind: "write",
+    path: join(sidecar, "SKILL.md"),
+    note: `sidecar skill renamed to zk-${base} so /${base} resolves to one skill`,
+  });
+  if (ctx.dryRun) return;
+  writeFileSync(file, renamed);
+}
+
 function place(
   ctx: Ctx,
   kind: Exclude<Action["kind"], "skip">,
@@ -386,6 +434,7 @@ function installContent(ctx: Ctx, content: ReturnType<typeof plan>): Map<string,
   const skillDest = new Map<string, string>();
   for (const name of content.skills) {
     const rel = join(".agents", "skills", name);
+    if (ctx.adopt) migrateSidecarSkillName(ctx, rel, name);
     if (ctx.adopt && treesMatch(join(ctx.kit, "skills", name), join(ctx.dest, rel), installed, ctx.avail)) {
       ctx.actions.push({ kind: "skip", path: rel, note: "already installed" });
       skillDest.set(name, rel);
@@ -395,6 +444,7 @@ function installContent(ctx: Ctx, content: ReturnType<typeof plan>): Map<string,
       cpSync(join(ctx.kit, "skills", name), join(ctx.dest, target), { recursive: true, dereference: true });
       patchLenses(join(ctx.dest, target), installed);
       patchConditionals(join(ctx.dest, target), ctx.avail);
+      if (target !== rel) renameFreshSidecarSkill(join(ctx.dest, target), name);
     });
     skillDest.set(name, destRel ?? rel);
   }

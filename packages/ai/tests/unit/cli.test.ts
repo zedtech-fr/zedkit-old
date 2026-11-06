@@ -239,7 +239,9 @@ describe("cli", () => {
     expect(result.text).toContain("1 problem");
     expect(result.text).not.toContain("1 problems");
     put(bad, "skills/beta/SKILL.md", SKILL("wrong"));
-    expect(run("validate", bad).text).toContain("2 problems");
+    const both = run("validate", bad).text;
+    expect(both).toContain("3 problems");
+    expect(both).toContain('duplicate skill name "wrong"');
   });
 
   it("validate accepts a project root and reports provider-copy drift", () => {

@@ -201,7 +201,9 @@ test.describe("IdentityDock", () => {
     const exportBlock = page.locator("[data-slot='identity-dock-export']");
     await expect(exportBlock).toBeVisible();
     await exportBlock.getByRole("button", { name: "Copy Install command" }).click();
-    await expect.poll(async () => page.evaluate(() => navigator.clipboard.readText())).toBe("pnpm add @zedtech/zedkit-ui");
+    await expect.poll(async () => page.evaluate(() => navigator.clipboard.readText())).toBe(
+      "pnpm add @zedtech/zedkit-ui @fontsource-variable/inter",
+    );
     await expect(exportBlock.getByRole("status").first()).toContainText("Install command copied");
     await exportBlock.getByRole("button", { name: "Copy this CSS tokens" }).click();
     const css = await page.evaluate(() => navigator.clipboard.readText());

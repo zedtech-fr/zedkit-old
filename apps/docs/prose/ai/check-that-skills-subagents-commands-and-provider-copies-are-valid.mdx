@@ -65,6 +65,10 @@ count and one slice per reader.
 - `names no installed skill` — the installed preset does not ship that
   skill (for example `diagnosing-bugs` needs `--preset full`). Re-run `init` with the
   wider preset, or remove the command.
+- `duplicate skill name "…" (also claimed by …)` — two skills claim one
+  name, usually a `zk-<name>` sidecar an older adopt left behind. Re-run
+  `setup` to refresh the sidecar name, or merge it into your copy and
+  delete it.
 - `kit.json … lists missing …` — the manifest names a skill, agent or
   command with no file on disk. Add the file or drop the entry, then
   re-validate.
