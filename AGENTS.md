@@ -49,6 +49,9 @@ Public TypeScript monorepo (pnpm workspaces): small generic packages. See
 
 ## How to work
 
+- After an edit, run that area's **Local loop** (its AGENTS.md), or
+  `pnpm --filter <pkg> typecheck lint test`. CI owns full-repo test, e2e
+  and static-export smoke.
 - Small PRs from fresh `main`, never stacked. One package per PR.
 - Each package PR updates the root README package table, adds a
   Changeset file, records the module's origin in the package README
@@ -92,13 +95,14 @@ bash scripts/check-no-private-refs.sh
 bash scripts/check-tone.sh
 ```
 
-CI runs all of these plus the rest of [ci.yml](.github/workflows/ci.yml)
-(`pnpm exec eslint .`, API reports, registry smoke, docs e2e). A fresh clone
-has no `dist/`: `pnpm --filter <pkg> test|typecheck` and `pnpm catalog:check`
+CI runs the commands above plus the rest of
+[ci.yml](.github/workflows/ci.yml) (`pnpm exec eslint .`, API reports,
+registry smoke). Docs browser gate is `smoke`, not `pnpm e2e` —
+[apps/docs/AGENTS.md](apps/docs/AGENTS.md). A fresh clone has no
+`dist/`: `pnpm --filter <pkg> test|typecheck` and `pnpm catalog:check`
 fail until sibling packages are built. Build once
 (`pnpm exec turbo run build --filter='!@zedtech/zedkit-docs'`) or let turbo
-do it (`pnpm exec turbo run test --filter=<pkg>`). Docs browser tests:
-[apps/docs/AGENTS.md](apps/docs/AGENTS.md).
+do it (`pnpm exec turbo run test --filter=<pkg>`).
 
 ## Product, domain, tokenomics
 

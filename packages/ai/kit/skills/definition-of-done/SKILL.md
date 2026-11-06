@@ -1,6 +1,6 @@
 ---
 name: definition-of-done
-description: "Checklist to pass before calling a code change done: real gates on the final state, tests for every changed file, no weakened tests, refactor parity, a cold second review, and a rendered-page critique for visual work. Use at the end of any code change and before opening a PR."
+description: "Checklist to pass before calling a code change done. Cheap loop from the area AGENTS.md after the last edit; full CI and e2e are the PR's job. Tests for every changed behavior, no weakened tests, refactor parity, a cold second review, and a rendered-page critique for visual work. Use at the end of any code change and before opening a PR."
 ---
 
 # Definition of done
@@ -9,7 +9,9 @@ Done is a claim. This list is the evidence. If one box cannot be ticked, say whi
 
 ## Gates
 
-- [ ] The project's own gates ran **after the last edit**: typecheck, lint, tests, build (read the commands in the manifest). A fix made after the run means run again.
+The **cheap loop** is the `Local loop` line in the area `AGENTS.md` (filter typecheck, lint, and the unit or integration tests that cover the files you touched). One foreground command. CI owns full-repo test, e2e, static-export smoke and catalog:check.
+
+- [ ] Cheap loop ran **after the last edit** (read the area AGENTS.md). A fix made after the run means run the cheap loop again.
 - [ ] Output was read, not assumed. A failure you cannot explain is not done.
 - [ ] Nothing generated, built or cached is staged: check `git status` and `git diff --stat HEAD`. Never `git add -A` blindly.
 - [ ] No secrets, tokens or personal data in code, tests, logs, fixtures or errors.
@@ -51,7 +53,7 @@ Exception: a non-visual change (N/A).
 
 <!-- /if -->
 
-- [ ] Lint, types, axe and screenshot diffs ran on the final state. Necessary, not sufficient.
+- [ ] The cheap loop and an opened render are necessary, not sufficient. Axe and screenshot diffs only when a spec you changed already has them, or when reproducing a failed CI smoke job.
 - [ ] A rendered-page critique names the strongest remaining weaknesses (composition, hierarchy, type roles, density, rhythm). A self-assigned score is not done.
 - [ ] Screenshots were opened and described (matching content/viewport/identity/mode, before vs after). `UNSEEN` if not looked at. Generated-but-unread shots do not count.
 
