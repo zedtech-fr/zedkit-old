@@ -1,7 +1,7 @@
 import { existsSync, lstatSync, readdirSync, readFileSync, readlinkSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { markerLine } from "#generate.js";
+import { hasMarker, markerLine } from "#generate.js";
 import { ALL_PROVIDERS, installKit } from "#install.js";
 import { agentsForPreset, commandsForPreset, kitDir, readManifest } from "#kit.js";
 import { checkDrift, checkKitDocs, checkPlaceholders, validateKit } from "#validate.js";
@@ -50,11 +50,11 @@ function parityCell(dest: string, preset: string, providers: readonly string[] |
 }
 
 /** A generated agent file: marker on line 2, name kept, header keys gone. */
-function expectGenerated(path: string, name: string): void {
+function expectGenerated(path: string, name: string, sourceName = name): void {
   const text = readFileSync(path, "utf8");
   const lines = text.split("\n");
   expect(lines[0], `${path} opens frontmatter`).toBe("---");
-  expect(lines[1], `${path} marker`).toBe(markerLine(name));
+  expect(lines[1], `${path} marker`).toBe(markerLine(sourceName));
   expect(text, `${path} name`).toContain(`name: ${name}\n`);
   expect(text, `${path} no header keys`).not.toMatch(/^(role|default_needs|kinds|default_kind|min_stakes|min_effort):/mu);
 }
@@ -113,17 +113,46 @@ function expectClaudeLayer(dest: string, preset: string): void {
   expect(readFileSync(join(dest, "CLAUDE.md"), "utf8")).toBe(readFileSync(join(dest, "AGENTS.md"), "utf8"));
 }
 
-// codex and muse ship no layer: they read the shared source directly.
+// Codex ships no layer. Muse writes native marked files into `.agents/agents`.
 function expectSharedSource(dest: string): void {
   expect(lstatSync(join(dest, "AGENTS.md")).isFile()).toBe(true);
   expect(lstatSync(join(dest, ".agents", "skills")).isDirectory()).toBe(true);
+}
+
+function museFrontmatter(text: string): string {
+  const close = text.indexOf("\n---", 3);
+  return close < 0 ? text : text.slice(0, close);
+}
+
+function expectMuseNative(dest: string, preset: string): void {
+  expectSharedSource(dest);
+  for (const name of presetContent(preset).agents) {
+    const srcPath = join(dest, ".agents", "agents", `${name}.md`);
+    const destName = /^[a-z]+(-[a-z]+)*$/.test(name) ? name : name === "a11y-auditor" ? "accessibility-auditor" : undefined;
+    if (destName === undefined) {
+      expect(hasMarker(readFileSync(srcPath, "utf8")), name).toBe(false);
+      continue;
+    }
+    if (destName !== name) {
+      expect(hasMarker(readFileSync(srcPath, "utf8")), `${name} source stays unmarked`).toBe(false);
+    }
+    const path = join(dest, ".agents", "agents", `${destName}.md`);
+    const text = readFileSync(path, "utf8");
+    expectGenerated(path, destName, name);
+    const denied = museFrontmatter(text).split("\n").find((line) => line.startsWith("disallowedTools:")) ?? "";
+    expect(denied, destName).not.toMatch(/\bWrite\b|\bEdit\b|NotebookEdit/);
+    expect(text, destName).not.toContain("readonly:");
+    if (destName !== name) {
+      expect(text.split("\n")[1], destName).toContain(`${name}.md`);
+    }
+  }
 }
 
 const LAYER: Record<MatrixProvider, (dest: string, preset: string) => void> = {
   cursor: expectCursorLayer,
   claude: expectClaudeLayer,
   codex: (dest) => expectSharedSource(dest),
-  muse: (dest) => expectSharedSource(dest),
+  muse: expectMuseNative,
 };
 
 describe("provider matrix", () => {

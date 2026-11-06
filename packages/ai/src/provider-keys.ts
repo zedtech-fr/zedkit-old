@@ -13,7 +13,7 @@ export type ProviderKeys = {
 };
 
 /** Providers sync generates agent files for. */
-export const GENERATED_PROVIDERS = ["cursor", "claude"] as const;
+export const GENERATED_PROVIDERS = ["cursor", "claude", "muse"] as const;
 export type GeneratedProvider = (typeof GENERATED_PROVIDERS)[number];
 
 export function isGenerated(provider: string): provider is GeneratedProvider {
@@ -34,9 +34,12 @@ export function isGenerated(provider: string): provider is GeneratedProvider {
  * claimed for it: the generated file keeps `disallowedTools` and gets the
  * route's model written as the same plain scalar.
  *
- * Muse reads only `.agents/agents`, and only regular files, so there is
- * nothing to generate for it. The kit's read-only agents carry Claude tool
- * names in `disallowedTools`, which Muse Code 1.4.14 rejects at spawn.
+ * Muse reads only `.agents/agents`, and only regular files. One symlink in
+ * that directory empties the catalog. Generated Muse files are a native
+ * dialect (closed frontmatter, `write_file`/`edit_file`) and are not the
+ * canonical source: unmarked files and `kit/agents` stay generic. Cursor
+ * `readonly: true` is generated on check-kind agents; it is the write gate
+ * this tool enforces. Claude `disallowedTools` stay the Claude spelling.
  */
 export const PROVIDER_KEYS: Readonly<Record<string, ProviderKeys>> = {
   cursor: {
@@ -58,9 +61,9 @@ export const PROVIDER_KEYS: Readonly<Record<string, ProviderKeys>> = {
     checked: "2026-11-05",
   },
   muse: {
-    agentsDir: undefined,
+    agentsDir: ".agents/agents",
     effortKey: false,
-    note: "muse reads .agents/agents directly and needs regular files there: nothing generated",
-    checked: "2026-11-05",
+    note: "muse native files in .agents/agents (closed frontmatter, Muse tool names); unmarked/kit files stay the canonical source",
+    checked: "2026-11-06",
   },
 };

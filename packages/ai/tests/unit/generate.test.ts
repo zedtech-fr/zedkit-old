@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { generateAgent, hasMarker, markerLine, MARKER_PREFIX } from "#generate.js";
+import { generateAgent, generateMuseAgent, hasMarker, markerLine, MARKER_PREFIX } from "#generate.js";
 import { parseFrontmatter } from "#frontmatter.js";
 
 const fixture = (name: string): string =>
@@ -98,5 +98,55 @@ describe("hasMarker", () => {
     expect(hasMarker("---\nname: a\n---\n")).toBe(false);
     expect(hasMarker(`---\nname: a\n${markerLine("a")}\n---\n`)).toBe(false);
     expect(hasMarker("")).toBe(false);
+  });
+});
+
+describe("generateAgent readonly", () => {
+  it("writes readonly: true when asked, and leaves it off otherwise", () => {
+    const source = "---\nname: explorer\ndescription: d\nmodel: inherit\ndisallowedTools: Write, Edit, NotebookEdit\n---\nBody\n";
+    const withFlag = generateAgent({ name: "explorer", source, model: "cursor-grok-4.6-high", readonly: true });
+    if (!withFlag.ok) throw withFlag.error;
+    expect(withFlag.value.text).toContain("readonly: true\n");
+    expect(withFlag.value.text).toContain("model: cursor-grok-4.6-high\n");
+    const without = generateAgent({ name: "explorer", source, model: "cursor-grok-4.6-high" });
+    if (!without.ok) throw without.error;
+    expect(without.value.text).not.toContain("readonly:");
+  });
+});
+
+describe("generateMuseAgent", () => {
+  it("maps Claude write tools, drops unknown keys, and bakes the model", () => {
+    const source =
+      "---\nname: explorer\ndescription: d\nmodel: inherit\ndisallowedTools: Write, Edit, NotebookEdit\nreadonly: true\nrole: lookup\n---\n\nBody\n";
+    const out = generateMuseAgent({ name: "explorer", source, model: "muse-spark-1.3-contributor" });
+    if (!out.ok) throw out.error;
+    expect(out.value.text).toContain("disallowedTools: write_file, edit_file\n");
+    expect(out.value.text).not.toMatch(/\bWrite\b/);
+    expect(out.value.text).not.toContain("readonly:");
+    expect(out.value.text).not.toContain("role:");
+    expect(out.value.text).toContain("model: muse-spark-1.3-contributor\n");
+    expect(hasMarker(out.value.text)).toBe(true);
+    expect(out.value.text.endsWith("\n\nBody\n")).toBe(true);
+  });
+
+  it("omits disallowedTools when the source has none", () => {
+    const source = "---\nname: improver\ndescription: d\nmodel: inherit\n---\nBody\n";
+    const out = generateMuseAgent({ name: "improver", source, model: "inherit" });
+    if (!out.ok) throw out.error;
+    expect(out.value.text).not.toContain("disallowedTools");
+  });
+
+  it("rewrites name to the Muse dest and cites the source in the marker", () => {
+    const source = "---\nname: a11y-auditor\ndescription: d\nmodel: inherit\ndisallowedTools: Write, Edit, NotebookEdit\n---\nBody\n";
+    const out = generateMuseAgent({
+      name: "accessibility-auditor",
+      sourceName: "a11y-auditor",
+      source,
+      model: "muse-spark-1.3-contributor",
+    });
+    if (!out.ok) throw out.error;
+    expect(out.value.text).toContain("name: accessibility-auditor\n");
+    expect(out.value.text).not.toContain("name: a11y-auditor\n");
+    expect(out.value.text.split("\n")[1]).toContain(".agents/agents/a11y-auditor.md");
   });
 });

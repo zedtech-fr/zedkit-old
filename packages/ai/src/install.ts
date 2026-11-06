@@ -20,7 +20,7 @@ import { setLensStatus } from "./lenses.js";
 import { danglingKitRefs, skillRefFiles } from "./skill-refs.js";
 import { resolveConditionals, type Availability } from "./conditional.js";
 import { loadPolicy } from "./route.js";
-import { syncAgents } from "./sync.js";
+import { resolveAgentSource, syncAgents } from "./sync.js";
 import { loadDefaults } from "./tokenomics.js";
 
 /** Providers that get an installer layer or shared-source wiring. */
@@ -526,11 +526,10 @@ function generateAgents(ctx: Ctx, content: ReturnType<typeof plan>, providers: r
           return disk.ok ? disk.value : undefined;
         },
       },
+      avail: ctx.avail,
       source: (name) => {
-        const disk = tryCatch(() => readFileSync(join(agentsDir, "agents", `${name}.md`), "utf8"));
-        if (disk.ok) return disk.value;
-        const kit = tryCatch(() => readFileSync(join(ctx.kit, "agents", `${name}.md`), "utf8"));
-        return kit.ok ? resolveIfNeeded(kit.value, ctx.avail) : undefined;
+        const resolved = resolveAgentSource(ctx.dest, name, join(ctx.kit, "agents"));
+        return resolved === undefined ? undefined : resolveIfNeeded(resolved, ctx.avail);
       },
     },
     ctx.actions,

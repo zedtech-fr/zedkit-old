@@ -5,6 +5,7 @@ import {
   readdirSync,
   readFileSync,
   readlinkSync,
+  realpathSync,
   rmSync,
   symlinkSync,
   unlinkSync,
@@ -12,13 +13,17 @@ import {
 } from "node:fs";
 import { dirname, join, sep } from "node:path";
 import { err, ok, tryCatch, type Result } from "@zedtech/zedkit-core";
-import { generateAgent, hasMarker } from "./generate.js";
+import type { AgentHeader } from "./agent-header.js";
+import { resolveConditionals, type Availability } from "./conditional.js";
+import { generateAgent, generateMuseAgent, hasMarker, MUSE_NAME_ALIAS, museNativeName } from "./generate.js";
 import { ALL_PROVIDERS, type Action } from "./install.js";
-import { adoptRel } from "./kit.js";
+import { adoptRel, kitDir } from "./kit.js";
 import { isKitCopy } from "./legacy.js";
 import { isGenerated, PROVIDER_KEYS } from "./provider-keys.js";
 import { loadAgent, loadPolicy, resolveRoute } from "./route.js";
 import type { Tokenomics } from "./tokenomics.js";
+
+const MUSE_ALIAS_DEST = new Set(Object.values(MUSE_NAME_ALIAS));
 
 export type SyncOptions = {
   /** Project directory (the one that holds `.agents/`). */
@@ -45,6 +50,7 @@ type Ctx = {
   dest: string;
   write: boolean;
   actions: Action[];
+  avail: Availability | undefined;
 };
 
 function lstatOf(path: string): ReturnType<typeof lstatSync> | undefined {
@@ -55,6 +61,32 @@ function lstatOf(path: string): ReturnType<typeof lstatSync> | undefined {
 function readText(path: string): string | undefined {
   const read = tryCatch(() => readFileSync(path, "utf8"));
   return read.ok ? read.value : undefined;
+}
+
+/**
+ * Canonical source for one agent: an unmarked regular file in the project,
+ * else the kit. Never a marked native file, and never a path reached only
+ * by following a directory symlink (writing there would change the kit).
+ */
+export function resolveAgentSource(projectRoot: string, name: string, kitAgents = join(kitDir(), "agents")): string | undefined {
+  const agentsRel = join(".agents", "agents");
+  const dir = join(projectRoot, agentsRel);
+  const dirStat = lstatOf(dir);
+  const parentStat = lstatOf(join(projectRoot, ".agents"));
+  if (dirStat?.isSymbolicLink() !== true && parentStat?.isSymbolicLink() !== true) {
+    const file = join(dir, `${name}.md`);
+    const st = lstatOf(file);
+    if (st?.isFile() && st.isSymbolicLink() !== true) {
+      const text = readText(file);
+      if (text !== undefined && !hasMarker(text)) return text;
+    }
+  }
+  return readText(join(kitAgents, `${name}.md`));
+}
+
+function isCheckKind(header: AgentHeader): boolean {
+  if (header.default_kind === "check") return true;
+  return header.kinds?.length === 1 && header.kinds[0] === "check";
 }
 
 function nonEmptyDir(path: string): boolean {
@@ -75,7 +107,37 @@ function sourceNames(agentsDir: string): string[] | undefined {
   return entries.value
     .filter((f) => f.endsWith(".md") && !f.endsWith(KIT_SUFFIX))
     .map((f) => f.slice(0, -3))
+    .filter((name) => !MUSE_ALIAS_DEST.has(name))
     .sort();
+}
+
+function withConditionals(text: string, avail: Availability | undefined): string {
+  return avail !== undefined && text.includes("<!-- if:") ? resolveConditionals(text, avail) : text;
+}
+
+/** Installed skills/agents/commands, for resolving kit conditionals the same way `init` did. */
+export function availabilityOf(agentsDir: string, names: readonly string[]): Availability {
+  const skills = new Set<string>();
+  const listed = tryCatch(() => readdirSync(join(agentsDir, "skills"), { withFileTypes: true }));
+  if (listed.ok) {
+    for (const entry of listed.value) if (entry.isDirectory()) skills.add(entry.name);
+  }
+  return {
+    skills,
+    agents: new Set(names.filter((name) => !MUSE_ALIAS_DEST.has(name))),
+    commands: new Set(commandNames(agentsDir)),
+  };
+}
+
+/** Unmarked/kit source with install-time conditionals applied. Never marked Muse bytes. */
+export function resolvedAgentText(
+  projectRoot: string,
+  name: string,
+  avail: Availability,
+  kitAgents = join(kitDir(), "agents"),
+): string | undefined {
+  const raw = resolveAgentSource(projectRoot, name, kitAgents);
+  return raw === undefined ? undefined : withConditionals(raw, avail);
 }
 
 function commandNames(agentsDir: string): string[] {
@@ -116,12 +178,15 @@ function skip(ctx: Ctx, rel: string, note: string): void {
 
 // One generated file against what is on disk, per the safety table: never
 // overwrite work that is not ours.
-function syncFile(ctx: Ctx, rel: string, name: string, source: string, text: string, notes: string[]): void {
+function syncFile(ctx: Ctx, rel: string, name: string, source: string | undefined, text: string, notes: string[], sidecar = true): void {
   const suffix = notes.length > 0 ? `; ${notes.join("; ")}` : "";
   const full = join(ctx.dest, rel);
   const stat = lstatOf(full);
   if (stat === undefined) {
-    put(ctx, "generate", rel, notes.join("; ") || undefined, text);
+    // Muse dest is the shared agents dir: a pending kit copy (install dry-run)
+    // is the same replace the real run does after `copyFile`.
+    const note = !sidecar && source !== undefined ? `replaces a copy of the kit${suffix}` : notes.join("; ") || undefined;
+    put(ctx, "generate", rel, note, text);
     return;
   }
   if (stat.isSymbolicLink()) {
@@ -142,23 +207,35 @@ function syncFile(ctx: Ctx, rel: string, name: string, source: string, text: str
     put(ctx, "generate", rel, `replaces a copy of the kit${suffix}`, text);
     return;
   }
-  // A file the user owns: keep it, offer the generated version beside it.
-  const sidecar = adoptRel(rel);
-  skip(ctx, rel, `user file kept; generated version -> ${sidecar}`);
-  const beside = readText(join(ctx.dest, sidecar));
+  if (current !== undefined && !sidecar && source !== undefined) {
+    const resolved = withConditionals(source, ctx.avail);
+    if (current.replace(/\r\n/g, "\n") === resolved.replace(/\r\n/g, "\n")) {
+      put(ctx, "generate", rel, `replaces a copy of the kit${suffix}`, text);
+      return;
+    }
+  }
+  // A file the user owns: keep it. Cursor/Claude get a sidecar; Muse cannot
+  // use `*.kit.md` names, and must not overwrite the canonical source.
+  if (!sidecar) {
+    skip(ctx, rel, "user file kept; Muse may drop it if headers/tools/names are illegal");
+    return;
+  }
+  const sidecarPath = adoptRel(rel);
+  skip(ctx, rel, `user file kept; generated version -> ${sidecarPath}`);
+  const beside = readText(join(ctx.dest, sidecarPath));
   if (beside === undefined) {
-    put(ctx, "generate", sidecar, `kit version beside your ${rel}`, text);
+    put(ctx, "generate", sidecarPath, `kit version beside your ${rel}`, text);
     return;
   }
   if (beside === text) {
-    skip(ctx, sidecar, "up to date");
+    skip(ctx, sidecarPath, "up to date");
     return;
   }
   if (hasMarker(beside) || isKitCopy("agents", name, beside, source)) {
-    put(ctx, "generate", sidecar, `kit version beside your ${rel}`, text);
+    put(ctx, "generate", sidecarPath, `kit version beside your ${rel}`, text);
     return;
   }
-  skip(ctx, sidecar, "user sidecar kept");
+  skip(ctx, sidecarPath, "user sidecar kept");
 }
 
 // Marked files whose source agent is gone. Only files that carry the marker
@@ -193,6 +270,12 @@ function layerBlocked(ctx: Ctx, dirRel: string): boolean {
 // The directory a provider's agents go in. A link the kit made earlier
 // (`.claude/agents -> ../.agents/agents`) becomes a real directory; any other
 // link is not ours to touch.
+function isKitAgentsLink(full: string): boolean {
+  const resolved = tryCatch(() => realpathSync(full));
+  const kit = tryCatch(() => realpathSync(join(kitDir(), "agents")));
+  return resolved.ok && kit.ok && resolved.value === kit.value;
+}
+
 function prepareDir(ctx: Ctx, dirRel: string): "ready" | "blocked" {
   const full = join(ctx.dest, dirRel);
   const stat = lstatOf(full);
@@ -202,6 +285,11 @@ function prepareDir(ctx: Ctx, dirRel: string): "ready" | "blocked" {
     if (target.ok && target.value === "../.agents/agents") {
       if (ctx.write) unlinkSync(full);
       ctx.actions.push({ kind: "convert", path: dirRel, note: "link to .agents/agents -> real directory of generated files" });
+      return "ready";
+    }
+    if (isKitAgentsLink(full)) {
+      if (ctx.write) unlinkSync(full);
+      ctx.actions.push({ kind: "convert", path: dirRel, note: "link to kit agents -> real directory of Muse files" });
       return "ready";
     }
     skip(ctx, dirRel, `directory link to ${target.ok ? target.value : "?"} left alone`);
@@ -295,12 +383,18 @@ export type AgentSync = {
   strict?: boolean | undefined;
   prune?: boolean | undefined;
   noPrune?: boolean | undefined;
+  /** When set, a resolved kit copy (conditionals applied) counts as a kit copy for Muse. */
+  avail?: Availability | undefined;
 };
 
 /** The generating half of `syncKit`: appends what it did (or would do) to `actions`. Throws on a source it cannot generate from. */
 export function syncAgents(input: AgentSync, actions: Action[]): void {
-  const ctx: Ctx = { dest: input.dest, write: input.write, actions };
+  const ctx: Ctx = { dest: input.dest, write: input.write, actions, avail: input.avail };
   const known = new Set(input.names);
+  for (const name of input.names) {
+    const alias = MUSE_NAME_ALIAS[name];
+    if (alias !== undefined) known.add(alias);
+  }
   for (const provider of input.providers) {
     const keys = PROVIDER_KEYS[provider];
     if (!isGenerated(provider) || keys?.agentsDir === undefined) {
@@ -309,22 +403,62 @@ export function syncAgents(input: AgentSync, actions: Action[]): void {
     }
     const dirRel = keys.agentsDir;
     if (layerBlocked(ctx, dirRel) || prepareDir(ctx, dirRel) === "blocked") continue;
+    if (provider === "muse") {
+      const dirFull = join(ctx.dest, dirRel);
+      const listed = tryCatch(() => readdirSync(dirFull, { withFileTypes: true }));
+      if (listed.ok && listed.value.some((entry) => entry.isSymbolicLink())) {
+        skip(ctx, dirRel, "symlink in .agents/agents would empty the Muse catalog; no Muse writes");
+        continue;
+      }
+    }
     for (const name of input.names) {
+      if (MUSE_ALIAS_DEST.has(name)) continue;
       const agent = loadAgent(input.agentsDir, name);
       if (!agent.ok) {
         skip(ctx, join(dirRel, `${name}.md`), `not synced: ${agent.error.message}`);
         continue;
       }
+      const destName = provider === "muse" ? museNativeName(name) : name;
+      if (provider === "muse" && destName === undefined) {
+        skip(
+          ctx,
+          join(dirRel, `${name}.md`),
+          "muse name is not [a-z-] and has no alias map row; file left if unmarked (limitation)",
+        );
+        continue;
+      }
+      const fileName = destName ?? name;
       const route = resolveRoute(input.policy, { stakes: "standard", agent: agent.value, provider });
       if (!route.ok) throw new Error(`${name}: ${route.error.message}`);
       const source = input.source(name) ?? "";
-      const made = generateAgent({ name, source, model: route.value.model });
+      const kitText = readText(join(kitDir(), "agents", `${name}.md`));
+      const made =
+        provider === "muse"
+          ? generateMuseAgent({ name: fileName, sourceName: name, source, model: route.value.model })
+          : generateAgent({
+              name,
+              source,
+              model: route.value.model,
+              readonly: provider === "cursor" && isCheckKind(agent.value.header),
+            });
       if (!made.ok) {
         if (input.strict === true) throw made.error;
-        skip(ctx, join(dirRel, `${name}.md`), `not synced: ${made.error.message}`);
+        skip(ctx, join(dirRel, `${fileName}.md`), `not synced: ${made.error.message}`);
         continue;
       }
-      syncFile(ctx, join(dirRel, `${name}.md`), name, source, made.value.text, made.value.notes);
+      // Muse writes into `.agents/agents`: kit-copy detection must use the kit
+      // bytes, never the file we are about to replace (that would treat every
+      // unmarked custom agent as a kit copy). Aliased names keep the unmarked
+      // source file and write the native file beside it.
+      syncFile(
+        ctx,
+        join(dirRel, `${fileName}.md`),
+        name,
+        provider === "muse" ? kitText : source,
+        made.value.text,
+        made.value.notes,
+        provider !== "muse",
+      );
     }
     if (input.noPrune !== true) pruneOrphans(ctx, dirRel, known, false);
     skip(ctx, dirRel, keys.note);
@@ -336,7 +470,7 @@ export function syncAgents(input: AgentSync, actions: Action[]): void {
     skip(ctx, ".claude/agents", "cursor reads .cursor/agents before .claude/agents and lists a name once (checked 2026-11-05)");
   }
   if (input.prune === true) {
-    for (const provider of ["cursor", "claude"]) {
+    for (const provider of ["cursor", "claude", "muse"]) {
       const dirRel = PROVIDER_KEYS[provider]?.agentsDir;
       if (dirRel !== undefined && !input.providers.includes(provider) && !layerBlocked(ctx, dirRel)) {
         pruneOrphans(ctx, dirRel, known, true);
@@ -349,11 +483,14 @@ export function syncAgents(input: AgentSync, actions: Action[]): void {
  * Write each tool's agent files from `.agents/agents` and `.agents/tokenomics.md`.
  * Cursor and Claude get a generated copy per agent with `model` set from the
  * route of the agent's default kind at `standard` stakes (a call with another
- * kind or needs routes at spawn time); Codex and Muse read `.agents/agents`
- * directly and get a note. A file that carries the marker is regenerated, a
- * copy of the kit is replaced, anything else is kept and the generated
- * version goes beside it as `<name>.kit.md`. Returns what happened (or, with
- * `check` or `dryRun`, what would). A second run reports only `skip`.
+ * kind or needs routes at spawn time). Cursor check-kind agents also get
+ * `readonly: true`. Muse gets a native marked file in `.agents/agents`
+ * (closed frontmatter, Muse tool names); unmarked and kit files stay the
+ * canonical source. Codex reads `.agents` and is not generated. A file that
+ * carries the marker is regenerated, a copy of the kit is replaced, anything
+ * else is kept (Cursor/Claude sidecar as `<name>.kit.md`; Muse never
+ * sidecars). Returns what happened (or, with `check` or `dryRun`, what would).
+ * A second run reports only `skip`.
  */
 export function syncKit(options: SyncOptions): Result<Action[]> {
   const agentsDir = join(options.dest, ".agents");
@@ -369,6 +506,7 @@ export function syncKit(options: SyncOptions): Result<Action[]> {
   const policy = loadPolicy(agentsDir);
   if (!policy.ok) return err(policy.error);
   const actions: Action[] = [];
+  const avail = availabilityOf(agentsDir, names);
   const run = tryCatch(() =>
     syncAgents(
       {
@@ -378,7 +516,8 @@ export function syncKit(options: SyncOptions): Result<Action[]> {
         policy: policy.value,
         agentsDir,
         names,
-        source: (name) => readText(join(agentsDir, "agents", `${name}.md`)),
+        avail,
+        source: (name) => resolvedAgentText(options.dest, name, avail),
         commands: {
           names: commandNames(agentsDir),
           source: (name) => readText(join(agentsDir, "commands", `${name}.md`)),

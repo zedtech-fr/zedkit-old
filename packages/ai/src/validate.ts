@@ -3,8 +3,9 @@ import { existsSync, lstatSync, readdirSync, readFileSync, statSync } from "node
 import { dirname, join, relative, sep } from "node:path";
 import { tryCatch } from "@zedtech/zedkit-core";
 import type { Action } from "./install.js";
+import { hasMarker } from "./generate.js";
 import { loadPolicy } from "./route.js";
-import { syncAgents } from "./sync.js";
+import { availabilityOf, resolvedAgentText, syncAgents } from "./sync.js";
 import { adoptRel, kitDir, kitUniverse, readManifest } from "./kit.js";
 import { parseFrontmatter } from "./frontmatter.js";
 import { HEADER_KEYS, KIT_HEADERS, SIDECAR, parseAgentHeader, readSidecar } from "./agent-header.js";
@@ -131,7 +132,9 @@ function checkSidecar(root: string, strict: boolean, issues: Issue[]): void {
     for (const message of parseAgentHeader(entry, true).issues) issues.push({ path, message: `${name}: ${message}` });
     const kinds = entry.kinds;
     if (Array.isArray(kinds) && kinds.length > 0 && !kinds.includes("build") && installed.has(name)) {
-      const denied = toolList(readDenied(join(dir, `${name}.md`)));
+      const file = join(dir, `${name}.md`);
+      if (hasMarker(read(file))) continue;
+      const denied = toolList(readDenied(file));
       if (!WRITE_TOOLS.every((tool) => denied.includes(tool))) {
         issues.push({ path: join("agents", `${name}.md`), message: `kinds has no build in ${SIDECAR}, so the file must set disallowedTools: ${WRITE_TOOLS.join(", ")}` });
       }
@@ -139,6 +142,7 @@ function checkSidecar(root: string, strict: boolean, issues: Issue[]): void {
   }
   if (strict) {
     for (const name of installed) {
+      if (hasMarker(read(join(dir, `${name}.md`)))) continue;
       if (sidecar.value[name] === undefined) issues.push({ path: SIDECAR, message: `${name}: no header (strict_headers is on)` });
     }
   }
@@ -151,7 +155,10 @@ function readDenied(file: string): unknown {
 
 function checkAgent(root: string, file: string, issues: Issue[]): void {
   const path = join("agents", file);
-  const front = parseText(path, read(join(root, path)), issues);
+  const rawText = read(join(root, path));
+  // Marked files are a provider dialect (Muse), not the portable source.
+  if (hasMarker(rawText)) return;
+  const front = parseText(path, rawText, issues);
   if (!front) return;
   const { data, raw } = front;
   checkName(data.name, file.replace(/\.md$/, ""), path, issues);
@@ -507,6 +514,8 @@ function checkGenerated(projectRoot: string, source: string, issues: Issue[]): v
   const actions: Action[] = [];
   const names = (dir: string): string[] =>
     isRealDir(join(source, dir)) ? mdFiles(join(source, dir)).map((f) => f.slice(0, -3)) : [];
+  const agentNames = names("agents");
+  const avail = availabilityOf(source, agentNames);
   syncAgents(
     {
       dest: projectRoot,
@@ -514,7 +523,8 @@ function checkGenerated(projectRoot: string, source: string, issues: Issue[]): v
       providers,
       policy: policy.value,
       agentsDir: source,
-      names: names("agents"),
+      names: agentNames,
+      avail,
       commands: {
         names: names("commands"),
         source: (name) => {
@@ -522,7 +532,7 @@ function checkGenerated(projectRoot: string, source: string, issues: Issue[]): v
           return text.ok ? text.value : undefined;
         },
       },
-      source: (name) => read(join(source, "agents", `${name}.md`)),
+      source: (name) => resolvedAgentText(projectRoot, name, avail),
     },
     actions,
   );

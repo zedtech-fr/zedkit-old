@@ -15,7 +15,7 @@ Append one entry per `/setup-ai` run, newest first. Each entry records what the 
 | `cursor` | Rules, skills, agents and commands inside the IDE          |
 | `claude` | The same setup for Claude Code sessions, linked not copied |
 | `codex`  | Reads the shared source directly; nothing extra to install |
-| `muse`   | Reads the shared source directly; nothing extra to install |
+| `muse`   | Native marked files in `.agents/agents`; kit/unmarked files stay the source |
 
 - **Wired:** cursor, claude (example)
 - **Reading:** medium repo, 8 readers as `check`/`standard` from `npx zedkit-ai scan`; 61 rules merged, 4 dropped after spot-checks; log at `.agents/setup-log/reading.md`; interview cut to 5 questions because the code answered the rest.

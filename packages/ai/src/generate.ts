@@ -22,6 +22,14 @@ export type GenerateInput = {
   source: string;
   /** The model the route resolved for this provider; `inherit` means "the session's model". */
   model: string;
+  /**
+   * Cursor only: `readonly: true` is the write gate this tool enforces.
+   * Never set on a Muse file (unknown key drops the agent) or in canonical
+   * unmarked sources (validate rejects it as not portable).
+   */
+  readonly?: boolean;
+  /** Muse aliases: marker cites this source name when it differs from `name`. */
+  sourceName?: string;
 };
 
 export type Generated = { text: string; notes: string[] };
@@ -81,8 +89,91 @@ export function generateAgent(input: GenerateInput): Result<Generated> {
   } else if (input.model !== "inherit") {
     kept.push({ key: "model", lines: [`model: ${input.model}`] });
   }
+  if (input.readonly === true) {
+    const readAt = kept.findIndex((block) => block.key === "readonly");
+    if (readAt >= 0) kept[readAt] = { key: "readonly", lines: ["readonly: true"] };
+    else kept.push({ key: "readonly", lines: ["readonly: true"] });
+  }
 
   const frontmatter = kept.flatMap((block) => block.lines);
   const text = ["---", markerLine(input.name), ...frontmatter, ...lines.slice(close)].join("\n");
+  return ok({ text, notes });
+}
+
+/** Muse 1.4.14 lists only names that match this; digits / `_` / capitals drop the agent. */
+export const MUSE_AGENT_NAME = /^[a-z]+(-[a-z]+)*$/;
+
+/** Kit names Muse drops silently; dest file and frontmatter use the alias. Cursor keeps the source name. */
+export const MUSE_NAME_ALIAS: Readonly<Record<string, string>> = {
+  "a11y-auditor": "accessibility-auditor",
+};
+
+/** Muse dest name, or undefined when the source name is illegal and unmapped (limitation, not a skip-as-complete). */
+export function museNativeName(name: string): string | undefined {
+  if (MUSE_AGENT_NAME.test(name)) return name;
+  return MUSE_NAME_ALIAS[name];
+}
+
+const MUSE_KEYS = new Set(["name", "description", "model", "disallowedTools"]);
+const MUSE_DENIED: Readonly<Record<string, string>> = {
+  Write: "write_file",
+  Edit: "edit_file",
+};
+
+function museDenied(value: string): string | undefined {
+  const mapped = [...new Set(value.split(",").map((part) => part.trim()).filter(Boolean).map((part) => MUSE_DENIED[part] ?? ""))]
+    .filter(Boolean);
+  return mapped.length > 0 ? mapped.join(", ") : undefined;
+}
+
+/**
+ * Muse-native agent file: closed frontmatter (unknown keys drop the agent),
+ * Muse tool names in `disallowedTools`, route baked into `model`, marker on
+ * line 2, body copied byte for byte. Not a generic source: Cursor/Claude
+ * must keep generating from the unmarked/kit file, never from this output.
+ */
+export function generateMuseAgent(input: GenerateInput): Result<Generated> {
+  const lines = input.source.replace(/\r\n/g, "\n").replace(/^\uFEFF/, "").split("\n");
+  if (lines[0] !== "---") return err(new Error(`${input.name}: missing frontmatter (file must start with ---)`));
+  const close = lines.findIndex((line, i) => i > 0 && line.trimEnd() === "---");
+  if (close < 0) return err(new Error(`${input.name}: frontmatter is not closed`));
+  if (input.model !== "inherit" && !PLAIN_MODEL.test(input.model)) {
+    return err(new Error(`${input.name}: model "${input.model}" cannot be written as a plain value (letters, digits, . _ -)`));
+  }
+
+  const notes: string[] = [];
+  const kept: Block[] = [];
+  for (const block of blocks(lines.slice(1, close).filter((line) => !line.startsWith(MARKER_PREFIX)))) {
+    if (block.key === undefined) {
+      kept.push(block);
+      continue;
+    }
+    if (!MUSE_KEYS.has(block.key)) continue;
+    if (block.key === "name") {
+      kept.push({ key: "name", lines: [`name: ${input.name}`] });
+      continue;
+    }
+    if (block.key === "disallowedTools") {
+      const mapped = museDenied(scalar(block));
+      if (mapped === undefined) continue;
+      kept.push({ key: "disallowedTools", lines: [`disallowedTools: ${mapped}`] });
+      continue;
+    }
+    kept.push(block);
+  }
+  const at = kept.findIndex((block) => block.key === "model");
+  if (at >= 0) {
+    const current = scalar(kept[at] as Block);
+    if (current === "inherit" || current === "") {
+      kept[at] = { key: "model", lines: [`model: ${input.model}`] };
+    } else {
+      notes.push(`model pinned in source (${current}): route not applied`);
+    }
+  } else if (input.model !== "inherit") {
+    kept.push({ key: "model", lines: [`model: ${input.model}`] });
+  }
+
+  const frontmatter = kept.flatMap((block) => block.lines);
+  const text = ["---", markerLine(input.sourceName ?? input.name), ...frontmatter, ...lines.slice(close)].join("\n");
   return ok({ text, notes });
 }

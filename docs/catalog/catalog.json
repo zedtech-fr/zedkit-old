@@ -193,9 +193,9 @@
           "status": "beta",
           "shortName": "Agent file sync",
           "audience": "Maintainers who keep subagents in `.agents/agents` and want each tool's copy to carry the model from one policy file.",
-          "purpose": "Generate `.cursor/agents` and `.claude/agents` from `.agents/agents` and `.agents/tokenomics.md`, with the model of each agent's default route and a marker so a later run can tell its own files from yours; never overwrite a file it did not write.",
+          "purpose": "Generate `.cursor/agents`, `.claude/agents`, and Muse-native files in `.agents/agents` from the unmarked/kit source and `.agents/tokenomics.md`, with the model of each agent's default route and a marker so a later run can tell its own files from yours; never overwrite a file it did not write.",
           "whenToUse": "After editing an agent or `tokenomics.md`, after upgrading the kit, and as a `--check` step in CI.",
-          "whenNotToUse": "When every agent runs on the session model and no tool needs its own copy; Codex and Muse read `.agents/agents` directly and get nothing generated.",
+          "whenNotToUse": "When every agent runs on the session model and no tool needs its own copy. Codex reads `.agents` directly. Muse gets a native marked file in `.agents/agents` (not the canonical source).",
           "derivedFrom": null,
           "example": "import { inSync, syncKit } from \"@zedtech/zedkit-ai\";\nconst actions = syncKit({ dest: \".\", providers: [\"cursor\", \"claude\"], check: true });\nif (!actions.ok) throw actions.error;\nif (!inSync(actions.value)) process.exitCode = 1;",
           "examples": [

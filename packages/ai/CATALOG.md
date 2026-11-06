@@ -123,9 +123,9 @@ The stakes come from the task file: `zedkit-ai stakes PLAN.md --base origin/main
 - Status: beta
 - Short name: Agent file sync
 - Audience: Maintainers who keep subagents in `.agents/agents` and want each tool's copy to carry the model from one policy file.
-- Purpose: Generate `.cursor/agents` and `.claude/agents` from `.agents/agents` and `.agents/tokenomics.md`, with the model of each agent's default route and a marker so a later run can tell its own files from yours; never overwrite a file it did not write.
+- Purpose: Generate `.cursor/agents`, `.claude/agents`, and Muse-native files in `.agents/agents` from the unmarked/kit source and `.agents/tokenomics.md`, with the model of each agent's default route and a marker so a later run can tell its own files from yours; never overwrite a file it did not write.
 - When to use: After editing an agent or `tokenomics.md`, after upgrading the kit, and as a `--check` step in CI.
-- When not to use: When every agent runs on the session model and no tool needs its own copy; Codex and Muse read `.agents/agents` directly and get nothing generated.
+- When not to use: When every agent runs on the session model and no tool needs its own copy. Codex reads `.agents` directly. Muse gets a native marked file in `.agents/agents` (not the canonical source).
 - See also: `Route an agent call to a model and effort from a policy file`
 
 ```ts

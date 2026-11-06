@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { main } from "#cli.js";
 import { hasMarker } from "#generate.js";
+import { kitDir } from "#kit.js";
 import { installKit, type Action } from "#install.js";
 import { inSync, syncKit, type SyncOptions } from "#sync.js";
 import { AGENT, put, tempDir } from "./helpers.js";
@@ -59,6 +60,9 @@ describe("syncKit: generate", () => {
     expect(read(root, ".claude/agents/verifier.md")).toContain("model: cl-check-sensitive\n");
     expect(read(root, ".cursor/agents/plain.md")).toContain("model: cur-build-standard\n");
     expect(read(root, ".claude/agents/plain.md")).toContain("model: cl-build-standard\n");
+    expect(read(root, ".cursor/agents/verifier.md")).toContain("readonly: true\n");
+    expect(read(root, ".cursor/agents/plain.md")).not.toContain("readonly:");
+    expect(read(root, ".claude/agents/verifier.md")).not.toContain("readonly:");
     for (const rel of [".cursor/agents/verifier.md", ".claude/agents/plain.md"]) {
       expect(hasMarker(read(root, rel)), rel).toBe(true);
       expect(read(root, rel).split("\n")[0]).toBe("---");
@@ -112,15 +116,15 @@ describe("syncKit: generate", () => {
     }
   });
 
-  it("generates nothing for codex and muse, and says why", () => {
+  it("generates nothing for codex, and keeps unmarked custom Muse sources", () => {
     const root = project();
+    const before = read(root, ".agents/agents/verifier.md");
     const actions = sync(root, { providers: ["codex", "muse"] });
-    expect(changes(actions)).toEqual([]);
-    expect(actions.map((a) => a.note)).toEqual([
-      "codex reads .agents directly: nothing generated",
-      "muse reads .agents/agents directly and needs regular files there: nothing generated",
-    ]);
+    expect(actions.find((a) => a.path === ".agents/agents")?.note).toContain("codex reads .agents directly");
+    expect(changes(actions).filter((line) => line.startsWith("generate "))).toEqual([]);
     expect(existsSync(join(root, ".cursor"))).toBe(false);
+    expect(read(root, ".agents/agents/verifier.md")).toBe(before);
+    expect(hasMarker(before)).toBe(false);
   });
 
   it("keeps a model the source pins and says so", () => {
@@ -422,5 +426,90 @@ describe("zedkit-ai sync", () => {
     expect(run("sync", root, "--prune").code).toBe(2);
     expect(run("sync", join(root, "nope"), "--provider", "cursor").code).toBe(2);
     expect(run("sync", root, "extra", "--provider", "cursor").code).toBe(2);
+  });
+});
+
+describe("syncKit: muse native files", () => {
+  it("keeps an unmarked edited source and does not write a .kit.md sidecar", () => {
+    const root = project();
+    const custom = AGENT("plain", "model: inherit\n") + "USER\n";
+    put(root, ".agents/agents/plain.md", custom);
+    sync(root, { providers: ["muse"] });
+    expect(read(root, ".agents/agents/plain.md")).toBe(custom);
+    expect(existsSync(join(root, ".agents/agents/plain.kit.md"))).toBe(false);
+  });
+
+  it("replaces a kit-equal unmarked copy, and Cursor still generates from the kit", () => {
+    const root = project();
+    const kitExplorer = readFileSync(join(kitDir(), "agents/explorer.md"), "utf8");
+    put(root, ".agents/agents/explorer.md", kitExplorer);
+    sync(root, { providers: ["muse"] });
+    const muse = read(root, ".agents/agents/explorer.md");
+    expect(hasMarker(muse)).toBe(true);
+    expect(muse).toContain("disallowedTools: write_file, edit_file");
+    expect(muse).not.toContain("Write");
+    sync(root, { providers: ["cursor"] });
+    const cursor = read(root, ".cursor/agents/explorer.md");
+    expect(cursor).toContain("disallowedTools: Write, Edit, NotebookEdit");
+    expect(cursor).toContain("readonly: true");
+    expect(cursor).not.toContain("write_file");
+  });
+
+  it("converts a kit-dir symlink without writing into the kit", () => {
+    const root = tempDir();
+    put(root, ".agents/tokenomics.md", POLICY);
+    mkdirSync(join(root, ".agents"), { recursive: true });
+    const kitAgents = join(kitDir(), "agents");
+    symlinkSync(kitAgents, join(root, ".agents/agents"));
+    const before = readFileSync(join(kitAgents, "explorer.md"), "utf8");
+    const actions = sync(root, { providers: ["muse"] });
+    expect(actions.some((a) => a.kind === "convert" && a.path === ".agents/agents")).toBe(true);
+    expect(lstatSync(join(root, ".agents/agents")).isSymbolicLink()).toBe(false);
+    expect(readFileSync(join(kitAgents, "explorer.md"), "utf8")).toBe(before);
+    expect(hasMarker(read(root, ".agents/agents/explorer.md"))).toBe(true);
+    expect(hasMarker(read(root, ".agents/agents/accessibility-auditor.md"))).toBe(true);
+    expect(read(root, ".agents/agents/accessibility-auditor.md")).toContain("name: accessibility-auditor\n");
+    expect(existsSync(join(kitAgents, "a11y-auditor.md"))).toBe(true);
+    expect(readFileSync(join(kitAgents, "a11y-auditor.md"), "utf8")).toContain("name: a11y-auditor\n");
+  });
+
+  it("skips Muse writes when a leftover symlink sits in .agents/agents", () => {
+    const root = project();
+    mkdirSync(join(root, ".agents/agents"), { recursive: true });
+    symlinkSync("plain.md", join(root, ".agents/agents/loop.md"));
+    const before = read(root, ".agents/agents/plain.md");
+    const actions = sync(root, { providers: ["muse"] });
+    expect(actions.some((a) => (a.note ?? "").includes("would empty the Muse catalog"))).toBe(true);
+    expect(read(root, ".agents/agents/plain.md")).toBe(before);
+  });
+
+  it("maps a11y-auditor to accessibility-auditor and keeps the unmarked source", () => {
+    const root = project();
+    const kit = readFileSync(join(kitDir(), "agents/a11y-auditor.md"), "utf8");
+    put(root, ".agents/agents/a11y-auditor.md", kit);
+    sync(root, { providers: ["muse"] });
+    expect(read(root, ".agents/agents/a11y-auditor.md")).toBe(kit);
+    const muse = read(root, ".agents/agents/accessibility-auditor.md");
+    expect(hasMarker(muse)).toBe(true);
+    expect(muse).toContain("name: accessibility-auditor\n");
+    expect(muse.split("\n")[1]).toContain("a11y-auditor.md");
+    expect(muse).toContain("disallowedTools: write_file, edit_file");
+    expect(existsSync(join(root, ".agents/agents/a11y-auditor.kit.md"))).toBe(false);
+    sync(root, { providers: ["cursor"] });
+    const cursor = read(root, ".cursor/agents/a11y-auditor.md");
+    expect(cursor).toContain("name: a11y-auditor\n");
+    expect(cursor).toContain("readonly: true");
+    expect(existsSync(join(root, ".cursor/agents/accessibility-auditor.md"))).toBe(false);
+  });
+
+  it("does not overwrite an unmarked custom accessibility-auditor dest", () => {
+    const root = project();
+    const kit = readFileSync(join(kitDir(), "agents/a11y-auditor.md"), "utf8");
+    put(root, ".agents/agents/a11y-auditor.md", kit);
+    const custom = AGENT("accessibility-auditor", "model: inherit\n") + "MINE\n";
+    put(root, ".agents/agents/accessibility-auditor.md", custom);
+    sync(root, { providers: ["muse"] });
+    expect(read(root, ".agents/agents/accessibility-auditor.md")).toBe(custom);
+    expect(read(root, ".agents/agents/a11y-auditor.md")).toBe(kit);
   });
 });
