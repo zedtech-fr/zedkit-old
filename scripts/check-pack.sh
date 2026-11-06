@@ -194,7 +194,9 @@ size_budget ui 10200 marketing
 # and validate rules); PR measured 37466. Budget = measured + ~1%.
 # Raised to 41300 on 5 Nov 2026: the route resolver and its CLI (route.ts,
 # cli.ts); PR measured 40853. Budget = measured + ~1%.
-size_budget ai 41300
+# Raised to 43700 on 5 Nov 2026: the stakes contract and its CLI (stakes.ts,
+# cli.ts); PR measured 43241.
+size_budget ai 43700
 
 if [ -f apps/docs/out/index.html ]; then
   if ! node apps/docs/scripts/check-first-load-budget.mjs; then

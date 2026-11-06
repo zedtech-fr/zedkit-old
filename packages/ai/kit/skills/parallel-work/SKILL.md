@@ -44,6 +44,7 @@ A subagent has no memory of this conversation. Every brief states:
 3. **Context it needs**: decisions already made, constraints, the contract. Paste them; do not say "as discussed".
 4. **Deliverable**: the exact output shape. Findings as `file:line`, a diff, a table, a verdict.
 5. **Stop rule**: what to do when blocked or unsure (report, do not guess).
+6. **Stakes and kind**: the task's `Stakes:`, how this agent is used (`Kind: decide|design|build|check`) and any `Needs:`. Route the spawn with `zedkit-ai route <agent> --kind <k> --stakes <s>`; a `check` brief says "read-only".
 
 Delegate the question, not the thinking: do not hand off understanding. Say what you already know so it is not rediscovered.
 
@@ -56,6 +57,6 @@ Delegate the question, not the thinking: do not hand off understanding. Say what
 
 ## Cost and context
 
-- Pick the cheapest agent that can do the job: exploration and lookups need less capability than design or release decisions. Pin a model only after listing what the tool offers.
+- Pick the cheapest agent that can do the job: exploration and lookups need less capability than design or release decisions. Take the model from `zedkit-ai route` where the tool lets a spawn override it; otherwise pin one only after listing what the tool offers.
 - Background agents free you to continue; foreground ones block. Use background for long read-only work you do not need right now.
 - More agents is not better. Two or three well-briefed ones usually beat eight.

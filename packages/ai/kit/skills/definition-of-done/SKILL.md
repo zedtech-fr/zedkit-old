@@ -13,6 +13,7 @@ Done is a claim. This list is the evidence. If one box cannot be ticked, say whi
 - [ ] Output was read, not assumed. A failure you cannot explain is not done.
 - [ ] Nothing generated, built or cached is staged: check `git status` and `git diff --stat HEAD`. Never `git add -A` blindly.
 - [ ] No secrets, tokens or personal data in code, tests, logs, fixtures or errors.
+- [ ] The PR body carries `Stakes:` (never lowered; a raise has its `Stakes raised:` line). `sensitive` or higher has a recorded review; `critical` also has `Second review:` and `Human validation:` (check with `zedkit-ai stakes <body file>`).
 
 ## Tests
 

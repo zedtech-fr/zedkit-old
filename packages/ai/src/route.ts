@@ -136,7 +136,7 @@ function shiftedColumn(stakes: Stakes, needs: Needs): Stakes {
   );
 }
 
-function secondReviewFor(
+export function secondReviewFor(
   policy: Tokenomics,
   provider: PolicyProvider,
   stakes: Stakes,
