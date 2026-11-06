@@ -82,24 +82,21 @@ test("home hero proof follows site mode and can override dark (#1072)", async ({
   const scope = proof.locator("[data-identity-scope]");
   const shellIdentity = await page.locator("html").getAttribute("data-identity");
   await expect(scope).toHaveAttribute("data-identity", DEFAULT_IDENTITY);
-  const siteDarkBg = await scope.evaluate((el) => getComputedStyle(el).backgroundColor);
-  const siteChannels = siteDarkBg.match(/\d+/g)!.map(Number);
-  expect(Math.max(...siteChannels.slice(0, 3))).toBeLessThan(70);
+  // The scope repaints after the shell class flips (colour transition, slower under load), so poll the same bar.
+  const brightest = () =>
+    scope.evaluate((el) => Math.max(...getComputedStyle(el).backgroundColor.match(/\d+/g)!.slice(0, 3).map(Number)));
+  await expect.poll(brightest).toBeLessThan(70);
 
   await proof.getByRole("combobox", { name: "Identity for this demo" }).click();
   await page.getByRole("option", { name: "Tide" }).click();
   await expect(scope).toHaveAttribute("data-identity", "tide");
   await proof.getByRole("combobox", { name: "Color mode for this demo" }).click();
   await page.getByRole("option", { name: "Light" }).click();
-  const lightBg = await scope.evaluate((el) => getComputedStyle(el).backgroundColor);
-  const lightChannels = lightBg.match(/\d+/g)!.map(Number);
-  expect(Math.max(...lightChannels.slice(0, 3))).toBeGreaterThan(200);
+  await expect.poll(brightest).toBeGreaterThan(200);
 
   await proof.getByRole("combobox", { name: "Color mode for this demo" }).click();
   await page.getByRole("option", { name: "Dark" }).click();
-  const overrideDarkBg = await scope.evaluate((el) => getComputedStyle(el).backgroundColor);
-  const overrideChannels = overrideDarkBg.match(/\d+/g)!.map(Number);
-  expect(Math.max(...overrideChannels.slice(0, 3))).toBeLessThan(70);
+  await expect.poll(brightest).toBeLessThan(70);
   expect(await page.locator("html").getAttribute("data-identity")).toBe(shellIdentity);
   expect(await page.evaluate(() => document.documentElement.classList.contains("dark"))).toBe(true);
 });
@@ -129,6 +126,21 @@ test("home hero specimen follows the headline within the mobile demo budget (#11
   });
   expect(metrics).not.toBeNull();
   expect(metrics!).toBeLessThanOrEqual(760);
+});
+
+test("home 'More in the kit' links are tappable on a phone and sit beside their description on desktop", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(BASE, { waitUntil: "networkidle" });
+  const links = page.locator("#entry-points [data-home-secondary-links] a");
+  await expect(links).toHaveCount(4);
+  for (const box of await Promise.all((await links.all()).map((link) => link.boundingBox()))) {
+    expect(box!.height).toBeGreaterThanOrEqual(44);
+  }
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const row = page.locator("#entry-points [data-home-secondary-links] > div").first();
+  const [text, link] = await Promise.all([row.locator("> div").boundingBox(), row.locator("a").boundingBox()]);
+  expect(link!.x).toBeGreaterThan(text!.x + text!.width);
+  expect(Math.abs(link!.y - text!.y)).toBeLessThan(40);
 });
 
 test("home area cards keep a decorative icon at tablet width and up", async ({ page }) => {

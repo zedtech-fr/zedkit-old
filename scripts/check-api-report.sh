@@ -67,13 +67,13 @@ write_config() {
 JSON
 }
 
-for spec in "${entries[@]}"; do
+extract_one() {
+  local spec="$1" pkg entry report src dest cfg generated
   IFS='|' read -r pkg entry report <<<"$spec"
   src="packages/$pkg/$entry"
   if [ ! -f "$src" ]; then
     echo "$pkg: missing $entry (run build first, except quality)"
-    fail=1
-    continue
+    return 1
   fi
   mkdir -p "packages/$pkg/etc" "packages/$pkg/temp"
   dest="packages/$pkg/etc/$report"
@@ -83,8 +83,7 @@ for spec in "${entries[@]}"; do
     generated="packages/$pkg/temp/$report"
     if ! node scripts/dts-api-report.mjs "$src" "@zedtech/zedkit-$pkg" "$generated"; then
       echo "api-report: $pkg dump failed"
-      fail=1
-      continue
+      return 1
     fi
     if [ "$write" = 1 ]; then
       cp "$generated" "$dest"
@@ -92,11 +91,11 @@ for spec in "${entries[@]}"; do
     elif ! diff -q "$dest" "$generated" >/dev/null; then
       echo "api-report: $pkg $report drifted"
       diff -u "$dest" "$generated" || true
-      fail=1
+      return 1
     else
       echo "api-report: $pkg $report ok"
     fi
-    continue
+    return 0
   fi
   cfg="packages/$pkg/temp/$report.extractor.json"
   write_config "$pkg" "$entry" "$report" "$cfg"
@@ -104,18 +103,32 @@ for spec in "${entries[@]}"; do
   pnpm exec api-extractor run --config "$cfg" --local >/dev/null 2>&1 || true
   if [ ! -f "$generated" ]; then
     echo "api-report: $pkg $report drifted or extractor failed"
-    fail=1
+    return 1
   elif [ "$write" = 1 ]; then
     cp "$generated" "$dest"
     echo "api-report: $pkg $report wrote"
   elif ! diff -q "$dest" "$generated" >/dev/null; then
     echo "api-report: $pkg $report drifted"
     diff -u "$dest" "$generated" || true
-    fail=1
+    return 1
   else
     echo "api-report: $pkg $report ok"
   fi
-done
+}
+
+export -f extract_one write_config
+export write
+# Sequential extractor is ~10s each; four at a time keeps the full suite.
+# BSD xargs has no -P (local macOS); GNU xargs on CI does.
+if xargs -P 1 -I{} true </dev/null 2>/dev/null; then
+  if ! printf '%s\n' "${entries[@]}" | xargs -P "${API_EXTRACTOR_JOBS:-4}" -I{} bash -c 'extract_one "$1"' _ {}; then
+    fail=1
+  fi
+else
+  for spec in "${entries[@]}"; do
+    extract_one "$spec" || fail=1
+  done
+fi
 
 [ "$fail" -eq 0 ] || { echo "api-report: extractor FAILED"; exit 1; }
 

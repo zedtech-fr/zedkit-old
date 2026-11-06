@@ -46,3 +46,8 @@ test("changeset gate skips the version PR branch", () => {
   assert.match(script, /changeset-release\/main/);
   assert.match(script, /skip changeset gate on version PR/);
 });
+
+test("extractor runs in parallel on GNU xargs and falls back otherwise", () => {
+  assert.match(script, /xargs -P "\$\{API_EXTRACTOR_JOBS:-4\}"/);
+  assert.match(script, /BSD xargs has no -P/);
+});

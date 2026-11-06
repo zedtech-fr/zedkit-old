@@ -12,6 +12,7 @@ export function requiredJobsPass({ results, selected }) {
     workflow_lint: Boolean(selected.workflows),
     checks: !selected.workflow_only,
     registry: Boolean(selected.registry) && !selected.workflow_only,
+    docs_build: Boolean(selected.docs) && !selected.workflow_only,
     docs_e2e: Boolean(selected.docs) && !selected.workflow_only,
     docs_smoke: Boolean(selected.docs) && !selected.workflow_only,
   };
@@ -41,6 +42,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       workflow_lint: process.env.WORKFLOW_LINT ?? "",
       checks: process.env.CHECKS ?? "",
       registry: process.env.REGISTRY ?? "",
+      docs_build: process.env.DOCS_BUILD ?? "",
       docs_e2e: process.env.DOCS_E2E ?? "",
       docs_smoke: process.env.DOCS_SMOKE ?? "",
     },

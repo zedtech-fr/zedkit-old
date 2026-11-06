@@ -38,7 +38,16 @@ test("lockfile and root config still run docs and registry jobs; workflow edits 
 
 test("a package outside the docs closure skips docs and registry", () => {
   const r = run(["packages/nest/src/index.ts"]);
-  assert.deepEqual([r.docs, r.registry], [false, false]);
+  assert.deepEqual([r.docs, r.registry, r.packages], [false, false, true]);
+});
+
+test("docs-only diffs skip API report and pack; package and tsconfig.base do not", () => {
+  assert.equal(run(["apps/docs/app/page.tsx"]).packages, false);
+  assert.equal(run(["docs/catalog/catalog.json"]).packages, false);
+  assert.equal(run(["pnpm-lock.yaml"]).packages, false);
+  assert.equal(run(["packages/core/src/a.ts"]).packages, true);
+  assert.equal(run(["tsconfig.base.json"]).packages, true);
+  assert.equal(run(["README.md"], "main").packages, true);
 });
 
 test("package docs reach the docs site but not the registry smoke", () => {
@@ -121,6 +130,7 @@ const requiredOk = {
   workflow_lint: "skipped",
   checks: "success",
   registry: "skipped",
+  docs_build: "skipped",
   docs_e2e: "skipped",
   docs_smoke: "skipped",
 };
@@ -130,13 +140,18 @@ test("impact-excluded docs jobs may skip; selected docs jobs must succeed", () =
   assert.deepEqual(requiredJobsPass({ results: requiredOk, selected: packOnly }), []);
   assert.ok(
     requiredJobsPass({
-      results: { ...requiredOk, docs_e2e: "skipped", docs_smoke: "skipped" },
+      results: { ...requiredOk, docs_build: "skipped", docs_e2e: "skipped", docs_smoke: "skipped" },
       selected: { ...packOnly, docs: true },
     }).some((e) => e.includes("docs_e2e")),
   );
   assert.deepEqual(
     requiredJobsPass({
-      results: { ...requiredOk, docs_e2e: "success", docs_smoke: "success" },
+      results: {
+        ...requiredOk,
+        docs_build: "success",
+        docs_e2e: "success",
+        docs_smoke: "success",
+      },
       selected: { ...packOnly, docs: true },
     }),
     [],
@@ -146,7 +161,7 @@ test("impact-excluded docs jobs may skip; selected docs jobs must succeed", () =
 test("fail, cancel, unknown and missing results are not green", () => {
   for (const result of ["failure", "cancelled", "unknown", ""]) {
     const errors = requiredJobsPass({
-      results: { ...requiredOk, docs_e2e: result, docs_smoke: "success" },
+      results: { ...requiredOk, docs_build: "success", docs_e2e: result, docs_smoke: "success" },
       selected: { ...packOnly, docs: true },
     });
     assert.ok(errors.length > 0, result);
@@ -168,6 +183,7 @@ test("workflow-only requires the lint job and skips checks and docs", () => {
         ...requiredOk,
         workflow_lint: "success",
         checks: "skipped",
+        docs_build: "skipped",
         docs_e2e: "skipped",
         docs_smoke: "skipped",
       },
@@ -188,6 +204,7 @@ test("PR to main keeps docs selected so a skip is not green", () => {
     results: requiredOk,
     selected: { workflows: false, docs: true, registry: true, workflow_only: false },
   });
+  assert.ok(errors.some((e) => e.includes("docs_build")));
   assert.ok(errors.some((e) => e.includes("docs_e2e")));
   assert.ok(errors.some((e) => e.includes("registry")));
 });

@@ -190,7 +190,7 @@ test("catalog search keeps every letter while typing", async ({ page }) => {
   await page.goto(`${BASE}/catalog`, { waitUntil: "networkidle" });
   const search = page.getByRole("searchbox", { name: "Catalog search" });
   await search.click();
-  await page.keyboard.type("dialog", { delay: 50 });
+  await search.pressSequentially("dialog", { delay: 20 });
   await expect(search).toHaveValue("dialog");
   await expect(page).toHaveURL(/q=dialog/, { timeout: 5000 });
 });

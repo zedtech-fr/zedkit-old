@@ -17,7 +17,7 @@ const PHONE = {
 const FIELD_SELECTOR = [
   'input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="range"]):not([type="color"]):not([type="image"])',
   "textarea",
-  "select",
+  'select:not([aria-hidden="true"])',
   '[contenteditable=""]',
   '[contenteditable="true"]',
   '[role="combobox"]',

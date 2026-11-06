@@ -14,9 +14,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
-# Same-repo PRs into `dev` run heavy jobs on the self-hosted zedkit runner
-# (persistent /runner-cache + TURBO_CACHE_DIR, Playwright from the runner
-# image). Forks, PRs into `main`, and pushes stay on ubuntu-latest.
+# Same-repo PRs into `dev` run checks, registry and docs-build on the
+# self-hosted zedkit runner (persistent /runner-cache + TURBO_CACHE_DIR).
+# Docs Playwright smoke always runs on ubuntu-latest against the docs-out
+# artifact. Forks, PRs into `main`, and pushes stay on ubuntu-latest.
 # Release/deploy workflows are separate and untouched.
 
 jobs:
@@ -35,6 +36,7 @@ jobs:
       docs: ${{ steps.detect.outputs.docs }}
       registry: ${{ steps.detect.outputs.registry }}
       ui: ${{ steps.detect.outputs.ui }}
+      packages: ${{ steps.detect.outputs.packages }}
       filter: ${{ steps.detect.outputs.filter }}
     steps:
       - uses: actions/checkout@v7
@@ -123,6 +125,7 @@ jobs:
       BASE_REF: ${{ github.base_ref }}
       FULL: ${{ needs.changes.outputs.full }}
       DOCS: ${{ needs.changes.outputs.docs }}
+      PACKAGES: ${{ needs.changes.outputs.packages }}
     steps:
       - name: Self-hosted runner env
         if: runner.environment == 'self-hosted'
@@ -136,8 +139,8 @@ jobs:
             echo "RUNNER_TOOL_CACHE=/tmp/runner-tool-cache"
             echo "XDG_CACHE_HOME=/runner-cache/xdg"
             echo "TURBO_CONCURRENCY=4"
-            echo "VITEST_MAX_WORKERS=4"
-            echo "VITEST_MAX_FORKS=4"
+            echo "VITEST_MAX_WORKERS=2"
+            echo "VITEST_MAX_FORKS=2"
           } >> "$GITHUB_ENV"
       - uses: actions/checkout@v7
         with:
@@ -170,7 +173,9 @@ jobs:
       - uses: actions/cache@v6
         if: runner.environment != 'self-hosted'
         with:
-          path: .turbo
+          path: |
+            .turbo
+            .eslintcache
           key: turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
           restore-keys: |
             turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
@@ -194,13 +199,14 @@ jobs:
           if [ "${RUNNER_ENVIRONMENT}" = "self-hosted" ]; then
             bash scripts/ci-eslint.sh --cache --cache-location /runner-cache/eslint/.eslintcache
           else
-            bash scripts/ci-eslint.sh
+            bash scripts/ci-eslint.sh --cache --cache-location .eslintcache
           fi
       # catalog:check (docs check.mjs) always builds seo/ai/ui (admin tutorial
       # spawns ui build). Build only those packages; turbo ^build pulls i18n/
       # core/quality. Avoids building all 16 when DOCS=true. Persistent
       # TURBO_CACHE_DIR on self-hosted keeps repeats warm.
       - name: Build (catalog deps)
+        if: env.FULL == 'true' || env.DOCS == 'true'
         run: |
           extra=()
           if [ "${RUNNER_ENVIRONMENT}" = "self-hosted" ]; then
@@ -211,27 +217,26 @@ jobs:
             --filter=@zedtech/zedkit-ai \
             --filter=@zedtech/zedkit-ui \
             "${extra[@]}"
-      - run: pnpm run catalog:check
-      # Remaining package builds feed API report / pack; docs only when affected.
+      - name: catalog:check
+        if: env.FULL == 'true' || env.DOCS == 'true'
+        run: pnpm run catalog:check
+      # Remaining package builds feed API report / pack. Skip when no
+      # package (or tsconfig.base) changed: the reports cannot drift.
+      # Docs static export lives in docs-build.
       - name: Build
+        if: env.FULL == 'true' || env.PACKAGES == 'true'
         run: |
           extra=()
           if [ "${RUNNER_ENVIRONMENT}" = "self-hosted" ]; then
             extra+=(--cache-dir=/runner-cache/turbo)
           fi
-          if [ "$DOCS" = "true" ]; then
-            pnpm exec turbo run build "${extra[@]}"
-          else
-            pnpm exec turbo run build --filter='!@zedtech/zedkit-docs' "${extra[@]}"
-          fi
-      - run: bash scripts/check-api-report.sh
-      - name: Docs static export SEO check
-        if: env.DOCS == 'true'
-        run: node apps/docs/scripts/check-seo-export.mjs
-      - name: Docs home first-load JS budget
-        if: env.DOCS == 'true'
-        run: node apps/docs/scripts/check-first-load-budget.mjs
-      - run: bash scripts/check-pack.sh
+          pnpm exec turbo run build --filter='!@zedtech/zedkit-docs' "${extra[@]}"
+      - name: API report
+        if: env.FULL == 'true' || env.PACKAGES == 'true'
+        run: bash scripts/check-api-report.sh
+      - name: Pack
+        if: env.FULL == 'true' || env.PACKAGES == 'true'
+        run: bash scripts/check-pack.sh
       - run: bash scripts/check-e2e-registered.sh
       - name: test
         run: |
@@ -356,19 +361,17 @@ jobs:
         if: runner.environment == 'self-hosted'
         run: bash scripts/ci-runner-cache.sh install
       - run: pnpm registry:build
-      # quickstart-smoke.sh runs playwright install --with-deps when CI is set,
-      # which needs sudo. Self-hosted no-new-privileges blocks sudo; browsers are
-      # in the runner image. Strip --with-deps on self-hosted only.
-      - name: Playwright browsers (image)
-        if: runner.environment == 'self-hosted'
-        run: bash scripts/ci-runner-cache.sh playwright
+      # Two Next smokes; Vite paths live in the dedicated quickstart-smoke job.
       - name: registry smoke
         run: |
-          if [ "${RUNNER_ENVIRONMENT}" = "self-hosted" ]; then
-            # shellcheck disable=SC2016
-            sed -i 's/${CI:+--with-deps}//' scripts/quickstart-smoke.sh
-          fi
-          pnpm registry:smoke
+          fail=0
+          bash scripts/registry/smoke-shadcn-add.sh &
+          p1=$!
+          bash scripts/registry/smoke-ui-quickstart.sh &
+          p2=$!
+          wait "$p1" || fail=1
+          wait "$p2" || fail=1
+          exit "$fail"
 
   quickstart-smoke:
     runs-on: ${{ (github.event_name == 'pull_request' && github.base_ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","zedkit"]') || 'ubuntu-latest' }}
@@ -424,6 +427,8 @@ jobs:
             sed -i 's/${CI:+--with-deps}//' scripts/quickstart-smoke.sh
           fi
           bash scripts/quickstart-smoke.sh
+        env:
+          QUICKSTART_PREBUILT: "1"
 
   # Follows the adoption instructions the site shows (home, getting-started, component pages), and nothing else,
   # in clean Next.js projects: install Button, copy Button and Drawer by CLI and by hand, Theme, Motion, the
@@ -478,160 +483,9 @@ jobs:
         run: bash scripts/ci-runner-cache.sh playwright
       - run: pnpm adoption:smoke
 
-  docs-e2e-shard:
-    name: docs-e2e-shard (${{ matrix.shard }}/3)
-    runs-on: ${{ (github.event_name == 'pull_request' && github.base_ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","zedkit"]') || 'ubuntu-latest' }}
-    timeout-minutes: 35
-    needs: changes
-    if: needs.changes.outputs.docs == 'true' && needs.changes.outputs.workflow_only != 'true'
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3]
-    steps:
-      - name: Self-hosted runner env
-        if: runner.environment == 'self-hosted'
-        run: |
-          mkdir -p /runner-cache/{pnpm,nm,tsbuildinfo,eslint,turbo,npm,xdg}
-          {
-            echo "PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright"
-            echo "npm_config_store_dir=/runner-cache/pnpm"
-            echo "npm_config_cache=/runner-cache/npm"
-            echo "TURBO_CACHE_DIR=/runner-cache/turbo"
-            echo "RUNNER_TOOL_CACHE=/tmp/runner-tool-cache"
-            echo "XDG_CACHE_HOME=/runner-cache/xdg"
-            echo "TURBO_CONCURRENCY=4"
-          } >> "$GITHUB_ENV"
-      - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-      - uses: actions/setup-node@v7
-        if: runner.environment != 'self-hosted'
-        with:
-          node-version: 22
-          cache: pnpm
-      - uses: actions/setup-node@v7
-        if: runner.environment == 'self-hosted'
-        with:
-          node-version: 22
-          package-manager-cache: false
-      - run: pnpm install --frozen-lockfile
-        if: runner.environment != 'self-hosted'
-      - name: pnpm install (store + nm archive)
-        if: runner.environment == 'self-hosted'
-        run: bash scripts/ci-runner-cache.sh install
-      - name: Build docs
-        run: |
-          extra=()
-          if [ "${RUNNER_ENVIRONMENT}" = "self-hosted" ]; then
-            extra+=(--cache-dir=/runner-cache/turbo)
-          fi
-          pnpm exec turbo run build --filter=@zedtech/zedkit-docs "${extra[@]}"
-      - uses: actions/cache@v6
-        if: runner.environment != 'self-hosted'
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - run: pnpm exec playwright install --with-deps chromium
-        if: runner.environment != 'self-hosted'
-      - name: Playwright browsers (image)
-        if: runner.environment == 'self-hosted'
-        run: bash scripts/ci-runner-cache.sh playwright
-      - run: |
-          pnpm dlx serve@14.2.6 apps/docs/out -l 3100 >/tmp/docs-e2e.log 2>&1 &
-          echo $! > /tmp/docs-e2e.pid
-          for _ in $(seq 1 24); do
-            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 http://127.0.0.1:3100/ || true)
-            [ "$code" = "200" ] && break
-            sleep 5
-          done
-          pnpm --filter @zedtech/zedkit-docs run e2e
-          kill "$(cat /tmp/docs-e2e.pid)"
-        env:
-          DOCS_E2E_PROJECT: chromium
-          DOCS_E2E_SHARD: ${{ matrix.shard }}
-          DOCS_E2E_SHARD_TOTAL: "3"
-
-  # Sitemap sweep (100+ routes × axe views) lives outside the shards: it alone
-  # can exceed a 20-minute job since #1203 grew the route list and e2e count.
-  docs-e2e-routes:
-    runs-on: ${{ (github.event_name == 'pull_request' && github.base_ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","zedkit"]') || 'ubuntu-latest' }}
-    timeout-minutes: 25
-    needs: changes
-    if: needs.changes.outputs.docs == 'true' && needs.changes.outputs.workflow_only != 'true'
-    steps:
-      - name: Self-hosted runner env
-        if: runner.environment == 'self-hosted'
-        run: |
-          mkdir -p /runner-cache/{pnpm,nm,tsbuildinfo,eslint,turbo,npm,xdg}
-          {
-            echo "PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright"
-            echo "npm_config_store_dir=/runner-cache/pnpm"
-            echo "npm_config_cache=/runner-cache/npm"
-            echo "TURBO_CACHE_DIR=/runner-cache/turbo"
-            echo "RUNNER_TOOL_CACHE=/tmp/runner-tool-cache"
-            echo "XDG_CACHE_HOME=/runner-cache/xdg"
-            echo "TURBO_CONCURRENCY=4"
-          } >> "$GITHUB_ENV"
-      - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-      - uses: actions/setup-node@v7
-        if: runner.environment != 'self-hosted'
-        with:
-          node-version: 22
-          cache: pnpm
-      - uses: actions/setup-node@v7
-        if: runner.environment == 'self-hosted'
-        with:
-          node-version: 22
-          package-manager-cache: false
-      - run: pnpm install --frozen-lockfile
-        if: runner.environment != 'self-hosted'
-      - name: pnpm install (store + nm archive)
-        if: runner.environment == 'self-hosted'
-        run: bash scripts/ci-runner-cache.sh install
-      - name: Build docs
-        run: |
-          extra=()
-          if [ "${RUNNER_ENVIRONMENT}" = "self-hosted" ]; then
-            extra+=(--cache-dir=/runner-cache/turbo)
-          fi
-          pnpm exec turbo run build --filter=@zedtech/zedkit-docs "${extra[@]}"
-      - uses: actions/cache@v6
-        if: runner.environment != 'self-hosted'
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - run: pnpm exec playwright install --with-deps chromium
-        if: runner.environment != 'self-hosted'
-      - name: Playwright browsers (image)
-        if: runner.environment == 'self-hosted'
-        run: bash scripts/ci-runner-cache.sh playwright
-      - run: |
-          pnpm dlx serve@14.2.6 apps/docs/out -l 3100 >/tmp/docs-e2e.log 2>&1 &
-          echo $! > /tmp/docs-e2e.pid
-          for _ in $(seq 1 24); do
-            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 http://127.0.0.1:3100/ || true)
-            [ "$code" = "200" ] && break
-            sleep 5
-          done
-          pnpm --filter @zedtech/zedkit-docs run e2e:routes
-          kill "$(cat /tmp/docs-e2e.pid)"
-        env:
-          DOCS_E2E_PROJECT: chromium
-
-  # Required check name stays `docs-e2e`: one gate over the three shards.
-  docs-e2e:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    needs: [changes, docs-e2e-shard, docs-e2e-routes]
-    if: always() && needs.changes.outputs.docs == 'true' && needs.changes.outputs.workflow_only != 'true'
-    steps:
-      - name: All shards passed
-        run: |
-          test "${{ needs.docs-e2e-shard.result }}" = "success"
-          test "${{ needs.docs-e2e-routes.result }}" = "success"
-
-  docs-smoke:
+  # One Next export for Playwright smoke, SEO and the first-load budget.
+  # Smoke downloads `apps/docs/out` instead of exporting again.
+  docs-build:
     runs-on: ${{ (github.event_name == 'pull_request' && github.base_ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","zedkit"]') || 'ubuntu-latest' }}
     timeout-minutes: 20
     needs: changes
@@ -667,9 +521,13 @@ jobs:
       - name: pnpm install (store + nm archive)
         if: runner.environment == 'self-hosted'
         run: bash scripts/ci-runner-cache.sh install
-      # Scoped build (turbo builds workspace deps first), then serve the
-      # static export (apps/docs/out, same files Caddy serves in prod)
-      # and prove the home renders with live demos.
+      - uses: actions/cache@v6
+        if: runner.environment != 'self-hosted'
+        with:
+          path: .turbo
+          key: turbo-docs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            turbo-docs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
       - name: Build docs
         run: |
           extra=()
@@ -677,16 +535,43 @@ jobs:
             extra+=(--cache-dir=/runner-cache/turbo)
           fi
           pnpm exec turbo run build --filter=@zedtech/zedkit-docs "${extra[@]}"
+      - name: Docs static export SEO check
+        run: node apps/docs/scripts/check-seo-export.mjs
+      - name: Docs home first-load JS budget
+        run: node apps/docs/scripts/check-first-load-budget.mjs
+      - uses: actions/upload-artifact@v7
+        with:
+          name: docs-out
+          path: apps/docs/out
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
+  # Critical browser journeys only (home, search, catalog, a component
+  # page, getting-started). Visual matrices and the sitemap axe sweep are
+  # not a merge gate: catalog:check, SEO export and first-load cover the rest.
+  docs-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [changes, docs-build]
+    if: needs.changes.outputs.docs == 'true' && needs.changes.outputs.workflow_only != 'true'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --filter="@zedtech/zedkit-docs..."
+      - uses: actions/download-artifact@v7
+        with:
+          name: docs-out
+          path: apps/docs/out
       - uses: actions/cache@v6
-        if: runner.environment != 'self-hosted'
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - run: pnpm exec playwright install --with-deps chromium
-        if: runner.environment != 'self-hosted'
-      - name: Playwright browsers (image)
-        if: runner.environment == 'self-hosted'
-        run: bash scripts/ci-runner-cache.sh playwright
+      - run: pnpm exec playwright install chromium
       - run: |
           pnpm dlx serve@14.2.6 apps/docs/out -l 3100 >/tmp/docs-start.log 2>&1 &
           echo $! > /tmp/docs.pid
@@ -701,15 +586,10 @@ jobs:
           curl -sf -o /dev/null http://127.0.0.1:3100/robots.txt
           curl -sf -o /dev/null http://127.0.0.1:3100/sitemap.xml
           curl -sf -o /dev/null http://127.0.0.1:3100/llms.txt
-          if [ "${RUNNER_ENVIRONMENT}" = "self-hosted" ]; then
-            pnpm --filter @zedtech/zedkit-docs run smoke -- --workers=1 --retries=2
-          else
-            pnpm --filter @zedtech/zedkit-docs run smoke
-          fi
+          pnpm --filter @zedtech/zedkit-docs run smoke
           kill "$(cat /tmp/docs.pid)"
         env:
           DOCS_E2E_PROJECT: chromium
-          DOCS_E2E_EXPECT_TIMEOUT: ${{ runner.environment == 'self-hosted' && '30000' || '' }}
       - uses: actions/upload-artifact@v7
         if: success()
         with:
@@ -717,15 +597,25 @@ jobs:
           path: apps/docs/test-results/*.png
           if-no-files-found: ignore
 
+  # Stable check name for older rulesets. The browser suite is docs-smoke.
+  docs-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [changes, docs-smoke]
+    if: always() && needs.changes.outputs.docs == 'true' && needs.changes.outputs.workflow_only != 'true'
+    steps:
+      - name: Smoke passed
+        run: test "${{ needs.docs-smoke.result }}" = "success"
+
   # Stable check name for branch protection. Require this one job instead of
-  # listing every CI job (and the docs-e2e shard names). The ruleset still
-  # lists the old names until an admin applies the settings issue.
+  # listing every CI job. The ruleset still lists the old names until an
+  # admin applies the settings issue.
   # Selected jobs must succeed. Skipped is allowed only when `changes`
   # excluded that job. Failure, cancel, unknown and missing never pass.
   ci-required:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [changes, hygiene, workflow-lint, checks, registry-smoke, docs-e2e, docs-smoke]
+    needs: [changes, hygiene, workflow-lint, checks, registry-smoke, docs-build, docs-e2e, docs-smoke]
     if: always()
     steps:
       - uses: actions/checkout@v7
@@ -736,6 +626,7 @@ jobs:
           WORKFLOW_LINT: ${{ needs.workflow-lint.result }}
           CHECKS: ${{ needs.checks.result }}
           REGISTRY: ${{ needs.registry-smoke.result }}
+          DOCS_BUILD: ${{ needs.docs-build.result }}
           DOCS_E2E: ${{ needs.docs-e2e.result }}
           DOCS_SMOKE: ${{ needs.docs-smoke.result }}
           WORKFLOWS: ${{ needs.changes.outputs.workflows }}

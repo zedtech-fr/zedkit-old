@@ -46,10 +46,16 @@ for (const mode of ["light", "dark"] as const) {
   test(`theme-color follows the ${mode} page background`, async ({ page }) => {
     await page.addInitScript((theme) => localStorage.setItem("theme", theme), mode);
     await page.goto(PAGE, { waitUntil: "networkidle" });
-    const colors = await themeColors(page);
-    expect(colors.length).toBeGreaterThan(0);
-    const expected = await background(page);
-    for (const color of colors) expect(await resolve(page, color)).toBe(expected);
+    // The meta is written after hydration, once the theme has resolved.
+    await expect.poll(async () => {
+      const colors = await themeColors(page);
+      const expected = await background(page);
+      if (colors.length === 0) return false;
+      for (const color of colors) {
+        if ((await resolve(page, color)) !== expected) return false;
+      }
+      return true;
+    }).toBe(true);
   });
 }
 
