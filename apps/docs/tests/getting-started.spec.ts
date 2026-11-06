@@ -1,7 +1,5 @@
 import { expect, test } from "@playwright/test";
 
-const BASE = "http://127.0.0.1:3100";
-
 test("docs index and guides carry no production memo in visitor copy (#1096)", async ({ page }) => {
   const leaks = [
     "hand-written",
@@ -20,7 +18,7 @@ test("docs index and guides carry no production memo in visitor copy (#1096)", a
     "/docs/maturity-and-compatibility",
     "/docs/zedkit-and-shadcn",
   ]) {
-    await page.goto(`${BASE}${path}`, { waitUntil: "networkidle" });
+    await page.goto(path, { waitUntil: "networkidle" });
     const text = (await page.locator("main").first().innerText()).toLowerCase();
     for (const leak of leaks) {
       expect(text, `${path} must not contain ${JSON.stringify(leak)}`).not.toContain(leak);
@@ -30,7 +28,7 @@ test("docs index and guides carry no production memo in visitor copy (#1096)", a
 
 test("maturity page explains each badge on the page", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(`${BASE}/docs/maturity-and-compatibility`, { waitUntil: "networkidle" });
+  await page.goto("/docs/maturity-and-compatibility", { waitUntil: "networkidle" });
   const heading = page.getByRole("heading", { name: "What a badge means", level: 2 });
   await expect(heading).toBeVisible();
   await expect(page.getByText(/No badge = stable: semver-protected/)).toBeVisible();
@@ -42,7 +40,7 @@ test("maturity page explains each badge on the page", async ({ page }) => {
 });
 
 test("getting started is first stop from docs index", async ({ page }) => {
-  await page.goto(`${BASE}/docs`, { waitUntil: "networkidle" });
+  await page.goto("/docs", { waitUntil: "networkidle" });
   await expect(page.getByRole("heading", { name: "Start here" })).toBeVisible();
   const startLink = page.getByRole("link", { name: "Getting started" }).first();
   await startLink.click();
@@ -55,7 +53,7 @@ test("getting started is first stop from docs index", async ({ page }) => {
 
 test("getting started leads with install and quickstart before audience guidance", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(`${BASE}/docs/getting-started`, { waitUntil: "networkidle" });
+  await page.goto("/docs/getting-started", { waitUntil: "networkidle" });
   const headings = await page.locator("main h2").evaluateAll((elements) =>
     elements.map((el) => el.textContent?.replace(/Copy Anchor Link/g, "").trim() ?? ""),
   );
@@ -72,7 +70,7 @@ test("getting started leads with install and quickstart before audience guidance
 });
 
 test("getting started documents install or copy paths", async ({ page }) => {
-  await page.goto(`${BASE}/docs/getting-started#install-or-copy`, { waitUntil: "networkidle" });
+  await page.goto("/docs/getting-started#install-or-copy", { waitUntil: "networkidle" });
   await expect(page.getByRole("heading", { name: "Install or copy", level: 2 })).toBeVisible();
   await expect(page.getByRole("columnheader", { name: "Command" })).toBeVisible();
   await expect(page.getByText(/follow semver on packages at 1\.0\.0/i)).toBeVisible();
@@ -80,25 +78,25 @@ test("getting started documents install or copy paths", async ({ page }) => {
 });
 
 test("getting started lists a core npm quickstart path", async ({ page }) => {
-  await page.goto(`${BASE}/docs/getting-started`, { waitUntil: "networkidle" });
+  await page.goto("/docs/getting-started", { waitUntil: "networkidle" });
   await expect(page.getByRole("heading", { name: "Path C — core helpers (npm only)", level: 3 })).toBeVisible();
   await expect(page.getByText("pnpm add @zedtech/zedkit-core")).toBeVisible();
 });
 
 test("getting started lists a server npm quickstart path", async ({ page }) => {
-  await page.goto(`${BASE}/docs/getting-started`, { waitUntil: "networkidle" });
+  await page.goto("/docs/getting-started", { waitUntil: "networkidle" });
   await expect(page.getByRole("heading", { name: "Path D — server helpers (npm only)", level: 3 })).toBeVisible();
   await expect(page.getByText("pnpm add @zedtech/zedkit-server")).toBeVisible();
 });
 
 test("getting started lists a nest npm quickstart path", async ({ page }) => {
-  await page.goto(`${BASE}/docs/getting-started`, { waitUntil: "networkidle" });
+  await page.goto("/docs/getting-started", { waitUntil: "networkidle" });
   await expect(page.getByRole("heading", { name: "Path E — Nest API (npm only)", level: 3 })).toBeVisible();
   await expect(page.getByText("pnpm add @zedtech/zedkit-nest")).toBeVisible();
 });
 
 test("getting started package table links SEO row to SEO scenario", async ({ page }) => {
-  await page.goto(`${BASE}/docs/getting-started#choose-a-package`, { waitUntil: "networkidle" });
+  await page.goto("/docs/getting-started#choose-a-package", { waitUntil: "networkidle" });
   const table = page
     .getByRole("table")
     .filter({ has: page.getByRole("columnheader", { name: "Typical first page" }) });
@@ -107,7 +105,7 @@ test("getting started package table links SEO row to SEO scenario", async ({ pag
 });
 
 test("getting started package table links UI row to Quickstart paths B–B′", async ({ page }) => {
-  await page.goto(`${BASE}/docs/getting-started#choose-a-package`, { waitUntil: "networkidle" });
+  await page.goto("/docs/getting-started#choose-a-package", { waitUntil: "networkidle" });
   const table = page
     .getByRole("table")
     .filter({ has: page.getByRole("columnheader", { name: "Typical first page" }) });
@@ -118,7 +116,7 @@ test("getting started package table links UI row to Quickstart paths B–B′", 
 });
 
 test("getting started package table links agents row to Quickstart path A", async ({ page }) => {
-  await page.goto(`${BASE}/docs/getting-started#choose-a-package`, { waitUntil: "networkidle" });
+  await page.goto("/docs/getting-started#choose-a-package", { waitUntil: "networkidle" });
   const table = page
     .getByRole("table")
     .filter({ has: page.getByRole("columnheader", { name: "Typical first page" }) });
@@ -128,7 +126,7 @@ test("getting started package table links agents row to Quickstart path A", asyn
 });
 
 test("getting started package table links backend row to Quickstart paths", async ({ page }) => {
-  await page.goto(`${BASE}/docs/getting-started#choose-a-package`, { waitUntil: "networkidle" });
+  await page.goto("/docs/getting-started#choose-a-package", { waitUntil: "networkidle" });
   const table = page
     .getByRole("table")
     .filter({ has: page.getByRole("columnheader", { name: "Typical first page" }) });
@@ -140,7 +138,7 @@ test("getting started package table links backend row to Quickstart paths", asyn
 test("getting started install cards keep their explanation visible at phone widths", async ({ page }) => {
   for (const width of [320, 360, 390] as const) {
     await page.setViewportSize({ width, height: 844 });
-    await page.goto(`${BASE}/docs/getting-started#install-or-copy`, { waitUntil: "networkidle" });
+    await page.goto("/docs/getting-started#install-or-copy", { waitUntil: "networkidle" });
     const host = page
       .locator("[data-docs-table]")
       .filter({ has: page.getByRole("columnheader", { name: "Command" }) });
@@ -174,7 +172,7 @@ test("getting started install cards keep their explanation visible at phone widt
 test("getting started package cards fit the viewport at phone widths", async ({ page }) => {
   for (const width of [320, 360, 390] as const) {
     await page.setViewportSize({ width, height: 844 });
-    await page.goto(`${BASE}/docs/getting-started#choose-a-package`, { waitUntil: "networkidle" });
+    await page.goto("/docs/getting-started#choose-a-package", { waitUntil: "networkidle" });
     const host = page
       .locator("[data-docs-table]")
       .filter({ has: page.getByRole("columnheader", { name: "Typical first page" }) });
@@ -204,7 +202,7 @@ test("getting started package cards fit the viewport at phone widths", async ({ 
 
 test("getting started package table keeps a decorative area icon", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(`${BASE}/docs/getting-started#choose-a-package`, { waitUntil: "networkidle" });
+  await page.goto("/docs/getting-started#choose-a-package", { waitUntil: "networkidle" });
   const table = page
     .getByRole("table")
     .filter({ has: page.getByRole("columnheader", { name: "Typical first page" }) });
@@ -226,7 +224,7 @@ test.describe("getting started package table light/dark (#753)", () => {
         localStorage.setItem("zk-docs-site-identity-opt-in", "1");
         localStorage.setItem("theme", theme);
       }, mode);
-      await page.goto(`${BASE}/docs/getting-started#choose-a-package`, { waitUntil: "networkidle" });
+      await page.goto("/docs/getting-started#choose-a-package", { waitUntil: "networkidle" });
       const table = page
         .getByRole("table")
         .filter({ has: page.getByRole("columnheader", { name: "Typical first page" }) });
@@ -238,7 +236,7 @@ test.describe("getting started package table light/dark (#753)", () => {
 });
 
 test("getting started next steps tutorials follow choose-a-package table order", async ({ page }) => {
-  await page.goto(`${BASE}/docs/getting-started`, { waitUntil: "networkidle" });
+  await page.goto("/docs/getting-started", { waitUntil: "networkidle" });
   await page.getByRole("heading", { name: "Next steps", level: 2 }).scrollIntoViewIfNeeded();
   const titles = await page.getByRole("heading", { name: "Next steps", level: 2 }).evaluate((heading) => {
     const item = [...heading.parentElement!.querySelectorAll("li")].find((li) =>
@@ -256,7 +254,7 @@ test("getting started next steps tutorials follow choose-a-package table order",
 });
 
 test("getting started scenarios follow choose-a-package table order", async ({ page }) => {
-  await page.goto(`${BASE}/docs/getting-started`, { waitUntil: "networkidle" });
+  await page.goto("/docs/getting-started", { waitUntil: "networkidle" });
   const order = await page.locator("main h2").evaluateAll((elements) =>
     elements
       .map((el) => el.textContent?.replace(/Copy Anchor Link/g, "").trim() ?? "")
@@ -271,7 +269,7 @@ test("getting started scenarios follow choose-a-package table order", async ({ p
 });
 
 test("getting started includes UI, backend, agents, and SEO scenarios", async ({ page }) => {
-  await page.goto(`${BASE}/docs/getting-started`, { waitUntil: "networkidle" });
+  await page.goto("/docs/getting-started", { waitUntil: "networkidle" });
   await expect(page.getByRole("heading", { name: "Scenario — coding agents", level: 2 })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Scenario — backend", level: 2 })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Scenario — SEO", level: 2 })).toBeVisible();
@@ -282,7 +280,7 @@ test("getting started includes UI, backend, agents, and SEO scenarios", async ({
 });
 
 test("getting started troubleshooting mentions server env boot failures", async ({ page }) => {
-  await page.goto(`${BASE}/docs/getting-started`, { waitUntil: "networkidle" });
+  await page.goto("/docs/getting-started", { waitUntil: "networkidle" });
   await page.getByRole("heading", { name: "Troubleshooting", level: 2 }).scrollIntoViewIfNeeded();
   const row = page.getByRole("row", { name: /Boot fails on bad process\.env/ });
   await expect(row).toBeVisible();
@@ -291,7 +289,7 @@ test("getting started troubleshooting mentions server env boot failures", async 
 });
 
 test("getting started links to a catalog page", async ({ page }) => {
-  await page.goto(`${BASE}/docs/getting-started`, { waitUntil: "networkidle" });
+  await page.goto("/docs/getting-started", { waitUntil: "networkidle" });
   await page
     .getByRole("main")
     .getByRole("link", { name: "AI setup catalog page", exact: true })

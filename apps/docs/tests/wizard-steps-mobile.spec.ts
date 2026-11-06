@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const URL = "http://127.0.0.1:3100/docs/ui/guide-a-multi-step-flow-with-selectable-option-cards";
+const URL = "/docs/ui/guide-a-multi-step-flow-with-selectable-option-cards";
 
 test.describe("wizard steps at phone width", () => {
   test("390px shows compact step summary without orphan connectors", async ({ page }) => {

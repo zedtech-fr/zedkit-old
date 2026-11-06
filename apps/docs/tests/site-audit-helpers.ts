@@ -84,7 +84,7 @@ export async function assertUniqueLinkNames(page: Page): Promise<void> {
   ).toEqual([]);
 }
 
-export async function assertInternalLinksResolve(page: Page, origin: string): Promise<void> {
+export async function assertInternalLinksResolve(page: Page): Promise<void> {
   const hrefs = await page.locator("main a[href]").evaluateAll((anchors) =>
     anchors
       .map((a) => a.getAttribute("href"))
@@ -94,7 +94,7 @@ export async function assertInternalLinksResolve(page: Page, origin: string): Pr
     .filter((h) => h.startsWith("/") && !h.startsWith("//"))
     .slice(0, 24);
   for (const href of internal) {
-    const res = await page.request.get(`${origin}${href}`);
+    const res = await page.request.get(href);
     expect(res.status(), href).toBeLessThan(400);
   }
 }

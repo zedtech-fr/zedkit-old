@@ -1,9 +1,7 @@
 import { expect, test } from "@playwright/test";
 
-const BASE = process.env.DOCS_E2E_BASE_URL ?? "http://127.0.0.1:3100";
-
 test("search dialog uses the kit glass surface", async ({ page }) => {
-  await page.goto(`${BASE}/docs`, { waitUntil: "networkidle" });
+  await page.goto("/docs", { waitUntil: "networkidle" });
   await page.locator("html[data-identity='glass']").waitFor({ timeout: 15000 });
   await page.keyboard.press("Control+k");
   const dialog = page.getByRole("dialog");
@@ -16,7 +14,7 @@ test("search dialog uses the kit glass surface", async ({ page }) => {
 test("search finds grouped results and navigates", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (event) => errors.push(String(event)));
-  await page.goto(`${BASE}/docs`, { waitUntil: "networkidle" });
+  await page.goto("/docs", { waitUntil: "networkidle" });
   await page.keyboard.press("Control+k");
   const dialog = page.getByRole("dialog");
   await dialog.waitFor({ timeout: 10000 });
@@ -32,7 +30,7 @@ test("search finds grouped results and navigates", async ({ page }) => {
 });
 
 test("button query ranks the Button doc page first", async ({ page }) => {
-  await page.goto(`${BASE}/docs`, { waitUntil: "networkidle" });
+  await page.goto("/docs", { waitUntil: "networkidle" });
   await page.keyboard.press("Control+k");
   const dialog = page.getByRole("dialog");
   await dialog.waitFor({ timeout: 10000 });
@@ -43,7 +41,7 @@ test("button query ranks the Button doc page first", async ({ page }) => {
 });
 
 test("tab focus stays inside the search dialog", async ({ page }) => {
-  await page.goto(`${BASE}/docs`, { waitUntil: "networkidle" });
+  await page.goto("/docs", { waitUntil: "networkidle" });
   await page.keyboard.press("Control+k");
   const dialog = page.getByRole("dialog");
   await dialog.waitFor({ timeout: 10000 });
@@ -61,7 +59,7 @@ test("tab focus stays inside the search dialog", async ({ page }) => {
 });
 
 test("unknown query shows the empty state", async ({ page }) => {
-  await page.goto(`${BASE}/docs`, { waitUntil: "networkidle" });
+  await page.goto("/docs", { waitUntil: "networkidle" });
   await page.keyboard.press("Control+k");
   const dialog = page.getByRole("dialog");
   await dialog.waitFor({ timeout: 10000 });
@@ -72,7 +70,7 @@ test("unknown query shows the empty state", async ({ page }) => {
 });
 
 test("keyboard navigates to a result", async ({ page }) => {
-  await page.goto(`${BASE}/docs`, { waitUntil: "networkidle" });
+  await page.goto("/docs", { waitUntil: "networkidle" });
   await page.keyboard.press("Control+k");
   const dialog = page.getByRole("dialog");
   await dialog.waitFor({ timeout: 10000 });
@@ -85,7 +83,7 @@ test("keyboard navigates to a result", async ({ page }) => {
 });
 
 test("escape closes the search dialog", async ({ page }) => {
-  await page.goto(`${BASE}/docs`, { waitUntil: "networkidle" });
+  await page.goto("/docs", { waitUntil: "networkidle" });
   await page.keyboard.press("Control+k");
   const dialog = page.getByRole("dialog");
   await dialog.waitFor({ timeout: 10000 });

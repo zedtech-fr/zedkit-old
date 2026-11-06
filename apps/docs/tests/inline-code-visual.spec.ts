@@ -1,9 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-const BASE = "http://127.0.0.1:3100";
 const MOBILE = { width: 390, height: 844 };
-const BUTTON = `${BASE}/docs/ui/trigger-actions-with-buttons`;
-const MOTION_PAGE = `${BASE}/docs/ui/animate-entrances-and-hover-feedback-with-css-utilities`;
+const BUTTON = "/docs/ui/trigger-actions-with-buttons";
+const MOTION_PAGE = "/docs/ui/animate-entrances-and-hover-feedback-with-css-utilities";
 
 test.describe("docs tables on mobile (#zk-chips ext 2)", () => {
   test.beforeEach(async ({ page }) => {
