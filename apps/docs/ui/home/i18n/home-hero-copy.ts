@@ -2,12 +2,9 @@ export const homeHeroCopy = {
   hero: {
     /** Product class before the promise (visual `label` role; see docs/design/signature.md). */
     titleCategory: "UI/AI kit ·",
-    title: "A top-notch AI setup, one prompt away. Only the UI you need.",
-    /** The first words are an invitation to use the example beside the text; the rest says what it is made of. */
-    /** Kept on one line at phone width so the hyphen never ends a line. */
-    titleNoBreak: "top-notch",
-    play: "Play with it yourself",
-    sub: "Everything in this app is a zedkit component. Click through the pages, add an app, change the look.",
+    title: "Your AI agent, set up with one prompt. The UI, only what you need.",
+    /** What the window is, and the first thing to look at in it. */
+    sub: "This app is built from zedkit components. Watch the setup run, then click around.",
     facts: "What you see installs from npm or copies as source · MIT · React 19 · Tailwind 4",
   },
   /** The tour is the cursor that clicks through the example. It can be paused, and replayed on purpose. */

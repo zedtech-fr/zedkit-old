@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 
-const BASE = process.env.DOCS_E2E_BASE_URL ?? "http://127.0.0.1:3100";
 const WIDTHS = [375, 390, 768, 1280] as const;
 
 const SECTION_IDS = ["identities", "get-started", "components", "entry-points"];
@@ -11,7 +10,7 @@ test.describe("home layout rhythm (#387)", () => {
   for (const width of WIDTHS) {
     test(`no overflow and aligned sections at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
-      await page.goto(BASE, { waitUntil: "networkidle" });
+      await page.goto("/", { waitUntil: "networkidle" });
 
       const metrics = await page.evaluate((sectionIds) => {
         const root = document.querySelector("#home-page");
@@ -49,7 +48,7 @@ test.describe("home layout rhythm (#387)", () => {
 
   test("min section and card padding at 375px", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
 
     const metrics = await page.evaluate((sectionIds) => {
       const padding = (el: Element | null) => {
@@ -77,13 +76,12 @@ test.describe("home layout rhythm (#387)", () => {
     }
   });
 
-  test("proximity snap on the home scroll root; pin section is not snapped", async ({ page }) => {
+  test("proximity snap on the home scroll root; the looks band is not snapped", async ({ page }) => {
     const readSnap = () =>
       page.evaluate(() => {
         const html = getComputedStyle(document.documentElement);
         const root = document.querySelector("[data-slot='section-scroll']");
         const identities = document.getElementById("identities");
-        const pin = document.querySelector("[data-identity-pin]");
         const entry = document.getElementById("entry-points");
         const snap = (el: Element | null) => (el ? getComputedStyle(el).scrollSnapAlign : "");
         return {
@@ -93,14 +91,13 @@ test.describe("home layout rhythm (#387)", () => {
           rootType: root ? getComputedStyle(root).scrollSnapType : "",
           identitiesAlign: snap(identities),
           identitiesSnap: identities?.getAttribute("data-snap"),
-          pinAlign: snap(pin),
           entryAlign: snap(entry),
         };
       });
 
     for (const width of [375, 1440] as const) {
       await page.setViewportSize({ width, height: width === 375 ? 812 : 900 });
-      await page.goto(BASE, { waitUntil: "networkidle" });
+      await page.goto("/", { waitUntil: "networkidle" });
       const metrics = await readSnap();
       expect(metrics.htmlType, `${width}`).toMatch(/^y(\s+proximity)?$/);
       expect(metrics.htmlType, `${width}`).not.toMatch(/mandatory/);
@@ -109,7 +106,6 @@ test.describe("home layout rhythm (#387)", () => {
       expect(Number.parseFloat(metrics.htmlPaddingTop), `${width}`).toBeGreaterThanOrEqual(48);
       expect(metrics.identitiesSnap, `${width}`).toBe("none");
       expect(metrics.identitiesAlign, `${width}`).toBe("none");
-      expect(["none", "normal", ""]).toContain(metrics.pinAlign);
       expect(metrics.entryAlign, `${width}`).toMatch(/start/);
     }
   });
@@ -118,7 +114,7 @@ test.describe("home layout rhythm (#387)", () => {
 test.describe("home bands (#1025)", () => {
   test("sections bleed edge to edge with content capped at wide on 2560px", async ({ page }) => {
     await page.setViewportSize({ width: 2560, height: 1080 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
 
     const metrics = await page.evaluate(() => {
       const rect = (el: Element | null | undefined) => {
@@ -149,7 +145,7 @@ test.describe("home bands (#1025)", () => {
 });
 
 test.describe("docs shell wide (#1064)", () => {
-  const DOCS_PAGE = `${BASE}/docs/ui/trigger-actions-with-buttons`;
+  const DOCS_PAGE = "/docs/ui/trigger-actions-with-buttons";
 
   async function docsGeometry(page: import("@playwright/test").Page) {
     return page.evaluate(() => {

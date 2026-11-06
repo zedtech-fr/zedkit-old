@@ -24,7 +24,11 @@
    licence file next to them.
 6. First-party skills: imperative, short, one job, the trigger in the
    `description` ("Use when ..."). Add one only if no existing skill or
-   subagent fits; a preset entry only if most projects benefit.
+   subagent fits; a preset entry only if most projects benefit. A `Skill
+   tool` call carries the shared SKILL.md fallback on the same line
+   (`tests/unit/skill-content.test.ts`). Presets stay reference-closed:
+   setup ships the plan/implement playbooks, starter stays lean
+   (`tests/unit/preset-closure.test.ts`).
 7. Installer never overwrites. `--adopt` keeps a different user file and
    writes a kit sidecar (`*.kit.md` or `zk-<name>`); a copy that already
    matches the kit is skipped. Per-skill provider links cover dirs that

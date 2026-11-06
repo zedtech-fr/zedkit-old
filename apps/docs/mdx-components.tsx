@@ -7,6 +7,7 @@ import { DocsProseTable } from "@/components/docs-prose-table";
 import { DocsKitNameList } from "@/components/docs-kit-name-list";
 import { IdentityEditorPanel } from "@/components/identity-editor-panel";
 import { AiSetupPrompt } from "@/components/ai-setup-prompt";
+import { AiSetupPageTitle } from "@/components/ai-setup-page-title";
 import { MdxPre } from "@/components/mdx-pre";
 
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
@@ -19,6 +20,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     DocsProseTable,
     IdentityEditorPanel,
     AiSetupPrompt,
+    AiSetupPageTitle,
     pre: MdxPre,
     table: DocsProseTable,
     ...components,

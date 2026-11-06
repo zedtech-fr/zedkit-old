@@ -61,10 +61,6 @@ export function HomeIdentityLooksTabs({
           ))}
         </TabsList>
       </ScrollGallery>
-      {/* Only shown while the examples change with the scroll: how far through them the page is. */}
-      <span data-identity-progress="" aria-hidden="true">
-        <span />
-      </span>
       {children}
     </Tabs>
   );

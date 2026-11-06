@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 import { assertAxeOnMain, assertNoHorizontalOverflow } from "./site-audit-helpers";
 
 const PAGE =
-  "http://127.0.0.1:3100/docs/ai/set-up-ai-agent-instructions-skills-subagents-and-commands-in-a-repo";
+  "/docs/ai/set-up-ai-agent-instructions-skills-subagents-and-commands-in-a-repo";
 
 test.describe("agents table icons (#428)", () => {
   test("each agent row shows a decorative icon without horizontal overflow", async ({ page }) => {

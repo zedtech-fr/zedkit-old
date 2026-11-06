@@ -315,3 +315,92 @@ test("SecretField package example is a complete page that typechecks", () => {
   rmSync(dir, { recursive: true, force: true });
   assert.equal(result.status, 0, result.stdout + result.stderr);
 });
+
+function packagePageExports() {
+  // Every package-mode render block that is a full page: the exact bytes the
+  // public Copy button puts on the clipboard (FileBlock copies block.code).
+  const pages = [];
+  for (const [packageName, entry] of Object.entries(catalog.packages)) {
+    for (const found of entry.needs) {
+      const built = buildAdoptionPlan({ need: found, packageName, siteUrl: SITE }, { registry });
+      const pkg = built.modes.find((item) => item.id === "package");
+      const page = allBlocks(pkg).find(
+        (block) => block.kind === "file" && block.path === "src/app/page.tsx" && block.code.includes("export default function Page"),
+      );
+      if (page) pages.push({ need: found.need, packageName, code: page.code });
+    }
+  }
+  return pages;
+}
+
+function tscRun(dir, files) {
+  writeFileSync(
+    join(dir, "tsconfig.json"),
+    `${JSON.stringify(
+      {
+        files,
+        compilerOptions: {
+          target: "ES2022",
+          lib: ["ES2022", "DOM", "DOM.Iterable"],
+          module: "ESNext",
+          moduleResolution: "bundler",
+          jsx: "react-jsx",
+          noEmit: true,
+          strict: true,
+          skipLibCheck: true,
+          incremental: false,
+        },
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  const result = spawnSync(join(ROOT, "node_modules/.bin/tsc"), ["-p", join(dir, "tsconfig.json"), "--pretty", "false"], {
+    encoding: "utf8",
+  });
+  return { status: result.status, output: `${result.stdout ?? ""}${result.stderr ?? ""}` };
+}
+
+function filesWithErrors(output) {
+  // Filenames only: tsc prints paths relative to the caller's cwd.
+  return [...new Set([...output.matchAll(/([\w-]+\.tsx)\(\d+,\d+\): error TS\d+/g)].map((match) => match[1]))];
+}
+
+test("every copyable page export typechecks (exact copy bytes)", () => {
+  const pages = packagePageExports();
+  // Floor, not an exact pin: the audit counted 48 public payloads; the tree
+  // may ship more, but must never silently ship fewer.
+  assert.ok(pages.length >= 48, `expected at least the 48 audited page exports, found ${pages.length}`);
+  const dir = join(dirname(fileURLToPath(import.meta.url)), "../.tmp-complete-examples");
+  mkdirSync(dir, { recursive: true });
+  const names = pages.map((page, index) => `page-${String(index + 1).padStart(2, "0")}.tsx`);
+  names.forEach((name, index) =>
+    writeFileSync(join(dir, name), `// need: ${pages[index].need} [${pages[index].packageName}]\n${pages[index].code}`),
+  );
+  // Green path: one tsc run; exit 0 means zero errors of any kind. A red run
+  // re-runs once without the failing files: one syntax-broken page masks the
+  // semantic errors of the whole program, while syntax errors never mask each
+  // other, so two rounds attribute every failure.
+  const first = tscRun(dir, names.map((name) => `./${name}`));
+  const rounds = [first.output];
+  let bad = first.status === 0 ? [] : filesWithErrors(first.output);
+  if (first.status !== 0 && bad.length === 0) {
+    rmSync(dir, { recursive: true, force: true });
+    assert.fail(`tsc failed without file errors (status ${first.status}):\n${first.output}`);
+  }
+  if (bad.length > 0) {
+    const remaining = names.filter((name) => !bad.includes(name));
+    if (remaining.length > 0) {
+      const second = tscRun(dir, remaining.map((name) => `./${name}`));
+      rounds.push(second.output);
+      bad = [...bad, ...filesWithErrors(second.output).filter((name) => !bad.includes(name))];
+    }
+  }
+  rmSync(dir, { recursive: true, force: true });
+  const needOf = new Map(names.map((name, index) => [name, pages[index].need]));
+  assert.deepEqual(
+    bad.map((name) => needOf.get(name) ?? name).sort(),
+    [],
+    `${bad.length} of ${names.length} page exports do not typecheck:\n${rounds.join("\n")}`,
+  );
+});

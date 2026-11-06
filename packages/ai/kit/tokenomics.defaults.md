@@ -25,7 +25,7 @@ providers:
       standard: { model: inherit, effort: medium }
       sensitive: { model: inherit, effort: high }
       critical: { model: inherit, effort: max }
-    context_windows: { small: 128k, medium: 256k, large: 1M }
+    context_windows: { small: 128k, medium: 256k, large: 1M } # UNVERIFIED placeholder, not measured
 
   claude:
     decide:
@@ -48,7 +48,7 @@ providers:
       standard: { model: inherit, effort: medium }
       sensitive: { model: inherit, effort: high }
       critical: { model: inherit, effort: max }
-    context_windows: { small: 128k, medium: 256k, large: 1M }
+    context_windows: { small: 128k, medium: 256k, large: 1M } # UNVERIFIED placeholder, not measured
 
   codex:
     decide:
@@ -71,7 +71,7 @@ providers:
       standard: { model: inherit, effort: medium }
       sensitive: { model: inherit, effort: high }
       critical: { model: inherit, effort: max }
-    context_windows: { small: 128k, medium: 256k, large: 1M }
+    context_windows: { small: 128k, medium: 256k, large: 1M } # UNVERIFIED placeholder, not measured
 
   muse:
     decide:
@@ -94,7 +94,7 @@ providers:
       standard: { model: inherit, effort: medium }
       sensitive: { model: inherit, effort: high }
       critical: { model: inherit, effort: max }
-    context_windows: { small: 128k, medium: 256k, large: 1M }
+    context_windows: { small: 128k, medium: 256k, large: 1M } # UNVERIFIED placeholder, not measured
 
 gates:
   trivial: { review: optional }

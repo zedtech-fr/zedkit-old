@@ -1,3 +1,6 @@
+"use client";
+
+import { useSyncExternalStore } from "react";
 import type * as React from "react";
 
 import { IDENTITY_BOOTSTRAP_SOURCE } from "./identity-bootstrap.js";
@@ -13,18 +16,25 @@ type IdentityScriptProps = {
   optInStorageKey?: string;
 };
 
+const subscribe = (): (() => void) => () => {};
+
 /**
  * Inline script that sets `data-identity` on <html> before first paint,
  * so the stored identity never flashes. Render it once inside <head>
  * of the root layout. The html element needs `suppressHydrationWarning`.
- * No `use client`: this is a static tag, not a hydrated island.
+ *
+ * Emits the tag on the server and during hydration only. React 19 never
+ * runs scripts created on a client render (Next.js 16 logs that as an error);
+ * the SSR HTML still contains the IIFE, so it runs before paint.
  */
 function IdentityScript({
   ids = identities.map((item) => item.id),
   defaultIdentity,
   storageKey = IDENTITY_STORAGE_KEY,
   optInStorageKey,
-}: IdentityScriptProps): React.JSX.Element {
+}: IdentityScriptProps): React.JSX.Element | null {
+  const emitScript = useSyncExternalStore(subscribe, () => false, () => true);
+  if (!emitScript) return null;
   return (
     <script
       data-slot="identity-script"

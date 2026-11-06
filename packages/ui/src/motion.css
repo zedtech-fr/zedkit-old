@@ -52,6 +52,17 @@
     translate: 0 calc(var(--zk-reveal-distance, 0.75rem) * -1);
   }
 }
+/** Word roll exit: outgoing glides up (pair with `data-animate="fade-up"` enter on the incoming span). */
+@keyframes zk-word-roll-exit-up {
+  from {
+    opacity: 1;
+    translate: 0 0;
+  }
+  to {
+    opacity: 0;
+    translate: 0 calc(-1 * var(--zk-reveal-distance, 0.75rem));
+  }
+}
 @keyframes zk-pulse {
   50% {
     scale: 1.03;
@@ -132,6 +143,14 @@
 [data-stagger="in"] > :nth-child(7) { animation-delay: calc(6 * var(--zk-stagger-step, 70ms)); }
 [data-stagger="in"] > :nth-child(8) { animation-delay: calc(7 * var(--zk-stagger-step, 70ms)); }
 [data-stagger="in"] > :nth-child(n + 9) { animation-delay: calc(8 * var(--zk-stagger-step, 70ms)); }
+
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-motion="reduce"]) {
+    [data-word-roll] [data-word-roll="exit"] {
+      animation: zk-word-roll-exit-up var(--zk-reveal-duration, 300ms) var(--zk-reveal-ease, cubic-bezier(0.22, 1, 0.36, 1)) forwards;
+    }
+  }
+}
 
 /* data-animate: appear (pending → in), then held / progress triggers. */
 [data-animate="fade-up"][data-animate-state="pending"],
@@ -324,6 +343,7 @@
 @media (prefers-reduced-motion: reduce) {
   [data-reveal],
   [data-stagger] > *,
+  [data-word-roll] [data-word-roll="exit"],
   [data-animate],
   [data-animate-appear],
   [data-animate-scroll],
@@ -360,6 +380,7 @@
 
 :root[data-motion="reduce"] [data-reveal],
 :root[data-motion="reduce"] [data-stagger] > *,
+:root[data-motion="reduce"] [data-word-roll] [data-word-roll="exit"],
 :root[data-motion="reduce"] [data-animate],
 :root[data-motion="reduce"] [data-animate-appear],
 :root[data-motion="reduce"] [data-animate-scroll],

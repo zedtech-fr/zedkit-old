@@ -64,8 +64,8 @@ export function checkLlmsFull(text) {
   if (!text.includes("# Documentation index")) {
     errors.push("llms-full.txt: missing # Documentation index section");
   }
-  if (!text.includes("# Set up zedkit AI in Cursor")) {
-    errors.push("llms-full.txt: missing # Set up zedkit AI in Cursor section");
+  if (!text.includes("# Set up zedkit AI")) {
+    errors.push("llms-full.txt: missing # Set up zedkit AI section");
   }
   return errors;
 }

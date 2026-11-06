@@ -2,8 +2,6 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { openHeroPage, settleHero } from "./hero-helpers";
 
-const BASE = "http://127.0.0.1:3100";
-
 async function axeDashboard(page: import("@playwright/test").Page) {
   const demo = page.locator("#demo").getByLabel("Interactive admin dashboard demo in the hero");
   await expect(demo).toBeVisible();
@@ -15,7 +13,7 @@ async function axeDashboard(page: import("@playwright/test").Page) {
 }
 
 test("home dashboard: row selection and add-app toast (no detail panel in hero)", async ({ page }) => {
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   await openHeroPage(page, "Apps");
   const demo = page.locator("#demo").getByLabel("Interactive admin dashboard demo in the hero");
 
@@ -30,7 +28,7 @@ test("home dashboard: row selection and add-app toast (no detail panel in hero)"
 });
 
 test("home dashboard: create, edit, delete with axe on ready state", async ({ page }) => {
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   await openHeroPage(page, "Apps");
   const demo = page.locator("#demo").getByLabel("Interactive admin dashboard demo in the hero");
   await axeDashboard(page);
@@ -52,7 +50,7 @@ test("home dashboard: create, edit, delete with axe on ready state", async ({ pa
 });
 
 test("home dashboard: closing the create drawer restores focus to Add app", async ({ page }) => {
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   await openHeroPage(page, "Apps");
   const demo = page.locator("#demo").getByLabel("Interactive admin dashboard demo in the hero");
   await expect(demo).toBeVisible();
@@ -66,7 +64,7 @@ test("home dashboard: closing the create drawer restores focus to Add app", asyn
 });
 
 test("home dashboard: create success restores focus to Add app", async ({ page }) => {
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   await openHeroPage(page, "Apps");
   const demo = page.locator("#demo").getByLabel("Interactive admin dashboard demo in the hero");
   const add = demo.getByRole("button", { name: "Add app" });
@@ -78,7 +76,7 @@ test("home dashboard: create success restores focus to Add app", async ({ page }
 });
 
 test("home dashboard: canceling edit restores focus to the edit trigger", async ({ page }) => {
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   await openHeroPage(page, "Apps");
   const demo = page.locator("#demo").getByLabel("Interactive admin dashboard demo in the hero");
   const edit = demo.getByRole("button", { name: "Edit console" });
@@ -93,7 +91,7 @@ test("home dashboard: canceling edit restores focus to the edit trigger", async 
 test("home dashboard: focus lost to the page right after the overlay closes is given back to the edit trigger", async ({ page }) => {
   // The table can re-render and replace the button just after the overlay closes (focus falls to <body>): seen in
   // about one run in twenty, and the trigger must still end up focused. Simulated by blurring it the moment it is back.
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   await openHeroPage(page, "Apps");
   const demo = page.locator("#demo").getByLabel("Interactive admin dashboard demo in the hero");
   const edit = demo.getByRole("button", { name: "Edit console" });
@@ -107,7 +105,7 @@ test("home dashboard: focus lost to the page right after the overlay closes is g
 });
 
 test("home dashboard: preview modes are keyboard reachable", async ({ page }) => {
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   await openHeroPage(page, "Apps");
   const demo = page.locator("#demo").getByLabel("Interactive admin dashboard demo in the hero");
   const display = page.locator("[data-hero-demo-display]");

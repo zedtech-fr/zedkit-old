@@ -78,7 +78,7 @@ kit packages.
 - Layout: `AppShell` (sidebar + topbar + main slots), `PageHeader`,
   `Stack`, `Section`, `SectionScroll`, `Container` (named widths + full-bleed bands).
 - Motion: `Animate`, `AnimateObserver`, `observeAnimate` (`data-animate`
-  appear / scroll / press / longpress / hover / focus), `MotionScript`,
+  appear / scroll / press / longpress / hover / focus), `WordRoll`, `MotionScript`,
   `useMotionPreference`. Parallax layers live on `@zedtech/zedkit-ui/motion`
   (`ParallaxSection`, `ParallaxLayer`; CSS scroll-driven, 0 JS). Original
   work by the same author.

@@ -465,7 +465,7 @@ describe("installKit", () => {
     for (const dir of [".claude", ".cursor", ".codex", ".muse"]) {
       expect(existsSync(join(dest, dir)), dir).toBe(false);
     }
-    expect(actions.some((a) => a.path !== "AGENTS.md" && !a.path.startsWith(".agents/"))).toBe(false);
+    expect(actions.some((a) => a.path !== "AGENTS.md" && a.path !== ".gitignore" && !a.path.startsWith(".agents/"))).toBe(false);
   });
 
   it("installs no commands when the manifest lists none", () => {
@@ -775,6 +775,54 @@ describe("installKit", () => {
         if (referenced) expect(installed.has(name), `${file} references ${name}`).toBe(true);
       }
     }
+  });
+
+  it("creates .gitignore with the .scratch/ line on a fresh tree", () => {
+    const dest = tempDir();
+    const actions = install(dest, { preset: "starter", providers: [] });
+    expect(readFileSync(join(dest, ".gitignore"), "utf8")).toBe("# Local working plans and tickets (zedkit-ai)\n.scratch/\n");
+    expect(actions).toContainEqual({ kind: "write", path: ".gitignore", note: "ignores .scratch/" });
+  });
+
+  it("appends .scratch/ to an existing .gitignore without touching owner lines", () => {
+    for (const before of ["node_modules/\n", "node_modules/"]) {
+      const dest = tempDir();
+      put(dest, ".gitignore", before);
+      const actions = install(dest, { preset: "starter", providers: [] });
+      expect(readFileSync(join(dest, ".gitignore"), "utf8")).toBe("node_modules/\n.scratch/\n");
+      expect(actions).toContainEqual({ kind: "append", path: ".gitignore", note: "ignores .scratch/" });
+    }
+  });
+
+  it("repeated adoption keeps the ignore a skip and the bytes identical", () => {
+    const dest = tempDir();
+    put(dest, ".gitignore", "dist/\n");
+    install(dest, { preset: "setup", providers: ["cursor"], adopt: true });
+    const once = readFileSync(join(dest, ".gitignore"), "utf8");
+    expect(once).toBe("dist/\n.scratch/\n");
+    const again = install(dest, { preset: "setup", providers: ["cursor"], adopt: true });
+    expect(readFileSync(join(dest, ".gitignore"), "utf8")).toBe(once);
+    expect(again).toContainEqual({ kind: "skip", path: ".gitignore", note: "already ignores .scratch/" });
+    expect(again.filter((a) => a.path === ".gitignore" && a.kind !== "skip")).toEqual([]);
+  });
+
+  it("never writes through a linked .gitignore", () => {
+    const dest = tempDir();
+    put(dest, "shared/ignore", "dist/\n");
+    symlinkSync(join(dest, "shared/ignore"), join(dest, ".gitignore"));
+    const actions = install(dest, { preset: "starter", providers: [] });
+    expect(readFileSync(join(dest, "shared/ignore"), "utf8")).toBe("dist/\n");
+    expect(lstatSync(join(dest, ".gitignore")).isSymbolicLink()).toBe(true);
+    expect(actions).toContainEqual(
+      expect.objectContaining({ kind: "skip", path: ".gitignore" }),
+    );
+  });
+
+  it("dry run reports the ignore without writing it", () => {
+    const dest = tempDir();
+    const actions = install(dest, { preset: "starter", providers: [], dryRun: true });
+    expect(existsSync(join(dest, ".gitignore"))).toBe(false);
+    expect(actions).toContainEqual({ kind: "write", path: ".gitignore", note: "ignores .scratch/" });
   });
 });
 

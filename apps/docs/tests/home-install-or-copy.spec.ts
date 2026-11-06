@@ -2,12 +2,10 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { assertA11yGate, assertFocusUnclipped, assertFocusVisibleRing, focusWithKeyboard } from "./a11y-helpers";
 
-const BASE = "http://127.0.0.1:3100";
-
 test.describe("home adoption panel", () => {
   async function openHome(page: Page, width = 1280) {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     const panel = page.locator("#install-or-copy");
     await panel.scrollIntoViewIfNeeded();
     return panel;
@@ -15,7 +13,7 @@ test.describe("home adoption panel", () => {
 
   test("one choice, not a row of buttons: two tabs, one package-manager select", async ({ page }) => {
     const panel = await openHome(page);
-    await expect(page.getByRole("heading", { name: "Get started", level: 2 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Start your way", level: 2 })).toBeVisible();
     await expect(panel.getByRole("tablist", { name: "How to adopt" }).getByRole("tab")).toHaveText(["Install package", "Copy source"]);
     await expect(panel.getByRole("tab", { name: "Install package" })).toHaveAttribute("aria-selected", "true");
     // No pressed-state buttons standing in for a selector, and exactly one package manager control.

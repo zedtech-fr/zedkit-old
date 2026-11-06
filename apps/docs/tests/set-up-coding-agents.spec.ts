@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const PAGE = "http://127.0.0.1:3100/docs/set-up-your-coding-agents";
+const PAGE = "/docs/set-up-your-coding-agents";
 
 test("coding agents guide lists what gets installed", async ({ page }) => {
   await page.goto(PAGE, { waitUntil: "networkidle" });

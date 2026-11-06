@@ -80,7 +80,7 @@ function checkSkill(root: string, name: string, issues: Issue[]): void {
   }
   const front = parseText(path, read(file), issues);
   if (!front) return;
-  checkName(front.data.name, name.replace(/^zk-/, ""), path, issues);
+  checkName(front.data.name, name, path, issues);
   checkDescription(front.data.description, path, issues);
   // No single-line check here, deliberately: skill descriptions are read
   // through YAML-aware loaders (this kit's `yaml` parse, providers), so a
@@ -360,10 +360,47 @@ function checkSkillRefs(root: string, skills: Set<string>, kit: string, issues: 
   }
 }
 
+function checkDuplicateSkillNames(root: string, skills: Set<string>, issues: Issue[]): void {
+  const claimants = new Map<string, string[]>();
+  for (const name of [...skills].sort()) {
+    const file = join(root, "skills", name, "SKILL.md");
+    const raw = tryCatch(() => readFileSync(file, "utf8"));
+    if (!raw.ok) continue;
+    const front = parseFrontmatter(raw.value);
+    if (!front.ok || typeof front.value.data.name !== "string") continue;
+    const paths = claimants.get(front.value.data.name) ?? [];
+    paths.push(join("skills", name, "SKILL.md"));
+    claimants.set(front.value.data.name, paths);
+  }
+  for (const [claimed, paths] of [...claimants.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
+    if (paths.length < 2) continue;
+    const ordered = [...paths].sort();
+    const sidecar = ordered.find((path) => (path.split(sep)[1] ?? "").startsWith("zk-"));
+    if (sidecar !== undefined) {
+      const others = ordered.filter((path) => path !== sidecar);
+      if (others.length > 0) {
+        issues.push({
+          path: sidecar,
+          message: `duplicate skill name "${claimed}" (also claimed by ${others.join(", ")}); re-run setup to refresh the sidecar, or merge it into your copy and delete it`,
+        });
+      }
+      continue;
+    }
+    const [first, ...rest] = ordered;
+    for (const path of rest) {
+      issues.push({
+        path,
+        message: `duplicate skill name "${claimed}" (also claimed by ${first}); give each skill its own name`,
+      });
+    }
+  }
+}
+
 function collect(root: string, kit: string): Issue[] {
   const issues: Issue[] = [];
   const skills = new Set(dirsIn(join(root, "skills")));
   for (const name of skills) checkSkill(root, name, issues);
+  checkDuplicateSkillNames(root, skills, issues);
   const agentsDir = join(root, "agents");
   if (existsSync(agentsDir)) {
     for (const file of mdFiles(agentsDir)) {

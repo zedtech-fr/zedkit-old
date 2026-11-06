@@ -2,8 +2,7 @@ import { expect, test, type Page, type Route } from "@playwright/test";
 
 import { assertA11yGate, assertFocusUnclipped, assertFocusVisibleRing, focusWithKeyboard } from "./a11y-helpers";
 
-const BASE = "http://127.0.0.1:3100";
-const EDITOR = `${BASE}/features/identity-editor`;
+const EDITOR = "/features/identity-editor";
 /** `#create` is how a visitor arrives to create: the assistant opens, with focus in its form. */
 const OPEN = `${EDITOR}#create`;
 const SERVICE = "**/api/identity/suggest";
@@ -54,7 +53,7 @@ test.describe("home closing scene", () => {
   test("invites, shows an example brief with a fake link as the placeholder, and sends nothing", async ({ page }) => {
     const posts = await service(page, (_p, route) => route.abort());
     await page.setViewportSize({ width: 1280, height: 900 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     const scene = page.locator("#your-identity");
     await scene.scrollIntoViewIfNeeded();
     await expect(scene.getByRole("heading", { name: "And yours?", level: 3 })).toBeVisible();
@@ -70,13 +69,13 @@ test.describe("home closing scene", () => {
   test("Start creating opens the widget in place with the text prefilled and focused; the URL does not change", async ({ page }) => {
     const posts = await service(page, (_p, route) => route.abort());
     await page.setViewportSize({ width: 1280, height: 900 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     const scene = page.locator("#your-identity");
     await scene.scrollIntoViewIfNeeded();
     await scene.getByLabel("Your product and brand").fill("Film restoration. Like https://atelier-nord.example.org/ please.");
     await expect(scene.getByRole("list", { name: "Links found in your text" })).toContainText("atelier-nord.example.org");
     await scene.getByRole("button", { name: "Start creating" }).click();
-    await expect(page).toHaveURL(`${BASE}/`);
+    await expect(page).toHaveURL("/");
     const field = page.locator("#identity-assistant-brief");
     await expect(field).toBeVisible();
     await expect(field).toHaveValue("Film restoration. Like https://atelier-nord.example.org/ please.");
@@ -88,11 +87,11 @@ test.describe("home closing scene", () => {
   test("Start creating with an empty brief opens the widget unchanged, and the editor link keeps a way back", async ({ page }) => {
     await service(page, (_p, route) => route.abort());
     await page.setViewportSize({ width: 1280, height: 900 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     const scene = page.locator("#your-identity");
     await scene.scrollIntoViewIfNeeded();
     await scene.getByRole("button", { name: "Start creating" }).click();
-    await expect(page).toHaveURL(`${BASE}/`);
+    await expect(page).toHaveURL("/");
     await expect(page.locator("#identity-assistant-brief")).toHaveValue("");
     await page.getByRole("link", { name: "Open the detailed editor" }).click();
     await page.waitForURL("**/features/identity-editor");
@@ -101,7 +100,7 @@ test.describe("home closing scene", () => {
   });
 
   test("links in the text, full or bare, become chips that can be dropped; a fourth is said not to be read", async ({ page }) => {
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     const scene = page.locator("#your-identity");
     await scene.scrollIntoViewIfNeeded();
     const field = scene.getByLabel("Your product and brand");

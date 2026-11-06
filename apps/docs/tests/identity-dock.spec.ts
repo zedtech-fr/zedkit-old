@@ -1,6 +1,5 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
 
-const BASE = "http://127.0.0.1:3100";
 const SERVICE = "**/api/identity/suggest";
 
 async function service(page: Page, handler: (posted: { requestId: string; prompt: string }, route: Route) => ReturnType<Route["fulfill"]> | Promise<ReturnType<Route["fulfill"]>>) {
@@ -26,7 +25,7 @@ test.describe("IdentityDock", () => {
 
   test("Try the demo editor opens the dock on the editor with no inline assistant", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     await page.locator("#identities").scrollIntoViewIfNeeded();
     await page.getByRole("link", { name: "Try the demo editor" }).click();
     await page.waitForURL("**/features/identity-editor#create");
@@ -36,7 +35,7 @@ test.describe("IdentityDock", () => {
   });
 
   test("brief persists across reload in zk-identity-dock-v2", async ({ page }) => {
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     await expect(dock(page)).toBeVisible();
     await page.keyboard.press("Control+I");
     await brief(page).fill("Persist after reload");
@@ -81,7 +80,7 @@ test.describe("IdentityDock", () => {
     await page.route(`${SERVICE}/status`, (route) =>
       route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ available: true }) }),
     );
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     await page.keyboard.press("Control+I");
     await brief(page).fill("A ceramics studio");
     // No thread yet: the send control reads Generate, never Refine.
@@ -139,7 +138,7 @@ test.describe("IdentityDock", () => {
     await page.route(`${SERVICE}/status`, (route) =>
       route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ available: true }) }),
     );
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     await page.keyboard.press("Control+I");
     await brief(page).fill("I run a daily newspaper");
     await page.getByRole("button", { name: "Generate", exact: true }).click();
@@ -193,7 +192,7 @@ test.describe("IdentityDock", () => {
       route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ available: true }) }),
     );
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     await page.keyboard.press("Control+I");
     await brief(page).fill("Export block check");
     await page.getByRole("button", { name: "Generate", exact: true }).click();
@@ -202,7 +201,9 @@ test.describe("IdentityDock", () => {
     const exportBlock = page.locator("[data-slot='identity-dock-export']");
     await expect(exportBlock).toBeVisible();
     await exportBlock.getByRole("button", { name: "Copy Install command" }).click();
-    await expect.poll(async () => page.evaluate(() => navigator.clipboard.readText())).toBe("pnpm add @zedtech/zedkit-ui");
+    await expect.poll(async () => page.evaluate(() => navigator.clipboard.readText())).toBe(
+      "pnpm add @zedtech/zedkit-ui @fontsource-variable/inter",
+    );
     await expect(exportBlock.getByRole("status").first()).toContainText("Install command copied");
     await exportBlock.getByRole("button", { name: "Copy this CSS tokens" }).click();
     const css = await page.evaluate(() => navigator.clipboard.readText());
@@ -213,16 +214,16 @@ test.describe("IdentityDock", () => {
   });
 
   test("brief persists when moving to another route", async ({ page }) => {
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     await dock(page).locator("[data-slot='identity-dock-trigger']").click();
     await brief(page).fill("A calm SaaS dashboard");
-    await page.goto(`${BASE}/docs`, { waitUntil: "networkidle" });
+    await page.goto("/docs", { waitUntil: "networkidle" });
     await dock(page).locator("[data-slot='identity-dock-trigger']").click();
     await expect(brief(page)).toHaveValue("A calm SaaS dashboard");
   });
 
   test("Escape and close return focus to the dock trigger", async ({ page }) => {
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     await page.setViewportSize({ width: 1440, height: 900 });
     const trigger = dock(page).locator("[data-slot='identity-dock-trigger']");
     await trigger.focus();
@@ -239,7 +240,7 @@ test.describe("IdentityDock", () => {
 
   test("the dock does not take focus when the page loads", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     const trigger = dock(page).locator("[data-slot='identity-dock-trigger']");
     await expect(trigger).toBeVisible();
     // Give the late mount effect more than the frame it would use to move focus.
@@ -249,7 +250,7 @@ test.describe("IdentityDock", () => {
 
   test("the widget is a chat: greeting first, multiline composer with send, and no New conversation control", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     await page.keyboard.press("Control+I");
     await expect(page.locator("[data-assistant-greeting]")).toContainText("Describe your product in a few plain sentences");
     const field = brief(page);
@@ -289,7 +290,7 @@ test.describe("IdentityDock", () => {
       route.fulfill({ status: 200, contentType: "application/json", json: { requestId: posted.requestId, summary: "Warmer.", changed: ["radius"], references: [], tokens: WARM } }),
     );
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     await page.keyboard.press("Control+I");
     const field = brief(page);
     await expect(field).toBeVisible();
@@ -302,7 +303,7 @@ test.describe("IdentityDock", () => {
   });
 
   test("a garbled open request still opens the widget without touching the brief", async ({ page }) => {
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     await page.keyboard.press("Control+I");
     await brief(page).fill("kept");
     await page.evaluate(() => window.dispatchEvent(new CustomEvent("zk-identity-dock-open", { detail: 42 })));
@@ -312,7 +313,7 @@ test.describe("IdentityDock", () => {
 
   test("390px: sheet height is adjusted with the drag handle, not text detent buttons", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     await page.keyboard.press("Control+I");
     await expect(page.locator("[data-slot='identity-dock-panel']")).toBeVisible();
     await expect(page.getByRole("button", { name: /peek height|half height|full height/i })).toHaveCount(0);
@@ -329,7 +330,7 @@ test.describe("IdentityDock", () => {
       }),
     );
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     await page.keyboard.press("Control+I");
     await expect(brief(page)).toBeVisible();
     await brief(page).fill("A ceramics shop");
@@ -386,7 +387,7 @@ test.describe("IdentityDock", () => {
       route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ available: true }) }),
     );
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     await page.keyboard.press("Control+I");
     await brief(page).fill("A ceramics shop");
     await page.getByRole("button", { name: "Generate" }).click();
@@ -425,7 +426,7 @@ test.describe("IdentityDock", () => {
       }),
     );
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     await page.keyboard.press("Control+I");
     await brief(page).fill("A calm ceramics studio");
     await page.getByRole("button", { name: "Generate" }).click();
@@ -479,7 +480,7 @@ test.describe("IdentityDock", () => {
       }),
     );
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     await page.keyboard.press("Control+I");
     await expect(page.getByRole("button", { name: "Apply to the whole site" })).toHaveCount(0);
     await brief(page).fill("A cool SaaS dashboard");
@@ -518,7 +519,7 @@ test.describe("IdentityDock reduced motion", () => {
   test.use({ reducedMotion: "reduce" });
 
   test("the composer placeholder stays still", async ({ page }) => {
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     await page.keyboard.press("Control+I");
     const field = page.locator("#identity-assistant-brief");
     await expect(field).toBeVisible();

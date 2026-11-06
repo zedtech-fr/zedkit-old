@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { assertA11yGate } from "./a11y-helpers";
 
-const BASE = "http://127.0.0.1:3100/docs/ui";
+const BASE = "/docs/ui";
 const IDENTITIES = ["mist", "press", "tide", "volt", "maison", "glass"] as const;
 const OFFLINE = "flag-offline-state-with-a-live-note";
 const THEME = "theme-an-admin-app-dark-light-included";

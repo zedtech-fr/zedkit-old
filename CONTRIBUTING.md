@@ -12,9 +12,9 @@ Rules:
 - Each PR adds a Changeset file (`.changeset/<name>.md`); CI runs
   typecheck, lint, test, build, and the public-safety checks.
 - Merge on green CI (squash) after a reviewer posts **MERGE-OK** on the
-  latest commit. PRs that touch `packages/*` or docs/README/registry must
-  include the Lenses run and Personas tables from the PR template (CI
-  checks). No force-push to `main`.
+  latest commit. PRs carry 1–3 meaningful reviews proportionate to risk
+  (findings with evidence, or explicit reservations); review tools and
+  lenses are aids only. No force-push to `main`.
 - **`main` is protected:** required checks and merge rules are documented in
   [docs/ci-branch-protection.md](docs/ci-branch-protection.md).
 - TypeScript strict, ESM + types, vitest. Raw `try`/`catch` is banned —

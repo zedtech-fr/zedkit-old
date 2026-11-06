@@ -9,6 +9,7 @@ const QUOTED: Array<{ fragment: string; src: string }> = [
   { fragment: "copy missing", src: "validate.ts" },
   { fragment: "or re-run init", src: "validate.ts" },
   { fragment: "names no installed skill", src: "validate.ts" },
+  { fragment: "duplicate skill name", src: "validate.ts" },
   { fragment: "lists missing", src: "validate.ts" },
   { fragment: "no such directory", src: "cli.ts" },
 ];

@@ -58,7 +58,7 @@ function HomeAiSetupWhatYouGet() {
             <Text variant="muted" className={HOME_PERSUASION_TEXT_CLASS}>
               {whatYouGet.items[item.id].body}
             </Text>
-            <Text variant="muted" typeRole="caption" className={`font-mono wrap-anywhere ${HOME_METADATA_TEXT_CLASS}`}>
+            <Text variant="muted" typeRole="caption" className={`font-mono wrap-anywhere max-sm:hidden ${HOME_METADATA_TEXT_CLASS}`}>
               {item.names}
             </Text>
           </li>

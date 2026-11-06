@@ -2,7 +2,6 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { catalogIndex } from "../content/catalog-index";
 
-const BASE = "http://127.0.0.1:3100";
 const MOBILE = { width: 390, height: 844 };
 
 async function gotoCatalogQuiet(page: Page, path = "/catalog") {
@@ -11,7 +10,7 @@ async function gotoCatalogQuiet(page: Page, path = "/catalog") {
   page.on("console", (msg) => {
     if (msg.type() === "error") errors.push(msg.text());
   });
-  await page.goto(`${BASE}${path}`, { waitUntil: "networkidle" });
+  await page.goto(path, { waitUntil: "networkidle" });
   await expect(page.getByRole("heading", { name: "Catalog", level: 1 })).toBeVisible();
   return errors;
 }
@@ -103,7 +102,7 @@ test("catalog has no console errors with a filter in the URL", async ({ page }) 
 
 test("catalog area filters keep a decorative icon", async ({ page }) => {
   await page.setViewportSize(MOBILE);
-  await page.goto(`${BASE}/catalog`, { waitUntil: "networkidle" });
+  await page.goto("/catalog", { waitUntil: "networkidle" });
   await page.getByLabel("Area").click();
   for (const name of ["UI", "Core & server", "SEO", "Agents"] as const) {
     await expect(page.getByRole("option", { name, exact: true }).locator("svg[aria-hidden='true']")).toHaveCount(1);
@@ -117,7 +116,7 @@ test("catalog area filters keep a decorative icon", async ({ page }) => {
 
 test("catalog results group by category without per-row area chips", async ({ page }) => {
   await page.setViewportSize(MOBILE);
-  await page.goto(`${BASE}/catalog`, { waitUntil: "networkidle" });
+  await page.goto("/catalog", { waitUntil: "networkidle" });
   await expect(page.getByRole("heading", { name: /^UI · \d+$/, level: 2 })).toBeVisible();
   await expect(page.getByRole("heading", { name: /^Core & server · \d+$/, level: 2 })).toBeVisible();
   await expect(page.locator("[data-catalog-area]")).toHaveCount(0);
@@ -128,7 +127,7 @@ test("catalog results group by category without per-row area chips", async ({ pa
 });
 
 test("catalog area filter shows one category group", async ({ page }) => {
-  await page.goto(`${BASE}/catalog?area=seo`, { waitUntil: "networkidle" });
+  await page.goto("/catalog?area=seo", { waitUntil: "networkidle" });
   await expect(page.getByRole("heading", { name: /^SEO · \d+$/, level: 2 })).toHaveCount(1);
   await expect(page.getByRole("heading", { name: /^UI · /, level: 2 })).toHaveCount(0);
   await expect(page.getByRole("navigation", { name: "Jump to category" })).toHaveCount(0);
@@ -136,7 +135,7 @@ test("catalog area filter shows one category group", async ({ page }) => {
 
 test("catalog result maturity chips keep a decorative icon", async ({ page }) => {
   await page.setViewportSize(MOBILE);
-  await page.goto(`${BASE}/catalog`, { waitUntil: "networkidle" });
+  await page.goto("/catalog", { waitUntil: "networkidle" });
   const badges = page.locator("a[data-badge-link]");
   const badgeCount = await badges.count();
   const expectedBadges = catalogIndex.filter((entry) => entry.status.toLowerCase() !== "stable").length;
@@ -156,7 +155,7 @@ test.describe("catalog grouped results mobile visual", () => {
       localStorage.setItem("zk-docs-site-identity-opt-in", "1");
       localStorage.setItem("theme", "light");
     });
-    await page.goto(`${BASE}/catalog`, { waitUntil: "networkidle" });
+    await page.goto("/catalog", { waitUntil: "networkidle" });
     const results = page.locator("[data-catalog-results]");
     await expect(page.getByRole("status").filter({ hasText: /^\d+ entries$/ })).toBeVisible();
     await expect(page.getByRole("link", { name: /UI \(\d+\)/ })).toBeVisible();
@@ -174,7 +173,7 @@ test.describe("catalog result maturity chips light/dark", () => {
         localStorage.setItem("zk-docs-site-identity-opt-in", "1");
         localStorage.setItem("theme", theme);
       }, mode);
-      await page.goto(`${BASE}/catalog`, { waitUntil: "networkidle" });
+      await page.goto("/catalog", { waitUntil: "networkidle" });
       const badge = page.locator("a[data-badge-link]").first();
       await badge.scrollIntoViewIfNeeded();
       await expect(badge).toBeVisible();
@@ -187,7 +186,7 @@ test.describe("catalog result maturity chips light/dark", () => {
 
 test("catalog search keeps every letter while typing", async ({ page }) => {
   await page.setViewportSize(MOBILE);
-  await page.goto(`${BASE}/catalog`, { waitUntil: "networkidle" });
+  await page.goto("/catalog", { waitUntil: "networkidle" });
   const search = page.getByRole("searchbox", { name: "Catalog search" });
   await search.click();
   await search.pressSequentially("dialog", { delay: 20 });
@@ -196,7 +195,7 @@ test("catalog search keeps every letter while typing", async ({ page }) => {
 });
 
 test("catalog filters persist in the URL and show empty state", async ({ page }) => {
-  await page.goto(`${BASE}/catalog`, { waitUntil: "networkidle" });
+  await page.goto("/catalog", { waitUntil: "networkidle" });
   await expect(page.getByRole("heading", { name: "Catalog", level: 1 })).toBeVisible();
   await page.getByLabel("Area").click();
   await page.getByRole("option", { name: "UI", exact: true }).click();
@@ -240,7 +239,7 @@ test("catalog first viewport shows result rows at 390", async ({ page }) => {
 test("catalog filter chips use quiet fill not primary accent", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("theme", "dark"));
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(`${BASE}/catalog?area=ui`, { waitUntil: "networkidle" });
+  await page.goto("/catalog?area=ui", { waitUntil: "networkidle" });
   const chip = page.getByRole("button", { name: "UI", exact: true }).first();
   await expect(chip).toBeVisible();
   const usesPrimaryBg = await chip.evaluate((el) => {
@@ -258,7 +257,7 @@ test("catalog filter chips use quiet fill not primary accent", async ({ page }) 
 });
 
 test("home links to catalog with component families", async ({ page }) => {
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   const catalog = page.getByRole("link", { name: /Browse all UI in the catalog/ });
   await expect(catalog).toBeVisible();
   await expect(catalog.locator("svg[aria-hidden='true']")).toHaveCount(1);
@@ -268,7 +267,7 @@ test("home links to catalog with component families", async ({ page }) => {
 
 test("catalog CTA keeps a decorative icon at phone width", async ({ page }) => {
   await page.setViewportSize(MOBILE);
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   const catalog = page.getByRole("link", { name: /Browse all UI in the catalog/ });
   await catalog.scrollIntoViewIfNeeded();
   await expect(catalog.locator("svg[aria-hidden='true']")).toHaveCount(1);
@@ -287,7 +286,7 @@ test.describe("catalog CTA light/dark", () => {
         localStorage.setItem("zk-docs-site-identity-opt-in", "1");
         localStorage.setItem("theme", theme);
       }, mode);
-      await page.goto(BASE, { waitUntil: "networkidle" });
+      await page.goto("/", { waitUntil: "networkidle" });
       const catalog = page.getByRole("link", { name: /Browse all UI in the catalog/ });
   await catalog.scrollIntoViewIfNeeded();
       await catalog.scrollIntoViewIfNeeded();

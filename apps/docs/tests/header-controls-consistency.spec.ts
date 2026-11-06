@@ -5,7 +5,6 @@ import { DEFAULT_IDENTITY } from "../lib/default-identity";
 import { homeCopy } from "../ui/home/i18n/home-copy";
 import { persistDocsSiteLook, waitForAppliedLook } from "./identity-helpers";
 
-const BASE = process.env.DOCS_E2E_BASE_URL ?? "http://127.0.0.1:3100";
 const SHOTS = process.env.HOME_LINK_SHOTS;
 const shotPath = (name: string) => (SHOTS ? `${SHOTS}/${name}` : `test-results/${name}`);
 
@@ -17,7 +16,7 @@ for (const theme of ["light", "dark"] as const) {
     test(`consistency after ${name}px ${theme}`, async ({ page }) => {
       await persistDocsSiteLook(page, DEFAULT_IDENTITY, theme);
       await page.setViewportSize({ width, height: 900 });
-      await page.goto(BASE, { waitUntil: "networkidle" });
+      await page.goto("/", { waitUntil: "networkidle" });
       await waitForAppliedLook(page, DEFAULT_IDENTITY, theme);
 
       if (width >= 768) {
@@ -99,7 +98,7 @@ for (const theme of ["light", "dark"] as const) {
 
 test("shell version label is caption text, not a link", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(BASE, { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
   const version = page.locator("#nd-nav [data-kit-version]");
   await expect(version).toBeVisible();
   const style = await version.evaluate((el) => {
@@ -115,7 +114,7 @@ for (const theme of ["light", "dark"] as const) {
   test(`guides menu glass panel at 1440 ${theme}`, async ({ page }) => {
     await persistDocsSiteLook(page, DEFAULT_IDENTITY, theme);
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     await waitForAppliedLook(page, DEFAULT_IDENTITY, theme);
     const header = page.locator("#nd-nav");
     await header.getByRole("button", { name: "Guides" }).hover();

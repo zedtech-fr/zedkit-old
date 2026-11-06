@@ -97,10 +97,10 @@ export function DarkThemeButton() {
 - Troubleshooting: English still shows — the provider is missing above that host, or a label prop is set. A custom bundle must keep every key (`locale` included) so `UpdatedAgo` can pick `Intl.RelativeTimeFormat`.
 
 ```ts
-import { ZedkitUiProvider, zedkitUiMessagesFr } from "@zedtech/zedkit-ui";
+import { Button, ZedkitUiProvider, zedkitUiMessagesFr } from "@zedtech/zedkit-ui";
 
 <ZedkitUiProvider messages={zedkitUiMessagesFr}>
-  {children}
+  <Button>Enregistrer</Button>
 </ZedkitUiProvider>
 ```
 
@@ -212,6 +212,33 @@ import { Animate, Stack, Text } from "@zedtech/zedkit-ui";
 </Animate>
 ```
 
+## Cycle a word in a clipped slot
+
+- Import: `@zedtech/zedkit-ui` — `WordRoll`, `WordRollProps`
+- Attributes: `data-word-roll`, `data-word-roll="exit"` (on the outgoing layer, styled in `motion.css`)
+- Wraps: `(none)` — composes with `data-animate="fade-up"` on the incoming span (mount `AnimateObserver` / `observeAnimate` once for appear)
+- Status: alpha
+- Short name: Word roll
+- Audience: Headlines or inline labels that rotate a single word without remount-only fades.
+- Purpose: Stable-height clipped slot with padded block axis so descenders and underline stay visible; outgoing glides up (`zk-word-roll-exit-up`), incoming uses the standard appear contract (`fade-up` from below).
+- When to use: Cycling provider names, emphasis words, or short tokens next to static copy.
+- When not to use: Full sentences or list carousels — use content-specific layout. For scroll reveal only, use `data-reveal` / `data-animate` without WordRoll.
+- See also: `Reveal and react with motion on any element`
+- Examples: Inline in a heading
+- A11y: Treat the roll as decorative when the full phrase is provided via `aria-label` on the heading; set `aria-hidden` on `WordRoll`. Under reduced motion, prefer a static inclusive string instead of cycling.
+- Troubleshooting: Incoming stays invisible — ensure `observeAnimate()` runs (same as any `data-animate` appear). Exit does not move — check `prefers-reduced-motion` and `data-motion="reduce"`.
+
+```ts
+import { Heading, WordRoll } from "@zedtech/zedkit-ui";
+
+const words = ["Cursor", "Muse", "Claude"] as const;
+
+<Heading level={1} typeRole="title" aria-label={`Set up in ${words.join(", ")}`}>
+  Set up in{" "}
+  <WordRoll words={words} value={words[0]} dwellMs={300} aria-hidden />
+</Heading>
+```
+
 ## Trigger actions with buttons
 
 - Import: `@zedtech/zedkit-ui` — `Button`, `buttonVariants`, `ButtonProps`
@@ -265,9 +292,9 @@ import { Button } from "@zedtech/zedkit-ui";
 import { Archive, RefreshCw, Share2 } from "lucide-react";
 import { IconButton } from "@zedtech/zedkit-ui";
 
-<IconButton label="Refresh tasks" variant="ghost" onClick={refresh}><RefreshCw /></IconButton>
-<IconButton label="Share project" variant="ghost" onClick={share}><Share2 /></IconButton>
-<IconButton label="Archive project" variant="outline" onClick={archive}><Archive /></IconButton>
+<IconButton label="Refresh tasks" variant="ghost" onClick={() => {}}><RefreshCw /></IconButton>
+<IconButton label="Share project" variant="ghost" onClick={() => {}}><Share2 /></IconButton>
+<IconButton label="Archive project" variant="outline" onClick={() => {}}><Archive /></IconButton>
 ```
 
 ```ts
@@ -481,7 +508,7 @@ import { StatusDot } from "@zedtech/zedkit-ui";
 
 ```ts
 import { PromptInput } from "@zedtech/zedkit-ui";
-<PromptInput sendLabel="Send" value={text} onChange={(e) => setText(e.target.value)} onSubmit={send} placeholder="Ask anything" aria-label="Message" />
+<PromptInput sendLabel="Send" defaultValue="Summarize this page" onSubmit={() => {}} placeholder="Ask anything" aria-label="Message" />
 ```
 
 ```ts
@@ -616,9 +643,9 @@ import { Checkmark } from "@zedtech/zedkit-ui";
 
 ```ts
 import { Suspense } from "react";
-import { CardSkeleton } from "@zedtech/zedkit-ui";
+import { Card, CardContent, CardSkeleton } from "@zedtech/zedkit-ui";
 <Suspense fallback={<CardSkeleton label="Loading report" />}>
-  <ReportCard />
+  <Card><CardContent>Annual report.</CardContent></Card>
 </Suspense>
 ```
 
@@ -677,7 +704,7 @@ import { StatusLabel } from "@zedtech/zedkit-ui";
 
 ```ts
 import { UpdatedAgo } from "@zedtech/zedkit-ui";
-<UpdatedAgo date={updatedAt} /> // "Updated 3 minutes ago" via Intl.RelativeTimeFormat
+<UpdatedAgo date={Date.now() - 3 * 60 * 1000} /> {/* "Updated 3 minutes ago" via Intl.RelativeTimeFormat */}
 ```
 
 ```ts
@@ -925,7 +952,7 @@ import { Button, Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader,
 ```ts
 import { Button, ConfirmDialog } from "@zedtech/zedkit-ui";
 <ConfirmDialog trigger={<Button>Delete</Button>} title="Delete item?"
-  description="This cannot be undone." onConfirm={remove} />
+  description="This cannot be undone." onConfirm={() => {}} />
 ```
 
 ```ts
@@ -1306,7 +1333,7 @@ import { AppShell, PageHeader } from "@zedtech/zedkit-ui";
 
 ```ts
 import { AppShell } from "@zedtech/zedkit-ui";
-<AppShell sidebar={<OrgNav />}> // topbar is optional
+<AppShell sidebar={<nav aria-label="Primary"><a href="#">Overview</a></nav>}> {/* topbar is optional */}
   <p>Content.</p>
 </AppShell>
 ```
@@ -1425,6 +1452,7 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldSet }
 <FieldSet><FieldGroup><Field>
 <FieldLabel>Name</FieldLabel><FieldDescription>Public.</FieldDescription>
 <FieldError errors={[{ message: "Too short." }]} />
+</Field></FieldGroup></FieldSet>
 ```
 
 ## Shared panel surface (border, shadow, glass)

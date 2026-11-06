@@ -28,14 +28,14 @@ Communication to and from subagents should be sparse. Communicate primarily thro
    - confirms its worktree is based on the integration branch before starting, and resets onto it if not;
    - re-asks the `ponytail-review` ladder before writing each piece, and
      stops and replans the ticket if a higher rung holds;
-   - calls the Skill tool with `tdd` to build the ticket;
+   - calls the Skill tool with `tdd` to build the ticket. Without a Skill tool, open that skill's `SKILL.md` under `.agents/skills/` and follow its steps in this conversation (same for repo-added skills; explicit-only skills still need an explicit user call).
    - merges the integration branch tip into its own branch before reporting done
 
 5. Once an **implementer subagent** completes, merge its work to the integration branch with a **merger subagent**.
 
 6. If this changes the **frontier** of available tickets, kick off more **implementer subagents** to work on the new tickets. This allows for maximum concurrency.
 
-7. Once all tickets are complete, call the Skill tool with `code-review` on the integration branch. Fix all issues raised by the code review in a single **implementer subagent**.
+7. Once all tickets are complete, call the Skill tool with `code-review` on the integration branch. Without a Skill tool, open that skill's `SKILL.md` under `.agents/skills/` and follow its steps in this conversation (same for repo-added skills; explicit-only skills still need an explicit user call). Fix all issues raised by the code review in a single **implementer subagent**.
 
 8. If a draft PR exists, mark it ready for review. Otherwise, resolve each ticket the way the issue tracker closes work, and report the integration branch.
 

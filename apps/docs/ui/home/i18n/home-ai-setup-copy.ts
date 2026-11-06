@@ -1,9 +1,9 @@
 /** English copy for the home AI setup band. Counts and file names come from the kit manifest, not from here. */
 export const homeAiSetupCopy = {
   section: {
-    title: "One prompt gets you a top-notch AI setup",
+    title: "One prompt, and your agent knows your repo",
     description:
-      "Paste it in a new Cursor chat at your repo root. The agent installs the kit, reads your code, docs and CI, asks up to eight questions, then writes rules that match your repo.",
+      "Paste it in a new chat at your repo root (Cursor, Muse, Claude Code, or similar). The agent installs the kit, reads your code, docs and CI, asks up to eight questions, then writes rules that match your repo.",
   },
   prompt: {
     label: "Your prompt",

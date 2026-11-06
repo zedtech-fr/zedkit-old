@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 
-const BASE = "http://127.0.0.1:3100";
 const PROMPT = "Set up zedkit AI on this repo following https://zedkit.app/ai/setup.md";
 
 test.describe("home AI setup section", () => {
@@ -11,11 +10,11 @@ test.describe("home AI setup section", () => {
   test("sits right after the hero, copies the prompt, links the guide", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await page.setViewportSize({ width: 390, height: 900 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
 
     const aiSetup = page.locator("#ai-setup");
     await expect(aiSetup).toBeVisible();
-    await expect(aiSetup.getByRole("heading", { level: 2, name: "One prompt gets you a top-notch AI setup" })).toBeVisible();
+    await expect(aiSetup.getByRole("heading", { level: 2, name: "One prompt, and your agent knows your repo" })).toBeVisible();
     await expect(aiSetup.getByRole("heading", { level: 3, name: "What you get" })).toBeVisible();
 
     const hero = await page.locator("[data-home-hero-band]").boundingBox();
@@ -38,18 +37,29 @@ test.describe("home AI setup section", () => {
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1);
 
     await expect(aiSetup.getByRole("link", { name: "Read the AI setup guide" })).toHaveAttribute("href", "/docs/ai/setup");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("top-notch AI setup, one prompt away");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Your AI agent, set up with one prompt");
   });
 
   test("the guide route exists", async ({ page }) => {
-    const response = await page.goto(`${BASE}/docs/ai/setup`, { waitUntil: "networkidle" });
+    const response = await page.goto("/docs/ai/setup", { waitUntil: "networkidle" });
     expect(response?.status()).toBe(200);
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Set up zedkit AI");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Set up zedkit AI in");
+    await expect(page.locator("h1 [data-slot='word-roll']")).toBeVisible();
+    await expect(page.getByText("Give your coding agent one prompt to set up ZedKit AI in your project.")).toBeVisible();
+    await expect(page.locator("[data-slot='text'] p")).toHaveCount(0);
+  });
+
+  test("the guide H1 keeps the same tree under reduced motion (no cycling)", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/docs/ai/setup", { waitUntil: "networkidle" });
+    await expect(page.getByRole("heading", { level: 1, name: "Set up zedkit AI in Cursor, Muse, Claude, or your choice" })).toBeVisible();
+    await expect(page.locator("h1 [data-word-roll='in']")).toHaveText("Cursor");
+    await expect(page.locator("h1 [data-animate]")).toHaveCount(0);
   });
 
   test("terminal region is keyboard reachable and wide screens show it beside the prompt", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     const terminal = page.locator("#ai-setup").getByRole("region", { name: "Files the AI setup creates" });
     await terminal.focus();
     await expect(terminal).toBeFocused();
@@ -61,7 +71,7 @@ test.describe("home AI setup section", () => {
 
   test("no skill or subagent counters; the benefits name what the setup does", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     const text = await page.locator("#ai-setup").innerText();
     expect(text).not.toMatch(/\b\d+\s+(skills?|subagents?|agents?|commands?)\b/i);
     for (const title of ["Thin orchestration", "Clear roles", "Business rules from your code", "Skills tailored to your repo"]) {
@@ -71,7 +81,7 @@ test.describe("home AI setup section", () => {
 
   test("the shorter column stays in view while the longer one scrolls (StickyAside)", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     const aside = page.locator("#ai-setup [data-sticky-aside-aside]");
     const main = page.locator("#ai-setup [data-sticky-aside-main]");
     const heights = await Promise.all([aside.boundingBox(), main.boundingBox()]);
@@ -87,22 +97,17 @@ test.describe("home AI setup section", () => {
     expect(first).toBeLessThan(120);
   });
 
-  test("the entrance uses the kit animate layer and the hero keeps top-notch on one line at 390px", async ({ page }) => {
+  test("the entrance uses the kit animate layer", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     await expect(page.locator("#ai-setup [data-animate-stagger]")).toHaveAttribute("data-animate", "fade-up");
     await expect(page.locator("#ai-setup [data-slot='animate']")).toHaveAttribute("data-animate", "fade-in");
-    const lines = await page.evaluate(() => {
-      const span = document.querySelector("h1 span.whitespace-nowrap")!;
-      return span.getClientRects().length;
-    });
-    expect(lines).toBe(1);
   });
 
   test("under reduced motion nothing waits for an entrance", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto(BASE, { waitUntil: "networkidle" });
+    await page.goto("/", { waitUntil: "networkidle" });
     await page.locator("#ai-setup").scrollIntoViewIfNeeded();
     const pending = await page.locator("#ai-setup [data-animate-state='pending']").count();
     expect(pending).toBe(0);

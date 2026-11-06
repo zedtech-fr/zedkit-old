@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const URL = "http://127.0.0.1:3100/docs/ui/lay-out-an-admin-page-sidebar-topbar-header";
+const URL = "/docs/ui/lay-out-an-admin-page-sidebar-topbar-header";
 const IDENTITIES = ["mist", "press", "tide", "volt", "maison", "glass"] as const;
 
 test.describe("page shell preview is a complete screen", () => {

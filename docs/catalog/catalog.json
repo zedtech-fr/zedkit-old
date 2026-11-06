@@ -2843,11 +2843,11 @@
           "whenToUse": "Around the tree when the UI language is not English, or when you pass your own copy.",
           "whenNotToUse": "For app copy (page titles, form labels, empty-state stories) — keep those in your own messages.",
           "derivedFrom": null,
-          "example": "import { ZedkitUiProvider, zedkitUiMessagesFr } from \"@zedtech/zedkit-ui\";\n\n<ZedkitUiProvider messages={zedkitUiMessagesFr}>\n  {children}\n</ZedkitUiProvider>",
+          "example": "import { Button, ZedkitUiProvider, zedkitUiMessagesFr } from \"@zedtech/zedkit-ui\";\n\n<ZedkitUiProvider messages={zedkitUiMessagesFr}>\n  <Button>Enregistrer</Button>\n</ZedkitUiProvider>",
           "examples": [
             {
               "title": "French bundle",
-              "code": "import { ZedkitUiProvider, zedkitUiMessagesFr } from \"@zedtech/zedkit-ui\";\n\n<ZedkitUiProvider messages={zedkitUiMessagesFr}>\n  {children}\n</ZedkitUiProvider>"
+              "code": "import { Button, ZedkitUiProvider, zedkitUiMessagesFr } from \"@zedtech/zedkit-ui\";\n\n<ZedkitUiProvider messages={zedkitUiMessagesFr}>\n  <Button>Enregistrer</Button>\n</ZedkitUiProvider>"
             },
             {
               "title": "Override one string",
@@ -3028,6 +3028,42 @@
           ]
         },
         {
+          "need": "Cycle a word in a clipped slot",
+          "import": "`@zedtech/zedkit-ui` — `WordRoll`, `WordRollProps`",
+          "wraps": "`(none)` — composes with `data-animate=\"fade-up\"` on the incoming span (mount `AnimateObserver` / `observeAnimate` once for appear)",
+          "status": "alpha",
+          "shortName": "Word roll",
+          "audience": "Headlines or inline labels that rotate a single word without remount-only fades.",
+          "purpose": "Stable-height clipped slot with padded block axis so descenders and underline stay visible; outgoing glides up (`zk-word-roll-exit-up`), incoming uses the standard appear contract (`fade-up` from below).",
+          "whenToUse": "Cycling provider names, emphasis words, or short tokens next to static copy.",
+          "whenNotToUse": "Full sentences or list carousels — use content-specific layout. For scroll reveal only, use `data-reveal` / `data-animate` without WordRoll.",
+          "derivedFrom": null,
+          "example": "import { Heading, WordRoll } from \"@zedtech/zedkit-ui\";\n\nconst words = [\"Cursor\", \"Muse\", \"Claude\"] as const;\n\n<Heading level={1} typeRole=\"title\" aria-label={`Set up in ${words.join(\", \")}`}>\n  Set up in{\" \"}\n  <WordRoll words={words} value={words[0]} dwellMs={300} aria-hidden />\n</Heading>",
+          "examples": [
+            {
+              "title": "Inline in a heading",
+              "code": "import { Heading, WordRoll } from \"@zedtech/zedkit-ui\";\n\nconst words = [\"Cursor\", \"Muse\", \"Claude\"] as const;\n\n<Heading level={1} typeRole=\"title\" aria-label={`Set up in ${words.join(\", \")}`}>\n  Set up in{\" \"}\n  <WordRoll words={words} value={words[0]} dwellMs={300} aria-hidden />\n</Heading>"
+            }
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "WordRoll",
+                  "WordRollProps"
+                ]
+              }
+            ]
+          },
+          "a11y": "Treat the roll as decorative when the full phrase is provided via `aria-label` on the heading; set `aria-hidden` on `WordRoll`. Under reduced motion, prefer a static inclusive string instead of cycling.",
+          "troubleshooting": "Incoming stays invisible — ensure `observeAnimate()` runs (same as any `data-animate` appear). Exit does not move — check `prefers-reduced-motion` and `data-motion=\"reduce\"`.",
+          "seeAlso": [
+            "Reveal and react with motion on any element"
+          ]
+        },
+        {
           "need": "Trigger actions with buttons",
           "import": "`@zedtech/zedkit-ui` — `Button`, `buttonVariants`, `ButtonProps`",
           "wraps": "`@radix-ui/react-slot`, `class-variance-authority`",
@@ -3080,11 +3116,11 @@
           "whenToUse": "Toolbar or header controls where the glyph alone is not enough for screen readers.",
           "whenNotToUse": "Actions with visible text — use `Button` instead.",
           "derivedFrom": null,
-          "example": "import { Archive, RefreshCw, Share2 } from \"lucide-react\";\nimport { IconButton } from \"@zedtech/zedkit-ui\";\n\n<IconButton label=\"Refresh tasks\" variant=\"ghost\" onClick={refresh}><RefreshCw /></IconButton>\n<IconButton label=\"Share project\" variant=\"ghost\" onClick={share}><Share2 /></IconButton>\n<IconButton label=\"Archive project\" variant=\"outline\" onClick={archive}><Archive /></IconButton>",
+          "example": "import { Archive, RefreshCw, Share2 } from \"lucide-react\";\nimport { IconButton } from \"@zedtech/zedkit-ui\";\n\n<IconButton label=\"Refresh tasks\" variant=\"ghost\" onClick={() => {}}><RefreshCw /></IconButton>\n<IconButton label=\"Share project\" variant=\"ghost\" onClick={() => {}}><Share2 /></IconButton>\n<IconButton label=\"Archive project\" variant=\"outline\" onClick={() => {}}><Archive /></IconButton>",
           "examples": [
             {
               "title": "Project toolbar",
-              "code": "import { Archive, RefreshCw, Share2 } from \"lucide-react\";\nimport { IconButton } from \"@zedtech/zedkit-ui\";\n\n<IconButton label=\"Refresh tasks\" variant=\"ghost\" onClick={refresh}><RefreshCw /></IconButton>\n<IconButton label=\"Share project\" variant=\"ghost\" onClick={share}><Share2 /></IconButton>\n<IconButton label=\"Archive project\" variant=\"outline\" onClick={archive}><Archive /></IconButton>"
+              "code": "import { Archive, RefreshCw, Share2 } from \"lucide-react\";\nimport { IconButton } from \"@zedtech/zedkit-ui\";\n\n<IconButton label=\"Refresh tasks\" variant=\"ghost\" onClick={() => {}}><RefreshCw /></IconButton>\n<IconButton label=\"Share project\" variant=\"ghost\" onClick={() => {}}><Share2 /></IconButton>\n<IconButton label=\"Archive project\" variant=\"outline\" onClick={() => {}}><Archive /></IconButton>"
             },
             {
               "title": "Row actions in a list",
@@ -3380,11 +3416,11 @@
           "whenToUse": "Chat-style briefs where the send affordance sits inside the composer.",
           "whenNotToUse": "Plain forms with a separate submit row — use `Field` + `Textarea` + `Button`.",
           "derivedFrom": null,
-          "example": "import { PromptInput } from \"@zedtech/zedkit-ui\";\n<PromptInput sendLabel=\"Send\" value={text} onChange={(e) => setText(e.target.value)} onSubmit={send} placeholder=\"Ask anything\" aria-label=\"Message\" />",
+          "example": "import { PromptInput } from \"@zedtech/zedkit-ui\";\n<PromptInput sendLabel=\"Send\" defaultValue=\"Summarize this page\" onSubmit={() => {}} placeholder=\"Ask anything\" aria-label=\"Message\" />",
           "examples": [
             {
               "title": "Simple",
-              "code": "import { PromptInput } from \"@zedtech/zedkit-ui\";\n<PromptInput sendLabel=\"Send\" value={text} onChange={(e) => setText(e.target.value)} onSubmit={send} placeholder=\"Ask anything\" aria-label=\"Message\" />"
+              "code": "import { PromptInput } from \"@zedtech/zedkit-ui\";\n<PromptInput sendLabel=\"Send\" defaultValue=\"Summarize this page\" onSubmit={() => {}} placeholder=\"Ask anything\" aria-label=\"Message\" />"
             },
             {
               "title": "Complete",
@@ -3548,11 +3584,11 @@
           "whenToUse": "As a `Suspense` fallback matching the component that will land.",
           "whenNotToUse": "For freeform blocks — use a plain `Skeleton`; for named operations — use `StatusLabel`.",
           "derivedFrom": null,
-          "example": "import { Suspense } from \"react\";\nimport { CardSkeleton } from \"@zedtech/zedkit-ui\";\n<Suspense fallback={<CardSkeleton label=\"Loading report\" />}>\n  <ReportCard />\n</Suspense>",
+          "example": "import { Suspense } from \"react\";\nimport { Card, CardContent, CardSkeleton } from \"@zedtech/zedkit-ui\";\n<Suspense fallback={<CardSkeleton label=\"Loading report\" />}>\n  <Card><CardContent>Annual report.</CardContent></Card>\n</Suspense>",
           "examples": [
             {
               "title": "In Suspense",
-              "code": "import { Suspense } from \"react\";\nimport { CardSkeleton } from \"@zedtech/zedkit-ui\";\n<Suspense fallback={<CardSkeleton label=\"Loading report\" />}>\n  <ReportCard />\n</Suspense>"
+              "code": "import { Suspense } from \"react\";\nimport { Card, CardContent, CardSkeleton } from \"@zedtech/zedkit-ui\";\n<Suspense fallback={<CardSkeleton label=\"Loading report\" />}>\n  <Card><CardContent>Annual report.</CardContent></Card>\n</Suspense>"
             },
             {
               "title": "Standalone",
@@ -3653,11 +3689,11 @@
           "whenToUse": "Under data that refreshes (polling, SWR, manual refetch).",
           "whenNotToUse": "For absolute timestamps — render a `<time dateTime>` instead.",
           "derivedFrom": null,
-          "example": "import { UpdatedAgo } from \"@zedtech/zedkit-ui\";\n<UpdatedAgo date={updatedAt} /> // \"Updated 3 minutes ago\" via Intl.RelativeTimeFormat",
+          "example": "import { UpdatedAgo } from \"@zedtech/zedkit-ui\";\n<UpdatedAgo date={Date.now() - 3 * 60 * 1000} /> {/* \"Updated 3 minutes ago\" via Intl.RelativeTimeFormat */}",
           "examples": [
             {
               "title": "Simple",
-              "code": "import { UpdatedAgo } from \"@zedtech/zedkit-ui\";\n<UpdatedAgo date={updatedAt} /> // \"Updated 3 minutes ago\" via Intl.RelativeTimeFormat"
+              "code": "import { UpdatedAgo } from \"@zedtech/zedkit-ui\";\n<UpdatedAgo date={Date.now() - 3 * 60 * 1000} /> {/* \"Updated 3 minutes ago\" via Intl.RelativeTimeFormat */}"
             },
             {
               "title": "Custom prefix",
@@ -3976,11 +4012,11 @@
           "whenToUse": "Before any irreversible action.",
           "whenNotToUse": "For reversible or trivial actions — do it and offer undo (toast) instead.",
           "derivedFrom": null,
-          "example": "import { Button, ConfirmDialog } from \"@zedtech/zedkit-ui\";\n<ConfirmDialog trigger={<Button>Delete</Button>} title=\"Delete item?\"\n  description=\"This cannot be undone.\" onConfirm={remove} />",
+          "example": "import { Button, ConfirmDialog } from \"@zedtech/zedkit-ui\";\n<ConfirmDialog trigger={<Button>Delete</Button>} title=\"Delete item?\"\n  description=\"This cannot be undone.\" onConfirm={() => {}} />",
           "examples": [
             {
               "title": "Delete confirmation",
-              "code": "import { Button, ConfirmDialog } from \"@zedtech/zedkit-ui\";\n<ConfirmDialog trigger={<Button>Delete</Button>} title=\"Delete item?\"\n  description=\"This cannot be undone.\" onConfirm={remove} />"
+              "code": "import { Button, ConfirmDialog } from \"@zedtech/zedkit-ui\";\n<ConfirmDialog trigger={<Button>Delete</Button>} title=\"Delete item?\"\n  description=\"This cannot be undone.\" onConfirm={() => {}} />"
             },
             {
               "title": "Custom button labels",
@@ -4541,7 +4577,7 @@
             },
             {
               "title": "Without topbar",
-              "code": "import { AppShell } from \"@zedtech/zedkit-ui\";\n<AppShell sidebar={<OrgNav />}> // topbar is optional\n  <p>Content.</p>\n</AppShell>"
+              "code": "import { AppShell } from \"@zedtech/zedkit-ui\";\n<AppShell sidebar={<nav aria-label=\"Primary\"><a href=\"#\">Overview</a></nav>}> {/* topbar is optional */}\n  <p>Content.</p>\n</AppShell>"
             }
           ],
           "adoption": {
@@ -4728,11 +4764,11 @@
           "whenToUse": "To group related fields with legends and per-field errors.",
           "whenNotToUse": "For validation logic itself — pair with Form instead.",
           "derivedFrom": "shadcn/ui (field)",
-          "example": "import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldSet } from \"@zedtech/zedkit-ui\";\n<FieldSet><FieldGroup><Field>\n<FieldLabel>Name</FieldLabel><FieldDescription>Public.</FieldDescription>\n<FieldError errors={[{ message: \"Too short.\" }]} />",
+          "example": "import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldSet } from \"@zedtech/zedkit-ui\";\n<FieldSet><FieldGroup><Field>\n<FieldLabel>Name</FieldLabel><FieldDescription>Public.</FieldDescription>\n<FieldError errors={[{ message: \"Too short.\" }]} />\n</Field></FieldGroup></FieldSet>",
           "examples": [
             {
               "title": "Simple",
-              "code": "import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldSet } from \"@zedtech/zedkit-ui\";\n<FieldSet><FieldGroup><Field>\n<FieldLabel>Name</FieldLabel><FieldDescription>Public.</FieldDescription>\n<FieldError errors={[{ message: \"Too short.\" }]} />"
+              "code": "import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldSet } from \"@zedtech/zedkit-ui\";\n<FieldSet><FieldGroup><Field>\n<FieldLabel>Name</FieldLabel><FieldDescription>Public.</FieldDescription>\n<FieldError errors={[{ message: \"Too short.\" }]} />\n</Field></FieldGroup></FieldSet>"
             }
           ],
           "adoption": {
