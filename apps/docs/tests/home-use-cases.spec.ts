@@ -81,10 +81,10 @@ test("Display preview mode reaches the table without a toolbar select", async ({
   await expect(card.getByText(/No apps yet/)).toBeVisible();
 });
 
-test("identity looks has one example tab per identity", async ({ page }) => {
+test("identity looks has one example tab per product screen", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/");
   const looks = page.locator("[data-home-identity-looks]");
   await looks.scrollIntoViewIfNeeded();
-  await expect(looks.getByRole("tab")).toHaveCount(6);
+  await expect(looks.getByRole("tab")).toHaveCount(3);
 });

@@ -77,13 +77,12 @@ test.describe("home layout rhythm (#387)", () => {
     }
   });
 
-  test("proximity snap on the home scroll root; pin section is not snapped", async ({ page }) => {
+  test("proximity snap on the home scroll root; the looks band is not snapped", async ({ page }) => {
     const readSnap = () =>
       page.evaluate(() => {
         const html = getComputedStyle(document.documentElement);
         const root = document.querySelector("[data-slot='section-scroll']");
         const identities = document.getElementById("identities");
-        const pin = document.querySelector("[data-identity-pin]");
         const entry = document.getElementById("entry-points");
         const snap = (el: Element | null) => (el ? getComputedStyle(el).scrollSnapAlign : "");
         return {
@@ -93,7 +92,6 @@ test.describe("home layout rhythm (#387)", () => {
           rootType: root ? getComputedStyle(root).scrollSnapType : "",
           identitiesAlign: snap(identities),
           identitiesSnap: identities?.getAttribute("data-snap"),
-          pinAlign: snap(pin),
           entryAlign: snap(entry),
         };
       });
@@ -109,7 +107,6 @@ test.describe("home layout rhythm (#387)", () => {
       expect(Number.parseFloat(metrics.htmlPaddingTop), `${width}`).toBeGreaterThanOrEqual(48);
       expect(metrics.identitiesSnap, `${width}`).toBe("none");
       expect(metrics.identitiesAlign, `${width}`).toBe("none");
-      expect(["none", "normal", ""]).toContain(metrics.pinAlign);
       expect(metrics.entryAlign, `${width}`).toMatch(/start/);
     }
   });
