@@ -74,12 +74,16 @@ test("home layout shift stays under 0.05", async ({ page }) => {
 test("theme-color meta matches the active page background", async ({ page }) => {
   await page.goto("/", { waitUntil: "networkidle" });
   await expect(page.locator("html")).toHaveAttribute("data-identity", DEFAULT_IDENTITY);
-  const colors = await themeColors(page);
-  expect(colors.length).toBeGreaterThan(0);
-  const expected = await pageBackground(page);
-  for (const color of colors) {
-    expect(await resolveColor(page, color)).toBe(expected);
-  }
+  // The meta is written after hydration, once the theme has resolved.
+  await expect.poll(async () => {
+    const colors = await themeColors(page);
+    const expected = await pageBackground(page);
+    if (colors.length === 0) return false;
+    for (const color of colors) {
+      if ((await resolveColor(page, color)) !== expected) return false;
+    }
+    return true;
+  }).toBe(true);
 });
 
 for (const identity of DOCS_SHIPPED_IDENTITIES) {
