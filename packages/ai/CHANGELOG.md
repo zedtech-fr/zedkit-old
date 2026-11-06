@@ -1,5 +1,13 @@
 # @zedtech/zedkit-ai
 
+## 1.0.1
+
+### Patch Changes
+
+- cd538d6: Observable proportionate workflow: a routing rule in the agent template and Cursor rule (atomic inline with a check, multi-step through orchestrate), marked inline fallbacks with briefs-first, plan/implement playbooks and commands in the setup preset, a shared Skill-tool fallback, verifier evidence (revision and output, one gate, pending stays pending), git-ignored `.scratch/` working plans by default, and honest setup validation wording.
+- cd538d6: Definition of done and the verifier run the area cheap loop after an edit; full CI and e2e stay the PR's job.
+- cd538d6: Adopt sidecars no longer duplicate live skill names: a fresh `zk-<name>` sidecar carries `name: zk-<name>`, re-running `setup` migrates sidecars an older adopt left behind (user files untouched), and `validate` fails duplicate skill names with the fix.
+
 ## 1.0.0
 
 ### Major Changes
