@@ -11,13 +11,11 @@ import type { Issue } from "./validate.js";
 export const MODEL_OK_MARKER = "zk:model-ok";
 
 /**
- * Legacy `.agents/model-routing.md` holds real model ids written by
- * `/setup-ai`, so scanning it would fail every upgraded consumer before the
- * migration to `tokenomics.md` exists. Sunset: the setup-ai migration PR
- * turns hits in it into warnings, and the file is scanned normally once the
- * depth check stops accepting it (two minors later). Remove this entry then.
+ * Top-level `.agents/model-routing.md` is still scanned, but hits are
+ * warnings with a deprecation line (the migration to `tokenomics.md` exists).
+ * Drop this list when D4 stops accepting the legacy file, two minors later.
  */
-export const LEGACY_EXEMPT = ["model-routing.md"] as const;
+export const LEGACY_WARN = ["model-routing.md"] as const;
 
 /**
  * Kit skills that name a model in benchmark text. They are shipped verbatim,
@@ -125,7 +123,6 @@ function sourceFiles(projectRoot: string, agentsDir: string, nested: boolean): s
   const top = tryCatch(() => readdirSync(agentsDir));
   for (const name of top.ok ? top.value.sort() : []) {
     const full = join(agentsDir, name);
-    if (LEGACY_EXEMPT.some((legacy) => legacy === name)) continue;
     if (statSync(full, { throwIfNoEntry: false })?.isFile() === true) files.push(full);
   }
   // Root files belong to a project only when the dir is its `.agents/`; any
@@ -152,7 +149,7 @@ const trim = (name: string): string => name.replace(/[.-]+$/, "");
  * at its first unmarked line. A line (or the one above) holding
  * `zk:model-ok` is kept, `hardcode.allow_paths` globs (relative to the
  * project root or to the agents dir) are skipped, and so are files written
- * by `sync`. `model-routing.md` (legacy) is exempt, see {@link LEGACY_EXEMPT}.
+ * by `sync`. Hits in top-level `model-routing.md` are warnings, see {@link LEGACY_WARN}.
  * Paths are `<file>:<line>`, relative to `projectRoot`.
  */
 export function checkHardcodedModels(projectRoot: string, agentsDir: string): Issue[] {
@@ -185,9 +182,12 @@ export function checkHardcodedModels(projectRoot: string, agentsDir: string): Is
             const name = trim(match[0]);
             if (name === "" || names.has(name.toLowerCase())) continue;
             names.add(name.toLowerCase());
+            const warn = LEGACY_WARN.some((legacy) => legacy === basename(real) && posix(relative(agentsDir, real)) === legacy);
             issues.push({
               path: `${rootRel}:${index + 1}`,
-              message: `model name "${name}" outside tokenomics.md (move it there, or mark the line with <!-- ${MODEL_OK_MARKER} -->)`,
+              message: warn
+                ? `warning: model name "${name}" outside tokenomics.md (legacy .agents/model-routing.md; copy its rows into tokenomics.md then delete it — this file will fail validate two minors after this release)`
+                : `model name "${name}" outside tokenomics.md (move it there, or mark the line with <!-- ${MODEL_OK_MARKER} -->)`,
             });
           }
         }

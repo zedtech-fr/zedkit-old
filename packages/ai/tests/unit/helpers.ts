@@ -96,3 +96,15 @@ export function shippedNames(includePresets = false): Set<string> {
     manifest.value.agents.concat(manifest.value.commands ?? [], skillDirs(), extra),
   );
 }
+
+/** A project tokenomics.md that satisfies D4 (real models on the two required cells). */
+export const TOKENOMICS_D4 = `---
+schema: 1
+providers:
+  cursor:
+    build:
+      standard: { model: cheap-fast, effort: medium }
+    decide:
+      sensitive: { model: strong-max, effort: high }
+---
+`;

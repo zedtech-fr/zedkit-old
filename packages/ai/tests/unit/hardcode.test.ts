@@ -1,7 +1,7 @@
 import { mkdirSync, symlinkSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { checkHardcodedModels, KIT_ALLOW, LEGACY_EXEMPT } from "#hardcode.js";
+import { checkHardcodedModels, KIT_ALLOW, LEGACY_WARN } from "#hardcode.js";
 import { kitDir } from "#kit.js";
 import { checkTokenomics } from "#tokenomics.js";
 import { isPinnedId, MODEL_FAMILIES } from "#model-names.js";
@@ -308,10 +308,12 @@ describe("nested AGENTS.md", () => {
 });
 
 describe("legacy model-routing.md", () => {
-  it("is exempt at the top of .agents, with real ids in it, until its sunset", () => {
-    expect(LEGACY_EXEMPT).toEqual(["model-routing.md"]);
+  it("warns at the top of .agents, with real ids in it, until D4 drops the file", () => {
+    expect(LEGACY_WARN).toEqual(["model-routing.md"]);
     const root = project({ ".agents/model-routing.md": "| fast | claude-haiku-4-5 | low |\n| deep | gpt-5 | high |\n" });
-    expect(scan(root)).toEqual([]);
+    const found = scan(root);
+    expect(found).toHaveLength(2);
+    expect(found.every((line) => line.startsWith(".agents/model-routing.md:") && line.includes("warning:") && line.includes("legacy .agents/model-routing.md"))).toBe(true);
   });
 
   it("is only exempt as the one legacy file, not as a name anywhere", () => {
@@ -321,16 +323,20 @@ describe("legacy model-routing.md", () => {
       ".agents/model-routing.kit.md": "gpt-5\n",
       ".agents/model-routing-notes.md": "gpt-5\n",
     });
-    expect(
-      scan(root)
-        .map((line) => line.split(":")[0])
-        .sort(),
-    ).toEqual([".agents/model-routing-notes.md", ".agents/skills/alpha/model-routing.md"]);
+    const paths = scan(root).map((line) => line.split(":")[0]).sort();
+    expect(paths).toEqual([".agents/model-routing-notes.md", ".agents/model-routing.md", ".agents/skills/alpha/model-routing.md"]);
+    const top = scan(root).filter((line) => line.startsWith(".agents/model-routing.md:"));
+    expect(top).toHaveLength(1);
+    expect(top[0]).toContain("warning:");
   });
 
-  it("stays exempt when other files in the project are flagged", () => {
+  it("warns on the legacy file and still flags other files as errors", () => {
     const root = project({ ".agents/model-routing.md": "gpt-5\n", "AGENTS.md": "gpt-5\n" });
-    expect(scan(root)).toEqual([expect.stringContaining("AGENTS.md:1")]);
+    const found = scan(root);
+    expect(found).toEqual([
+      expect.stringContaining(".agents/model-routing.md:1: warning:"),
+      expect.stringContaining("AGENTS.md:1: model name \"gpt-5\""),
+    ]);
   });
 });
 

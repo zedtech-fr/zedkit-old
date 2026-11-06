@@ -170,12 +170,13 @@ function runValidate(args: string[], sinks: Sinks): number {
     for (const note of extra.notes) sinks.out(note);
   }
   for (const issue of issues) sinks.out(`${issue.path}: ${issue.message}`);
-  const summary =
-    issues.length === 0
-      ? "ok"
-      : `${issues.length} ${issues.length === 1 ? "problem" : "problems"}`;
-  sinks.out(summary);
-  return issues.length === 0 ? 0 : 1;
+  const failing = issues.filter((issue) => !issue.message.startsWith("warning:"));
+  if (failing.length === 0) {
+    sinks.out("ok");
+    return 0;
+  }
+  sinks.out(`${failing.length} ${failing.length === 1 ? "problem" : "problems"}`);
+  return 1;
 }
 
 function oneOf<T extends string>(

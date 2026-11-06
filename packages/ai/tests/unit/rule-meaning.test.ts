@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { kitDir } from "#kit.js";
 import { checkDepth } from "#setup-depth.js";
-import { put, tempDir } from "./helpers.js";
+import { put, tempDir, TOKENOMICS_D4 } from "./helpers.js";
 
 /** A webhook handler: the event and its outbox row are written in ONE transaction; a worker publishes later. */
 const INGEST = [
@@ -37,9 +37,9 @@ function repo(): string {
   put(root, "src/webhooks/ingest.ts", INGEST);
   put(root, "docs/sync.md", DOC);
   put(root, "src/AGENTS.md", "# src\n\nDomain: ../.agents/domain/sync.md\n");
-  put(root, "AGENTS.md", "# Root\n\n## Model routing\n\nSee `.agents/model-routing.md`.\n");
+  put(root, "AGENTS.md", "# Root\n\n## Tokenomics\n\nSee `.agents/tokenomics.md`.\n");
   put(root, ".agents/domain/sync.md", "| S-02 | current | Event and outbox row share a transaction | `src/webhooks/ingest.ts:4` |\n");
-  put(root, ".agents/model-routing.md", "**Provider running this setup:** cursor\n\n| Tier | Jobs |\n| **scout** | read |\n| **lead** | decide |\n");
+  put(root, ".agents/tokenomics.md", TOKENOMICS_D4);
   return root;
 }
 
