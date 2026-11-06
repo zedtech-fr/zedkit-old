@@ -6,10 +6,7 @@ import { assertA11yGate } from "./a11y-helpers";
 const IDENTITIES = [
   { id: "mist", name: "Mist", product: "Dev console", heading: "Project settings", action: "Save changes" },
   { id: "press", name: "Press", product: "Newsroom", heading: "Today's desk", action: "Publish" },
-  { id: "tide", name: "Tide", product: "Invoicing", heading: "Invoices", action: "Send reminder: Studio Nord" },
-  { id: "volt", name: "Volt", product: "Incidents", heading: "Incidents", action: "Acknowledge: p95 latency 1.8 s for 5 min" },
   { id: "maison", name: "Maison", product: "Bag shop", heading: "The autumn collection", action: "Save piece" },
-  { id: "glass", name: "Glass", product: "SaaS app", heading: "Usage", action: "Invite teammate" },
 ] as const;
 
 /** The examples arrive with a short entrance; checks that read colours or positions wait for it to be over. */
@@ -24,10 +21,7 @@ async function settle(looks: Locator) {
   );
 }
 
-/**
- * Opens the section at its top, above the pinned stretch, so the first example is the first one. Where the examples
- * follow the scroll (wide, tall, motion allowed), scrolling to the middle of the section would pick one by position.
- */
+/** Opens the section at its top, so the first example (Dev console) is on show. */
 async function openLooks(page: Page, width = 1440, height = 900): Promise<{ looks: Locator; stage: Locator }> {
   await page.setViewportSize({ width, height });
   await page.goto("/", { waitUntil: "networkidle" });
@@ -46,7 +40,7 @@ test("the section is a set of examples, not a count of identities", async ({ pag
   await openLooks(page);
   // The section's own heading and intro (the band around the tabs), not just the tabs.
   const section = page.locator("#identities");
-  await expect(section.getByRole("heading", { name: "Same components, different products", level: 2 })).toBeVisible();
+  await expect(section.getByRole("heading", { name: "Looks like your product", level: 2 })).toBeVisible();
   await expect(section).not.toContainText(/\bsix\b/i);
   await expect(page.locator("[data-home-identity-looks] p").first()).toContainText("Live components, not screenshots.");
 });
@@ -54,15 +48,14 @@ test("the section is a set of examples, not a count of identities", async ({ pag
 test("tabs switch the example and its identity without leaving the page", async ({ page }) => {
   const { looks, stage } = await openLooks(page);
   await expect(looks.getByRole("tablist", { name: "Examples" })).toBeVisible();
-  await expect(looks.getByRole("tab")).toHaveCount(6);
+  await expect(looks.getByRole("tab")).toHaveCount(3);
   await expect(stage).toHaveAttribute("data-identity", "mist");
   for (const identity of IDENTITIES) {
     await pick(looks, identity.product);
     await expect(stage).toHaveAttribute("data-identity", identity.id);
     await expect(looks.getByRole("tab", { name: identity.product })).toContainText(identity.name);
-    // The facts card speaks in the identity it describes.
-    await expect(looks.locator("[data-home-identity-facts]:visible")).toHaveAttribute("data-identity", identity.id);
-    await expect(looks.locator("[data-home-identity-facts]:visible h3")).toHaveText(identity.name);
+    // The caption under the example names the look on show.
+    await expect(looks.locator("[data-identity-caption]")).toContainText(`${identity.name}:`);
   }
   await pick(looks, "Dev console");
   await looks.getByRole("tab", { name: "Dev console" }).focus();
@@ -257,38 +250,6 @@ test("Newsroom: picking a story loads it, editing updates the preview, Publish m
   await expect(queue.getByRole("row", { name: /Ninety voices, one dry dock/ })).toContainText("Draft");
 });
 
-test("Invoicing: totals follow the data, the filter narrows the list, a reminder is a one-time action", async ({ page }) => {
-  const { looks, stage } = await openLooks(page);
-  await pick(looks, "Invoicing");
-  await expect(stage.getByText("€12,480")).toBeVisible();
-  await expect(stage.getByText("€8,920")).toBeVisible();
-  const list = stage.getByRole("list", { name: "Invoices" });
-  await expect(list.getByRole("listitem")).toHaveCount(6);
-  await stage.getByRole("button", { name: "Overdue", exact: true }).click();
-  await expect(list.getByRole("listitem")).toHaveCount(2);
-  await stage.getByRole("button", { name: "Send reminder: Studio Nord" }).click();
-  await expect(stage.locator("[data-home-identity-status]")).toContainText("Reminder to Studio Nord marked as sent");
-  await expect(stage.getByRole("button", { name: "Send reminder: Studio Nord" })).toHaveCount(0);
-  await expect(list.getByText("Reminder sent")).toHaveCount(1);
-});
-
-test("Incidents: the filter and Open only narrow the dense list, Ack closes one", async ({ page }) => {
-  const { looks, stage } = await openLooks(page);
-  await pick(looks, "Incidents");
-  const rows = stage.getByRole("list", { name: "Recent incidents" }).getByRole("listitem");
-  const status = stage.locator("[data-home-identity-status]");
-  await expect(rows).toHaveCount(6);
-  await expect(status).toHaveText("4 open");
-  await stage.getByRole("switch", { name: "Open only" }).click();
-  await expect(rows).toHaveCount(4);
-  await stage.getByRole("textbox", { name: "Filter events" }).fill("queue");
-  await expect(rows).toHaveCount(1);
-  await stage.getByRole("button", { name: "Acknowledge: depth 4.1k, workers 6/8" }).click();
-  await expect(status).toHaveText("3 open");
-  await expect(rows).toHaveCount(0);
-  await expect(stage.getByText("No events match.")).toBeVisible();
-});
-
 test("Bag shop: pick a piece, edit its price and stock, Save updates the collection and the low-stock notice", async ({ page }) => {
   const { looks, stage } = await openLooks(page);
   await pick(looks, "Bag shop");
@@ -302,33 +263,6 @@ test("Bag shop: pick a piece, edit its price and stock, Save updates the collect
   await expect(stage.locator("[data-home-identity-status]")).toContainText("Pochette Soir saved");
   await expect(stage.getByRole("button", { name: /^Pochette Soir/ })).toContainText("€950");
   await expect(stage.getByRole("alert")).toHaveCount(0);
-});
-
-test("SaaS app: the invite popover floats over the team card and adds a member", async ({ page }) => {
-  const { looks, stage } = await openLooks(page);
-  await pick(looks, "SaaS app");
-  const team = stage.getByRole("list", { name: "Team members" }).getByRole("listitem");
-  await expect(team).toHaveCount(2);
-  await stage.getByRole("button", { name: "Invite teammate" }).click();
-  const send = page.getByRole("button", { name: "Send invite" });
-  await expect(send).toBeDisabled();
-  await page.getByRole("textbox", { name: "Work email" }).fill("ana@lumen.app");
-  await send.click();
-  await expect(team).toHaveCount(3);
-  await expect(team.last()).toContainText("ana@lumen.app");
-  await expect(stage.locator("[data-home-identity-status]")).toContainText("ana@lumen.app added as invited");
-});
-
-test("Incidents reads as dense: its rows are tighter than the Dev console table's", async ({ page }) => {
-  const { looks, stage } = await openLooks(page, 1280, 900);
-  const height = (selector: string) =>
-    stage.evaluate((node, query) => node.querySelector(query)?.getBoundingClientRect().height ?? 0, selector);
-  const table = await height("tbody tr");
-  await pick(looks, "Incidents");
-  const dense = await height("ul[aria-label='Recent incidents'] li");
-  expect(dense).toBeGreaterThan(0);
-  expect(table).toBeGreaterThan(0);
-  expect(dense).toBeLessThan(table);
 });
 
 test("Delete project: the dialog traps focus, Cancel and Escape return it, Confirm completes and Restore undoes it", async ({ page }) => {
@@ -360,17 +294,4 @@ test("Delete project: the dialog traps focus, Cancel and Escape return it, Confi
   await restore.click();
   await expect(stage.getByRole("button", { name: "Delete project" })).toBeVisible();
   await expect(stage.getByText("Active", { exact: true }).first()).toBeVisible();
-});
-
-test("Volt's incident log keeps the 13px floor: density comes from the rhythm, not from small type", async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
-  const { looks } = await openLooks(page);
-  await pick(looks, "Incidents");
-  const sizes = await looks.locator("[data-home-identity-stage] ul li *").evaluateAll((nodes) =>
-    nodes
-      .filter((node) => (node.textContent ?? "").trim() && node.children.length === 0)
-      .map((node) => Number.parseFloat(getComputedStyle(node).fontSize)),
-  );
-  expect(sizes.length).toBeGreaterThan(0);
-  for (const size of sizes) expect(size).toBeGreaterThanOrEqual(13);
 });

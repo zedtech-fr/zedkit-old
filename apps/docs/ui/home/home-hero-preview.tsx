@@ -90,11 +90,9 @@ export function HomeHeroPreview() {
   const tour = useHeroTourState(motionOk);
   const { resolvedTheme } = useTheme();
   const mounted = useSyncExternalStore(noop, () => true, () => false);
-  const siteDark = mounted && resolvedTheme === "dark";
-  const dark = resolveHeroDemoDark(modePin, siteDark);
+  const dark = resolveHeroDemoDark(modePin, mounted && resolvedTheme === "dark");
 
   usePointerParallax(frame, motionOk);
-
   useLookFade(scope, look, motionOk);
 
   return (

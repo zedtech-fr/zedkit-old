@@ -44,7 +44,7 @@ test.describe("site semantics harness (#300)", () => {
 
   test("registry URLs used on the site resolve", async ({ page }) => {
     for (const path of REGISTRY_SMOKE_URLS) {
-      const res = await page.request.get(`${path}`);
+      const res = await page.request.get(path);
       expect(res.status(), path).toBe(200);
     }
   });

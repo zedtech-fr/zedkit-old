@@ -19,7 +19,6 @@ const TW_SIZE = /\btext-(xs|sm|base|lg|xl|\[[^\]]+\])\b/g;
 const DOCK_DOCS_TSX = /^(components\/identity-|components\/demos\/identity-)/;
 const OUT_OF_SCOPE_CSS = new Set([
   "app/home-hero.css",
-  "app/home-identity-scroll.css",
 ]);
 
 function walk(dir, out = []) {

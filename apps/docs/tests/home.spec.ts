@@ -10,7 +10,7 @@ test("home explains the product and four entry areas", async ({ page }) => {
   await expect(page.locator("[data-home-hero-category]")).toHaveText("UI/AI kit ·");
   await expect(
     page.getByRole("heading", {
-      name: "A top-notch AI setup, one prompt away. Only the UI you need.",
+      name: "Your AI agent, set up with one prompt. The UI, only what you need.",
       level: 1,
     }),
   ).toBeVisible();
@@ -44,13 +44,14 @@ test("home hero offers get started first with catalog and demo links (#1038)", a
   await expect(heroActions.nth(2)).toHaveText("Browse catalog");
   await expect(heroActions.nth(2)).toHaveAttribute("href", "/catalog");
 
-  await expect(page.locator("[data-home-hero-sub]")).toHaveText("Play with it yourself");
-  await expect(page.locator("[data-home-hero-lead]")).toContainText("Everything in this app is a zedkit component.");
+  await expect(page.locator("[data-home-hero-sub]")).toHaveText(
+    "This app is built from zedkit components. Watch the setup run, then click around.",
+  );
   // Category cue (label role) sits above the display H1 inside the lead stack (#1441).
   await expect(page.locator("[data-home-hero-lead] [data-home-hero-category]")).toHaveText("UI/AI kit ·");
   await expect(
     page.locator("[data-home-hero-lead]").getByRole("heading", {
-      name: "A top-notch AI setup, one prompt away. Only the UI you need.",
+      name: "Your AI agent, set up with one prompt. The UI, only what you need.",
       level: 1,
     }),
   ).toBeVisible();
@@ -367,6 +368,11 @@ test("home get-started opens on the package install command", async ({ page }) =
   // asChild puts data-home-ai-setup on the <a> itself.
   await expect(page.locator("#get-started [data-home-ai-setup]")).toHaveAttribute("href", "#ai-setup");
   await expect(page.locator("#get-started [data-home-ai-setup]")).toHaveText("Set up AI");
+  await expect(page.locator("#get-started [data-home-way]")).toHaveCount(2);
+  await expect(page.locator("#get-started").getByRole("link", { name: "Start without writing code" })).toHaveAttribute(
+    "href",
+    "/docs/start-without-writing-code",
+  );
 });
 
 test("home install section has no registry brick grid; catalog link lives in families", async ({ page }) => {
@@ -432,7 +438,7 @@ test("home component families link only to live docs pages, and Overlays keeps i
   ]);
   for (const href of hrefs) {
     expect(href.startsWith("/docs/"), href).toBe(true);
-    const response = await request.get(`${href}`);
+    const response = await request.get(href);
     expect(response.status(), href).toBe(200);
   }
 });

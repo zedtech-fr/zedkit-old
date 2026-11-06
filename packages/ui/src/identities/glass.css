@@ -1,9 +1,12 @@
 /*
  * Identity: glass.
  *
- *    Frosted, translucent surfaces over soft colour halos: backdrop blur,
- *    hairline light edges, generous radii, gentle tinted shadows. Inter
- *    body, Space Grotesk headings, code in JetBrains Mono.
+ *    Frosted, translucent surfaces over colour: a clear fill with a slanted
+ *    sheen, backdrop blur lifted by saturation and brightness, a lit rim
+ *    (bright top-left edge, soft bottom-right edge, inner glow) and gentle
+ *    tinted shadows, over saturated colour halos so the glass has something
+ *    to refract. Generous radii. Inter body, Space Grotesk headings, code in
+ *    JetBrains Mono.
  *
  *    Cards and popovers (below) and code blocks (the token consumers in
  *    identities.css) take the card colour at --zk-glass-alpha with a
@@ -88,30 +91,36 @@
   --ring-offset-width: 2px;
 
   /* Glass: how translucent surfaces look. Alpha 1 and blur 0 make them solid. */
-  --zk-glass-alpha: 0.66;
-  --zk-glass-blur: 18px;
-  --zk-glass-saturate: 1.6;
+  --zk-glass-alpha: 0.54;
+  --zk-glass-blur: 20px;
+  --zk-glass-saturate: 1.8;
+  --zk-glass-brightness: 1.05;
   --zk-glass-edge: 0 0% 100%;
-  --zk-glass-edge-alpha: 0.7;
-  --zk-glass-filter: blur(var(--zk-glass-blur)) saturate(var(--zk-glass-saturate));
-  --zk-glass-highlight: inset 0 1px 0 hsl(0 0% 100% / 0.65);
+  --zk-glass-edge-alpha: 0.8;
+  --zk-glass-filter: blur(var(--zk-glass-blur)) saturate(var(--zk-glass-saturate)) brightness(var(--zk-glass-brightness));
+  /* The light falls from the top left: a slanted sheen over the fill, and a lit rim. Text-bearing cards keep an alpha floor (see the overlay and card specs). */
+  --zk-glass-sheen: linear-gradient(135deg, hsl(0 0% 100% / 0.55) 0%, hsl(0 0% 100% / 0.1) 38%, hsl(0 0% 100% / 0) 62%, hsl(0 0% 100% / 0.22) 100%);
+  --zk-glass-highlight:
+    inset 1px 1px 0 hsl(0 0% 100% / 0.9),
+    inset -1px -1px 0 hsl(0 0% 100% / 0.3),
+    inset 0 0 16px hsl(0 0% 100% / 0.28);
 
   /* Glass bars (sticky headers): thinner tint so scrolling content shows
      through the blur, inset highlights for the relief and a luminous bottom
      edge. No drop shadow: nav chrome keeps an edge only (D5), shadows are for overlays. */
   --zk-glass-bar-alpha: 0.62;
-  --zk-glass-bar-filter: blur(var(--zk-glass-blur)) saturate(var(--zk-glass-saturate));
+  --zk-glass-bar-filter: blur(var(--zk-glass-blur)) saturate(var(--zk-glass-saturate)) brightness(var(--zk-glass-brightness));
   --zk-glass-bar-edge: 0 0% 100%;
   --zk-glass-bar-edge-alpha: 0.75;
   --zk-glass-bar-shadow:
-    inset 0 1px 0 hsl(0 0% 100% / 0.7),
+    inset 0 1px 0 hsl(0 0% 100% / 0.9),
     inset 0 -1px 0 hsl(var(--zk-glass-bar-edge) / var(--zk-glass-bar-edge-alpha));
 
   /* Glass overlays: panel alpha and blur, tint, and a light scrim. */
   --zk-glass-overlay-alpha: 0.76;
   --zk-glass-overlay-blur: 24px;
-  --zk-glass-overlay-filter: blur(var(--zk-glass-overlay-blur)) saturate(var(--zk-glass-saturate));
-  --zk-glass-overlay-tint: linear-gradient(160deg, hsl(262 90% 80% / 0.14), hsl(190 90% 70% / 0.1));
+  --zk-glass-overlay-filter: blur(var(--zk-glass-overlay-blur)) saturate(var(--zk-glass-saturate)) brightness(var(--zk-glass-brightness));
+  --zk-glass-overlay-tint: linear-gradient(135deg, hsl(0 0% 100% / 0.4), hsl(0 0% 100% / 0) 45%), linear-gradient(160deg, hsl(262 90% 80% / 0.16), hsl(190 90% 70% / 0.12));
   --zk-glass-scrim-alpha: 0.28;
 
   /* Depth: soft and wide, tinted by the page */
@@ -126,9 +135,9 @@
 
   /* Page texture: three colour halos behind the glass */
   --zk-bg-pattern:
-    radial-gradient(38rem 30rem at 6% 6rem, hsl(262 90% 78% / 0.4), transparent 70%),
-    radial-gradient(34rem 28rem at 94% 24rem, hsl(190 90% 68% / 0.34), transparent 70%),
-    radial-gradient(36rem 30rem at 24% 70rem, hsl(330 90% 82% / 0.28), transparent 70%);
+    radial-gradient(38rem 30rem at 6% 6rem, hsl(262 92% 74% / 0.55), transparent 70%),
+    radial-gradient(34rem 28rem at 94% 24rem, hsl(190 95% 62% / 0.5), transparent 70%),
+    radial-gradient(36rem 30rem at 24% 70rem, hsl(330 92% 78% / 0.4), transparent 70%);
   --zk-bg-size: 100% 100%;
   --zk-bg-repeat: no-repeat;
   --zk-bg-attach: scroll;
@@ -190,18 +199,23 @@
   --sidebar-foreground: 220 40% 94%;
   --sidebar-border: 230 25% 20%;
   --sidebar-accent: 255 40% 22%;
-  --zk-glass-alpha: 0.58;
+  --zk-glass-alpha: 0.5;
+  --zk-glass-brightness: 1.08;
+  --zk-glass-sheen: linear-gradient(135deg, hsl(0 0% 100% / 0.14) 0%, hsl(0 0% 100% / 0.03) 40%, hsl(0 0% 100% / 0) 62%, hsl(0 0% 100% / 0.06) 100%);
   --zk-glass-overlay-alpha: 0.66;
-  --zk-glass-overlay-tint: linear-gradient(160deg, hsl(262 90% 62% / 0.2), hsl(190 90% 50% / 0.12));
+  --zk-glass-overlay-tint: linear-gradient(135deg, hsl(0 0% 100% / 0.1), hsl(0 0% 100% / 0) 45%), linear-gradient(160deg, hsl(262 90% 62% / 0.2), hsl(190 90% 50% / 0.12));
   --zk-glass-scrim-alpha: 0.42;
   --zk-glass-edge: 220 60% 90%;
-  --zk-glass-edge-alpha: 0.16;
-  --zk-glass-highlight: inset 0 1px 0 hsl(0 0% 100% / 0.08);
+  --zk-glass-edge-alpha: 0.2;
+  --zk-glass-highlight:
+    inset 1px 1px 0 hsl(0 0% 100% / 0.24),
+    inset -1px -1px 0 hsl(0 0% 100% / 0.07),
+    inset 0 0 16px hsl(0 0% 100% / 0.05);
   --zk-glass-bar-alpha: 0.6;
   --zk-glass-bar-edge: 220 60% 90%;
   --zk-glass-bar-edge-alpha: 0.22;
   --zk-glass-bar-shadow:
-    inset 0 1px 0 hsl(0 0% 100% / 0.08),
+    inset 0 1px 0 hsl(0 0% 100% / 0.16),
     inset 0 -1px 0 hsl(var(--zk-glass-bar-edge) / var(--zk-glass-bar-edge-alpha));
   --zk-shadow-color: 232 60% 2%;
   --zk-shadow-xs: 0 8px 24px -12px rgb(0 0 0 / 0.55), var(--zk-glass-highlight);
@@ -215,9 +229,9 @@
   --zk-btn-hover-shadow: 0 12px 28px -10px hsl(252 95% 78% / 0.4);
   --zk-btn-press-shadow: 0 2px 6px -2px hsl(252 95% 78% / 0.3);
   --zk-bg-pattern:
-    radial-gradient(38rem 30rem at 6% 6rem, hsl(262 90% 60% / 0.26), transparent 70%),
-    radial-gradient(34rem 28rem at 94% 24rem, hsl(190 90% 46% / 0.2), transparent 70%),
-    radial-gradient(36rem 30rem at 24% 70rem, hsl(330 85% 56% / 0.16), transparent 70%);
+    radial-gradient(38rem 30rem at 6% 6rem, hsl(262 90% 60% / 0.4), transparent 70%),
+    radial-gradient(34rem 28rem at 94% 24rem, hsl(190 90% 46% / 0.32), transparent 70%),
+    radial-gradient(36rem 30rem at 24% 70rem, hsl(330 85% 56% / 0.24), transparent 70%);
 }
 
 /* A scope with another identity inside a glass page stays solid. */
@@ -225,6 +239,8 @@
   --zk-glass-alpha: 1;
   --zk-glass-blur: 0px;
   --zk-glass-saturate: 1;
+  --zk-glass-brightness: 1;
+  --zk-glass-sheen: none;
   --zk-glass-filter: none;
   --zk-glass-bar-alpha: 1;
   --zk-glass-bar-filter: none;
@@ -247,6 +263,15 @@
   border-color: hsl(var(--zk-glass-edge) / var(--zk-glass-edge-alpha));
   -webkit-backdrop-filter: var(--zk-glass-filter);
   backdrop-filter: var(--zk-glass-filter);
+}
+
+/*
+ * The sheen: the slanted light over the fill. A card that brings its own wash (`bg-linear-*`, `bg-gradient-*`,
+ * an image) keeps it; this rule only fills the plain ones.
+ */
+:root[data-identity="glass"] :where(.bg-card, .bg-popover):where(:not([data-identity-scope] *)):not([class*="bg-linear"], [class*="bg-gradient"], [class*="bg-[url"]),
+[data-identity-scope][data-identity="glass"] :where(.bg-card, .bg-popover):not([class*="bg-linear"], [class*="bg-gradient"], [class*="bg-[url"]) {
+  background-image: var(--zk-glass-sheen);
 }
 
 /* The floating pill sits over any content, so its label cannot rely on what is behind it: near-solid in every theme. */
@@ -325,6 +350,8 @@
     --zk-glass-bar-alpha: 0.96;
     --zk-glass-blur: 0px;
     --zk-glass-saturate: 1;
+    --zk-glass-brightness: 1;
+    --zk-glass-sheen: none;
     --zk-glass-overlay-alpha: 0.98;
     --zk-glass-overlay-blur: 0px;
     --zk-glass-overlay-tint: none;
@@ -339,6 +366,7 @@
   [data-identity-scope][data-identity="glass"].dark {
     --zk-glass-alpha: 0.97;
     --zk-glass-bar-alpha: 0.96;
+    --zk-glass-sheen: none;
     --zk-glass-overlay-alpha: 0.98;
     --zk-glass-overlay-tint: none;
     --zk-glass-scrim-alpha: 0.6;

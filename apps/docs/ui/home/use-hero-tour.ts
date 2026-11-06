@@ -89,8 +89,6 @@ export function useHeroTour({
   const agentRef = useRef(agent);
   const takeoverRef = useRef(onTakeover);
   const introRef = useRef(intro);
-  /** True once a lap has begun: a replay then starts at the first page instead of resuming the load animation. */
-  const started = useRef(false);
   useEffect(() => {
     lookRef.current = onLook;
     agentRef.current = agent;
@@ -196,7 +194,7 @@ export function useHeroTour({
 
     /**
      * Opens the agent panel, pastes the one prompt, presses send and waits for the scripted run to finish, then
-     * closes it. Every press is on the real control; the run itself is the panel's own timers (no network).
+     * closes it. About 10s from the first glide to the closed panel. Every press is on the real control; the run itself is the panel's own timers (no network).
      */
     const agentStep = async () => {
       const open = root.querySelector("[data-hero-agent-open]");
@@ -207,12 +205,12 @@ export function useHeroTour({
       agentRef.current.paste(AI_SETUP_MINI_PROMPT);
       await beat(100);
       await press(field);
-      await beat(900);
+      await beat(450);
       const send = root.querySelector("[data-hero-agent-panel] [data-slot='prompt-input'] button[type='submit']");
       if (!send || stopped) return;
       await press(send);
       await waitFor(() => root.querySelector("[data-hero-agent-panel][data-status='done']"), 12000);
-      await beat(2200);
+      await beat(1300);
       const close = root.querySelector("[data-hero-agent-close]");
       if (close && !stopped) await press(close);
       await beat(SETTLE_MS);
@@ -228,8 +226,10 @@ export function useHeroTour({
       root.dataset.tour = "on";
       while (!stopped && introRef.current) await beat(100);
       if (stopped) return;
-      let first = !started.current;
-      started.current = true;
+      // The one prompt is the headline, so it plays first, once per run; the lap that follows only tours the pages.
+      await agentStep();
+      if (stopped) return;
+      let first = false;
       while (!stopped) {
         for (const step of LAP) {
           if (stopped) return;
@@ -251,8 +251,6 @@ export function useHeroTour({
           if (stopped) return;
           if (step.look) await changeLook(step.look);
         }
-        if (stopped) return;
-        await agentStep();
       }
     };
     void run();

@@ -14,7 +14,7 @@ test.describe("home AI setup section", () => {
 
     const aiSetup = page.locator("#ai-setup");
     await expect(aiSetup).toBeVisible();
-    await expect(aiSetup.getByRole("heading", { level: 2, name: "One prompt gets you a top-notch AI setup" })).toBeVisible();
+    await expect(aiSetup.getByRole("heading", { level: 2, name: "One prompt, and your agent knows your repo" })).toBeVisible();
     await expect(aiSetup.getByRole("heading", { level: 3, name: "What you get" })).toBeVisible();
 
     const hero = await page.locator("[data-home-hero-band]").boundingBox();
@@ -37,7 +37,7 @@ test.describe("home AI setup section", () => {
     expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1);
 
     await expect(aiSetup.getByRole("link", { name: "Read the AI setup guide" })).toHaveAttribute("href", "/docs/ai/setup");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("top-notch AI setup, one prompt away");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Your AI agent, set up with one prompt");
   });
 
   test("the guide route exists", async ({ page }) => {
@@ -86,16 +86,11 @@ test.describe("home AI setup section", () => {
     expect(first).toBeLessThan(120);
   });
 
-  test("the entrance uses the kit animate layer and the hero keeps top-notch on one line at 390px", async ({ page }) => {
+  test("the entrance uses the kit animate layer", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/", { waitUntil: "networkidle" });
     await expect(page.locator("#ai-setup [data-animate-stagger]")).toHaveAttribute("data-animate", "fade-up");
     await expect(page.locator("#ai-setup [data-slot='animate']")).toHaveAttribute("data-animate", "fade-in");
-    const lines = await page.evaluate(() => {
-      const span = document.querySelector("h1 span.whitespace-nowrap")!;
-      return span.getClientRects().length;
-    });
-    expect(lines).toBe(1);
   });
 
   test("under reduced motion nothing waits for an entrance", async ({ page }) => {

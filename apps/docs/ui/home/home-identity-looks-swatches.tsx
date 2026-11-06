@@ -1,8 +1,7 @@
 "use client";
 
-import { cn, Stack, Text, ThemeScope } from "@zedtech/zedkit-ui";
-import type { IdentityId, IdentityPaletteSwatch, IdentityPaletteToken } from "@/ui/home/home-identity-facts";
-import { HOME_METADATA_TEXT_CLASS } from "@/ui/home/home-rhythm";
+import { cn, Stack, ThemeScope } from "@zedtech/zedkit-ui";
+import type { IdentityId, IdentityPaletteToken } from "@/ui/home/home-identity-facts";
 
 const SWATCH_BG: Record<IdentityPaletteToken, string> = {
   background: "bg-background",
@@ -33,32 +32,5 @@ export function HomeIdentityPaletteDots({
         ))}
       </Stack>
     </ThemeScope>
-  );
-}
-
-export function HomeIdentityPaletteSwatches({
-  identity,
-  mode,
-  palette,
-}: {
-  identity: IdentityId;
-  mode: "light" | "dark";
-  palette: readonly IdentityPaletteSwatch[];
-}) {
-  return (
-    <Stack direction="horizontal" gap={3} className="flex-wrap">
-      {palette.map((swatch) => (
-        <Stack key={swatch.token} gap={1} className="items-start">
-          <span className="size-10 shrink-0 overflow-hidden rounded-md border border-border">
-            <ThemeScope identity={identity} mode={mode} className="block size-full">
-              <span className={cn("block size-full", SWATCH_BG[swatch.token])} />
-            </ThemeScope>
-          </span>
-          <Text as="span" variant="muted" className={HOME_METADATA_TEXT_CLASS}>
-            {swatch.label}
-          </Text>
-        </Stack>
-      ))}
-    </Stack>
   );
 }
