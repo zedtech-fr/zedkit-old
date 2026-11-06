@@ -31,6 +31,13 @@ const DOCS_PREFIXES = [
   "scripts/quickstart",
   "scripts/adoption",
 ];
+/** Maintainer prose verified not to feed docs generate/runtime. Unknown docs/ paths still select browser jobs. */
+const MAINTAINER_DOCS = new Set([
+  "docs/publishing.md",
+  "docs/ci-branch-protection.md",
+  "docs/golden-rule.md",
+  "docs/agents-catalog.md",
+]);
 const REGISTRY_PREFIXES = [
   "apps/docs/",
   "registry/",
@@ -84,8 +91,12 @@ export function scope({ event, baseRef, files, workspace }) {
   const workflows = files.some((f) => f.startsWith(".github/workflows/"));
   const docsDirs = closure(workspace, "@zedtech/zedkit-docs");
   const uiDirs = closure(workspace, "@zedtech/zedkit-ui");
-  const relevant = (dirs, prefixes, docs = false) =>
-    full || files.some((f) => ROOT_CONFIG.has(f) || hit(f, dirs) || hit(f, prefixes) || (docs && isPackageDoc(f)));
+  const relevant = (dirs, prefixes, docsFlag = false) =>
+    full ||
+    files.some((f) => {
+      if (docsFlag && MAINTAINER_DOCS.has(f)) return false;
+      return ROOT_CONFIG.has(f) || hit(f, dirs) || hit(f, prefixes) || (docsFlag && isPackageDoc(f));
+    });
   return {
     full,
     workflow_only: workflowOnly,
