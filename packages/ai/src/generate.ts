@@ -176,17 +176,39 @@ const MUSE_DENIED: Readonly<Record<string, string>> = {
   Edit: "edit_file",
 };
 
+/**
+ * Muse write-capable tools `disallowedTools` actually enforces (P8, Muse 1.4.14).
+ * `write_file, edit_file` alone still lets children write via `bash`.
+ */
+export const MUSE_WRITE_TOOLS = ["write_file", "edit_file", "bash"] as const;
+
 function museDenied(value: string): string | undefined {
-  const mapped = [...new Set(value.split(",").map((part) => part.trim()).filter(Boolean).map((part) => MUSE_DENIED[part] ?? ""))]
-    .filter(Boolean);
-  return mapped.length > 0 ? mapped.join(", ") : undefined;
+  const names: string[] = [];
+  const seen = new Set<string>();
+  let writes = false;
+  for (const part of value.split(",").map((item) => item.trim()).filter(Boolean)) {
+    const mapped = MUSE_DENIED[part] ?? ((MUSE_WRITE_TOOLS as readonly string[]).includes(part) ? part : "");
+    if (mapped === "") continue;
+    writes = true;
+    if (seen.has(mapped)) continue;
+    seen.add(mapped);
+    names.push(mapped);
+  }
+  if (!writes) return undefined;
+  for (const tool of MUSE_WRITE_TOOLS) {
+    if (seen.has(tool)) continue;
+    seen.add(tool);
+    names.push(tool);
+  }
+  return names.join(", ");
 }
 
 /**
  * Muse-native agent file: closed frontmatter (unknown keys drop the agent),
- * Muse tool names in `disallowedTools`, route baked into `model`, marker on
- * line 2, body copied byte for byte. Not a generic source: Cursor/Claude
- * must keep generating from the unmarked/kit file, never from this output.
+ * Muse tool names in `disallowedTools` (Write/Edit → write_file, edit_file, bash),
+ * route baked into `model`, marker on line 2, body copied byte for byte. Not a
+ * generic source: Cursor/Claude must keep generating from the unmarked/kit file,
+ * never from this output.
  */
 export function generateMuseAgent(input: GenerateInput): Result<Generated> {
   const lines = input.source.replace(/\r\n/g, "\n").replace(/^\uFEFF/, "").split("\n");

@@ -141,6 +141,11 @@ function expectMuseNative(dest: string, preset: string): void {
     expectGenerated(path, destName, name);
     const denied = museFrontmatter(text).split("\n").find((line) => line.startsWith("disallowedTools:")) ?? "";
     expect(denied, destName).not.toMatch(/\bWrite\b|\bEdit\b|NotebookEdit/);
+    if (denied !== "") {
+      expect(denied, destName).toContain("write_file");
+      expect(denied, destName).toContain("edit_file");
+      expect(denied, destName).toContain("bash");
+    }
     expect(text, destName).not.toContain("readonly:");
     if (destName !== name) {
       expect(text.split("\n")[1], destName).toContain(`${name}.md`);

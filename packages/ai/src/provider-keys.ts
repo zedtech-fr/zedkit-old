@@ -36,7 +36,7 @@ export function isGenerated(provider: string): provider is GeneratedProvider {
  *
  * Muse reads only `.agents/agents`, and only regular files. One symlink in
  * that directory empties the catalog. Generated Muse files are a native
- * dialect (closed frontmatter, `write_file`/`edit_file`) and are not the
+ * dialect (closed frontmatter, `write_file`/`edit_file`/`bash`) and are not the
  * canonical source: unmarked files and `kit/agents` stay generic. Cursor
  * `readonly: true` is generated on check-kind agents; it is the write gate
  * this tool enforces. Claude `disallowedTools` stay the Claude spelling.
@@ -63,7 +63,7 @@ export const PROVIDER_KEYS: Readonly<Record<string, ProviderKeys>> = {
   muse: {
     agentsDir: ".agents/agents",
     effortKey: false,
-    note: "muse native files in .agents/agents (closed frontmatter, Muse tool names); unmarked/kit files stay the canonical source",
+    note: "muse native files in .agents/agents (closed frontmatter; Write/Edit → write_file, edit_file, bash); unmarked/kit files stay the canonical source",
     checked: "2026-11-06",
   },
 };

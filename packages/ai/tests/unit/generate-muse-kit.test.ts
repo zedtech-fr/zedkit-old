@@ -40,7 +40,7 @@ describe("generateMuseAgent from kit sources", () => {
       expect(hasMarker(text), name).toBe(true);
       expect(text.split("\n")[1], name).toBe(markerLine(name));
       expect(text, name).toContain(`name: ${name}\n`);
-      expect(text, name).toContain("disallowedTools: write_file, edit_file\n");
+      expect(text, name).toContain("disallowedTools: write_file, edit_file, bash\n");
       expect(text, name).not.toContain("readonly:");
       expect(bodyOf(text), name).toBe(bodyOf(source));
       const front = text.slice(0, text.indexOf("\n---\n", 3));
@@ -58,7 +58,7 @@ describe("generateMuseAgent from kit sources", () => {
     expect(text.split("\n")[1]).toBe(markerLine("a11y-auditor"));
     expect(text).toContain("name: accessibility-auditor\n");
     expect(text).not.toContain("name: a11y-auditor\n");
-    expect(text).toContain("disallowedTools: write_file, edit_file\n");
+    expect(text).toContain("disallowedTools: write_file, edit_file, bash\n");
     expect(text).not.toContain("readonly:");
     expect(bodyOf(text)).toBe(bodyOf(source));
   });

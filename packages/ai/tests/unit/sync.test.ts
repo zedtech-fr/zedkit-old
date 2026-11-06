@@ -545,7 +545,7 @@ describe("syncKit: muse native files", () => {
     sync(root, { providers: ["muse"] });
     const muse = read(root, ".agents/agents/explorer.md");
     expect(hasMarker(muse)).toBe(true);
-    expect(muse).toContain("disallowedTools: write_file, edit_file");
+    expect(muse).toContain("disallowedTools: write_file, edit_file, bash");
     expect(muse).not.toContain("Write");
     sync(root, { providers: ["cursor"] });
     const cursor = read(root, ".cursor/agents/explorer.md");
@@ -648,7 +648,7 @@ describe("syncKit: muse native files", () => {
     expect(hasMarker(muse)).toBe(true);
     expect(muse).toContain("name: accessibility-auditor\n");
     expect(muse.split("\n")[1]).toContain("a11y-auditor.md");
-    expect(muse).toContain("disallowedTools: write_file, edit_file");
+    expect(muse).toContain("disallowedTools: write_file, edit_file, bash");
     expect(existsSync(join(root, ".agents/agents/a11y-auditor.kit.md"))).toBe(false);
     sync(root, { providers: ["cursor"] });
     const cursor = read(root, ".cursor/agents/a11y-auditor.md");

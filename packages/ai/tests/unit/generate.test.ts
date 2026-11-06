@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { generateAgent, generateMuseAgent, hasMarker, isReservedMuseDest, markerLine, markerSource, MARKER_PREFIX, museIdentityName, museNativeName, museSourceName, MUSE_NAME_ALIAS } from "#generate.js";
+import { generateAgent, generateMuseAgent, hasMarker, isReservedMuseDest, markerLine, markerSource, MARKER_PREFIX, museIdentityName, museNativeName, museSourceName, MUSE_NAME_ALIAS, MUSE_WRITE_TOOLS } from "#generate.js";
 import { parseFrontmatter } from "#frontmatter.js";
 
 const fixture = (name: string): string =>
@@ -120,7 +120,7 @@ describe("generateMuseAgent", () => {
       "---\nname: explorer\ndescription: d\nmodel: inherit\ndisallowedTools: Write, Edit, NotebookEdit\nreadonly: true\nrole: lookup\n---\n\nBody\n";
     const out = generateMuseAgent({ name: "explorer", source, model: "muse-spark-1.3-contributor" });
     if (!out.ok) throw out.error;
-    expect(out.value.text).toContain("disallowedTools: write_file, edit_file\n");
+    expect(out.value.text).toContain("disallowedTools: write_file, edit_file, bash\n");
     expect(out.value.text).not.toMatch(/\bWrite\b/);
     expect(out.value.text).not.toContain("readonly:");
     expect(out.value.text).not.toContain("role:");
@@ -134,6 +134,16 @@ describe("generateMuseAgent", () => {
     const out = generateMuseAgent({ name: "improver", source, model: "inherit" });
     if (!out.ok) throw out.error;
     expect(out.value.text).not.toContain("disallowedTools");
+  });
+
+  it("closes the bash write escape when the source denies writes", () => {
+    expect([...MUSE_WRITE_TOOLS]).toEqual(["write_file", "edit_file", "bash"]);
+    const source = "---\nname: explorer\ndescription: d\nmodel: inherit\ndisallowedTools: Write, Edit, NotebookEdit\n---\nBody\n";
+    const out = generateMuseAgent({ name: "explorer", source, model: "inherit" });
+    if (!out.ok) throw out.error;
+    const denied = out.value.text.split("\n").find((line) => line.startsWith("disallowedTools:")) ?? "";
+    expect(denied).toBe("disallowedTools: write_file, edit_file, bash");
+    expect(denied).not.toBe("disallowedTools: write_file, edit_file");
   });
 
   it("rewrites name to the Muse dest and cites the source in the marker", () => {
@@ -165,7 +175,7 @@ describe("generateMuseAgent", () => {
     expect(source).toBe(frozen);
     expect(out.value.text.endsWith("Write the stories.\n")).toBe(true);
     const close = out.value.text.indexOf("\n---\n", 3);
-    expect(out.value.text.slice(0, close)).toContain("write_file, edit_file");
+    expect(out.value.text.slice(0, close)).toContain("write_file, edit_file, bash");
     expect(out.value.text.slice(0, close)).not.toMatch(/\bWrite\b/);
   });
 });
