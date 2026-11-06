@@ -13,10 +13,11 @@ Done is a claim. This list is the evidence. If one box cannot be ticked, say whi
 - [ ] Output was read, not assumed. A failure you cannot explain is not done.
 - [ ] Nothing generated, built or cached is staged: check `git status` and `git diff --stat HEAD`. Never `git add -A` blindly.
 - [ ] No secrets, tokens or personal data in code, tests, logs, fixtures or errors.
+- [ ] The PR body carries `Stakes:` (never lowered; a raise has its `Stakes raised:` line). `sensitive` or higher has a recorded review; `critical` also has `Second review:` and `Human validation:` (check with `zedkit-ai stakes <body file>`).
 
 ## Tests
 
-- [ ] Every changed behavior has a test. Bug fix: a regression test that fails without the fix. Use `tdd`; for edge cases use `adversarial-tests`.
+- [ ] Every changed behavior has a test. Bug fix: a regression test that fails without the fix. Use `tdd`; for edge cases use `adversarial-tests`. **Layer:** unit and integration tests are primary. Contract or Pact tests when a boundary earns them. End-to-end or browser tests only for an explicitly justified critical user path — not a default battery or an arbitrary count. Do not delete or change existing CI unless the owner asked.
 - [ ] **No test deleted, skipped or weakened to make the change pass.** If one had to change, list each (name, why) in the PR description. A test edited to match new behavior proves nothing unless the old behavior was verified wrong.
 - [ ] Tests assert behavior through the public interface, not internals.
 
@@ -43,6 +44,12 @@ Done is a claim. This list is the evidence. If one box cannot be ticked, say whi
 
 Applies when the change is a page, view, component, style or preview.
 Exception: a non-visual change (N/A).
+
+<!-- if:skill=compose-ui -->
+
+- [ ] `/compose-ui` persona-chain brief exists (client business → personas → the client's customers → their personas → UI choices); each UI choice has `because`.
+
+<!-- /if -->
 
 - [ ] Lint, types, axe and screenshot diffs ran on the final state. Necessary, not sufficient.
 - [ ] A rendered-page critique names the strongest remaining weaknesses (composition, hierarchy, type roles, density, rhythm). A self-assigned score is not done.

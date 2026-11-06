@@ -629,7 +629,7 @@ import { CardSkeleton } from "@zedtech/zedkit-ui";
 
 ## Name an operation in progress
 
-- Import: `@zedtech/zedkit-ui` — `StatusLabel`, `StatusLabelProps`, `StatusLabelTone`
+- Import: `@zedtech/zedkit-ui` — `StatusLabel`, `StatusLabelProps`, `StatusLabelTone`, `StreamStatus`, `StreamStatusProps`, `StreamText`, `StreamTextProps`, `ASSISTANT_STREAM_STAGES`, `consumeSseStream`, `isAssistantStreamStage`, `pullSseFrames`, `readAssistantStreamEvent`, `AssistantStreamEvent`, `AssistantStreamStage`, `SseFrame`
 - Wraps: `(none)`
 - Status: stable
 - Short name: StatusLabel
@@ -1228,12 +1228,12 @@ toast.error("Upload failed"); // typed variants: success | error | info | warnin
 - When to use: Right after creating a credential the user must store.
 - When not to use: For passwords the user typed — use a password Input instead.
 - See also: `Collect text input with a label`
-- A11y: The value is a read-only input (a read-only textarea with `multiline`), so it can be focused and selected with the keyboard. Name it: point a `Label` at `id`, or pass `aria-label`; the kit does not add one. The copy button is a real button named by `copyLabel` (a localized default otherwise). The copied state is a 2-second icon swap only and is not announced, and where the browser has no clipboard API the button does nothing and says nothing, so pair it with your own `aria-live` message for both outcomes.
+- A11y: The value is a read-only input (a read-only textarea with `multiline`), so it can be focused and selected with the keyboard. Name it: point a `Label` at `id`, or pass `aria-label`; the kit does not add one. The copy button is a real button named by `copyLabel` (a localized default otherwise). The copied state is a 2-second icon swap plus a polite live announcement. When the clipboard API is missing or writing to it fails, the same live region announces that copy failed.
 
 ```ts
 import { Label, SecretField } from "@zedtech/zedkit-ui";
 <Label htmlFor="key">API key (shown once)</Label>
-<SecretField id="key" value={key} />
+<SecretField id="key" value="zk_live_example_secret" />
 ```
 
 ## Show a sortable, filterable, paginated data table

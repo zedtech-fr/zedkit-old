@@ -4,9 +4,10 @@
    small installer, validator and CLI). Runtime deps: `@zedtech/zedkit-core`,
    `yaml`.
 2. `kit/` is the single source of truth for this repo's own skills and
-   subagents too (`.agents/skills` and `.agents/agents` are symlinks into
-   it). Edit there; `tests/unit/repo-wiring.test.ts` fails when a provider
-   link stops resolving to it.
+   unmarked subagent text (`.agents/skills` symlink into it; generated
+   agent files come from `sync`). Edit kit sources there;
+   `tests/unit/repo-wiring.test.ts` fails when a skills link stops
+   resolving to the kit or generated agents miss a kit name.
 3. Agent-agnostic: no tool-specific paths or model ids inside skills or
    subagents. Subagent `model` is omitted or `inherit`; descriptions are
    one line; names equal the folder or file name. `validateKit` enforces
@@ -33,3 +34,11 @@
 9. Definition of done: `pnpm --filter @zedtech/zedkit-ai typecheck && pnpm --filter @zedtech/zedkit-ai lint && pnpm --filter @zedtech/zedkit-ai build && pnpm --filter @zedtech/zedkit-ai test`
    green (each separately), `pnpm catalog:check` green. On a fresh clone build
    the sibling packages first (see Commands in the root `AGENTS.md`).
+
+## Domain and identity
+
+- Own-install and sync rules: [ai-kit.md](../../.agents/domain/ai-kit.md)
+- Public hygiene: [public-hygiene.md](../../.agents/domain/public-hygiene.md)
+- Tokenomics (root): [tokenomics.md](../../.agents/tokenomics.md)
+- Cursor pointer: [packages-ai.mdc](../../.cursor/rules/packages-ai.mdc) only
+  names this file.

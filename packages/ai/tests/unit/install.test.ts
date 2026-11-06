@@ -3,9 +3,9 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { installKit } from "#install.js";
-import { agentsForPreset, commandsForPreset, readManifest } from "#kit.js";
+import { agentsForPreset, commandsForPreset, kitDir, readManifest } from "#kit.js";
 import { checkDrift, validateKit } from "#validate.js";
-import { firstPartySkills, markdownFiles, put, SKILL, tempDir } from "./helpers.js";
+import { COMMAND, firstPartySkills, markdownFiles, put, SKILL, tempDir } from "./helpers.js";
 
 function install(dest: string, options: Parameters<typeof installKit>[0] extends infer O ? Partial<O> : never = {}) {
   const result = installKit({ dest, ...options });
@@ -127,6 +127,40 @@ describe("installKit", () => {
     const again = install(dest, { preset: "starter", providers: ["cursor"], adopt: true });
     expect(existsSync(join(dest, ".agents", "personas.kit.md"))).toBe(false);
     expect(again).toContainEqual({ kind: "skip", path: join(".agents", "personas.md"), note: "kept (already customized)" });
+  });
+
+  it("installs the tokenomics stub once, and a re-run is a no-op", () => {
+    const dest = tempDir();
+    const first = install(dest, { providers: [] });
+    expect(first).toContainEqual(expect.objectContaining({ kind: "copy", path: join(".agents", "tokenomics.md") }));
+    const stub = readFileSync(join(dest, ".agents", "tokenomics.md"), "utf8");
+    expect(stub).toBe(readFileSync(join(kitDir(), "tokenomics.template.md"), "utf8"));
+    const again = install(dest, { providers: [] });
+    expect(again.filter((a) => a.kind !== "skip")).toEqual([]);
+    expect(validateKit(join(dest, ".agents"))).toEqual([]);
+  });
+
+  it("leaves an edited tokenomics.md alone, with or without adopt, and writes no sidecar", () => {
+    for (const adopt of [false, true]) {
+      const dest = tempDir();
+      install(dest, { providers: [], adopt });
+      const file = join(dest, ".agents", "tokenomics.md");
+      const edited = `${readFileSync(file, "utf8")}\nOur own note.\n`;
+      writeFileSync(file, edited);
+      const again = install(dest, { providers: [], adopt });
+      expect(again.filter((a) => a.kind !== "skip")).toEqual([]);
+      expect(readFileSync(file, "utf8")).toBe(edited);
+      expect(existsSync(join(dest, ".agents", "tokenomics.kit.md"))).toBe(false);
+    }
+  });
+
+  it("validate reports an invalid project tokenomics.md", () => {
+    const dest = tempDir();
+    install(dest, { providers: [] });
+    writeFileSync(join(dest, ".agents", "tokenomics.md"), "---\nschema: 1\ntiers: {}\n---\n");
+    expect(validateKit(join(dest, ".agents"))).toEqual([
+      { path: "tokenomics.md", message: expect.stringContaining("tiers: unknown key") },
+    ]);
   });
 
   it("adopt still sidecars a lightly edited v1 personas file", () => {
@@ -401,6 +435,19 @@ describe("installKit", () => {
     expect(readFileSync(join(dest, ".cursor/agents/verifier.md"), "utf8")).toContain("verifier");
   });
 
+  it("second install keeps a custom Cursor command link", () => {
+    const dest = tempDir();
+    install(dest, { preset: "setup", providers: ["cursor"] });
+    put(dest, ".agents/commands/custom.md", COMMAND("plan", "Custom."));
+    const target = "../../.agents/commands/custom.md";
+    symlinkSync(target, join(dest, ".cursor/commands/custom.md"));
+    install(dest, { preset: "setup", providers: ["cursor"] });
+    expect(readlinkSync(join(dest, ".cursor/commands/custom.md"))).toBe(target);
+    expect(readFileSync(join(dest, ".agents/commands/custom.md"), "utf8")).toContain("Custom.");
+    const drift = checkDrift(dest, join(dest, ".agents")).map((i) => `${i.path}: ${i.message}`);
+    expect(drift.some((m) => m.includes("custom.md") && /missing|removed/i.test(m))).toBe(false);
+  });
+
   it("never overwrites the cursor copies: edits survive a second run", () => {
     const dest = tempDir();
     install(dest, { providers: ["cursor"] });
@@ -410,7 +457,7 @@ describe("installKit", () => {
     expect(readFileSync(join(dest, ".cursor/commands/review.md"), "utf8")).toBe("mine\n");
   });
 
-  it("adds no provider layer for codex and muse: they read the shared source", () => {
+  it("adds no extra provider folder for codex and muse", () => {
     const dest = tempDir();
     const actions = install(dest, { providers: ["codex", "muse"] });
     expect(existsSync(join(dest, "AGENTS.md"))).toBe(true);
@@ -592,7 +639,7 @@ describe("installKit", () => {
 
   it("keeps a Role and style section at the top of the agent template, under the line budget", () => {
     const lines = readFileSync(join(kitRoot(), "AGENTS.template.md"), "utf8").split("\n");
-    expect(lines.length).toBeLessThan(100);
+    expect(lines.length).toBeLessThanOrEqual(76);
     const role = lines.findIndex((l) => l === "## Role and style");
     const nonNegotiables = lines.findIndex((l) => l === "## Non-negotiables");
     expect(role).toBeGreaterThanOrEqual(0);
@@ -705,7 +752,8 @@ describe("installKit", () => {
     if (!Array.isArray(core)) throw new Error("core preset must list skills");
     // Hard cap (#443): adding a core skill must bump this number explicitly.
     // 26 since #440 (`orchestrate`: core's own setup-ai routes follow-ups to /orchestrate).
-    expect(core.length).toBeLessThanOrEqual(26);
+    // 27 for `compose-ui` (persona chain brief before composing UI).
+    expect(core.length).toBeLessThanOrEqual(27);
   });
 
   it("core-installed skills only name skills and agents that core installs", () => {

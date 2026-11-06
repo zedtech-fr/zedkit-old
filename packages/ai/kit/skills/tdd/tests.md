@@ -2,6 +2,8 @@
 
 ## Good Tests
 
+The TDD loop is unit and integration tests; do not start with a browser spec.
+
 **Integration-style**: Test through real interfaces, not mocks of internal parts.
 
 ```typescript

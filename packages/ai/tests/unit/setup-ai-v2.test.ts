@@ -117,6 +117,8 @@ describe("setup-ai v2 kit", () => {
     expect(cmd).toContain("before any tool call");
     expect(cmd).toContain("Then run the `setup-ai` skill on `$ARGUMENTS`");
     expect(cmd).toMatch(/Do not end your turn after the intro/);
+    expect(cmd).toMatch(/per session/);
+    expect(cmd).toContain("resumed at phase <X>");
     const skill = readFileSync(
       join(kitDir(), "skills", "setup-ai", "SKILL.md"),
       "utf8",
@@ -344,7 +346,7 @@ describe("setup-ai v2 kit", () => {
         ),
         "utf8",
       );
-      expect(tmpl, name).toContain("[domain rules](../../domain/booking.md)");
+      expect(tmpl, name).toContain("[domain rules](../../domain/)");
       expect(tmpl, name).toMatch(/\[product\]\(\.\.\/\.\.\/product\.md\)/u);
       expect(tmpl, name).not.toMatch(/\(\.\.\/domain\//u);
     }

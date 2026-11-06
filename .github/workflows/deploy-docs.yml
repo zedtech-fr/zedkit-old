@@ -14,18 +14,22 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: deploy-docs
   cancel-in-progress: false
-  queue: max
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
+      - name: Require green CI on this commit
+        run: bash scripts/require-green-ci.sh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-node@v7
         with:
           node-version: 22
@@ -52,23 +56,24 @@ jobs:
         run: |
           umask 077
           trim() { printf '%s' "$1" | tr -d '\r\n'; }
-          : > deploy/suggest.env
           # Generation is off unless IDENTITY_AI_ENABLED is 1 and an approved budget and the prices are set.
-          printf '%s=%s\n' IDENTITY_AI_ENABLED "$IDENTITY_AI_ENABLED" >> deploy/suggest.env
-          printf '%s=%s\n' IDENTITY_AI_BUDGET_DAILY_USD "$IDENTITY_AI_BUDGET_DAILY_USD" >> deploy/suggest.env
-          printf '%s=%s\n' IDENTITY_AI_BUDGET_MONTHLY_USD "$IDENTITY_AI_BUDGET_MONTHLY_USD" >> deploy/suggest.env
-          printf '%s=%s\n' IDENTITY_AI_PRICE_INPUT_USD_PER_MTOK "$IDENTITY_AI_PRICE_INPUT_USD_PER_MTOK" >> deploy/suggest.env
-          printf '%s=%s\n' IDENTITY_AI_PRICE_OUTPUT_USD_PER_MTOK "$IDENTITY_AI_PRICE_OUTPUT_USD_PER_MTOK" >> deploy/suggest.env
-          printf '%s=%s\n' IDENTITY_AI_FALLBACK_PRICE_INPUT_USD_PER_MTOK "$IDENTITY_AI_FALLBACK_PRICE_INPUT_USD_PER_MTOK" >> deploy/suggest.env
-          printf '%s=%s\n' IDENTITY_AI_FALLBACK_PRICE_OUTPUT_USD_PER_MTOK "$IDENTITY_AI_FALLBACK_PRICE_OUTPUT_USD_PER_MTOK" >> deploy/suggest.env
-          printf '%s=%s\n' IDENTITY_AI_BASE_URL "$(trim "$IDENTITY_AI_BASE_URL")" >> deploy/suggest.env
-          printf '%s=%s\n' IDENTITY_AI_API_KEY "$(trim "$IDENTITY_AI_API_KEY")" >> deploy/suggest.env
-          printf '%s=%s\n' IDENTITY_AI_MODEL "$(trim "$IDENTITY_AI_MODEL")" >> deploy/suggest.env
-          printf '%s=%s\n' IDENTITY_AI_MAX_TOKENS "$IDENTITY_AI_MAX_TOKENS" >> deploy/suggest.env
-          printf '%s=%s\n' IDENTITY_AI_REASONING_EFFORT "$IDENTITY_AI_REASONING_EFFORT" >> deploy/suggest.env
-          printf '%s=%s\n' IDENTITY_AI_FALLBACK_BASE_URL "$(trim "$IDENTITY_AI_FALLBACK_BASE_URL")" >> deploy/suggest.env
-          printf '%s=%s\n' IDENTITY_AI_FALLBACK_API_KEY "$(trim "$IDENTITY_AI_FALLBACK_API_KEY")" >> deploy/suggest.env
-          printf '%s=%s\n' IDENTITY_AI_FALLBACK_MODEL "$(trim "$IDENTITY_AI_FALLBACK_MODEL")" >> deploy/suggest.env
+          {
+            printf '%s=%s\n' IDENTITY_AI_ENABLED "$IDENTITY_AI_ENABLED"
+            printf '%s=%s\n' IDENTITY_AI_BUDGET_DAILY_USD "$IDENTITY_AI_BUDGET_DAILY_USD"
+            printf '%s=%s\n' IDENTITY_AI_BUDGET_MONTHLY_USD "$IDENTITY_AI_BUDGET_MONTHLY_USD"
+            printf '%s=%s\n' IDENTITY_AI_PRICE_INPUT_USD_PER_MTOK "$IDENTITY_AI_PRICE_INPUT_USD_PER_MTOK"
+            printf '%s=%s\n' IDENTITY_AI_PRICE_OUTPUT_USD_PER_MTOK "$IDENTITY_AI_PRICE_OUTPUT_USD_PER_MTOK"
+            printf '%s=%s\n' IDENTITY_AI_FALLBACK_PRICE_INPUT_USD_PER_MTOK "$IDENTITY_AI_FALLBACK_PRICE_INPUT_USD_PER_MTOK"
+            printf '%s=%s\n' IDENTITY_AI_FALLBACK_PRICE_OUTPUT_USD_PER_MTOK "$IDENTITY_AI_FALLBACK_PRICE_OUTPUT_USD_PER_MTOK"
+            printf '%s=%s\n' IDENTITY_AI_BASE_URL "$(trim "$IDENTITY_AI_BASE_URL")"
+            printf '%s=%s\n' IDENTITY_AI_API_KEY "$(trim "$IDENTITY_AI_API_KEY")"
+            printf '%s=%s\n' IDENTITY_AI_MODEL "$(trim "$IDENTITY_AI_MODEL")"
+            printf '%s=%s\n' IDENTITY_AI_MAX_TOKENS "$IDENTITY_AI_MAX_TOKENS"
+            printf '%s=%s\n' IDENTITY_AI_REASONING_EFFORT "$IDENTITY_AI_REASONING_EFFORT"
+            printf '%s=%s\n' IDENTITY_AI_FALLBACK_BASE_URL "$(trim "$IDENTITY_AI_FALLBACK_BASE_URL")"
+            printf '%s=%s\n' IDENTITY_AI_FALLBACK_API_KEY "$(trim "$IDENTITY_AI_FALLBACK_API_KEY")"
+            printf '%s=%s\n' IDENTITY_AI_FALLBACK_MODEL "$(trim "$IDENTITY_AI_FALLBACK_MODEL")"
+          } > deploy/suggest.env
           chmod 600 deploy/suggest.env
       - name: Configure SSH
         env:

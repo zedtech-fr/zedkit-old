@@ -1,25 +1,18 @@
 # <Project> — Agent Instructions
 
-<One or two sentences: what this project is, its stack, who it is for.>
-
-Keep this file short: it is loaded in every session. Put folder-specific
-rules in a nested `AGENTS.md` and workflows in `.agents/skills`.
+<One or two sentences: what this project is, its stack, who it is for.> Keep this file short; folder rules go in a nested `AGENTS.md`.
 
 ## Role and style
 
-<Role: one line, e.g. "senior maintainer of <project>, writing for <audience>".>
-<Tone: e.g. direct and calm. Reply language: <language of the docs and commits>; code, identifiers and comments stay in English.>
-Concise: no preamble, no plan recap, lead with the outcome. Evidence first:
-cite `file:line`, say what was not checked. Ask only when a wrong guess has
-real consequences (data loss, money, public behavior, a call only a human can
-make); otherwise pick the most likely reading and say so. Done means proven:
-gates run, tests cited, no weakened checks.
+<Role, e.g. "senior maintainer of <project>, writing for <audience>". Tone: direct and calm. Reply language: <language of the docs and commits>; code, identifiers and comments stay in English.>
+Concise: no preamble, lead with the outcome. Evidence first: cite `file:line`,
+say what was not checked. Ask only when a wrong guess has real consequences
+(data loss, money, public behavior); otherwise pick the likeliest reading and
+say so. Done means proven: gates run, tests cited, no weakened checks.
 
 ## Non-negotiables
 
-<!-- Replace with this project's invariants. Each one: a rule an agent could
-break, why it matters, how it is enforced (lint, test, CI). Delete this
-comment and the examples below that do not apply. -->
+<!-- Each: a rule an agent could break, why, and the check that enforces it. -->
 
 - **<Invariant>.** <Why, and the check that enforces it.>
 - **No secrets in code, logs, errors or client bundles.**
@@ -28,11 +21,11 @@ comment and the examples below that do not apply. -->
 
 ## Before writing any code
 
-Climb the ladder for every new piece of code, file, or dependency — stop
-at the first rung that holds<!-- if:skill=ponytail-review --> (skill `ponytail-review` has the full text)<!-- /if -->:
+Climb the ladder for any new code, file or dependency; stop at the first rung
+that holds<!-- if:skill=ponytail-review --> (skill `ponytail-review`)<!-- /if -->:
 
 1. Does this need to exist at all? If not, say so in one line.
-2. Already in this codebase? Reuse the helper or pattern.
+2. Already in this codebase? Reuse it.
 3. Does the standard library do it?
 4. Does a native platform feature or a standard tool cover it?
 5. Does an already-installed dependency solve it? Never add one for a few lines.
@@ -41,34 +34,31 @@ at the first rung that holds<!-- if:skill=ponytail-review --> (skill `ponytail-r
 
 ## How to work
 
-- **Verify, do not guess.** Read the source before relying on an API, shape,
-  flag, path, version or model name. Cite `file:line`. Say what you could not
-  check. (skill `ground-truth`)
-- **Smallest complete change.** Reuse before adding; no abstraction, option or
-  dependency nobody asked for; delete over add.<!-- if:skill=ponytail --> (skill `ponytail`)<!-- /if -->
-- **Parallelize independent work, route by tier.** Fan out read-only reading
-  and review to subagents with self-contained briefs on a cheap fast model,
-  passed on every spawn (omitted = the strong session model); synthesis and
-  decisions stay strong. (skill `parallel-work`; `.agents/model-routing.md`)
-- **Tests first, adversarial.** Behavior changes ship with tests that try to
-  break them; a bug fix starts with a failing test. (skills `tdd`,
-  `adversarial-tests`)
-- **Small PRs from fresh trunk.** Estimate the size before coding; if it is too
-  big to review in one sitting, split along seams. Never a broken intermediate
-  state.
+- **Verify, do not guess.** Read the source before relying on an API, flag,
+  path or version. (skill `ground-truth`)
+- **Smallest complete change.** No abstraction, option or dependency nobody
+  asked for.<!-- if:skill=ponytail --> (skill `ponytail`)<!-- /if -->
+- **Parallelize independent work, route by kind × stakes.** Fan out read-only work; set the model on every spawn. (skill `parallel-work`; `.agents/tokenomics.md`)
+- **Tests first, adversarial; unit and integration tests are primary.** Bug fix starts with a failing test. Contract or Pact tests when a boundary earns them. E2E/browser only for an explicitly justified critical user path — not a default battery or count. (skills `tdd`, `adversarial-tests`)
+- **Small PRs from fresh trunk,** split along seams, never a broken middle.
 - **Done means proven.** Gates run on the final state, no weakened tests, a
-  cold second review. (skill `definition-of-done`, agent `verifier`)
-- **Keep this setup true.** When a decision or correction comes up, update the
-  rule in the same turn.<!-- if:skill=rules-upkeep --> (skill `rules-upkeep`)<!-- /if -->
+  cold second review. (skill `definition-of-done`, agent `verifier`)<!-- if:skill=compose-ui --> Before composing UI, run `/compose-ui` (persona chain: client business → personas → the client's customers → their personas → UI choices).<!-- /if -->
+- **Review from the users' angles:** <who uses this? e.g. new user, integrating developer or agent, operator>. Cite tests and observable behavior.<!-- if:skill=persona-review --> (skill `persona-review`)<!-- /if -->
+- **Keep this setup true.** Update the rule in the same turn a decision or correction comes up.<!-- if:skill=rules-upkeep --> (skill `rules-upkeep`)<!-- /if -->
 
 ## Commands
 
+### Observed commands
+
 ```sh
 <install>
-<typecheck / lint>
-<test>
+<typecheck / lint / test>
 <build>
 ```
+
+### Test recommendation
+
+Unit and integration tests are primary. Contract or Pact tests when a boundary earns them. E2E/browser only for an explicitly justified critical user path — not a default battery or count. Do not delete or change existing CI unless the owner asked.
 
 ## Map
 
@@ -76,23 +66,9 @@ at the first rung that holds<!-- if:skill=ponytail-review --> (skill `ponytail-r
 | -------- | ------------------ | ------------------ |
 | `<path>` | `<path>/AGENTS.md` | `<path>/README.md` |
 
-## Reviews
-
-Check every change from the angles of the people it serves<!-- if:skill=persona-review --> (skill
-`persona-review`)<!-- /if -->: <who uses this? e.g. new user, integrating developer or
-agent, operator, security reviewer>. Cite tests and observable behavior as
-evidence.
-
 ## AI setup
 
-- `AGENTS.md` (this file) and nested `AGENTS.md`: instructions.
-- `.agents/skills/`: workflows. `.claude/skills` and `.cursor/skills` point to it.
-- `.agents/agents/`: subagents. `.claude/agents` points to it; `.cursor/agents`
-  holds copies (a linked folder shows up empty there).
-- `.agents/commands/`: one-keystroke commands. `.claude/commands` points to it;
-  `.cursor/commands` holds copies for the same reason.
-- codex and muse read this file and `.agents/` directly (no layer).
-- Subagent `model`: omit it, or `inherit`. Pin one only after listing the
-  models the tool accepts; an unknown id can fall back silently.
-- Tailor this file to the repo with the `setup-ai` skill.
-- Validate after editing: `zedkit-ai validate` (package `@zedtech/zedkit-ai`).
+- Layout: `.agents/skills/`, `.agents/agents/`, `.agents/commands/`; `.claude/`
+  and `.cursor/` mirror them; codex and muse read `.agents/` directly.
+- Subagent `model`: omit it, or `inherit`; never name a model in a source file, models live in `.agents/tokenomics.md` (an unknown pinned id can fall back silently).
+- Tailor this file with the `setup-ai` skill; validate with `zedkit-ai validate`.

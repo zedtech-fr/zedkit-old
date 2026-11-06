@@ -30,7 +30,7 @@ Install `@zedtech/zedkit-ai`, wire Cursor with adopt mode, run `/setup-ai` to ta
 
    - In Cursor: run **`/setup-ai`** (or ask the agent to run the `setup-ai` skill). Read the skill, then print its intro first — before any repo reads, inventory, or writes — and **continue in the same turn** straight into phase A without waiting for a reply. The only stop points are the phase B batched interview, plan approval before writes, and the final report.
    - Follow the skill through **verify**: run the gate commands it lists, apply the approved plan, finish the report.
-   - Phase **B** starts by **reading the code**, not by asking: the agent runs `npx zedkit-ai scan`, then spawns read-only subagents on a cheap, fast model (1–5 on a small repo, 10–20 on a big one) that report the rules already in place with `file:line` evidence. It writes them to domain rules, nested `AGENTS.md` files and `.agents/model-routing.md`, so later agent work in the repo keeps the same cheap-reads, strong-decides split.
+   - Phase **B** starts by **reading the code**, not by asking: the agent runs `npx zedkit-ai scan`, then spawns read-only subagents on a cheap, fast model (1–5 on a small repo, 10–20 on a big one) that report the rules already in place with `file:line` evidence. It writes them to domain rules, nested `AGENTS.md` files and `.agents/tokenomics.md`, then runs `zedkit-ai sync`, so later agent work in the repo keeps the same cheap-reads, strong-decides split.
    - Then **answer or delegate the batched discovery interview** (at most 8 questions in one batch, only what the code could not answer); do not skip the interview or substitute guesses for owner answers.
 
 4. **Validate**:

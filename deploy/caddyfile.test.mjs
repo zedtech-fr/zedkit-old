@@ -127,4 +127,5 @@ test("the suggest routes cap the request body and every connection has seconds t
   assert.deepEqual(proxies.sort(), ["suggest-dev:3001", "suggest:3001"]);
   assert.equal([...text.matchAll(/"handler":"request_body","max_size":32000/g)].length, 2, "a body cap in front of each proxy");
   assert.equal([...text.matchAll(/"read_timeout":240000000000/g)].length, 2, "suggest upstream read timeout stays above the provider budget");
+  assert.equal([...text.matchAll(/"flush_interval":-1/g)].length, 2, "suggest proxies flush immediately so status events are not buffered");
 });

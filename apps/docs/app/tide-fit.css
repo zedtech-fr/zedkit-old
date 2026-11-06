@@ -1,5 +1,5 @@
 /*
- * Tide is the site default. Desktop nav fit only (nowrap changelog label).
+ * Tide-only desktop nav fit (nowrap changelog label). Glass is the site default.
  * Phone section rhythm lives on kit `--zk-section-*` floors, not here.
  */
 :root[data-identity="tide"] #nd-nav nav > ul a,

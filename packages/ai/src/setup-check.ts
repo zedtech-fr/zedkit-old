@@ -32,6 +32,10 @@ function covers(plan: string, path: string): boolean {
 
 const SETUP_LOCKFILES = ["pnpm-lock.yaml", "package-lock.json", "yarn.lock", "bun.lock"];
 
+// `intro-first: x`, also with list/quote markers and markdown emphasis
+// around the label: `- **Intro-first:** x`, `**Intro-first**: x`, `_intro-first_: x`.
+const INTRO_FIRST = /^[\s>*_`#-]*intro-first[*_`]*\s*:[*_`]*\s*[^\s*_`]/im;
+
 const planRow = (path: string, reason: string): string => `| ${path} | edit | ${reason} |`;
 
 /** Ready-to-paste plan row for a git path the plan does not cover. */
@@ -47,24 +51,47 @@ export function suggestPlanRow(path: string): string {
   return planRow(path, "<reason>");
 }
 
+function logShape(path: string, raw: string, issues: Issue[]): void {
+  const lines = raw.split(/\r?\n/);
+  const body = lines.map((l) => l.trim()).filter(Boolean);
+  if (!lines[0]?.startsWith("CMD:")) issues.push({ path, message: "first line must start with CMD:" });
+  if (!body.some((l) => /^START\b/.test(l))) issues.push({ path, message: "missing START line" });
+  if (!body.some((l) => /^END\b/.test(l))) issues.push({ path, message: "missing END line" });
+  if (!/^EXIT:\d+$/.test(body.at(-1) ?? "")) issues.push({ path, message: "last line must match EXIT:<code>" });
+}
+
 function gates(root: string): Issue[] {
   const listed = tryCatch(() => readdirSync(join(root, ".agents/setup-log/gates")));
-  if (!listed.ok) return [];
   const issues: Issue[] = [];
-  const inventory = tryCatch(() => readFileSync(join(root, ".agents/setup-log.md"), "utf8"));
-  for (const name of listed.value.filter((n) => n.endsWith(".log"))) {
+  const log = tryCatch(() => readFileSync(join(root, ".agents/setup-log.md"), "utf8"));
+  const inventory = log.ok ? log.value : "";
+  const cmds: string[] = [];
+  for (const name of (listed.ok ? listed.value : []).filter((n) => n.endsWith(".log"))) {
     const path = join(root, ".agents/setup-log/gates", name);
     const raw = tryCatch(() => readFileSync(path, "utf8"));
     if (!raw.ok) continue;
-    const lines = raw.value.split(/\r?\n/);
-    const body = lines.map((l) => l.trim()).filter(Boolean);
-    if (!lines[0]?.startsWith("CMD:")) issues.push({ path, message: "first line must start with CMD:" });
-    if (!body.some((l) => /^START\b/.test(l))) issues.push({ path, message: "missing START line" });
-    if (!body.some((l) => /^END\b/.test(l))) issues.push({ path, message: "missing END line" });
-    if (!/^EXIT:\d+$/.test(body.at(-1) ?? "")) issues.push({ path, message: "last line must match EXIT:<code>" });
-    if (!inventory.ok || !inventory.value.includes(name)) {
+    logShape(path, raw.value, issues);
+    cmds.push(raw.value.split(/\r?\n/)[0] ?? "");
+    if (!inventory.includes(name)) {
       issues.push({ path, message: `gate inventory misses ${name} (one setup-log row per persisted gate log, killed logs included)` });
     }
+  }
+  // The full gate: a repo with a `check` script has a log of it, or a setup-log row saying why it did not run.
+  const pkg = tryCatch(() => JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as { scripts?: Record<string, string> });
+  if (pkg.ok && pkg.value.scripts?.check !== undefined) {
+    const logged = cmds.some((c) => /\b(pnpm|npm|yarn|bun)\b.*\bcheck\b/.test(c));
+    const excused = inventory.split("\n").some((l) => l.startsWith("|") && /\bcheck\b/.test(l) && /unverified|not run|did not run|skipped|killed|oom/i.test(l));
+    if (!logged && !excused) {
+      issues.push({ path: join(root, "package.json"), message: "the repo has a `check` script: persist its run as .agents/setup-log/gates/<name>.log (CMD/EXIT) or add a Gate outcomes row saying why it did not run" });
+    }
+  }
+  // The final `validate --setup` run, when persisted, is clean and named in the setup-log.
+  const run = tryCatch(() => readFileSync(join(root, ".agents/setup-log/validate.log"), "utf8"));
+  if (run.ok) {
+    const path = join(root, ".agents/setup-log/validate.log");
+    logShape(path, run.value, issues);
+    if (!/^EXIT:0\s*$/m.test(run.value.trimEnd().split("\n").at(-1) ?? "")) issues.push({ path, message: "validate.log is from a failing run: fix the issues and re-run validate --setup before scoring" });
+    if (!inventory.includes("validate.log")) issues.push({ path, message: "setup-log does not reference validate.log (name it in the setup-log entry)" });
   }
   return issues;
 }
@@ -107,7 +134,7 @@ export function checkSetup(root: string, options: { plan?: string } = {}): Setup
   }
   if (plan) {
     const text = tryCatch(() => readFileSync(plan, "utf8"));
-    if (text.ok && !/^\s*intro-first:\s*\S/im.test(text.value)) {
+    if (text.ok && !INTRO_FIRST.test(text.value)) {
       issues.push({ path: plan, message: "plan misses the intro-first line; append `intro-first: printed before any tool call` to the appendix" });
     }
   }

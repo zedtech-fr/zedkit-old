@@ -13,7 +13,6 @@ const NEW_TEMPLATES = [
   "templates/reader-brief.template.md",
   "templates/reading-log.template.md",
   "templates/nested-agents.template.md",
-  "templates/model-routing.template.md",
 ];
 
 describe("setup-ai v3: read the code first", () => {
@@ -49,6 +48,9 @@ describe("setup-ai v3: read the code first", () => {
     expect(raw).toMatch(/Cite the gap id with each question/u);
     expect(raw).toMatch(/found in code — confirm\?/u);
     expect(raw).toMatch(/at most eight questions/iu);
+    expect(raw).toMatch(/Never invent owner choices/u);
+    expect(raw).toMatch(/harness auto-skip is not an owner answer/u);
+    expect(raw).toMatch(/return the exact question text and options to the parent/u);
     expect(raw).toMatch(/Read before asking/u);
   });
 
@@ -105,7 +107,18 @@ describe("setup-ai v3: domain, identity and nested rules", () => {
     expect(log).toMatch(/## Policy docs/u);
     expect(read("templates", "reader-brief.template.md")).toMatch(/Documented law for this slice/u);
     expect(read("templates", "reader-brief.template.md")).toMatch(/UX and interaction laws/u);
-    expect(read("templates", "model-routing.template.md")).toMatch(/## Roles in this repo/u);
+    expect(readFileSync(join(kitDir(), "tokenomics.template.md"), "utf8")).toMatch(/kind x stakes|kind × stakes|kind of work/u);
+  });
+
+  it("refreshes the Rule map after phase C, in the skill, the log template and the checklist", () => {
+    const raw = read("SKILL.md");
+    const section = raw.slice(raw.indexOf("### Rule map refresh"), raw.indexOf("### Tokenomics"));
+    expect(section).toMatch(/written in phase B/u);
+    expect(section).toMatch(/`test -e`/u);
+    expect(section).toContain("rule-map: refreshed after phase C");
+    expect(raw.indexOf("### Nested AGENTS.md")).toBeLessThan(raw.indexOf("### Rule map refresh"));
+    expect(raw).toMatch(/- \[ \] Rule map refreshed after phase C/u);
+    expect(read("templates", "reading-log.template.md")).toContain("rule-map: refreshed after phase C");
   });
 
   it("the nested template keeps to what differs, links instead of copying, and cites evidence", () => {
@@ -117,49 +130,59 @@ describe("setup-ai v3: domain, identity and nested rules", () => {
   });
 });
 
-describe("setup-ai v3: model routing", () => {
-  it("routes the run itself by tier and provider", () => {
+describe("setup-ai v3: tokenomics", () => {
+  it("routes the run itself by kind x stakes and provider", () => {
     const raw = read("SKILL.md");
-    const m = raw.slice(raw.indexOf("## Model routing (whole run)"), raw.indexOf("## Phase A"));
+    const m = raw.slice(raw.indexOf("## Tokenomics (whole run)"), raw.indexOf("## Phase A"));
     expect(m.length).toBeGreaterThan(400);
-    for (const word of ["scout", "worker", "lead", "cursor", "claude", "codex", "muse"]) expect(m, word).toContain(word);
+    for (const word of ["kind", "stakes", "cursor", "claude", "codex", "muse"]) expect(m, word).toContain(word);
     expect(m).toMatch(/Pass the model on every spawn/u);
     expect(m).toMatch(/Never pin an id you did not see listed/u);
-    expect(m).toMatch(/\.agents\/model-routing\.md/u);
-    expect(raw).toMatch(/explorer.*scout/su);
+    expect(m).toMatch(/This tool's listing is not another provider's catalog/u);
+    expect(m).toMatch(/A Cursor Task list is not Muse availability/u);
+    expect(m).toMatch(/parent session's listed id/u);
+    expect(m).toMatch(/--provider <running>/u);
+    expect(m).toMatch(/CLI `--model` flag pins only the parent/u);
+    expect(m).toMatch(/cheapest-fast is not a substitute/u);
+    expect(m).toMatch(/\.agents\/tokenomics\.md/u);
+    expect(m).toMatch(/zedkit-ai sync/u);
+    expect(raw).toMatch(/explorer.*check/su);
   });
 
-  it("names no model id: tiers only, the model comes from the tool's own list", () => {
-    for (const rel of ["SKILL.md", "templates/model-routing.template.md", "templates/reader-brief.template.md"]) {
-      expect(read(...rel.split("/")), rel).not.toMatch(/\b(gpt-?\d|claude-\w+-\d|opus|sonnet|haiku|gemini-\d|o\d-mini)\b/iu);
+  it("names no model id: cells only, the model comes from the tool's own list", () => {
+    const stub = readFileSync(join(kitDir(), "tokenomics.template.md"), "utf8");
+    for (const [name, text] of [["SKILL.md", read("SKILL.md")], ["tokenomics.template.md", stub], ["reader-brief", read("templates", "reader-brief.template.md")]]) {
+      expect(text, name).not.toMatch(/\b(gpt-?\d|claude-\w+-\d|opus|sonnet|haiku|gemini-\d|o\d-mini)\b/iu);
     }
   });
 
-  it("the routing template covers tiers, provider mechanics, and the repo's agent rules", () => {
-    const raw = read("templates", "model-routing.template.md");
-    expect(raw).toMatch(/\*\*Provider running this setup:\*\*/u);
-    for (const tier of ["**scout**", "**worker**", "**lead**"]) expect(raw, tier).toContain(tier);
+  it("the skill and the stub cover cells, providers, sync, and inherit", () => {
+    const raw = read("SKILL.md");
+    const stub = readFileSync(join(kitDir(), "tokenomics.template.md"), "utf8");
+    expect(stub).toMatch(/model: inherit/u);
     for (const p of ["`cursor`", "`claude`", "`codex`", "`muse`"]) expect(raw, p).toContain(p);
     expect(raw).toMatch(/no routing available/u);
-    expect(raw).toMatch(/omitted or `inherit`/u);
+    expect(raw).toMatch(/zedkit-ai sync/u);
+    expect(raw).toMatch(/build\.standard/u);
+    expect(raw).toMatch(/decide\.sensitive/u);
   });
 
-  it("the generated AGENTS.md carries the routing rule, within the template line budget", () => {
+  it("the generated AGENTS.md points at tokenomics.md", () => {
     const template = readFileSync(join(kitDir(), "AGENTS.template.md"), "utf8");
-    expect(template).toMatch(/route by tier/u);
-    expect(template).toContain(".agents/model-routing.md");
-    const root = tempDir();
-    const result = installKit({ dest: root, preset: "setup", providers: ["cursor"] });
+    expect(template).toMatch(/route by kind/u);
+    expect(template).toContain(".agents/tokenomics.md");
+    const dest = tempDir();
+    const result = installKit({ dest, preset: "setup", providers: ["cursor"] });
     if (!result.ok) throw result.error;
-    expect(readFileSync(join(root, "AGENTS.md"), "utf8")).toContain(".agents/model-routing.md");
-    expect(validateKit(join(root, ".agents"))).toEqual([]);
+    expect(readFileSync(join(dest, "AGENTS.md"), "utf8")).toContain(".agents/tokenomics.md");
+    expect(validateKit(join(dest, ".agents"))).toEqual([]);
   });
 });
 
 describe("setup-ai v3: scored", () => {
   it("the rubric adds depth axes D1-D4 that each must reach 2, outside the 8-axis mean", () => {
     const raw = read("templates", "setup-rubric.md");
-    for (const axis of ["### D1. Code reading", "### D2. Domain and identity rules", "### D3. Nested rules", "### D4. Model routing"]) {
+    for (const axis of ["### D1. Code reading", "### D2. Domain and identity rules", "### D3. Nested rules", "### D4. Tokenomics"]) {
       expect(raw, axis).toContain(axis);
     }
     expect(raw).toMatch(/Every depth axis must score >= 2; a 0 on any of them fails the run/u);
@@ -174,7 +197,7 @@ describe("setup-ai v3: scored", () => {
     const depth = read("templates", "setup-rubric.md");
     expect(depth).toMatch(/D1\. Code reading[\s\S]*- 0: No reading phase/u);
     expect(depth).toMatch(/D3\. Nested rules[\s\S]*- 0: Only a root `AGENTS\.md`/u);
-    expect(depth).toMatch(/D4\. Model routing[\s\S]*- 0: Nothing; every spawn inherits the session model/u);
+    expect(depth).toMatch(/D4\. Tokenomics[\s\S]*- 0: Nothing; every spawn inherits the session model/u);
   });
 
   it("phase E and the setup-log template carry the depth fields", () => {
@@ -194,6 +217,6 @@ describe("setup-ai v3: scored", () => {
   it("the CLI documents scan and the depth checks", () => {
     const usage = usageText();
     expect(usage).toMatch(/^ {2}scan \[dir\]/mu);
-    expect(usage).toMatch(/reading log, domain\s+rules, nested AGENTS\.md and model routing/u);
+    expect(usage).toMatch(/reading log, domain\s+rules, nested AGENTS\.md and tokenomics/u);
   });
 });

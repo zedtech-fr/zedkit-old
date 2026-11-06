@@ -19,7 +19,8 @@ import { HARD, actualMicro, loadConfig, worstCaseMicro } from "./config.mjs";
 import { openLedgerSafely } from "./ledger.mjs";
 import { clientKey, networkOf, trustedList } from "./network.mjs";
 import { buildMessages, inputBytes, inputTokens, worstCaseReferences } from "./prompt.mjs";
-import { callProvider, parseJson } from "./provider.mjs";
+import { callProvider, callProviderStream, parseJson } from "./provider.mjs";
+import { applyDelta, openSse, startHeartbeat, wantsStream, writeSse } from "./sse.mjs";
 import { fetchReferences, urlsInText } from "./references.mjs";
 import { fontsAllowed, mergePatch, validateTokens } from "./tokens.mjs";
 
@@ -170,11 +171,12 @@ function changedPaths(before, after) {
 }
 
 /** One provider call within the deadline, abortable by the client's disconnect. */
-function attempt(provider, args, { client, deadline, now, fetchImpl, limits, effort = provider.effort }) {
+function attempt(provider, args, { client, deadline, now, fetchImpl, limits, effort = provider.effort, onDelta }) {
   const remaining = deadline - now();
   if (remaining < 1_000) return Promise.resolve({ ok: false, kind: "timeout", billable: false });
   const signal = AbortSignal.any([AbortSignal.timeout(remaining), client.signal]);
-  return callProvider(provider, { ...args, maxTokens: limits.maxOutputTokens, signal, fetchImpl, effort });
+  const call = onDelta ? callProviderStream : callProvider;
+  return call(provider, { ...args, maxTokens: limits.maxOutputTokens, signal, fetchImpl, effort, ...(onDelta ? { onDelta } : {}) });
 }
 
 /** What the call cost. A reply is charged at its (believable) reported usage; a failure at the worst case only if it may have run. */
@@ -206,7 +208,7 @@ async function generate(ctx, request, references) {
   let last = null;
   for (const provider of providers) {
     const worst = worstCaseMicro(provider, tokens, config.limits.maxOutputTokens);
-    let result = await attempt(provider, { messages }, { client, deadline, now, fetchImpl, limits: config.limits });
+    let result = await attempt(provider, { messages }, { client, deadline, now, fetchImpl, limits: config.limits, onDelta: ctx.onDelta });
     called += 1;
     if (
       !result.ok &&
@@ -216,7 +218,7 @@ async function generate(ctx, request, references) {
       result.status !== 429 &&
       provider.effort
     ) {
-      result = await attempt(provider, { messages }, { client, deadline, now, fetchImpl, limits: config.limits, effort: "" });
+      result = await attempt(provider, { messages }, { client, deadline, now, fetchImpl, limits: config.limits, effort: "", onDelta: ctx.onDelta });
       called += 1;
     }
     spent += costOf(provider, result, worst, sizes);
@@ -259,6 +261,51 @@ function referenceReport(items) {
         }
       : { url: item.url, status: "failed", reason: item.reason },
   );
+}
+
+
+function deltaWriter(res) {
+  let state = { raw: "", emitted: "" };
+  let announced = "picking-palette";
+  return (delta) => {
+    state = applyDelta(state, delta);
+    if (state.stage !== announced) {
+      announced = state.stage;
+      writeSse(res, "status", { stage: state.stage });
+    }
+    if (state.added) writeSse(res, "text", { delta: state.added });
+  };
+}
+
+async function finishStream(res, { outcome, request, references, release, log, base }) {
+  if (!outcome.result.ok) {
+    log({ outcome: `upstream-${outcome.result.kind}`, ...base, ...(outcome.result.status ? { status: outcome.result.status, detail: outcome.result.detail } : {}) });
+    if (outcome.result.kind === "aborted") {
+      if (!res.writableEnded) res.end();
+      return;
+    }
+    writeSse(res, "error", { error: outcome.result.kind === "timeout" ? "timeout" : "upstream", references: referenceReport(references) });
+    res.end();
+    return;
+  }
+  const answer = await interpret(outcome.result.content, request.current);
+  if (!answer.ok) {
+    log({ outcome: "invalid-output", ...base });
+    writeSse(res, "error", { error: "invalid-output", references: referenceReport(references) });
+    res.end();
+    return;
+  }
+  log({ outcome: "ok", ...base, changed: changedPaths(request.current, answer.tokens).length });
+  writeSse(res, "status", { stage: "building-preview" });
+  writeSse(res, "complete", {
+    requestId: request.requestId,
+    summary: answer.summary,
+    tokens: answer.tokens,
+    changed: changedPaths(request.current, answer.tokens),
+    references: referenceReport(references),
+    release: release.id,
+  });
+  res.end();
 }
 
 async function suggest(ctx, req, res) {
@@ -308,6 +355,13 @@ async function suggest(ctx, req, res) {
     if (!res.writableFinished) client.abort();
   });
   const deadline = started + config.limits.timeoutMs + config.limits.referenceTimeoutMs;
+  const stream = wantsStream(req);
+  let stopHeartbeat = () => {};
+  if (stream) {
+    openSse(res, setCookie);
+    stopHeartbeat = startHeartbeat(res);
+    if (request.references.length > 0) writeSse(res, "status", { stage: "reading-reference" });
+  }
   const references =
     request.references.length === 0
       ? []
@@ -325,7 +379,8 @@ async function suggest(ctx, req, res) {
     budgetLeft -= item.text.length;
   }
 
-  const outcome = await generate({ config, fetchImpl: ctx.fetchImpl, now, client, deadline: deadline + 1 }, request, references).then(
+  if (stream) writeSse(res, "status", { stage: "picking-palette" });
+  const outcome = await generate({ config, fetchImpl: ctx.fetchImpl, now, client, deadline: deadline + 1, onDelta: stream ? deltaWriter(res) : undefined }, request, references).then(
     (value) => ({ ...value, crashed: false }),
     () => ({ crashed: true, spent: amountMicro, called: 1, result: { ok: false, kind: "network" } }),
   );
@@ -336,6 +391,10 @@ async function suggest(ctx, req, res) {
   });
 
   const base = { ms: now() - started, refs: references.length, costMicro: outcome.spent, calls: outcome.called };
+  if (stream) {
+    stopHeartbeat();
+    return finishStream(res, { outcome, request, references, release, log, base });
+  }
   if (!outcome.result.ok) {
     // The provider's HTTP status is not a secret and is the first thing an operator needs.
     log({ outcome: `upstream-${outcome.result.kind}`, ...base, ...(outcome.result.status ? { status: outcome.result.status, detail: outcome.result.detail } : {}) });

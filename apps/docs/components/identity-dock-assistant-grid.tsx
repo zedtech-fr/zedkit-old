@@ -13,6 +13,9 @@ import { ReferenceReportList } from "@/components/identity-references";
 import type { Unavailable } from "@/lib/identity-assistant";
 import type { SessionState } from "@/lib/identity-creator-session";
 import type { IdentityTokens } from "@zedtech/zedkit-ui";
+import type { SpecimenDomain } from "@/lib/brief-specimen-domain";
+
+import type { ApplySiteHandlers, ApplySiteTokenHandlers } from "@/components/identity-apply-site-row";
 
 function compactPaneProps(narrowSplit: boolean | undefined) {
   return {
@@ -26,11 +29,13 @@ function DockAssistantPreviewColumn(props: {
   proposal: SessionState["proposal"];
   previewTokens: IdentityTokens;
   domainBrief: string;
+  previewDomain?: SpecimenDomain;
   busy: boolean;
   references: SessionState["references"];
   narrowSplit: boolean | undefined;
   onUse: (tokens: IdentityTokens) => void;
   onDiscard: () => void;
+  siteApply?: ApplySiteTokenHandlers;
 }) {
   const pane = compactPaneProps(props.narrowSplit);
   return (
@@ -44,6 +49,8 @@ function DockAssistantPreviewColumn(props: {
         busy={props.busy}
         onUse={props.onUse}
         onDiscard={props.onDiscard}
+        {...(props.previewDomain !== undefined ? { previewDomain: props.previewDomain } : {})}
+        {...(props.siteApply ? { siteApply: props.siteApply } : {})}
         {...pane}
       />
     </Stack>
@@ -79,7 +86,23 @@ function DockGridComposer(props: {
   );
 }
 
-export function IdentityDockAssistantGrid(props: {
+
+function conversationSiteApply(
+  siteApply: ApplySiteTokenHandlers | undefined,
+  proposal: SessionState["proposal"],
+): ApplySiteHandlers | undefined {
+  if (!siteApply) return undefined;
+  return {
+    appliedSite: siteApply.appliedSite,
+    onApplySite: () => {
+      if (!proposal) return;
+      siteApply.onApplySite(proposal.tokens);
+    },
+    onRemoveFromSite: siteApply.onRemoveFromSite,
+  };
+}
+
+type IdentityDockAssistantGridProps = {
   view: View;
   session: SessionState;
   off: Unavailable | null;
@@ -87,6 +110,7 @@ export function IdentityDockAssistantGrid(props: {
   busy: boolean;
   previewTokens: IdentityTokens;
   domainBrief: string;
+  previewDomain?: SpecimenDomain;
   narrowSplit?: boolean;
   inputRef: RefObject<HTMLTextAreaElement | null>;
   onBrief: (brief: string) => void;
@@ -97,8 +121,12 @@ export function IdentityDockAssistantGrid(props: {
   onDiscard: () => void;
   composerRef?: RefObject<HTMLDivElement | null>;
   hideComposer?: boolean;
-}) {
+  siteApply?: ApplySiteTokenHandlers;
+};
+
+export function IdentityDockAssistantGrid(props: IdentityDockAssistantGridProps) {
   const pane = compactPaneProps(props.narrowSplit);
+  const chatApply = conversationSiteApply(props.siteApply, props.session.proposal);
   return (
     <Stack gap={4} className="min-w-0">
       <ConversationMessages
@@ -110,6 +138,7 @@ export function IdentityDockAssistantGrid(props: {
         onQuickRefine={props.onQuickRefine}
         off={props.off}
         noticeInComposerFooter={props.hideComposer === true}
+        {...(chatApply ? { siteApply: chatApply } : {})}
         {...pane}
       />
       <DockAssistantPreviewColumn
@@ -122,6 +151,8 @@ export function IdentityDockAssistantGrid(props: {
         narrowSplit={props.narrowSplit}
         onUse={props.onUse}
         onDiscard={props.onDiscard}
+        {...(props.previewDomain !== undefined ? { previewDomain: props.previewDomain } : {})}
+        {...(props.siteApply ? { siteApply: props.siteApply } : {})}
       />
       <DockGridComposer
         session={props.session}

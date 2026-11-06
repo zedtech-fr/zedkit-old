@@ -724,3 +724,99 @@ test("references: links written in the brief are read too, their signals reach t
     assert.equal((await four.json()).references.length, 3, "explicit and written links together stay within three");
   });
 });
+
+function sseEvents(text) {
+  const frames = [];
+  for (const part of text.split("\n\n")) {
+    let event = "message";
+    let data = "";
+    for (const line of part.split("\n")) {
+      if (line.startsWith(":")) continue;
+      if (line.startsWith("event:")) event = line.slice(6).trim();
+      if (line.startsWith("data:")) data = line.slice(5).trim();
+    }
+    if (data) frames.push({ event, data: JSON.parse(data) });
+  }
+  return frames;
+}
+
+test("a stream client gets status and text events, and the provider is asked to stream", async () => {
+  const p = provider();
+  await withServer({ env: configured(), fetchImpl: p.fetchImpl }, async ({ port }) => {
+    const res = await post(port, body(), { accept: "text/event-stream" });
+    assert.equal(res.status, 200);
+    assert.match(res.headers.get("content-type") ?? "", /text\/event-stream/);
+    const frames = sseEvents(await res.text());
+    const names = frames.map((frame) => frame.event);
+    assert.ok(names.includes("status"));
+    assert.ok(names.includes("text"));
+    assert.ok(names.includes("complete"));
+    assert.equal(frames.find((frame) => frame.event === "status").data.stage, "picking-palette");
+    const done = frames.find((frame) => frame.event === "complete");
+    assert.match(done.data.summary, /Rounder corners/);
+    assert.equal(done.data.tokens.radius, "0.25rem");
+    assert.equal(p.calls[0].body.stream, true);
+    assert.deepEqual(p.calls[0].body.stream_options, { include_usage: true });
+  });
+});
+
+test("without an explicit event-stream accept the answer stays JSON and the provider is not asked to stream", async () => {
+  const p = provider();
+  await withServer({ env: configured(), fetchImpl: p.fetchImpl }, async ({ port }) => {
+    const res = await post(port, body(), { accept: "*/*" });
+    assert.equal(res.status, 200);
+    assert.match(res.headers.get("content-type") ?? "", /application\/json/);
+    const out = await res.json();
+    assert.match(out.summary, /Rounder corners/);
+    assert.equal(p.calls[0].body.stream, undefined);
+  });
+});
+
+test("an early refusal stays JSON even when the client asked to stream", async () => {
+  const p = provider();
+  await withServer({ env: { IDENTITY_AI_BASE_URL: "https://primary.test", IDENTITY_AI_API_KEY: "k", IDENTITY_AI_MODEL: "m", IDENTITY_AI_STATE_DIR: mkdtempSync(join(tmpdir(), "zk-")) }, fetchImpl: p.fetchImpl }, async ({ port }) => {
+    const res = await post(port, body(), { accept: "text/event-stream" });
+    assert.equal(res.status, 503);
+    assert.match(res.headers.get("content-type") ?? "", /application\/json/);
+    assert.deepEqual(await res.json(), { error: "disabled", reason: "disabled" });
+  });
+  assert.equal(p.calls.length, 0);
+});
+
+test("when the origin refuses to stream, the same visit still gets SSE from a JSON reply", async () => {
+  const p = provider((call) => {
+    if (call.body.stream) {
+      return { ok: false, status: 400, text: () => Promise.resolve(JSON.stringify({ error: { type: "invalid_request", message: "stream is not supported" } })) };
+    }
+    return reply(PATCH);
+  });
+  await withServer({ env: configured(), fetchImpl: p.fetchImpl }, async ({ port }) => {
+    const res = await post(port, body(), { accept: "text/event-stream" });
+    assert.equal(res.status, 200);
+    assert.match(res.headers.get("content-type") ?? "", /text\/event-stream/);
+    const frames = sseEvents(await res.text());
+    const names = frames.map((frame) => frame.event);
+    assert.ok(names.includes("status"));
+    assert.ok(names.includes("text"));
+    assert.ok(names.includes("complete"));
+    assert.match(frames.find((frame) => frame.event === "complete").data.summary, /Rounder corners/);
+    assert.equal(p.calls.length, 2);
+    assert.equal(p.calls[0].body.stream, true);
+    assert.equal(p.calls[1].body.stream, undefined);
+  });
+});
+
+test("a stream with a reference announces reading-reference before the model runs", async () => {
+  const p = provider();
+  const html = "<html><head><title>Example</title><style>body{color:#111}</style></head><body><p>Hello from the page.</p></body></html>";
+  const transport = () => Promise.resolve({ status: 200, headers: { "content-type": "text/html" }, body: Buffer.from(html), truncated: false });
+  await withServer({ env: configured(), fetchImpl: p.fetchImpl, transport }, async ({ port }) => {
+    const res = await post(port, body({ references: ["https://example.com/"] }), { accept: "text/event-stream" });
+    assert.equal(res.status, 200);
+    const frames = sseEvents(await res.text());
+    const stages = frames.filter((frame) => frame.event === "status").map((frame) => frame.data.stage);
+    assert.equal(stages[0], "reading-reference");
+    assert.ok(stages.includes("picking-palette"));
+    assert.ok(frames.some((frame) => frame.event === "complete"));
+  });
+});

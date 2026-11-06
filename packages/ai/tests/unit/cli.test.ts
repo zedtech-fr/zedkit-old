@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, symlinkSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { main } from "#cli.js";
@@ -103,6 +103,18 @@ describe("cli", () => {
     expect(again.code).toBe(0);
     const writes = again.text.split("\n").filter((line) => /^(copy|link|write)\s/u.test(line));
     expect(writes).toEqual([]);
+  });
+
+  it("setup re-run does not send the user back to /setup-ai once product.md exists", () => {
+    const dest = tempDir();
+    const first = run("setup", dest, "--provider", "cursor");
+    expect(first.text).toContain("next: run /setup-ai");
+    put(dest, ".agents/product.md", "# Product\n");
+    const again = run("setup", dest, "--provider", "cursor");
+    expect(again.code).toBe(0);
+    expect(again.text).toContain("next: validate, then phase E score");
+    const hints = again.text.split("\n").filter((line) => /^(next|note):/u.test(line));
+    expect(hints.some((line) => line.includes("/setup-ai"))).toBe(false);
   });
 
   it("setup --preset starter installs starter skills only", () => {
@@ -234,15 +246,31 @@ describe("cli", () => {
     const root = tempDir();
     put(root, ".agents/skills/alpha/SKILL.md", SKILL("alpha"));
     put(root, ".agents/commands/run.md", COMMAND("alpha"));
-    put(root, ".cursor/commands/run.md", COMMAND("alpha"));
+    mkdirSync(join(root, ".cursor/commands"), { recursive: true });
+    symlinkSync("../../.agents/commands/run.md", join(root, ".cursor/commands/run.md"));
     expect(run("validate", root)).toEqual({ code: 0, text: "ok", errors: "" });
+    unlinkSync(join(root, ".cursor/commands/run.md"));
     put(root, ".cursor/commands/run.md", COMMAND("alpha", "Edited."));
     for (const dir of [root, join(root, ".agents")]) {
       const result = run("validate", dir);
       expect(result.code, dir).toBe(1);
-      expect(result.text, dir).toContain("differs from");
-      expect(result.text, dir).not.toContain("copy it over");
+      expect(result.text, dir).toContain("user file kept");
+      expect(result.text, dir).toContain("npx zedkit-ai sync");
     }
+  });
+
+  it("validate fails on a model name outside tokenomics.md and passes once it is marked", () => {
+    const root = tempDir();
+    put(root, ".agents/skills/alpha/SKILL.md", SKILL("alpha"));
+    put(root, "AGENTS.md", "# Rules\n\nUse gpt-5 for reviews.\n");
+    for (const dir of [root, join(root, ".agents")]) {
+      const result = run("validate", dir);
+      expect(result.code, dir).toBe(1);
+      expect(result.text, dir).toContain('AGENTS.md:3: model name "gpt-5" outside tokenomics.md');
+      expect(result.text, dir).toContain("1 problem");
+    }
+    put(root, "AGENTS.md", "# Rules\n\nUse gpt-5 for reviews. <!-- zk:model-ok -->\n");
+    expect(run("validate", root)).toEqual({ code: 0, text: "ok", errors: "" });
   });
 
   it("validate fails on a missing directory and on unexpected arguments", () => {
@@ -252,5 +280,203 @@ describe("cli", () => {
     expect(run("validate", "a", "b").code).toBe(2);
     expect(run("validate", "--help").code).toBe(2);
     expect(run("list", "--foo").code).toBe(2);
+  });
+
+  describe("route", () => {
+    function project(tokenomics = ""): string {
+      const dir = tempDir();
+      put(
+        dir,
+        ".agents/agents/verifier.md",
+        `---\nname: verifier\ndescription: "Verifies. Use when needed."\n---\n\nBody.\n`,
+      );
+      if (tokenomics !== "") put(dir, ".agents/tokenomics.md", tokenomics);
+      return dir;
+    }
+
+    it("prints the cell, needs with sources, gates and read-only for a check call", () => {
+      const { code, text } = run(
+        "route",
+        "verifier",
+        "--kind",
+        "check",
+        "--stakes",
+        "standard",
+        "--provider",
+        "cursor",
+        "--dir",
+        project(),
+      );
+      expect(code).toBe(0);
+      expect(text).toContain("agent: verifier");
+      expect(text).toContain("kind: check (call)");
+      expect(text).toContain("stakes: standard, column sensitive");
+      expect(text).toContain(
+        "needs: reasoning=high (agent), context=medium (agent)",
+      );
+      expect(text).toContain("model: inherit");
+      expect(text).toContain("effort: high");
+      expect(text).toContain("context window: 256k");
+      expect(text).toContain("gates: review=recommended");
+      expect(text).toContain("read-only: yes");
+      expect(text).not.toContain("note:");
+    });
+
+    it("--json prints the route, and --reasoning/--context override the agent default for this call", () => {
+      const { code, text } = run(
+        "route",
+        "verifier",
+        "--kind",
+        "check",
+        "--stakes",
+        "standard",
+        "--provider",
+        "claude",
+        "--reasoning",
+        "low",
+        "--context",
+        "large",
+        "--json",
+        "--dir",
+        project(),
+      );
+      expect(code).toBe(0);
+      const route = JSON.parse(text) as {
+        column: string;
+        effort: string;
+        contextWindow: string;
+        needsSource: Record<string, string>;
+        provider: string;
+      };
+      expect(route).toMatchObject({
+        provider: "claude",
+        column: "sensitive",
+        effort: "medium",
+        contextWindow: "1M",
+      });
+      expect(route.needsSource).toEqual({ reasoning: "call", context: "call" });
+    });
+
+    it("reads the project's tokenomics.md and its default_provider", () => {
+      const dir = project(
+        "---\nschema: 1\ndefault_provider: claude\nproviders:\n  claude:\n    check:\n      sensitive: { model: my-check-model }\n---\n",
+      );
+      const { code, text } = run(
+        "route",
+        "verifier",
+        "--kind",
+        "check",
+        "--stakes",
+        "sensitive",
+        "--dir",
+        dir,
+      );
+      expect(code).toBe(0);
+      expect(text).toContain("provider: claude");
+      expect(text).toContain("model: my-check-model");
+    });
+
+    it("an omitted kind uses the hint and says so; critical prints the second review route", () => {
+      const { text } = run(
+        "route",
+        "verifier",
+        "--stakes",
+        "critical",
+        "--provider",
+        "cursor",
+        "--dir",
+        project(),
+      );
+      expect(text).toContain("kind: check (hint)");
+      expect(text).toContain("note: kind not given, using check (hint)");
+      expect(text).toContain("second review: cursor model inherit effort max");
+      expect(text).toContain("warning: cannot prove distinct model");
+    });
+
+    it("exits 2 on a missing or bad flag, no provider, an unknown agent, a kind the agent forbids and an invalid file", () => {
+      const dir = project();
+      const base = ["--dir", dir];
+      expect(run("route", ...base).errors).toContain("needs an agent name");
+      expect(run("route", "verifier", ...base).errors).toContain(
+        "needs --stakes",
+      );
+      expect(
+        run("route", "verifier", "--stakes", "urgent", ...base).errors,
+      ).toContain("--stakes must be one of");
+      expect(
+        run(
+          "route",
+          "verifier",
+          "--stakes",
+          "standard",
+          "--kind",
+          "review",
+          ...base,
+        ).errors,
+      ).toContain("--kind must be one of");
+      expect(
+        run(
+          "route",
+          "verifier",
+          "--stakes",
+          "standard",
+          "--provider",
+          "gemini",
+          ...base,
+        ).errors,
+      ).toContain("--provider must be one of");
+      expect(
+        run(
+          "route",
+          "verifier",
+          "--stakes",
+          "standard",
+          "--reasoning",
+          "max",
+          ...base,
+        ).errors,
+      ).toContain("--reasoning must be one of");
+      expect(
+        run("route", "verifier", "--stakes", "standard", ...base).errors,
+      ).toContain("no provider");
+      expect(
+        run(
+          "route",
+          "nobody",
+          "--stakes",
+          "standard",
+          "--provider",
+          "cursor",
+          ...base,
+        ).errors,
+      ).toContain('unknown agent "nobody"');
+      expect(
+        run(
+          "route",
+          "verifier",
+          "--stakes",
+          "standard",
+          "--kind",
+          "build",
+          "--provider",
+          "cursor",
+          ...base,
+        ).errors,
+      ).toContain("cannot be invoked as build");
+      const bad = project("---\nschema: 1\ntiers: {}\n---\n");
+      const invalid = run(
+        "route",
+        "verifier",
+        "--stakes",
+        "standard",
+        "--provider",
+        "cursor",
+        "--dir",
+        bad,
+      );
+      expect(invalid.code).toBe(2);
+      expect(invalid.errors).toContain("tokenomics.md: tiers: unknown key");
+      expect(run("route", "a", "b", "--stakes", "standard").code).toBe(2);
+    });
   });
 });

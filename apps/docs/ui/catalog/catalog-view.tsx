@@ -112,6 +112,8 @@ export function CatalogViewFromUrl({ entries }: { entries: CatalogIndexEntry[] }
 
   useEffect(() => {
     const next = readFilter(new URLSearchParams(searchParams.toString()), entries);
+    // A URL echo of an earlier query must not eat letters still being typed.
+    if (qDebounceRef.current) next.q = filtersRef.current.q;
     filtersRef.current = next;
     setFilterState(next);
   }, [entries, searchParams]);
@@ -137,7 +139,12 @@ export function CatalogViewFromUrl({ entries }: { entries: CatalogIndexEntry[] }
 
     if (next.q !== undefined) {
       if (qDebounceRef.current) clearTimeout(qDebounceRef.current);
-      qDebounceRef.current = setTimeout(() => pushFilterUrl(parsed), 120);
+      const timer = setTimeout(() => {
+        if (qDebounceRef.current !== timer) return;
+        qDebounceRef.current = null;
+        pushFilterUrl(filtersRef.current);
+      }, 120);
+      qDebounceRef.current = timer;
       return;
     }
     if (qDebounceRef.current) {

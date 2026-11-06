@@ -10,6 +10,9 @@ export function HomeHeroLeadActions() {
       <Button asChild>
         <HomeLink href="#get-started">{homeCopy.heroActions.getStarted}</HomeLink>
       </Button>
+      <Button asChild variant="outline">
+        <HomeLink href="#ai-setup">{homeCopy.heroActions.setupAi}</HomeLink>
+      </Button>
       <Button asChild variant="link" className="h-11 px-2">
         <HomeLink href="/catalog">{homeCopy.heroActions.browseCatalog}</HomeLink>
       </Button>

@@ -1,28 +1,29 @@
+---
+name: add-capability
+description: "Ship a feature that crosses layers (route, API, data, tests) as one thin vertical slice. Use when adding a capability that touches more than one layer of the repo."
+---
+
 # Add capability
 
-Template — copy to `.agents/skills/add-capability/SKILL.md` and add YAML frontmatter (`name`, `description`).
-
-Repo-specific workflow — paths and commands below are **placeholders**. Replace them with verified facts from this repo.
+One journey, end to end, smallest diff. Facts come from this repo, never from memory: if a step names a path or command you have not opened, open it first.
 
 ## Before you start
 
-From this skill folder (`.agents/skills/add-capability/`), read:
-
-- [product](../../product.md)
-- [domain rules](../../domain/booking.md) — use the real `.agents/domain/<area>.md` paths for this repo
-
-Confirm the capability is in the plan tier **must** or **should** (not a one-off).
+1. Read the root `AGENTS.md` for the gate commands and layer boundaries. Read [product](../../product.md) and the [domain rules](../../domain/) for the area.
+2. Find one shipped capability of the same shape (same layers) and read its diff or files. Copy its structure, not its code.
+3. Skip this skill for a single-layer change; just make the change.
 
 ## Steps
 
-1. **Spec the slice** — one journey, acceptance criteria, non-goals (link [product](../../product.md)).
-2. **Domain check** — list rules touched; add rows to domain docs if policy changes (`source: owner` when the owner confirmed).
-3. **Implement** — follow repo boundaries; smallest diff.
-4. **Prove** — run the repo gate commands from root `AGENTS.md`; add or extend tests for new rules.
-5. **Review** — run the repo review workflow before opening a PR.
+1. **Spec the slice.** One journey, acceptance criteria, non-goals. Three lines is enough; write them in the PR body.
+2. **Rule check.** List the domain rules the slice touches. If it changes a rule, update the domain doc in the same PR.
+3. **Test first.** Unit and integration tests are primary. Contract or Pact tests when a boundary earns them. Write the failing test at the seam this repo already uses. End-to-end or browser tests only for an explicitly justified critical user path this slice owns — not a default battery or count.
+4. **Build inward.** Route or UI, then API, then data. Follow the boundaries in `AGENTS.md`; no new layer, no new dependency without a reason in the PR.
+5. **Prove.** Run every gate from `AGENTS.md` and paste the result. A gate you could not run is listed as skipped, with the reason.
+6. **Review** with the repo's review workflow before opening the PR.
 
 ## Done when
 
-- Gates green (or skipped with reason in the PR).
-- Domain rules cite `file:line` or `source: owner`.
-- No dangling references in `.agents/`.
+- The journey works; acceptance criteria have a unit or integration test (E2E only if that path is an explicitly justified critical user path).
+- Gates are green, or skipped with a reason in the PR.
+- No file outside the slice changed.

@@ -51,8 +51,9 @@ land as `*.kit.md` / `zk-<name>`), then `/setup-ai`. Opt-in
 `npx zedkit-ai validate --setup` checks plan coverage, gate-log shape, and that the
 setup went deep: `/setup-ai` reads the code first with read-only subagents
 (`npx zedkit-ai scan` sizes them), writes domain rules and nested `AGENTS.md`
-files from what they found, and writes `.agents/model-routing.md` so cheap
-models read and the strong model decides.
+files from what they found, fills `.agents/tokenomics.md` (cheap models on
+`check`/`build` at `trivial`/`standard`, the strong model on `sensitive`/`critical`),
+and runs `zedkit-ai sync`.
 Full notes: the package README `Upgrading from 0.12` section.
 
 ## Troubleshooting

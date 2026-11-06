@@ -27,6 +27,7 @@ zedkit.app {
 			max_size 32KB
 		}
 		reverse_proxy suggest:3001 {
+			flush_interval -1
 			transport http {
 				# Above the suggest provider budget (max 180s) plus reference fetch (max 15s).
 				read_timeout 240s
@@ -82,6 +83,7 @@ dev.zedkit.app {
 			max_size 32KB
 		}
 		reverse_proxy suggest-dev:3001 {
+			flush_interval -1
 			transport http {
 				# Above the suggest provider budget (max 180s) plus reference fetch (max 15s).
 				read_timeout 240s

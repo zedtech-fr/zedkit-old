@@ -26,6 +26,16 @@ exists IS a blocker.
 | frontend-quality  | agents `ui-designer` + `console-architecture`                                   | exists | app routes, views, `**/*.tsx`, styles, preview/gallery                      | when triggered | layer + composition + design critique + one-file-one-job findings, file:line           |
 | doc-demos         | agent `docs-writer` (demos: `ui-designer`)                                      | exists | doc apps, `**/demos/**`, preview registries, generated pages                | when triggered | registry + frame + drift findings per §Frontend rules, file:line                       |
 
+At `Stakes: sensitive` or higher the full lens set runs: every lens whose
+trigger matches the diff is mandatory, and an "optional" lens is not skipped.
+Route each lens agent with `zedkit-ai route <agent> --kind check --stakes <s>`.
+A review may raise the stakes and writes `Stakes raised: <old> -> <new>: <reason>`;
+it never lowers them. At `critical` a second, independent review runs in a
+separate session (`route ... --stakes critical` gives its route; when the model
+is `inherit`, name the model that session used) and the PR carries `Second review:`
+and `Human validation:` lines before merge. A `check` call that changed
+`git status --porcelain` fails the step.
+
 ## Frontend rules (the `ui` lens fails the review on any of these)
 
 1. One demo = one file (`demos/<name>.tsx` or colocated with its doc).
@@ -51,3 +61,10 @@ exists IS a blocker.
    skeletons match the real content shape, retry keeps state. A page or
    example with no wait has no loading state.
    Example refusal: a spinner with no label on a slow save.
+
+<!-- if:skill=compose-ui -->
+
+The `ui` lens also fails when the change is visual and there is no
+`/compose-ui` persona-chain brief (client business → personas → the client's
+customers → their personas → UI choices) with a `because` on each UI decision.
+<!-- /if -->

@@ -109,7 +109,7 @@ function retryAfter(res: Response, body: Record<string, unknown>): number | unde
   return Number.isFinite(fromBody) && fromBody > 0 ? Math.min(Math.ceil(fromBody), MAX_RETRY_AFTER_SEC) : undefined;
 }
 
-function readJson(res: Response): Promise<Record<string, unknown>> {
+export function readJson(res: Response): Promise<Record<string, unknown>> {
   return res
     .text()
     .then((text) => JSON.parse(text) as unknown)
@@ -137,11 +137,36 @@ function failure(res: Response, body: Record<string, unknown>): AssistantResult 
   return { kind: "network" };
 }
 
+export function resultFromStreamError(payload: Record<string, unknown>): AssistantResult {
+  const error = typeof payload.error === "string" ? payload.error : "upstream";
+  const references = referencesOf(payload.references);
+  if (error === "timeout") return { kind: "timeout", references };
+  if (error === "invalid-output") return { kind: "invalid-output", references };
+  return { kind: "upstream", references };
+}
+
+export function resultFromBody(res: Response, body: Record<string, unknown>, requestId: string): Promise<AssistantResult> {
+  if (res.status !== 200) return Promise.resolve(failure(res, body));
+  const references = referencesOf(body.references);
+  return import("./identity-tokens-parse.ts").then(({ parseIdentityTokens }) => {
+    const parsed = parseIdentityTokens(body.tokens);
+    if (!parsed.success) return { kind: "invalid-output" as const, references };
+    return {
+      kind: "ok" as const,
+      requestId: typeof body.requestId === "string" ? body.requestId : requestId,
+      tokens: parsed.data,
+      summary: typeof body.summary === "string" ? body.summary.trim().slice(0, 600) : "",
+      changed: Array.isArray(body.changed) ? body.changed.filter((path): path is string => typeof path === "string").slice(0, 40) : [],
+      references,
+    };
+  });
+}
+
 /**
  * Sends one brief. The identity in an `ok` answer has passed `parseIdentityTokens`, the same schema the service
  * and the saved library use; an answer that does not is `invalid-output`, whatever else it says.
  */
-export function requestIdentity(input: AssistantInput, { fetchImpl = globalThis.fetch.bind(globalThis), signal }: { fetchImpl?: FetchLike; signal?: AbortSignal } = {}): Promise<AssistantResult> {
+export function requestIdentity(input: AssistantInput, { fetchImpl = globalThis.fetch.bind(globalThis), signal }: { fetchImpl?: FetchLike | undefined; signal?: AbortSignal | undefined } = {}): Promise<AssistantResult> {
   const checked = checkInput(input);
   if (checked !== "ok") return Promise.resolve({ kind: "invalid-input", field: checked === "too-many-references" ? "references" : "prompt" });
   return fetchImpl(ASSISTANT_URL, {
@@ -157,30 +182,14 @@ export function requestIdentity(input: AssistantInput, { fetchImpl = globalThis.
       current: input.current,
     }),
   })
-    .then((res) =>
-      readJson(res).then(async (body): Promise<AssistantResult> => {
-        if (res.status !== 200) return failure(res, body);
-        const references = referencesOf(body.references);
-        const { parseIdentityTokens } = await import("./identity-tokens-parse.ts");
-        const parsed = parseIdentityTokens(body.tokens);
-        if (!parsed.success) return { kind: "invalid-output", references };
-        return {
-          kind: "ok",
-          requestId: typeof body.requestId === "string" ? body.requestId : input.requestId,
-          tokens: parsed.data,
-          summary: typeof body.summary === "string" ? body.summary.trim().slice(0, 600) : "",
-          changed: Array.isArray(body.changed) ? body.changed.filter((path): path is string => typeof path === "string").slice(0, 40) : [],
-          references,
-        };
-      }),
-    )
+    .then((res) => readJson(res).then((body) => resultFromBody(res, body, input.requestId)))
     .catch((error: unknown) => ((error as { name?: string } | null)?.name === "AbortError" ? { kind: "aborted" } : { kind: "network" }));
 }
 
 export type AssistantStatus = { available: true } | { available: false; reason: Unavailable };
 
 /** Free: asks whether generation is on. Never starts any paid work, so a page may call it at any time. */
-export function fetchAssistantStatus({ fetchImpl = globalThis.fetch.bind(globalThis), signal }: { fetchImpl?: FetchLike; signal?: AbortSignal } = {}): Promise<AssistantStatus> {
+export function fetchAssistantStatus({ fetchImpl = globalThis.fetch.bind(globalThis), signal }: { fetchImpl?: FetchLike | undefined; signal?: AbortSignal | undefined } = {}): Promise<AssistantStatus> {
   return fetchImpl(`${ASSISTANT_URL}/status`, { ...(signal ? { signal } : {}), headers: { accept: "application/json" } })
     .then((res) => (res.ok ? readJson(res) : Promise.resolve<Record<string, unknown> | null>(null)))
     .then((body): AssistantStatus => {

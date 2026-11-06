@@ -8,7 +8,7 @@ import { applyWidgetSpecimenPreview } from "@/lib/identity-widget-specimen-previ
 
 /** Restores specimen preview from persisted tokens and resets when the site identity changes. */
 export function useIdentityDockPreview(baseTokens: IdentityTokens, identityId: string) {
-  const { previewTokens, setPreviewTokens } = useIdentityAssistantStore();
+  const { previewTokens, setPreviewTokens, setPreviewDomain } = useIdentityAssistantStore();
   const prevIdentityId = useRef(identityId);
 
   useEffect(() => {
@@ -19,8 +19,9 @@ export function useIdentityDockPreview(baseTokens: IdentityTokens, identityId: s
     if (prevIdentityId.current === identityId) return;
     prevIdentityId.current = identityId;
     setPreviewTokens(null);
+    setPreviewDomain(null);
     applyWidgetSpecimenPreview(baseTokens);
-  }, [identityId, baseTokens, setPreviewTokens]);
+  }, [identityId, baseTokens, setPreviewTokens, setPreviewDomain]);
 
   return { workingTokens: previewTokens ?? baseTokens, setPreviewTokens };
 }

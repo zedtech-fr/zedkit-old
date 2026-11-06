@@ -72,13 +72,15 @@ for dir in packages/*/; do
   [ "$(manifest_field "$pkg" "exports['.']")" != "null" ] || { echo "$name: package.json lacks exports['.']"; fail=1; }
 
   # Tarball holds the manifest, licence, readme, and every promised path.
+  # Here-strings, not `echo | grep -q`: with pipefail, grep exiting at the first match
+  # can SIGPIPE echo on a large listing and report a path as missing.
   for required in package/package.json package/LICENSE package/README.md; do
-    echo "$listing" | grep -qxF "$required" || { echo "$name: tarball lacks $required"; fail=1; }
+    grep -qxF "$required" <<< "$listing" || { echo "$name: tarball lacks $required"; fail=1; }
   done
   while IFS= read -r target; do
     [ -n "$target" ] || continue
     clean="${target#./}"
-    echo "$listing" | grep -qE "^package/$clean(/|$)" || { echo "$name: tarball lacks promised path $target"; fail=1; }
+    grep -qE "^package/$clean(/|$)" <<< "$listing" || { echo "$name: tarball lacks promised path $target"; fail=1; }
   done <<< "$(manifest_targets "$pkg")"
 
   # No private terms in the packed contents; report files, never matched lines.
@@ -120,9 +122,11 @@ for dir in packages/*/; do
   echo "$name: ok"
 done
 
-# Client gzip of dist/*.js (ui kit + ai installer): npm tarball size, not what
-# a browser downloads. Docs first-load JS is checked separately from the
+# Client gzip of dist/*.js for the ui kit: npm tarball size, not what a
+# browser downloads. Docs first-load JS is checked separately from the
 # static export (see apps/docs/scripts/check-first-load-budget.mjs).
+# @zedtech/zedkit-ai has no gzip ceiling: it is a CLI and kit installer,
+# not a browser payload. Pack still checks integrity, exports, contents.
 # Optional third argument: a subdirectory of dist/ to measure on its own
 # (ui: dist/marketing). The main budget then leaves that subdirectory out.
 size_budget() {
@@ -153,27 +157,13 @@ size_budget() {
 # (identity-tokens, splitting the Animate runtime).
 # Raised to 58000 on 5 Nov 2026 (measured 57331 in CI on ship #1446): ParallaxSection/
 # ParallaxLayer on the motion subpath; trim still tracked in issue 1398.
-size_budget ui 58000
+# Raised to 60500 on 5 Nov 2026 (measured 59132 locally): StreamStatus, StreamText,
+# and assistant SSE helpers on the main entry; trim still tracked in issue 1398.
+size_budget ui 60500
 # Marketing entry (separate from the main budget); measured 785 with GlassSurface only;
 # 9865 with L2 domain specimens plus goal/reference marketing sections (Hero, Pricing, …);
 # 10020 after specimen-primitives barrel; tokenized keyword routing measured 10084 gzip.
 size_budget ui 10200 marketing
-# 4 Nov 2026: validate --setup completion check (setup-check.ts). Measured
-# 18465; 17400 cannot fit a new module (gzip delta vs 17268 baseline is
-# ~1.2KB). Budget = measured + 2% = 18835.
-# Raised to 19250 on 4 Nov 2026: measured 18869 with plan-row suggestions
-# (suggestPlanRow tailored copy for 7 known setup outputs; ~320B of user-facing
-# strings cannot fit the 291B headroom). Budget = measured + 2%.
-# Raised to 19750 on 4 Nov 2026: main had consumed the headroom
-# (19081/19250); this PR adds ~300B net (placeholder-link check, shared link
-# scan, measured 19381). Budget 19750 is measured + ~2%.
-# Raised to 23600 on 4 Nov 2026: setup-ai v3 adds `scan` (repo sizing and
-# slicing) and the D1-D4 depth checks for validate --setup (scan.ts,
-# setup-depth.ts); baseline 19381, measured 23102. Budget = measured + ~2%.
-# Raised to 23850 on 5 Nov 2026: D2 unenforced-ID check (validate --setup
-# flags uninventoried IDs); base tip measured 23486, PR measured 23637
-# after a 70B shave. Budget = measured + ~1%.
-size_budget ai 23850
 
 if [ -f apps/docs/out/index.html ]; then
   if ! node apps/docs/scripts/check-first-load-budget.mjs; then

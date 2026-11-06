@@ -419,14 +419,24 @@ describe("overlays", () => {
       render(<SecretField id="key" value="zbk_secret" />);
       await user.click(screen.getByRole("button", { name: "Copy to clipboard" }));
       expect(writeText).toHaveBeenCalledWith("zbk_secret");
+      expect(screen.getByRole("status").textContent).toBe("Copied");
     });
 
-    it("does nothing without a clipboard API", async () => {
+    it("announces when the clipboard API is missing", async () => {
       const user = userEvent.setup();
       vi.stubGlobal("navigator", {});
       render(<SecretField id="key" value="zbk_secret" />);
       await user.click(screen.getByRole("button", { name: "Copy to clipboard" }));
-      expect(screen.getByRole("button", { name: "Copy to clipboard" })).not.toBeNull();
+      expect(screen.getByRole("status").textContent).toBe("Could not copy");
+    });
+
+    it("announces when writing to the clipboard is rejected", async () => {
+      const user = userEvent.setup();
+      const writeText = vi.fn(() => Promise.reject(new Error("denied")));
+      vi.stubGlobal("navigator", { clipboard: { writeText } });
+      render(<SecretField id="key" value="zbk_secret" />);
+      await user.click(screen.getByRole("button", { name: "Copy to clipboard" }));
+      expect(screen.getByRole("status").textContent).toBe("Could not copy");
     });
 
     it("keeps the single-line input by default", () => {

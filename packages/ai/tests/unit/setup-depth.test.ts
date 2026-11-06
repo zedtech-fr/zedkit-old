@@ -1,10 +1,13 @@
-import { rmSync } from "node:fs";
+import { readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { main } from "#cli.js";
+import { kitDir } from "#kit.js";
 import { checkDepth } from "#setup-depth.js";
-import { put, tempDir } from "./helpers.js";
+import { put, tempDir, TOKENOMICS_D4 } from "./helpers.js";
 
+/** The meaning check a second reader writes: one verdict per sequencing rule, none left open. */
+const MEANING = "\n## Meaning check\n\n| ID | Verdict | Code does | Resolution |\n| -- | ------- | --------- | ---------- |\n| R1-1 | match | caps the refund | |\n";
 const READING = [
   "**Budget:** none found",
   "| Slice | Reader paths | Tier | Rules |",
@@ -12,17 +15,17 @@ const READING = [
   "| 1 | `src` | scout | 3 |",
   "",
   "R1-1 refunds are capped, `src/refund.ts:31`",
-].join("\n");
+].join("\n") + MEANING;
 const ROUTING = "**Provider running this setup:** cursor\n\n| Tier | Jobs |\n| **scout** | read |\n| **lead** | decide |\n";
 
 /** A repo whose setup went deep on every axis. */
 function deep(root: string): void {
   put(root, "src/refund.ts", "x\n");
   put(root, "src/AGENTS.md", "# src rules\n\nDomain: ../.agents/domain/billing.md\n");
-  put(root, "AGENTS.md", "# Root\n\n## Model routing\n\nSee `.agents/model-routing.md`.\n");
+  put(root, "AGENTS.md", "# Root\n\n## Tokenomics\n\nSee `.agents/tokenomics.md`.\n");
   put(root, ".agents/setup-log/reading.md", READING);
   put(root, ".agents/domain/billing.md", "| B-01 | current | Refunds capped | `src/refund.ts:31` |\n");
-  put(root, ".agents/model-routing.md", ROUTING);
+  put(root, ".agents/tokenomics.md", TOKENOMICS_D4);
 }
 
 /** A v2-style setup: product, plan, setup-log, root AGENTS.md, nothing deeper. */
@@ -52,11 +55,11 @@ describe("checkDepth", () => {
   it("D1: needs a reading log with reader rows and file:line evidence", () => {
     const root = tempDir();
     deep(root);
-    put(root, ".agents/setup-log/reading.md", "**Budget:** none found\n| Slice |\n| 1 | src |\n");
+    put(root, ".agents/setup-log/reading.md", `**Budget:** none found\n| Slice |\n| 1 | src |\n${MEANING}`);
     expect(checkDepth(root).map((i) => i.message)).toEqual([
       expect.stringContaining("no file:line evidence"),
     ]);
-    put(root, ".agents/setup-log/reading.md", "**Budget:** none found\nno table, `src/refund.ts:3`\n");
+    put(root, ".agents/setup-log/reading.md", `**Budget:** none found\nno table, \`src/refund.ts:3\`\n${MEANING}`);
     expect(checkDepth(root).map((i) => i.message)).toEqual([expect.stringContaining("0 reader row(s)")]);
   });
 
@@ -67,19 +70,19 @@ describe("checkDepth", () => {
     const messages = checkDepth(root).map((i) => i.message);
     expect(messages).toEqual([expect.stringMatching(/1 reader row\(s\), a medium repo needs at least 6/u)]);
     const rows = [1, 2, 3, 4, 5, 6].map((n) => `| ${n} | x | scout | 1 |`).join("\n");
-    put(root, ".agents/setup-log/reading.md", `**Budget:** none found\n${rows}\n\`a/f1.ts:2\`\n`);
+    put(root, ".agents/setup-log/reading.md", `**Budget:** none found\n${rows}\n\`a/f1.ts:2\`\n${MEANING}`);
     expect(checkDepth(root)).toEqual([]);
   });
 
   it("D1: the log must state the run budget", () => {
     const root = tempDir();
     deep(root);
-    put(root, ".agents/setup-log/reading.md", "| Slice |\n| 1 | `src` | scout | 3 |\n\n`src/refund.ts:31`\n");
+    put(root, ".agents/setup-log/reading.md", `| Slice |\n| 1 | \`src\` | scout | 3 |\n\n\`src/refund.ts:31\`\n${MEANING}`);
     expect(checkDepth(root).map((i) => i.message)).toEqual([expect.stringContaining("no **Budget:** line")]);
     put(
       root,
       ".agents/setup-log/reading.md",
-      "**Budget:** stop after 5 files\n**Budget exceptions:** owner-approved: reader 1 read 8 files (budget 5), approved by interview Q2\n| 1 | `src` | scout | 3 |\n\n`src/refund.ts:31`\n",
+      "**Budget:** stop after 5 files\n**Budget exceptions:** owner-approved: reader 1 read 8 files (budget 5), approved by interview Q2\n| 1 | `src` | scout | 3 |\n\n`src/refund.ts:31`\n" + MEANING,
     );
     expect(checkDepth(root)).toEqual([]);
   });
@@ -98,7 +101,37 @@ describe("checkDepth", () => {
     deep(root);
     put(root, ".agents/domain/billing.md", "| B-01 | current (documented, not enforced) | No web token reuse | `src/auth/token.ts:12` |\n");
     expect(checkDepth(root).map((i) => i.message)).toEqual([expect.stringContaining("B-01")]);
-    put(root, "AGENTS.md", "# Root\n\n## Model routing\n\nSee `.agents/model-routing.md`.\n\n## Unenforced rules\n\n| B-01 | add token-reuse lint | `src/auth/token.ts:12` |\n");
+    put(root, "AGENTS.md", "# Root\n\n## Tokenomics\n\nSee `.agents/tokenomics.md`.\n\n## Unenforced rules\n\n| B-01 | add token-reuse lint | `src/auth/token.ts:12` |\n");
+    expect(checkDepth(root)).toEqual([]);
+  });
+
+  it("D2: an unenforced domain rule below the first line of the file is still inventoried", () => {
+    const root = tempDir();
+    deep(root);
+    put(root, ".agents/domain/billing.md", "# Billing\n\n| ID | Status | Rule | Source |\n| B-01 | current | Refunds capped | `src/refund.ts:31` |\n| B-02 | current (documented, not enforced) | One refund per order | `src/refund.ts:40` |\n");
+    expect(checkDepth(root).map((i) => i.message)).toEqual([expect.stringContaining("B-02")]);
+  });
+
+  it("D2: a current (documented, not enforced) identity rule in design.md must be cited in the inventory", () => {
+    const root = tempDir();
+    deep(root);
+    put(root, "src/Button.tsx", "x\n");
+    put(root, ".agents/design.md", "## Identity rules\n\n| I-04 | current (documented, not enforced) | Buttons use verbs | `src/Button.tsx:3` |\n");
+    expect(checkDepth(root).map((i) => i.message)).toEqual([expect.stringContaining("I-04")]);
+    put(root, ".agents/setup-log.md", "## Unenforced rules\n\n| I-04 | add a copy lint | `src/Button.tsx:3` |\n");
+    expect(checkDepth(root)).toEqual([]);
+  });
+
+  it("D2: a nested AGENTS.md with documented, not enforced rules must be named in the inventory", () => {
+    const root = tempDir();
+    deep(root);
+    put(root, "src/AGENTS.md", "# src rules\n\nDomain: ../.agents/domain/billing.md\n\n1. **No I/O in the domain layer.** documented, not enforced (`src/refund.ts:31`)\n");
+    expect(checkDepth(root).map((i) => i.message)).toEqual([expect.stringContaining("src/AGENTS.md")]);
+    expect(tags(root)).toEqual(["D2"]);
+    put(root, ".agents/setup-log.md", "## Unenforced rules\n\n| src/AGENTS.md rule 1 | add an import-boundary lint | `src/refund.ts:31` |\n");
+    expect(checkDepth(root)).toEqual([]);
+    put(root, "src/AGENTS.md", "# src rules\n\nDomain: ../.agents/domain/billing.md\n\n1. **Caps.** enforced by `eslint.config.js` (`src/refund.ts:31`)\n");
+    put(root, ".agents/setup-log.md", "");
     expect(checkDepth(root)).toEqual([]);
   });
 
@@ -202,9 +235,36 @@ describe("checkDepth", () => {
     expect(checkDepth(root)).toEqual([]);
   });
 
-  it("D4: routing must name the provider, both tiers, and be pointed at from AGENTS.md", () => {
+  it("D4: filled tokenomics cells must be pointed at from AGENTS.md", () => {
     const root = tempDir();
     deep(root);
+    put(root, "AGENTS.md", "# Root\n");
+    expect(checkDepth(root).map((i) => i.message)).toEqual([expect.stringContaining("root AGENTS.md does not point at .agents/tokenomics.md")]);
+  });
+
+  it("D4: inherit-only tokenomics is not enough", () => {
+    const root = tempDir();
+    deep(root);
+    put(root, ".agents/tokenomics.md", "---\nschema: 1\nproviders:\n  cursor:\n    build:\n      standard: { model: inherit, effort: medium }\n---\n");
+    expect(checkDepth(root).map((i) => i.message)).toEqual([expect.stringContaining("real model (not inherit)")]);
+  });
+
+  it("D4: a valid leftover model-routing.md still passes, with a deprecation warning", () => {
+    const root = tempDir();
+    deep(root);
+    put(root, ".agents/tokenomics.md", "---\nschema: 1\n---\n");
+    put(root, ".agents/model-routing.md", ROUTING);
+    put(root, "AGENTS.md", "# Root\n\nSee `.agents/model-routing.md`.\n");
+    expect(checkDepth(root).map((i) => i.message)).toEqual([expect.stringContaining("deprecated")]);
+  });
+
+  it("D4: legacy routing must name the provider, both tiers, and be pointed at from AGENTS.md", () => {
+    const root = tempDir();
+    v2Style(root);
+    put(root, "src/AGENTS.md", "# src rules\n\nDomain: ../.agents/domain/billing.md\n");
+    put(root, ".agents/setup-log/reading.md", READING);
+    put(root, ".agents/domain/billing.md", "| B-01 | current | Refunds capped | `src/refund.ts:31` |\n");
+    put(root, "AGENTS.md", "# Root\n\nSee `.agents/model-routing.md`.\n");
     put(root, ".agents/model-routing.md", "Provider: unknown\n| scout | lead |\n");
     expect(checkDepth(root).map((i) => i.message)).toEqual([expect.stringContaining("name the provider")]);
     put(root, ".agents/model-routing.md", "Provider: claude\nonly scout here\n");
@@ -228,7 +288,7 @@ describe("validate --setup depth", () => {
     expect(run("validate", root).code).toBe(0);
     const setup = run("validate", root, "--setup");
     expect(setup.code).toBe(1);
-    for (const tag of ["D1 code reading", "D2 domain rules", "D3 nested rules", "D4 model routing"]) {
+    for (const tag of ["D1 code reading", "D2 domain rules", "D3 nested rules", "D4 tokenomics"]) {
       expect(setup.text).toContain(tag);
     }
   });
@@ -238,5 +298,16 @@ describe("validate --setup depth", () => {
     deep(root);
     put(root, "PLAN.md", "PLAN.md\nintro-first: printed before any tool call (fresh)\n");
     expect(run("validate", root, "--setup")).toEqual({ code: 0, text: "not a git repository; skipped change coverage\nok" });
+  });
+});
+
+describe("setup-ai prose for the unenforced inventory", () => {
+  it("reconciles nested AGENTS, design identity rules and domain purity, and says validate checks it", () => {
+    const skill = readFileSync(join(kitDir(), "skills", "setup-ai", "SKILL.md"), "utf8");
+    expect(skill).toContain("every nested `AGENTS.md`");
+    expect(skill).toContain("`design.md` Identity rules");
+    expect(skill).toContain("`I-04`");
+    expect(skill).toMatch(/\*\*Domain purity\*\*/u);
+    expect(skill).toMatch(/named there by path \(`validate --setup` checks both\)/u);
   });
 });

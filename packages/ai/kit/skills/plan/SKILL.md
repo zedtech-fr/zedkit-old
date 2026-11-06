@@ -36,3 +36,15 @@ table is a draft.
 
 Run `challenge` on the finished plan. A plan that has not survived a challenge
 is a draft: fix what it finds, then re-plan only the parts that changed.
+
+## 5. Stakes and kind
+
+Put `Stakes: trivial|standard|sensitive|critical` at the top of the plan
+(`standard` when unsure). Stakes only go up: raise them with a
+`Stakes raised: <old> -> <new>: <reason>` line, never lower them. Auth,
+secrets, tenancy, user data, money, data loss, public API or release
+changes start at `sensitive`; irreversible or multi-tenant exposure starts at
+`critical`. For each step that calls an agent, add `Kind: decide|design|build|check`
+(how it is used in that step) and, when the step needs more or less than the
+agent's default, `Needs: reasoning=low|medium|high, context=small|medium|large`.
+Read the gates back with `zedkit-ai stakes <plan file>`.

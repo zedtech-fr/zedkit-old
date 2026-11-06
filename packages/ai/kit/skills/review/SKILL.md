@@ -25,7 +25,10 @@ skipping a mandatory lens whose runner exists IS a blocker — say so.
 ## 3. Fan out
 
 One subagent per lens, all in parallel (see `parallel-work` for the pattern;
-skip the fan-out and run inline when the diff is a few lines). Every brief is
+skip the fan-out and run inline when the diff is a few lines). Route each spawn
+with `zedkit-ai route <agent> --kind check --stakes <s>` (the change's `Stakes:`; gates in `lenses.md`)
+and pass its model if the tool allows an override. A `check` spawn is read-only:
+say so and compare `git status --porcelain` before and after. Every brief is
 self-contained: the diff command, the lens skill to apply, and the evidence
 rule from `ground-truth` — every finding cites `file:line`, or it is not a
 finding. When the change implements a plan with a ladder table, verify the

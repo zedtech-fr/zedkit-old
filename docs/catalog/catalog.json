@@ -90,6 +90,137 @@
           "seeAlso": [
             "Set up AI agent instructions, skills, subagents and commands in a repo"
           ]
+        },
+        {
+          "need": "Run one gate command and keep a log that setup validation accepts",
+          "import": "`@zedtech/zedkit-ai` — `runGate`, `GateOptions`, `GateResult`, `GateCause`",
+          "wraps": "`(none)`",
+          "status": "stable",
+          "shortName": "Gate log",
+          "audience": "Agents and maintainers who run lint, test or build gates and need the result as evidence.",
+          "purpose": "Run a shell command and write a gate log in the `CMD:` / `START:` / `END:` / `EXIT:<code>` shape that `zedkit-ai validate --setup` checks, with the V8 heap capped and a `CAUSE:` line when the command times out, is killed or runs out of memory.",
+          "whenToUse": "When a setup run, a handoff or a PR cites a gate and the log must outlive the chat.",
+          "whenNotToUse": "For interactive commands or when a CI job already stores its own log.",
+          "derivedFrom": null,
+          "example": "import { runGate } from \"@zedtech/zedkit-ai\";\nconst result = await runGate({\n  cmd: \"pnpm exec turbo run test --concurrency=2\",\n  log: \".agents/setup-log/gates/test.log\",\n  timeoutMs: 20 * 60_000,\n});\nif (!result.ok) throw result.error;\nprocess.exitCode = result.value.code;",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "import { runGate } from \"@zedtech/zedkit-ai\";\nconst result = await runGate({\n  cmd: \"pnpm exec turbo run test --concurrency=2\",\n  log: \".agents/setup-log/gates/test.log\",\n  timeoutMs: 20 * 60_000,\n});\nif (!result.ok) throw result.error;\nprocess.exitCode = result.value.code;"
+            }
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ai",
+                "exports": [
+                  "runGate",
+                  "GateOptions",
+                  "GateResult",
+                  "GateCause"
+                ]
+              }
+            ]
+          },
+          "seeAlso": [
+            "Check that skills, subagents, commands and provider copies are valid"
+          ]
+        },
+        {
+          "need": "Route an agent call to a model and effort from a policy file",
+          "import": "`@zedtech/zedkit-ai` — `resolveRoute`, `RouteInput`, `Route`, `SecondReview`, `KindSource`, `NeedsSource`, `AgentHeader`, `Tokenomics`, `Kind`, `Stakes`, `Effort`, `Needs`, `Reasoning`, `ContextSize`, `Review`, `Cell`, `PolicyProvider`, `ProviderPolicy`, `AgentFloor`, `HardcodeConfig`, `KINDS`, `STAKES`, `EFFORTS`, `REASONING`, `CONTEXT_SIZES`, `REVIEWS`, `POLICY_PROVIDERS`",
+          "wraps": "`(none)`",
+          "status": "beta",
+          "shortName": "Agent routing",
+          "audience": "Agents and maintainers who pick a model per subagent call from one policy instead of hardcoding it.",
+          "purpose": "Resolve kind (how the agent is used for this call) times stakes (how much is at risk) and the call's needs to a provider's model and effort, with the gates of those stakes and the second review route for critical work.",
+          "whenToUse": "Before spawning a subagent, when the project keeps its model policy in `.agents/tokenomics.md`.",
+          "whenNotToUse": "When one session model is fine for everything, leave every cell on `inherit`.",
+          "derivedFrom": null,
+          "example": "import { resolveRoute } from \"@zedtech/zedkit-ai\";\n// `policy` is the project's tokenomics.md merged over the shipped defaults.\nconst route = resolveRoute(policy, {\n  kind: \"check\",\n  stakes: \"standard\",\n  provider: \"cursor\",\n});\nif (!route.ok) throw route.error;\nconsole.log(route.value.model, route.value.effort, route.value.gates.review);",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "import { resolveRoute } from \"@zedtech/zedkit-ai\";\n// `policy` is the project's tokenomics.md merged over the shipped defaults.\nconst route = resolveRoute(policy, {\n  kind: \"check\",\n  stakes: \"standard\",\n  provider: \"cursor\",\n});\nif (!route.ok) throw route.error;\nconsole.log(route.value.model, route.value.effort, route.value.gates.review);"
+            }
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ai",
+                "exports": [
+                  "resolveRoute",
+                  "RouteInput",
+                  "Route",
+                  "SecondReview",
+                  "KindSource",
+                  "NeedsSource",
+                  "AgentHeader",
+                  "Tokenomics",
+                  "Kind",
+                  "Stakes",
+                  "Effort",
+                  "Needs",
+                  "Reasoning",
+                  "ContextSize",
+                  "Review",
+                  "Cell",
+                  "PolicyProvider",
+                  "ProviderPolicy",
+                  "AgentFloor",
+                  "HardcodeConfig",
+                  "KINDS",
+                  "STAKES",
+                  "EFFORTS",
+                  "REASONING",
+                  "CONTEXT_SIZES",
+                  "REVIEWS",
+                  "POLICY_PROVIDERS"
+                ]
+              }
+            ]
+          },
+          "seeAlso": [
+            "Set up AI agent instructions, skills, subagents and commands in a repo"
+          ]
+        },
+        {
+          "need": "Write each tool's agent files from one source and a policy",
+          "import": "`@zedtech/zedkit-ai` — `syncKit`, `inSync`, `SyncOptions`, `Action`",
+          "wraps": "`(none)`",
+          "status": "beta",
+          "shortName": "Agent file sync",
+          "audience": "Maintainers who keep subagents in `.agents/agents` and want each tool's copy to carry the model from one policy file.",
+          "purpose": "Generate `.cursor/agents`, `.claude/agents`, and Muse-native files in `.agents/agents` from the unmarked/kit source and `.agents/tokenomics.md`, with the model of each agent's default route and a marker so a later run can tell its own files from yours; never overwrite a file it did not write.",
+          "whenToUse": "After editing an agent or `tokenomics.md`, after upgrading the kit, and as a `--check` step in CI.",
+          "whenNotToUse": "When every agent runs on the session model and no tool needs its own copy. Codex reads `.agents` directly. Muse gets a native marked file in `.agents/agents` (not the canonical source).",
+          "derivedFrom": null,
+          "example": "import { inSync, syncKit } from \"@zedtech/zedkit-ai\";\nconst actions = syncKit({ dest: \".\", providers: [\"cursor\", \"claude\"], check: true });\nif (!actions.ok) throw actions.error;\nif (!inSync(actions.value)) process.exitCode = 1;",
+          "examples": [
+            {
+              "title": "Simple",
+              "code": "import { inSync, syncKit } from \"@zedtech/zedkit-ai\";\nconst actions = syncKit({ dest: \".\", providers: [\"cursor\", \"claude\"], check: true });\nif (!actions.ok) throw actions.error;\nif (!inSync(actions.value)) process.exitCode = 1;"
+            }
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ai",
+                "exports": [
+                  "syncKit",
+                  "inSync",
+                  "SyncOptions",
+                  "Action"
+                ]
+              }
+            ]
+          },
+          "seeAlso": [
+            "Route an agent call to a model and effort from a policy file"
+          ]
         }
       ]
     },
@@ -3455,7 +3586,7 @@
         },
         {
           "need": "Name an operation in progress",
-          "import": "`@zedtech/zedkit-ui` — `StatusLabel`, `StatusLabelProps`, `StatusLabelTone`",
+          "import": "`@zedtech/zedkit-ui` — `StatusLabel`, `StatusLabelProps`, `StatusLabelTone`, `StreamStatus`, `StreamStatusProps`, `StreamText`, `StreamTextProps`, `ASSISTANT_STREAM_STAGES`, `consumeSseStream`, `isAssistantStreamStage`, `pullSseFrames`, `readAssistantStreamEvent`, `AssistantStreamEvent`, `AssistantStreamStage`, `SseFrame`",
           "wraps": "`(none)`",
           "status": "stable",
           "shortName": "StatusLabel",
@@ -3487,7 +3618,19 @@
                 "exports": [
                   "StatusLabel",
                   "StatusLabelProps",
-                  "StatusLabelTone"
+                  "StatusLabelTone",
+                  "StreamStatus",
+                  "StreamStatusProps",
+                  "StreamText",
+                  "StreamTextProps",
+                  "ASSISTANT_STREAM_STAGES",
+                  "consumeSseStream",
+                  "isAssistantStreamStage",
+                  "pullSseFrames",
+                  "readAssistantStreamEvent",
+                  "AssistantStreamEvent",
+                  "AssistantStreamStage",
+                  "SseFrame"
                 ]
               }
             ]
@@ -4292,11 +4435,11 @@
           "whenToUse": "Right after creating a credential the user must store.",
           "whenNotToUse": "For passwords the user typed — use a password Input instead.",
           "derivedFrom": null,
-          "example": "import { Label, SecretField } from \"@zedtech/zedkit-ui\";\n<Label htmlFor=\"key\">API key (shown once)</Label>\n<SecretField id=\"key\" value={key} />",
+          "example": "import { Label, SecretField } from \"@zedtech/zedkit-ui\";\n<Label htmlFor=\"key\">API key (shown once)</Label>\n<SecretField id=\"key\" value=\"zk_live_example_secret\" />",
           "examples": [
             {
               "title": "Simple",
-              "code": "import { Label, SecretField } from \"@zedtech/zedkit-ui\";\n<Label htmlFor=\"key\">API key (shown once)</Label>\n<SecretField id=\"key\" value={key} />"
+              "code": "import { Label, SecretField } from \"@zedtech/zedkit-ui\";\n<Label htmlFor=\"key\">API key (shown once)</Label>\n<SecretField id=\"key\" value=\"zk_live_example_secret\" />"
             }
           ],
           "adoption": {
@@ -4311,7 +4454,7 @@
               }
             ]
           },
-          "a11y": "The value is a read-only input (a read-only textarea with `multiline`), so it can be focused and selected with the keyboard. Name it: point a `Label` at `id`, or pass `aria-label`; the kit does not add one. The copy button is a real button named by `copyLabel` (a localized default otherwise). The copied state is a 2-second icon swap only and is not announced, and where the browser has no clipboard API the button does nothing and says nothing, so pair it with your own `aria-live` message for both outcomes.",
+          "a11y": "The value is a read-only input (a read-only textarea with `multiline`), so it can be focused and selected with the keyboard. Name it: point a `Label` at `id`, or pass `aria-label`; the kit does not add one. The copy button is a real button named by `copyLabel` (a localized default otherwise). The copied state is a 2-second icon swap plus a polite live announcement. When the clipboard API is missing or writing to it fails, the same live region announces that copy failed.",
           "seeAlso": [
             "Collect text input with a label"
           ]

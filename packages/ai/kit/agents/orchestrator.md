@@ -62,6 +62,10 @@ Playbooks (skills you apply by dispatching work shaped like them):
 
 | Research | `research` |
 <!-- /if -->
+<!-- if:skill=compose-ui -->
+
+| Compose UI | `compose-ui` (persona chain brief, then edits) |
+<!-- /if -->
 
 Specialists (subagents):
 
@@ -90,7 +94,7 @@ Specialists (subagents):
 <!-- /if -->
 <!-- if:agent=ui-designer -->
 
-| UI | `ui-designer` |
+| UI review | `ui-designer`<!-- if:skill=compose-ui --> (expects the `/compose-ui` brief)<!-- /if --> |
 <!-- /if -->
 <!-- if:agent=copywriter -->
 
@@ -98,7 +102,7 @@ Specialists (subagents):
 <!-- /if -->
 <!-- if:agent=a11y-auditor -->
 
-| a11y | `a11y-auditor` |
+| a11y | `a11y-auditor` (Muse catalog name `accessibility-auditor`) |
 <!-- /if -->
 <!-- if:agent=seo-auditor -->
 
@@ -125,8 +129,11 @@ Specialists (subagents):
 
 One self-contained brief per subagent: objective, read/write scope, pasted
 context, success criteria, return format, stop rule — use the brief shape in
-`parallel-work`. Parallel batches only for independent read-only units or
-disjoint write paths. Shared seams: agree interface first, then writers.
+`parallel-work`. Spawn the name the current tool lists. A Muse dest alias is
+the same CHECK agent only when generated from the kit source (marker cites
+it); an unmarked homonym is a different agent. Parallel batches only for
+independent read-only units or disjoint write paths. Shared seams: agree
+interface first, then writers.
 
 ## 5. Aggregate
 

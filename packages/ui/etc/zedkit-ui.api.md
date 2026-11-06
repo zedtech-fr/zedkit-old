@@ -27,6 +27,7 @@ import * as PopoverPrimitive from '@radix-ui/react-popover';
 import * as React_2 from 'react';
 import type { ReactNode } from 'react';
 import type { RefObject } from 'react';
+import { Result } from '@zedtech/zedkit-core';
 import { RowData } from '@tanstack/react-table';
 import { RowModel } from '@tanstack/react-table';
 import * as SelectPrimitive from '@radix-ui/react-select';
@@ -127,6 +128,28 @@ export interface AppShellProps {
     topbar?: React_2.ReactNode;
 }
 
+// @public
+export const ASSISTANT_STREAM_STAGES: readonly ["reading-reference", "picking-palette", "picking-typography", "picking-spacing", "building-preview"];
+
+// @public (undocumented)
+export type AssistantStreamEvent = {
+    type: "status";
+    stage: AssistantStreamStage;
+} | {
+    type: "text";
+    delta: string;
+} | {
+    type: "complete";
+    payload: Record<string, unknown>;
+} | {
+    type: "error";
+    error: string;
+    payload: Record<string, unknown>;
+};
+
+// @public (undocumented)
+export type AssistantStreamStage = (typeof ASSISTANT_STREAM_STAGES)[number];
+
 // @public (undocumented)
 export function Badge(input: BadgeProps): React_2.JSX.Element;
 
@@ -161,7 +184,7 @@ export interface ButtonProps extends React_2.ComponentProps<"button">, VariantPr
 
 // @public (undocumented)
 export const buttonVariants: (props?: ({
-    variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | null | undefined;
+    variant?: "link" | "default" | "destructive" | "secondary" | "outline" | "ghost" | null | undefined;
     size?: "default" | "sm" | "lg" | "icon" | null | undefined;
 } & ClassProp) | undefined) => string;
 
@@ -275,6 +298,9 @@ export interface ConfirmDialogProps {
     title: string;
     trigger: React_2.ReactNode;
 }
+
+// @public
+export function consumeSseStream(stream: ReadableStream<Uint8Array>, onFrame: (frame: SseFrame) => void, signal?: AbortSignal): Promise<Result<void, Error>>;
 
 // @public (undocumented)
 export function Container(input: ContainerProps): React_2.JSX.Element;
@@ -1071,6 +1097,9 @@ export function Input(input: InputProps): React_2.JSX.Element;
 // @public (undocumented)
 export type InputProps = React_2.ComponentProps<"input">;
 
+// @public (undocumented)
+export function isAssistantStreamStage(value: string): value is AssistantStreamStage;
+
 // @public
 export function isMotionReduced(): boolean;
 
@@ -1320,7 +1349,17 @@ export type PromptInputProps = Omit<React_2.ComponentProps<"textarea">, "onSubmi
     busy?: boolean;
     sendDisabled?: boolean;
     allowEmptySubmit?: boolean;
+    maxRows?: 4 | 8 | 12;
 };
+
+// @public
+export function pullSseFrames(buffer: string): {
+    frames: SseFrame[];
+    rest: string;
+};
+
+// @public
+export function readAssistantStreamEvent(frame: SseFrame): AssistantStreamEvent | null;
 
 // @public
 export function RouteModal(input: RouteModalProps): React_2.JSX.Element;
@@ -1491,6 +1530,12 @@ export interface SpinnerProps {
 }
 
 // @public (undocumented)
+export type SseFrame = {
+    event: string;
+    data: string;
+};
+
+// @public (undocumented)
 export function Stack(input: StackProps): React_2.JSX.Element;
 
 // @public (undocumented)
@@ -1502,7 +1547,7 @@ export type StackProps = React_2.ComponentProps<"div"> & VariantProps<typeof sta
 // @public (undocumented)
 export const stackVariants: (props?: ({
     direction?: "horizontal" | "vertical" | null | undefined;
-    gap?: 1 | 6 | 2 | 3 | 8 | 4 | 5 | 7 | null | undefined;
+    gap?: 1 | 6 | 2 | 3 | 5 | 4 | 8 | 7 | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public
@@ -1591,6 +1636,30 @@ export type StickyAsideRatioPreset = "1/3" | "2/5" | "1/2";
 export type StickyAsideSide = "left" | "right" | "start" | "end";
 
 // @public
+export function StreamStatus(input: StreamStatusProps): JSX.Element | null;
+
+// @public (undocumented)
+export interface StreamStatusProps {
+    // (undocumented)
+    className?: string | undefined;
+    label?: string | undefined;
+    live?: boolean | undefined;
+    stage?: AssistantStreamStage | undefined;
+}
+
+// @public
+export function StreamText(input: StreamTextProps): JSX.Element | null;
+
+// @public (undocumented)
+export interface StreamTextProps {
+    // (undocumented)
+    className?: string | undefined;
+    live?: boolean | undefined;
+    // (undocumented)
+    text: string;
+}
+
+// @public
 export function suggestIdentityTokens(prompt: string): IdentityTokens;
 
 // @public (undocumented)
@@ -1614,10 +1683,10 @@ export type SurfaceProps = React_2.ComponentProps<"div"> & Omit<VariantProps<typ
 
 // @public (undocumented)
 export const surfaceVariants: (props?: ({
-    variant?: "solid" | "popover" | "glass" | null | undefined;
-    elevation?: 0 | 2 | 1 | 3 | null | undefined;
-    radius?: "none" | "sm" | "md" | "lg" | "xl" | "2xl" | "full" | null | undefined;
-    padding?: "none" | "sm" | "md" | "card" | "dialog" | null | undefined;
+    variant?: "popover" | "solid" | "glass" | null | undefined;
+    elevation?: 0 | 1 | 2 | 3 | null | undefined;
+    radius?: "none" | "sm" | "lg" | "full" | "md" | "xl" | "2xl" | null | undefined;
+    padding?: "dialog" | "none" | "sm" | "md" | "card" | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public (undocumented)
@@ -1854,6 +1923,8 @@ export type ZedkitUiMessages = {
     pageOf: string;
     wizardStepOf: string;
     copyToClipboard: string;
+    copied: string;
+    copyFailed: string;
     live: string;
     idle: string;
     options: string;
@@ -1878,6 +1949,13 @@ export type ZedkitUiMessages = {
     mainNavigation: string;
     language: string;
     locale: "en" | "fr";
+    streamStatus: {
+        "reading-reference": string;
+        "picking-palette": string;
+        "picking-typography": string;
+        "picking-spacing": string;
+        "building-preview": string;
+    };
 };
 
 // @public (undocumented)

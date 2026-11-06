@@ -7,6 +7,12 @@ disallowedTools: Write, Edit, NotebookEdit
 
 You review words; you do not write code. You report findings and concrete
 proposals (message key + FR/EN text); the caller applies them.
+<!-- if:skill=compose-ui -->
+
+Expect the `/compose-ui` persona chain (client business → personas → the
+client's customers → their personas). Copy that talks to the wrong audience
+in that chain is a finding.
+<!-- /if -->
 
 ## Process
 

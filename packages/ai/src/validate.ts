@@ -2,8 +2,14 @@
 import { existsSync, lstatSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
 import { tryCatch } from "@zedtech/zedkit-core";
+import type { Action } from "./install.js";
+import { hasMarker } from "./generate.js";
+import { loadPolicy } from "./route.js";
+import { availabilityOf, isCheckedUnchanged, museGenerated, resolvedAgentText, sourceNames, syncAgents } from "./sync.js";
 import { adoptRel, kitDir, kitUniverse, readManifest } from "./kit.js";
 import { parseFrontmatter } from "./frontmatter.js";
+import { HEADER_KEYS, KIT_HEADERS, SIDECAR, parseAgentHeader, readSidecar } from "./agent-header.js";
+import { checkTokenomics, parseTokenomics } from "./tokenomics.js";
 import { lensClosureIssues } from "./lenses.js";
 import { danglingKitRefs, skillRefFiles } from "./skill-refs.js";
 import { resolveConditionals, withoutMarkers, type Availability } from "./conditional.js";
@@ -82,9 +88,77 @@ function checkSkill(root: string, name: string, issues: Issue[]): void {
   // for agent/command lists shown by naive parsers. See #484.
 }
 
+// `strict_headers: true` in the project's tokenomics.md: every agent needs a full header.
+function strictHeaders(root: string): boolean {
+  const file = join(root, "tokenomics.md");
+  if (!existsSync(file)) return false;
+  const layer = parseTokenomics(read(file));
+  return layer.ok && layer.value.strict_headers === true;
+}
+
+function toolList(value: unknown): string[] {
+  const items = Array.isArray(value) ? value : typeof value === "string" ? value.split(",") : [];
+  return items.map((item) => String(item).trim());
+}
+
+const WRITE_TOOLS = ["Write", "Edit", "NotebookEdit"];
+
+// The header contract lives in `agents.meta.json`, never in agent frontmatter:
+// a tool drops (silently) an agent whose frontmatter has a key it does not know.
+function checkNoHeaderKeys(data: Record<string, unknown>, path: string, issues: Issue[]): void {
+  const found = [...HEADER_KEYS, "needs", "kind"].filter((key) => data[key] !== undefined);
+  if (found.length > 0) {
+    issues.push({ path, message: `${found.join(", ")} must not be in the agent file (some tools skip agents with unknown keys); put the header in ${SIDECAR}` });
+  }
+}
+
+// The sidecar (role, default_needs, kinds, default_kind per agent). A missing
+// entry is fine unless strict: kit-name agents fall back to the shipped
+// table. An agent that cannot be invoked as `build` must also deny the write
+// tools in its own file, the one enforcement every tool honors.
+function checkSidecar(root: string, strict: boolean, issues: Issue[]): void {
+  const sidecar = readSidecar(root);
+  if (!sidecar.ok) {
+    issues.push({ path: SIDECAR, message: sidecar.error.message.replace(`${SIDECAR}: `, "") });
+    return;
+  }
+  const dir = join(root, "agents");
+  const installed = new Set(existsSync(dir) ? mdFiles(dir).map((file) => file.replace(/\.md$/, "")) : []);
+  for (const [name, entry] of Object.entries(sidecar.value)) {
+    const path = SIDECAR;
+    if (!installed.has(name) && !KIT_HEADERS[name]) {
+      issues.push({ path, message: `${name}: no agents/${name}.md in this directory` });
+    }
+    for (const message of parseAgentHeader(entry, true).issues) issues.push({ path, message: `${name}: ${message}` });
+    const kinds = entry.kinds;
+    if (Array.isArray(kinds) && kinds.length > 0 && !kinds.includes("build") && installed.has(name)) {
+      const file = join(dir, `${name}.md`);
+      if (hasMarker(read(file))) continue;
+      const denied = toolList(readDenied(file));
+      if (!WRITE_TOOLS.every((tool) => denied.includes(tool))) {
+        issues.push({ path: join("agents", `${name}.md`), message: `kinds has no build in ${SIDECAR}, so the file must set disallowedTools: ${WRITE_TOOLS.join(", ")}` });
+      }
+    }
+  }
+  if (strict) {
+    for (const name of installed) {
+      if (hasMarker(read(join(dir, `${name}.md`)))) continue;
+      if (sidecar.value[name] === undefined) issues.push({ path: SIDECAR, message: `${name}: no header (strict_headers is on)` });
+    }
+  }
+}
+
+function readDenied(file: string): unknown {
+  const front = parseFrontmatter(read(file));
+  return front.ok ? front.value.data.disallowedTools : undefined;
+}
+
 function checkAgent(root: string, file: string, issues: Issue[]): void {
   const path = join("agents", file);
-  const front = parseText(path, read(join(root, path)), issues);
+  const rawText = read(join(root, path));
+  // Marked files are a provider dialect (Muse), not the portable source.
+  if (hasMarker(rawText)) return;
+  const front = parseText(path, rawText, issues);
   if (!front) return;
   const { data, raw } = front;
   checkName(data.name, file.replace(/\.md$/, ""), path, issues);
@@ -103,6 +177,7 @@ function checkAgent(root: string, file: string, issues: Issue[]): void {
   if (data.readonly !== undefined) {
     issues.push({ path, message: "readonly is not portable: some tools skip agent files that set it (use disallowedTools instead)" });
   }
+  checkNoHeaderKeys(data, path, issues);
 }
 
 function checkCommand(root: string, file: string, skills: Set<string>, issues: Issue[]): void {
@@ -117,6 +192,10 @@ function checkCommand(root: string, file: string, skills: Set<string>, issues: I
   checkDescription(front.data.description, path, issues);
   if (!isSingleLineDescription(front.raw)) {
     issues.push({ path, message: "description must be a single line (no `>` or `|` block, no continuation lines)" });
+  }
+  // Commands have no routing path: they always run on the session model.
+  if (front.data.model !== undefined && front.data.model !== "inherit") {
+    issues.push({ path, message: 'model must be omitted or "inherit" (commands always use the session model)' });
   }
   // A command runs a skill by name: it must name at least one installed one.
   const names = [...skills].filter((name) => text.includes(`\`${name}\``));
@@ -291,6 +370,7 @@ function collect(root: string, kit: string): Issue[] {
       checkAgent(root, file, issues);
     }
   }
+  checkSidecar(root, strictHeaders(root), issues);
   const commandsDir = join(root, "commands");
   if (existsSync(commandsDir)) {
     for (const file of mdFiles(commandsDir)) {
@@ -298,12 +378,22 @@ function collect(root: string, kit: string): Issue[] {
     }
   }
   checkManifest(root, issues);
+  checkPolicy(root, issues);
   checkLadder(root, issues);
   checkLineEndings(root, issues);
   checkSkillRefs(root, skills, kit, issues);
   checkLenses(root, skills, issues);
   checkLinks(root, kit, issues);
   return issues;
+}
+
+// The project policy file, when present. The shipped defaults and the stub
+// (`tokenomics.defaults.md`, `tokenomics.template.md`) are kit data, not a
+// project file, so only `tokenomics.md` is checked here.
+function checkPolicy(root: string, issues: Issue[]): void {
+  const file = join(root, "tokenomics.md");
+  if (!existsSync(file)) return;
+  for (const message of checkTokenomics(read(file))) issues.push({ path: "tokenomics.md", message });
 }
 
 function checkLenses(root: string, skills: Set<string>, issues: Issue[]): void {
@@ -394,9 +484,69 @@ function layerWired(projectRoot: string, layer: string): boolean {
   return ["skills", "agents", "commands"].some((kind) => linkState(join(projectRoot, layer, kind)) !== "missing");
 }
 
+// Agents (both tools) and Cursor commands are written by `syncAgents`, so the
+// check is a dry run of it: whatever it would change is drift. Nothing it
+// reports asks to overwrite a user file; a file that is not ours stays and
+// only its generated sidecar can be missing.
+const SYNC_HINT = "run: npx zedkit-ai sync";
+
+function driftMessage(action: Action): string {
+  const note = action.note ?? "";
+  if (action.kind === "generate" || action.kind === "link") {
+    if (note.includes("replaces a copy of the kit")) return `stale copy of the kit, ${SYNC_HINT}`;
+    if (note.includes("replaces a link to the source")) return `link to the source, ${SYNC_HINT} to generate the file`;
+    if (note.includes("kit version beside your")) return `user file kept; ${SYNC_HINT} to write the kit version beside it`;
+    if (note.includes("regenerated")) return `out of date, ${SYNC_HINT}`;
+    return `missing, ${SYNC_HINT}`;
+  }
+  if (action.kind === "convert") return `link to .agents/agents, ${SYNC_HINT} to generate the files`;
+  return `${note || "generated file with no source"}, ${SYNC_HINT}`;
+}
+
+function checkGenerated(projectRoot: string, source: string, issues: Issue[]): void {
+  const providers = [".cursor", ".claude"]
+    .filter((layer) => layerWired(projectRoot, layer))
+    .map((layer) => layer.slice(1));
+  if (museGenerated(projectRoot)) providers.push("muse");
+  if (providers.length === 0) return;
+  // A policy that does not parse is reported by the policy check, not here.
+  const policy = loadPolicy(source);
+  if (!policy.ok) return;
+  const actions: Action[] = [];
+  const names = (dir: string): string[] =>
+    isRealDir(join(source, dir)) ? mdFiles(join(source, dir)).map((f) => f.slice(0, -3)) : [];
+  // readdir follows a kit dir-symlink; isRealDir does not, and empty names
+  // make every generated Cursor file look like "source agent removed".
+  const agentNames = sourceNames(source) ?? names("agents");
+  const avail = availabilityOf(source, agentNames);
+  syncAgents(
+    {
+      dest: projectRoot,
+      write: false,
+      providers,
+      policy: policy.value,
+      agentsDir: source,
+      names: agentNames,
+      avail,
+      commands: {
+        names: names("commands"),
+        source: (name) => {
+          const text = tryCatch(() => read(join(source, "commands", `${name}.md`)));
+          return text.ok ? text.value : undefined;
+        },
+      },
+      source: (name) => resolvedAgentText(projectRoot, name, avail),
+    },
+    actions,
+  );
+  for (const action of actions.filter((a) => !isCheckedUnchanged(a))) {
+    issues.push({ path: action.path, message: driftMessage(action) });
+  }
+}
+
 function checkClaudeLayer(projectRoot: string, source: string, issues: Issue[]): void {
   if (!existsSync(join(projectRoot, ".claude")) || !layerWired(projectRoot, ".claude")) return;
-  for (const kind of ["skills", "agents", "commands"]) {
+  for (const kind of ["skills", "commands"]) {
     const entry = join(projectRoot, ".claude", kind);
     if (linkState(entry) === "missing") {
       issues.push({
@@ -407,7 +557,7 @@ function checkClaudeLayer(projectRoot: string, source: string, issues: Issue[]):
       checkDanglingLink(projectRoot, entry, issues);
     }
   }
-  checkLayerCopies(projectRoot, source, ".claude", "agents", issues);
+  checkDanglingLink(projectRoot, join(projectRoot, ".claude", "agents"), issues);
   checkLayerCopies(projectRoot, source, ".claude", "commands", issues);
   checkLayerSkills(projectRoot, source, ".claude", issues);
   const pointer = join(projectRoot, "CLAUDE.md");
@@ -441,8 +591,7 @@ function checkClaudeLayer(projectRoot: string, source: string, issues: Issue[]):
 export function checkDrift(projectRoot: string, source: string): Issue[] {
   const run = tryCatch(() => {
     const issues: Issue[] = [];
-    checkLayerCopies(projectRoot, source, ".cursor", "agents", issues);
-    checkLayerCopies(projectRoot, source, ".cursor", "commands", issues);
+    checkGenerated(projectRoot, source, issues);
     checkDanglingLink(projectRoot, join(projectRoot, ".cursor", "skills"), issues);
     checkLayerSkills(projectRoot, source, ".cursor", issues);
     checkClaudeLayer(projectRoot, source, issues);
@@ -514,7 +663,7 @@ export function checkPlaceholders(projectRoot: string, source: string): Issue[] 
     for (const name of ["AGENTS.md", "CLAUDE.md"]) scan(join(projectRoot, name), name);
     if (existsSync(source)) {
       for (const entry of readdirSync(source, { recursive: true, encoding: "utf8" })) {
-        if (!entry.endsWith(".md") || entry.endsWith(".kit.md") || entry.endsWith(".template.md")) continue;
+        if (!entry.endsWith(".md") || entry.endsWith(".kit.md") || entry.endsWith(".template.md") || entry.endsWith(".defaults.md")) continue;
         scan(join(source, entry), relative(projectRoot, join(source, entry)));
       }
     }

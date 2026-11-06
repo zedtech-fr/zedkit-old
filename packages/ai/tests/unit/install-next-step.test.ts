@@ -29,6 +29,7 @@ describe("install next step hints", () => {
     const lines = installNextStepLines(root, ["cursor"]);
     expect(lines).toContain("next: validate, then phase E score");
     expect(lines.some((line) => line.includes("phase C adds"))).toBe(false);
+    expect(lines.some((line) => line.includes("/setup-ai"))).toBe(false);
   });
 
   it("prints exact .prettierignore lines when Prettier is configured and paths are missing", () => {

@@ -18,8 +18,22 @@ holds. Stop and replan any piece where a higher rung holds.
 
 Call the Skill tool with "tdd" where possible, at pre-agreed seams.
 
+<!-- if:skill=compose-ui -->
+If the work composes, restyles or personalises UI, run `/compose-ui` first:
+client business → personas → the client's customers → their personas → UI
+choices. Do not edit UI until that brief exists.
+<!-- /if -->
+
 Run typechecking regularly, single test files regularly, and the full test suite once at the end.
 
 Then pass `definition-of-done`, and call the Skill tool with "review" to review the work.
+
+Carry the ticket's `Stakes:` into the PR body, never lower it. Before each
+spawn run `zedkit-ai route <agent> --kind <how it is used now> --stakes <s>`,
+adding `--reasoning <r>` or `--context <c>` when the step has a `Needs:` line.
+If the tool lets a spawn override the model, pass the one it prints; if not,
+the stakes still decide the gates. `sensitive` or higher makes `review`
+mandatory, and `critical` also needs a second independent review and a
+`Human validation:` line.
 
 Commit your work to the current branch.

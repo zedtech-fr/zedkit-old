@@ -14,6 +14,8 @@ export type ZedkitUiMessages = {
   /** Template with `{step}`, `{stepCount}`, and `{title}` (WizardSteps mobile summary). */
   wizardStepOf: string;
   copyToClipboard: string;
+  copied: string;
+  copyFailed: string;
   live: string;
   idle: string;
   options: string;
@@ -46,6 +48,14 @@ export type ZedkitUiMessages = {
   /** Accessible name of the language switch. */
   language: string;
   locale: "en" | "fr";
+  /** Named steps while an assistant answer is still being written. */
+  streamStatus: {
+    "reading-reference": string;
+    "picking-palette": string;
+    "picking-typography": string;
+    "picking-spacing": string;
+    "building-preview": string;
+  };
 };
 
 export const zedkitUiMessagesEn: ZedkitUiMessages = {
@@ -62,6 +72,8 @@ export const zedkitUiMessagesEn: ZedkitUiMessages = {
   pageOf: "Page {page} of {pageCount}",
   wizardStepOf: "Step {step} of {stepCount} · {title}",
   copyToClipboard: "Copy to clipboard",
+  copied: "Copied",
+  copyFailed: "Could not copy",
   live: "Live",
   idle: "Idle",
   options: "Options",
@@ -86,6 +98,13 @@ export const zedkitUiMessagesEn: ZedkitUiMessages = {
   mainNavigation: "Main navigation",
   language: "Language",
   locale: "en",
+  streamStatus: {
+    "reading-reference": "Reading the site",
+    "picking-palette": "Choosing a palette",
+    "picking-typography": "Choosing typography",
+    "picking-spacing": "Choosing spacing",
+    "building-preview": "Building the preview",
+  },
 };
 
 export const zedkitUiMessagesFr: ZedkitUiMessages = {
@@ -102,6 +121,8 @@ export const zedkitUiMessagesFr: ZedkitUiMessages = {
   pageOf: "Page {page} sur {pageCount}",
   wizardStepOf: "Étape {step} sur {stepCount} · {title}",
   copyToClipboard: "Copier dans le presse-papiers",
+  copied: "Copié",
+  copyFailed: "Impossible de copier",
   live: "En direct",
   idle: "Inactif",
   options: "Choix",
@@ -126,4 +147,11 @@ export const zedkitUiMessagesFr: ZedkitUiMessages = {
   mainNavigation: "Navigation principale",
   language: "Langue",
   locale: "fr",
+  streamStatus: {
+    "reading-reference": "Lecture du site",
+    "picking-palette": "Choix de la palette",
+    "picking-typography": "Choix de la typographie",
+    "picking-spacing": "Choix de l'espacement",
+    "building-preview": "Préparation de l'aperçu",
+  },
 };

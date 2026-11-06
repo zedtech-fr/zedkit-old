@@ -315,7 +315,7 @@ test.describe("identity editor apply to site", () => {
     const chooser = page.getByRole("combobox", { name: "Identity" }).first();
 
     // Clean draft: the editor adopts the header's look and the URL follows.
-    // Press, not tide: tide is the site default, so switching to it is a no-op.
+    // Press, not glass: glass is the site default, so switching to it is a no-op.
     await chooser.selectOption("press");
     await expect(page.locator("html")).toHaveAttribute("data-identity", "press");
     await expect(page.getByLabel("Look")).toHaveValue("press");
