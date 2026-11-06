@@ -38,12 +38,9 @@ that holds<!-- if:skill=ponytail-review --> (skill `ponytail-review`)<!-- /if --
   path or version. (skill `ground-truth`)
 - **Smallest complete change.** No abstraction, option or dependency nobody
   asked for.<!-- if:skill=ponytail --> (skill `ponytail`)<!-- /if -->
-- **Parallelize independent work, route by kind × stakes.** Fan out read-only work to
-  subagents with self-contained briefs on a cheap model, set on every spawn;
-  decisions stay strong. (skill `parallel-work`; `.agents/tokenomics.md`)
-- **Tests first, adversarial.** Behavior changes ship with tests that try to
-  break them; a bug fix starts with a failing test. (skills `tdd`,
-  `adversarial-tests`)
+- **Parallelize independent work, route by kind × stakes.** Fan out read-only
+  work; set the model on every spawn. (skill `parallel-work`; `.agents/tokenomics.md`)
+- **Tests first, adversarial; unit and integration tests are primary.** Bug fix starts with a failing test. Contract or Pact tests when a boundary earns them. E2E/browser only for an explicitly justified critical user path — not a default battery or count. (skills `tdd`, `adversarial-tests`)
 - **Small PRs from fresh trunk,** split along seams, never a broken middle.
 - **Done means proven.** Gates run on the final state, no weakened tests, a
   cold second review. (skill `definition-of-done`, agent `verifier`)<!-- if:skill=compose-ui --> Before composing UI, run `/compose-ui` (persona chain: client business → personas → the client's customers → their personas → UI choices).<!-- /if -->
@@ -54,6 +51,8 @@ that holds<!-- if:skill=ponytail-review --> (skill `ponytail-review`)<!-- /if --
   correction comes up.<!-- if:skill=rules-upkeep --> (skill `rules-upkeep`)<!-- /if -->
 
 ## Commands
+
+Observed commands and CI are not the desired recommendation. Do not delete or change existing CI unless the owner asked.
 
 ```sh
 <install>

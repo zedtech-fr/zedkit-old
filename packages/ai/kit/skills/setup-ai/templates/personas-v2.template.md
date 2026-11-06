@@ -16,4 +16,4 @@ alone. Keep evidence links.
 
 Keep the high bars from the installed `personas.md` template (loading states, mobile, security) where they apply to this product's UI. Link each bar to routes or tests when you customize.
 
-**Journey tests column:** a file path here must cover the **whole** **Key journeys** row after you open the test; otherwise write **`no test — flag`** exactly, and say what the nearest test does cover under **Partial coverage**. A journey may be a code path (`import → call → assert`) exercised by unit tests, not only a route exercised by e2e — the whole-journey rule still applies.
+**Journey tests column:** a file path here must cover the **whole** **Key journeys** row after you open the test; otherwise write **`no test — flag`** exactly, and say what the nearest test does cover under **Partial coverage**. The path is **observed coverage**, not a recommendation to add E2E. A journey may be a code path (`import → call → assert`) exercised by unit tests, not only a route exercised by e2e — the whole-journey rule still applies.

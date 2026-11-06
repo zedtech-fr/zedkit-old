@@ -9,11 +9,13 @@ Tests that only show the code working prove little. Aim them at how it breaks. A
 
 ## Pick the test type first
 
-| Test                                                             | Use it for                                                             | Not for               |
-| ---------------------------------------------------------------- | ---------------------------------------------------------------------- | --------------------- |
-| Unit                                                             | one decision: guard, branch, mapping, error classification             | full flows, wiring    |
-| Integration (real DB, real queue or in-memory fake that behaves) | data access, transactions, constraints                                 | logic branches        |
-| End-to-end through the public entry (HTTP, message, CLI)         | the contract: the success case, each documented failure, garbage input | every internal branch |
+| Test                                                             | Use it for                                                                             | Not for                                              |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Unit                                                             | one decision: guard, branch, mapping, error classification                             | full flows, wiring                                   |
+| Integration (real DB, real queue or in-memory fake that behaves) | data access, transactions, constraints                                                 | logic branches                                       |
+| End-to-end through the public entry (HTTP, message, CLI)         | an explicitly justified critical user path: success, documented failure, garbage input | every internal branch, a default browser/E2E battery |
+
+**Layer:** unit and integration tests are primary. Contract or Pact tests when a boundary earns them. End-to-end through the public entry only for an explicitly justified critical user path — not a default browser/E2E CI battery, not an arbitrary E2E count or budget. Observed CI is not the desired recommendation; do not delete or change existing CI unless the owner asked.
 
 Do not mock the database or the thing under test. Fake only what you do not own (network, clock, third parties).
 

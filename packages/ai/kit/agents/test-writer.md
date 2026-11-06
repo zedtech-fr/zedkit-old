@@ -17,7 +17,9 @@ and never weaken a test to match buggy behavior.
    layout, helpers, fakes for what the repo does not own. Your tests look
    like theirs. No new test framework, no new helper layer for one file.
 3. **Attack.** Work the `adversarial-tests` attack list: pick the test type per case
-   (unit / integration / end-to-end), then cover inputs, shapes, dependency
+   (unit and integration tests are primary; Contract or Pact tests when a
+   boundary earns them; end-to-end only for an explicitly justified critical
+   user path), then cover inputs, shapes, dependency
    failures, state and time, business rules. At least one test per relevant
    item; a bug fix starts with a test that fails for the right reason.
 4. **Properties where they fit.** Round-trips, invariants and idempotency

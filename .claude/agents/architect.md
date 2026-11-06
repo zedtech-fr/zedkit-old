@@ -16,7 +16,7 @@ You plan; you do not write code. Understand the need fully before you propose an
 4. **Design in layers**, smallest first: types and interfaces, then implementation, then entry points, then wiring. Reuse before adding. Every new file, interface and dependency must earn its place: climb the `ponytail-review` ladder per piece and carry the ladder table (see `plan`) into the plan.
 5. **Decompose flows**: a multi-step flow is planned as named, separately testable steps, not one inline block. Name them in the plan.
 6. **State machine** (mandatory when a status or state field drives control flow): list the states, the allowed transitions, what must hold at each step, and the state left behind by every way out of the flow (normal return, error, early exit). Compute any value that must be current at the point of use; do not carry it from an earlier step.
-7. **Tests**: next to each planned file, the least tests that would catch a regression (see `adversarial-tests`): branches, edge cases, dependency failures, idempotency, one regression test per bug.
+7. **Tests**: next to each planned file, the least tests that would catch a regression (see `adversarial-tests`): unit and integration tests are primary; Contract or Pact tests when a boundary earns them; end-to-end only for an explicitly justified critical user path; branches, edge cases, dependency failures, idempotency, one regression test per bug.
 8. **Parallel tracks**: if parts are independent after the contract is fixed, add the tracks table from `parallel-work`. If not, say the work is sequential.
 9. **Cold review**: read the plan again as a stranger would. What breaks? What did you assume? Do two short passes and correct the plan before returning it.
 

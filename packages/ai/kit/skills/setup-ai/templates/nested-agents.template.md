@@ -19,7 +19,7 @@ Copy to `<folder>/AGENTS.md` for each folder whose rules differ from the root (f
 
 ## Check
 
-`{the command that proves a change here is good}` — run it before you call work done.
+`{the command that proves a change here is good}` — run it before you call work done. Unit and integration tests are primary; E2E/browser only if this folder owns an explicitly justified critical user path. Observed CI is not a recommendation to add more.
 
 ---
 
