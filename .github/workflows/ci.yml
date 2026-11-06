@@ -16,8 +16,9 @@ concurrency:
 
 # Same-repo PRs into `dev` run checks, registry and docs-build on the
 # self-hosted zedkit runner (persistent /runner-cache + TURBO_CACHE_DIR).
-# Docs Playwright smoke always runs on ubuntu-latest against the docs-out
-# artifact. Forks, PRs into `main`, and pushes stay on ubuntu-latest.
+# Docs Playwright smoke and the UI gallery screenshots always run on
+# ubuntu-latest (the host the PNG baselines were taken on). Forks, PRs
+# into `main`, and pushes stay on ubuntu-latest.
 # Release/deploy workflows are separate and untouched.
 
 jobs:
@@ -284,26 +285,6 @@ jobs:
             scripts/require-green-ci.test.mjs \
             scripts/ci-affected.test.mjs \
             apps/docs/scripts/*.test.mjs
-      # Gallery smoke: real chromium over the built ui gallery (both
-      # themes, zero console errors), screenshots kept as artifacts.
-      - uses: actions/cache@v6
-        if: needs.changes.outputs.ui == 'true' && runner.environment != 'self-hosted'
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - run: pnpm exec playwright install --with-deps chromium
-        if: needs.changes.outputs.ui == 'true' && runner.environment != 'self-hosted'
-      - name: Playwright browsers (image)
-        if: needs.changes.outputs.ui == 'true' && runner.environment == 'self-hosted'
-        run: bash scripts/ci-runner-cache.sh playwright
-      - run: pnpm --filter @zedtech/zedkit-ui smoke
-        if: needs.changes.outputs.ui == 'true'
-      - uses: actions/upload-artifact@v7
-        if: needs.changes.outputs.ui == 'true'
-        with:
-          name: ui-gallery
-          path: packages/ui/test-results/*.png
-          if-no-files-found: ignore
       # Versioning dry-run only: proves the Changesets metadata is sane.
       # Skipped on the Version PR itself: it consumed the changesets, so
       # `status` always reports "changed packages, no changesets" there.
@@ -321,6 +302,35 @@ jobs:
       - name: Cache disk report
         if: always() && runner.environment == 'self-hosted'
         run: bash scripts/ci-runner-cache.sh disk-report
+
+  # Gallery screenshots (gallery-*-linux.png) were taken on GitHub-hosted
+  # Ubuntu + the Chromium Playwright 1.64.1 installs. The Dedibox image
+  # browser is a different revision and fails maxDiffPixelRatio: 0.02.
+  ui-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: changes
+    if: needs.changes.outputs.ui == 'true' && needs.changes.outputs.workflow_only != 'true'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - run: pnpm exec playwright install chromium
+      - run: pnpm --filter @zedtech/zedkit-ui smoke
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ui-gallery
+          path: packages/ui/test-results/*.png
+          if-no-files-found: ignore
 
   registry-smoke:
     runs-on: ${{ (github.event_name == 'pull_request' && github.base_ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","zedkit"]') || 'ubuntu-latest' }}
@@ -615,7 +625,7 @@ jobs:
   ci-required:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [changes, hygiene, workflow-lint, checks, registry-smoke, docs-build, docs-e2e, docs-smoke]
+    needs: [changes, hygiene, workflow-lint, checks, ui-smoke, registry-smoke, docs-build, docs-e2e, docs-smoke]
     if: always()
     steps:
       - uses: actions/checkout@v7
@@ -625,6 +635,7 @@ jobs:
           HYGIENE: ${{ needs.hygiene.result }}
           WORKFLOW_LINT: ${{ needs.workflow-lint.result }}
           CHECKS: ${{ needs.checks.result }}
+          UI_SMOKE: ${{ needs.ui-smoke.result }}
           REGISTRY: ${{ needs.registry-smoke.result }}
           DOCS_BUILD: ${{ needs.docs-build.result }}
           DOCS_E2E: ${{ needs.docs-e2e.result }}
@@ -632,5 +643,6 @@ jobs:
           WORKFLOWS: ${{ needs.changes.outputs.workflows }}
           DOCS: ${{ needs.changes.outputs.docs }}
           REGISTRY_SCOPE: ${{ needs.changes.outputs.registry }}
+          UI_SCOPE: ${{ needs.changes.outputs.ui }}
           WORKFLOW_ONLY: ${{ needs.changes.outputs.workflow_only }}
         run: node scripts/ci-required.mjs

@@ -25,8 +25,9 @@ is not green.
 **Same-repo PRs into `dev`** run the heavy jobs (`checks`, `registry-smoke`,
 `quickstart-smoke`, `adoption-smoke`, `docs-build`) on the Dedibox
 self-hosted runner (`[self-hosted, zedkit]`), with persistent `/runner-cache`
-(pnpm store, turbo, tsbuildinfo, eslint). Docs Playwright smoke always runs
-on `ubuntu-latest` against the `docs-out` artifact. Job **names** stay
+(pnpm store, turbo, tsbuildinfo, eslint). Docs Playwright smoke and the UI
+gallery screenshots always run on `ubuntu-latest` (the host the PNG
+baselines were taken on). Job **names** stay
 neutral (`checks`, not `checks-dedibox`) so `ci-required` and the ruleset
 do not change. Fork PRs, PRs into `main`, and pushes stay on `ubuntu-latest`.
 The former trial workflow `ci-dedibox-trial.yml` was removed once this path
@@ -36,7 +37,8 @@ landed in `ci.yml`.
 | --- | --- |
 | `ci-required` | Aggregate gate: hygiene + checks + registry-smoke + docs-build + docs-smoke |
 | `hygiene` | Artifact, tone, private-refs, dependabot, changeset, PR lenses |
-| `checks` | typecheck, lint, build, tests, catalog, pack, API reports, ui smoke |
+| `checks` | typecheck, lint, build, tests, catalog, pack, API reports |
+| `ui-smoke` | UI gallery screenshots on ubuntu-latest |
 | `registry-smoke` | Registry build + smoke |
 | `docs-build` | One docs static export, shared with Playwright smoke |
 | `docs-smoke` | Critical docs journeys (home, search, catalog, a component page) |
