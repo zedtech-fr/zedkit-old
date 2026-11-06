@@ -37,3 +37,8 @@ kit: `pnpm exec turbo run build --filter=@zedtech/zedkit-ui`.
 
 The suggest client lives in `apps/docs/lib/identity-assistant.ts`; its
 rules are in [apps/docs/AGENTS.md](../apps/docs/AGENTS.md).
+
+## Domain and identity
+
+- Operator spend, tokens, retries: [identity-suggest.md](../.agents/domain/identity-suggest.md)
+- Public hygiene: [public-hygiene.md](../.agents/domain/public-hygiene.md)
