@@ -8,10 +8,10 @@ pull request and green required checks.
 ## Required status checks (CI workflow)
 
 [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) ends with a job
-named **`ci-required`**. It `needs` the jobs below and fails if any one
-failed or was cancelled; a job that was skipped passes (same `if: always()`
-pattern as `docs-e2e`). Once the ruleset lists only that name, adding or
-renaming a leaf job does not need a settings change.
+named **`ci-required`**. It `needs` the jobs below. Selected jobs must
+succeed; skipped is allowed only when the detector excluded that job
+(same `if: always()` pattern as `docs-e2e`). Once the ruleset lists only
+that name, adding or renaming a leaf job does not need a settings change.
 
 **Full CI runs only for pushes and PRs targeting `main`.** A PR into `dev`
 (lockfile, root config and workflow changes included) takes the

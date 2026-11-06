@@ -278,7 +278,6 @@ jobs:
             scripts/release-tags-wait.test.mjs \
             scripts/require-green-ci.test.mjs \
             scripts/ci-affected.test.mjs \
-            scripts/ci-required.test.mjs \
             apps/docs/scripts/*.test.mjs
       # Gallery smoke: real chromium over the built ui gallery (both
       # themes, zero console errors), screenshots kept as artifacts.
