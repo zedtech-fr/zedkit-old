@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach } from "vitest";
 import { kitDir, readManifest } from "#kit.js";
+import { MUSE_NAME_ALIAS } from "#generate.js";
 
 const dirs: string[] = [];
 
@@ -93,7 +94,7 @@ export function shippedNames(includePresets = false): Set<string> {
   if (!manifest.ok) throw manifest.error;
   const extra = includePresets ? Object.keys(manifest.value.presets) : [];
   return new Set(
-    manifest.value.agents.concat(manifest.value.commands ?? [], skillDirs(), extra),
+    manifest.value.agents.concat(manifest.value.commands ?? [], skillDirs(), extra, Object.values(MUSE_NAME_ALIAS)),
   );
 }
 

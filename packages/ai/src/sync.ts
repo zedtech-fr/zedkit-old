@@ -15,7 +15,16 @@ import { dirname, join, sep } from "node:path";
 import { err, ok, tryCatch, type Result } from "@zedtech/zedkit-core";
 import type { AgentHeader } from "./agent-header.js";
 import { resolveConditionals, type Availability } from "./conditional.js";
-import { generateAgent, generateMuseAgent, hasMarker, MUSE_NAME_ALIAS, museNativeName } from "./generate.js";
+import {
+  generateAgent,
+  generateMuseAgent,
+  hasMarker,
+  isReservedMuseDest,
+  markerSource,
+  museNativeName,
+  museSourceName,
+  MUSE_NAME_ALIAS,
+} from "./generate.js";
 import { ALL_PROVIDERS, type Action } from "./install.js";
 import { adoptRel, kitDir } from "./kit.js";
 import { isKitCopy } from "./legacy.js";
@@ -23,7 +32,19 @@ import { isGenerated, PROVIDER_KEYS } from "./provider-keys.js";
 import { loadAgent, loadPolicy, resolveRoute } from "./route.js";
 import type { Tokenomics } from "./tokenomics.js";
 
-const MUSE_ALIAS_DEST = new Set(Object.values(MUSE_NAME_ALIAS));
+function unmarkedAliasSources(dir: string): Set<string> {
+  const entries = tryCatch(() => readdirSync(dir));
+  const sources = new Set<string>();
+  if (!entries.ok) return sources;
+  for (const file of entries.value) {
+    if (!file.endsWith(".md") || file.endsWith(KIT_SUFFIX)) continue;
+    const stem = file.slice(0, -3);
+    if (museSourceName(stem) !== stem) continue;
+    const text = readText(join(dir, file));
+    if (text !== undefined && !hasMarker(text)) sources.add(stem);
+  }
+  return sources;
+}
 
 export type SyncOptions = {
   /** Project directory (the one that holds `.agents/`). */
@@ -122,21 +143,18 @@ function infer(dest: string): string[] {
   return found;
 }
 
-const MARKER_SOURCE = /\.agents\/agents\/([^./]+)\.md/;
-
 export function sourceNames(agentsDir: string): string[] | undefined {
   const dir = join(agentsDir, "agents");
   const entries = tryCatch(() => readdirSync(dir));
   if (!entries.ok) return undefined;
+  const sources = unmarkedAliasSources(dir);
   const names = new Set<string>();
   for (const file of entries.value) {
     if (!file.endsWith(".md") || file.endsWith(KIT_SUFFIX)) continue;
     const stem = file.slice(0, -3);
-    if (MUSE_ALIAS_DEST.has(stem)) {
-      const text = readText(join(dir, file));
-      const from = text !== undefined ? MARKER_SOURCE.exec(text.split("\n", 3)[1] ?? "") : undefined;
-      if (from?.[1] !== undefined) names.add(from[1]);
-      else if (text !== undefined && !hasMarker(text)) names.add(stem);
+    const text = readText(join(dir, file));
+    if (isReservedMuseDest(stem, { sources, ...(text !== undefined && { destText: text }) })) {
+      names.add(markerSource(text ?? "") ?? museSourceName(stem));
       continue;
     }
     names.add(stem);
@@ -157,13 +175,7 @@ export function availabilityOf(agentsDir: string, names: readonly string[]): Ava
   }
   return {
     skills,
-    agents: new Set(
-      names.filter((name) => {
-        if (!MUSE_ALIAS_DEST.has(name)) return true;
-        const src = Object.entries(MUSE_NAME_ALIAS).find(([, dest]) => dest === name)?.[0];
-        return src === undefined || !names.includes(src);
-      }),
-    ),
+    agents: new Set(names),
     commands: new Set(commandNames(agentsDir)),
   };
 }
@@ -452,11 +464,13 @@ export function syncAgents(input: AgentSync, actions: Action[]): void {
       }
     }
     for (const name of input.names) {
-      // Muse dest name is the generated file when the alias source is also
-      // present; Cursor/Claude still generate a legitimate unmarked homonym.
-      if (provider === "muse" && MUSE_ALIAS_DEST.has(name)) {
-        const aliasSource = Object.entries(MUSE_NAME_ALIAS).find(([, dest]) => dest === name)?.[0];
-        if (aliasSource !== undefined && known.has(aliasSource)) continue;
+      const destText = readText(join(input.agentsDir, "agents", `${name}.md`));
+      const sources = unmarkedAliasSources(join(input.agentsDir, "agents"));
+      if (
+        provider !== "muse" &&
+        isReservedMuseDest(name, { sources, ...(destText !== undefined && { destText }) })
+      ) {
+        continue;
       }
       const agent = loadAgent(input.agentsDir, name);
       if (!agent.ok) {

@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { parseFrontmatter } from "#frontmatter.js";
 import { installKit } from "#install.js";
+import { MUSE_NAME_ALIAS } from "#generate.js";
 import { readManifest } from "#kit.js";
 import { validateKit } from "#validate.js";
 import { tempDir } from "./helpers.js";
@@ -83,7 +84,7 @@ describe("orchestrator agent", () => {
     const manifest = readManifest();
     if (!manifest.ok) throw manifest.error;
     const skills = new Set(readdirSync(join(kitRoot(), "skills")));
-    const agents = new Set(manifest.value.agents);
+    const agents = new Set([...manifest.value.agents, ...Object.values(MUSE_NAME_ALIAS)]);
     for (const name of routingNamesFromOrchestrator()) {
       expect(skills.has(name) || agents.has(name), `unknown routing target: ${name}`).toBe(true);
     }

@@ -43,7 +43,7 @@ rule-map: refreshed after phase C (0 rows changed; nested files already existed;
 | `docs/golden-rule.md` | `.agents/domain/public-hygiene.md` | advice, not law |
 | `docs/catalog/README.md` | `.agents/domain/publishing.md` (Status) | |
 | `docs/design/signature.md` | `.agents/design.md` (signature tokens) | |
-| `apps/docs/VISUAL-CONTRACT.md` | `.agents/design.md` (docs chrome Tide vs specimen Glass) | |
+| `apps/docs/VISUAL-CONTRACT.md` | `.agents/design.md` (docs chrome first paint Glass; Tide opt-in) | |
 | `deploy/AGENTS.md` | `.agents/domain/identity-suggest.md` | |
 | `packages/ai/AGENTS.md` | `.agents/domain/ai-kit.md` | |
 | `docs/agents-catalog.md` | | not a rule: kit catalog, not this product's domain |
@@ -89,7 +89,7 @@ Closed by owner answers in the run prompt (`source: owner`). Each question cites
 | R-G4 | Invariants mixed across AGENTS + eslint | Confirm must-never-break? |
 | R-G5 | Suggest has operator spend; no checkout | Money / refunds? |
 | R-G6 | UI strings EN+FR in kit; repo voice? | Brand language? |
-| R-G7 | Signature vs Tide/Glass conflict | Design source of truth? |
+| R-G7 | Signature vs Tide/Glass conflict | Resolved: first paint Glass (`default-identity.ts:7`, `layout.tsx:53`); Tide opt-in |
 | R-G8 | Publishing is live in docs | Non-goals this slice? |
 
 ## Found in code, confirm

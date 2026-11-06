@@ -38,6 +38,6 @@ Say **"an upstream consumer"** — never a private project name. `source: owner`
 
 ## Open questions
 
-- **Glass vs Tide:** specimens use Glass (`docs/design/reference-decisions.md:9`); docs chrome selected-identity default is Tide (`apps/docs/VISUAL-CONTRACT.md:33`). Recorded in `.agents/design.md`; two owners, not a preference.
+- **Glass vs Tide:** runtime first paint is Glass (`apps/docs/lib/default-identity.ts:7`, `apps/docs/app/layout.tsx:53`). Specimens keep their own identity (`docs/design/reference-decisions.md:9` D3). Tide is opt-in, not the site default. Recorded in `.agents/design.md`.
 - **docs/publishing.md first-cut (ui 0.1.0)** vs live `README.md` table (ui 1.9.0): hold folder is README-only now (`.changeset-hold/README.md`).
 - Operator-only identity-suggest spend (deploy) is not a customer payment — recorded in `.agents/domain/identity-suggest.md`.

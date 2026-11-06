@@ -1,6 +1,6 @@
 # Design and identity
 
-Specimens use Glass (`docs/design/reference-decisions.md:9`). Docs chrome selected-identity default is Tide (`apps/docs/VISUAL-CONTRACT.md:33`). Two owners; not a preference.
+Specimens use Glass (`docs/design/reference-decisions.md:9`). Docs chrome first paint is Glass (`apps/docs/lib/default-identity.ts:7`, applied in `apps/docs/app/layout.tsx:53`). Tide is an opt-in look, not the site default. Two owners (specimen vs chrome); chrome default is Glass.
 
 Route model choice through the kind × stakes cell in `.agents/tokenomics.md`.
 
@@ -14,8 +14,8 @@ Route model choice through the kind × stakes cell in `.agents/tokenomics.md`.
 
 ## Signature
 
-Colour roles and font families below copy exact CSS variable names and values from Glass (specimens) and stock (no identity). Docs chrome Tide tokens are not restated here.
-<!-- Sources: docs/design/reference-decisions.md:9 Glass specimens; apps/docs/VISUAL-CONTRACT.md:33 Tide docs chrome. -->
+Colour roles and font families below copy exact CSS variable names and values from Glass (specimens and docs chrome first paint) and stock (no identity). Tide opt-in tokens are not restated here.
+<!-- Sources: docs/design/reference-decisions.md:9 Glass; apps/docs/lib/default-identity.ts:7; apps/docs/app/layout.tsx:53. -->
 
 **Colour roles**
 
