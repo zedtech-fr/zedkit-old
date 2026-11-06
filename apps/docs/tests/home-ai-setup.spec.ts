@@ -49,10 +49,11 @@ test.describe("home AI setup section", () => {
     await expect(page.locator("[data-slot='text'] p")).toHaveCount(0);
   });
 
-  test("the guide H1 is static inclusive text under reduced motion", async ({ page }) => {
+  test("the guide H1 keeps the same tree under reduced motion (no cycling)", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/docs/ai/setup", { waitUntil: "networkidle" });
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Cursor, Muse, Claude, or your choice");
+    await expect(page.getByRole("heading", { level: 1, name: "Set up zedkit AI in Cursor, Muse, Claude, or your choice" })).toBeVisible();
+    await expect(page.locator("h1 [data-word-roll='in']")).toHaveText("Cursor");
     await expect(page.locator("h1 [data-animate]")).toHaveCount(0);
   });
 

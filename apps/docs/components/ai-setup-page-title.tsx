@@ -11,8 +11,6 @@ export const AI_SETUP_PAGE_H1_LABEL = "Set up zedkit AI in Cursor, Muse, Claude,
 const ROTATE_MS = 2800;
 const ROLL_DWELL_MS = 300;
 
-const STATIC_INCLUSIVE = "Set up zedkit AI in Cursor, Muse, Claude, or your choice";
-
 const LEAD = "Give your coding agent one prompt to set up ZedKit AI in your project.";
 
 /** Accent the rolling word only; inherit Heading weight/size — no type size on the slot. */
@@ -20,8 +18,9 @@ const ROLL_ACCENT =
   "[&_[data-word-roll=in]]:text-primary [&_[data-word-roll=in]]:underline [&_[data-word-roll=in]]:decoration-primary/50 [&_[data-word-roll=in]]:underline-offset-4 [&_[data-word-roll=exit]]:text-primary [&_[data-word-roll=exit]]:underline [&_[data-word-roll=exit]]:decoration-primary/50 [&_[data-word-roll=exit]]:underline-offset-4";
 
 /**
- * Page H1 for the AI setup guide: cycles the last word with kit `WordRoll`.
- * Under reduced motion, shows a static inclusive title.
+ * Page H1 for the AI setup guide. SSR and the client paint the same tree
+ * (first word + WordRoll) so hydration does not swap a long title for a short
+ * one. The interval only starts when motion is allowed.
  */
 export function AiSetupPageTitle() {
   const motion = useMotionPreference();
@@ -40,16 +39,10 @@ export function AiSetupPageTitle() {
 
   return (
     <>
-      {motionOk ? (
-        <Heading level={1} typeRole="title" className="mb-2 text-balance" aria-label={AI_SETUP_PAGE_H1_LABEL}>
-          Set up zedkit AI in{" "}
-          <WordRoll words={WORDS} value={word} dwellMs={ROLL_DWELL_MS} className={ROLL_ACCENT} aria-hidden />
-        </Heading>
-      ) : (
-        <Heading level={1} typeRole="title" className="mb-2 text-balance">
-          {STATIC_INCLUSIVE}
-        </Heading>
-      )}
+      <Heading level={1} typeRole="title" className="mb-2 text-balance" aria-label={AI_SETUP_PAGE_H1_LABEL}>
+        Set up zedkit AI in{" "}
+        <WordRoll words={WORDS} value={word} dwellMs={ROLL_DWELL_MS} className={ROLL_ACCENT} aria-hidden />
+      </Heading>
       <Text as="p" variant="muted" className="mb-6 text-balance">
         {LEAD}
       </Text>
