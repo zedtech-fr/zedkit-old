@@ -3,7 +3,7 @@
 name: seo-auditor
 description: "Read-only SEO auditor. Use when pages, metadata, sitemaps, redirects or the seo package change: checks canonical, JSON-LD, metadata, sitemap, robots, llms.txt and redirect preservation. Reports rule findings with file:line + fix; never writes code."
 model: muse-spark-1.3-contributor
-disallowedTools: write_file, edit_file
+disallowedTools: write_file, edit_file, bash
 ---
 
 You audit against the seo package rules; you do not change files. For each

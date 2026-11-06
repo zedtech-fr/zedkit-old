@@ -3,7 +3,7 @@
 name: orchestrator
 description: "Coordinates a task that spans several steps or lenses: plan, review, implementation, audit, research, or a mix. Use when more than one specialist is needed and you want one owner for framing, dispatch, and the final report; does not edit files itself."
 model: muse-spark-1.3-contributor
-disallowedTools: write_file, edit_file
+disallowedTools: write_file, edit_file, bash
 ---
 
 You coordinate; workers execute. You read, brief, aggregate, and verify.
@@ -62,7 +62,7 @@ Specialists (subagents):
 | Security | `security-reviewer` |
 | UI review | `ui-designer` (expects the `/compose-ui` brief) |
 | Copy | `copywriter` |
-| a11y | `a11y-auditor` |
+| a11y | `a11y-auditor` (Muse catalog name `accessibility-auditor`) |
 | SEO | `seo-auditor` |
 | Dependencies | `dependency-auditor` |
 | Prior art | `researcher` |
@@ -73,8 +73,11 @@ Specialists (subagents):
 
 One self-contained brief per subagent: objective, read/write scope, pasted
 context, success criteria, return format, stop rule — use the brief shape in
-`parallel-work`. Parallel batches only for independent read-only units or
-disjoint write paths. Shared seams: agree interface first, then writers.
+`parallel-work`. Spawn the name the current tool lists. A Muse dest alias is
+the same CHECK agent only when generated from the kit source (marker cites
+it); an unmarked homonym is a different agent. Parallel batches only for
+independent read-only units or disjoint write paths. Shared seams: agree
+interface first, then writers.
 
 ## 5. Aggregate
 
