@@ -9,7 +9,7 @@ import {
   readSidecar,
   type AgentHeader,
 } from "./agent-header.js";
-import { museSourceName } from "./generate.js";
+import { hasMarker, museIdentityName, museSourceName } from "./generate.js";
 import {
   checkTokenomics,
   loadDefaults,
@@ -264,10 +264,11 @@ export function loadPolicy(agentsDir: string): Result<Tokenomics> {
 /**
  * The agent to route: its name and header, read from the `agents.meta.json`
  * entry of `agentsDir` when it has one (see `readAgentHeader`). A kit agent
- * routes from the shipped table when the project has no entry; a Muse dest
- * alias (`accessibility-auditor`) shares the kit source identity. A name that
- * is neither installed, nor a kit agent, nor an alias, nor in the sidecar is
- * an error. The note says when the default header was used.
+ * routes from the shipped table when the project has no entry. A Muse dest
+ * shares the kit source identity only with provenance (generated marker, or
+ * dest missing while the unmarked source exists). An unmarked dest homonym
+ * is its own agent. A name that is neither installed, nor a kit agent, nor a
+ * provenanced alias, nor in the sidecar is an error.
  */
 export function loadAgent(
   agentsDir: string,
@@ -277,19 +278,28 @@ export function loadAgent(
     return err(new Error(`invalid agent name "${name}"`));
   const sidecar = readSidecar(agentsDir);
   if (!sidecar.ok) return err(sidecar.error);
-  const sourceName = museSourceName(name);
+  const mapped = museSourceName(name);
   const file = join(agentsDir, "agents", `${name}.md`);
-  const sourceFile = join(agentsDir, "agents", `${sourceName}.md`);
-  const entry = sidecar.value[name] ?? sidecar.value[sourceName];
+  const sourceFile = join(agentsDir, "agents", `${mapped}.md`);
+  const destRead = tryCatch(() => readFileSync(file, "utf8"));
+  const sourceRead = tryCatch(() => readFileSync(sourceFile, "utf8"));
+  const sources = new Set<string>();
+  if (sourceRead.ok && !hasMarker(sourceRead.value)) sources.add(mapped);
+  const identity = museIdentityName(name, {
+    sources,
+    ...(destRead.ok && { destText: destRead.value }),
+  });
+  const identityFile = join(agentsDir, "agents", `${identity}.md`);
+  const entry = identity === name ? sidecar.value[name] : sidecar.value[name] ?? sidecar.value[identity];
   if (
     !existsSync(file) &&
-    !existsSync(sourceFile) &&
+    !existsSync(identityFile) &&
     entry === undefined &&
     KIT_HEADERS[name] === undefined &&
-    KIT_HEADERS[sourceName] === undefined
+    KIT_HEADERS[identity] === undefined
   )
     return err(new Error(`unknown agent "${name}" (no ${file})`));
-  const read = readAgentHeader(sourceName, entry);
+  const read = readAgentHeader(identity, entry);
   return ok({
     name,
     header: read.header,

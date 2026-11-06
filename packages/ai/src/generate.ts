@@ -124,11 +124,50 @@ const MUSE_DEST_SOURCE: Readonly<Record<string, string>> = Object.fromEntries(
 );
 
 /**
- * Kit source name for a Muse dest (or any legal name). Router/`loadAgent`
- * uses this so `accessibility-auditor` shares `a11y-auditor` CHECK rights.
+ * Kit source name for a Muse dest (or any legal name). Table reverse only:
+ * do not treat a dest as that source without `museIdentityName` provenance.
  */
 export function museSourceName(name: string): string {
   return MUSE_DEST_SOURCE[name] ?? name;
+}
+
+/** Source name cited on a generated marker line, if this text is marked. */
+export function markerSource(text: string): string | undefined {
+  if (!hasMarker(text)) return undefined;
+  const line = text.split("\n", 2)[1] ?? "";
+  const match = /from \.agents\/agents\/([a-z0-9]+(?:-[a-z0-9]+)*)\.md /.exec(line);
+  return match?.[1];
+}
+
+export type MuseAliasContext = {
+  /** Unmarked source names on disk. Do not list reserved dests here. */
+  sources: ReadonlySet<string>;
+  /** File text at `name.md` when that path exists. */
+  destText?: string;
+};
+
+/**
+ * Dest is reserved Muse output of a kit source only with provenance: a marker
+ * citing that source, or a present unmarked source while dest is absent/marked.
+ * An unmarked dest is a user homonym — never reserved, even if the source exists.
+ * Installer: skip dest as a Cursor/Claude source only when this is true.
+ */
+export function isReservedMuseDest(name: string, ctx: MuseAliasContext): boolean {
+  const source = MUSE_DEST_SOURCE[name];
+  if (source === undefined) return false;
+  if (ctx.destText !== undefined && !hasMarker(ctx.destText)) return false;
+  if (ctx.destText !== undefined && markerSource(ctx.destText) === source) return true;
+  return ctx.sources.has(source);
+}
+
+/**
+ * Header identity for route/delegation. Reserved Muse dest → kit source CHECK
+ * rights; unmarked dest → itself (legitimate homonym).
+ */
+export function museIdentityName(name: string, ctx: MuseAliasContext): string {
+  const source = MUSE_DEST_SOURCE[name];
+  if (source === undefined) return name;
+  return isReservedMuseDest(name, ctx) ? source : name;
 }
 
 const MUSE_KEYS = new Set(["name", "description", "model", "disallowedTools"]);

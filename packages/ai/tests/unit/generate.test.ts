@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { generateAgent, generateMuseAgent, hasMarker, markerLine, MARKER_PREFIX, museNativeName, museSourceName, MUSE_NAME_ALIAS } from "#generate.js";
+import { generateAgent, generateMuseAgent, hasMarker, isReservedMuseDest, markerLine, markerSource, MARKER_PREFIX, museIdentityName, museNativeName, museSourceName, MUSE_NAME_ALIAS } from "#generate.js";
 import { parseFrontmatter } from "#frontmatter.js";
 
 const fixture = (name: string): string =>
@@ -185,5 +185,33 @@ describe("museNativeName", () => {
     expect(museSourceName("a11y-auditor")).toBe("a11y-auditor");
     expect(museSourceName("explorer")).toBe("explorer");
     expect(museNativeName(museSourceName("accessibility-auditor"))).toBe("accessibility-auditor");
+  });
+});
+
+describe("Muse dest provenance", () => {
+  const dest = "accessibility-auditor";
+  const source = "a11y-auditor";
+  const marked = `---\n${markerLine(source)}\nname: ${dest}\n---\nBody\n`;
+  const unmarked = "---\nname: accessibility-auditor\ndescription: mine\nmodel: inherit\n---\nMINE\n";
+
+  it("unmarked dest without source is a user source, not a reserved skip", () => {
+    const ctx = { sources: new Set<string>(), destText: unmarked };
+    expect(hasMarker(unmarked)).toBe(false);
+    expect(isReservedMuseDest(dest, ctx)).toBe(false);
+    expect(museIdentityName(dest, ctx)).toBe(dest);
+  });
+
+  it("unmarked dest with source is a collision: dest stays a user source, not reserved", () => {
+    const ctx = { sources: new Set([source]), destText: unmarked };
+    expect(isReservedMuseDest(dest, ctx)).toBe(false);
+    expect(museIdentityName(dest, ctx)).toBe(dest);
+    expect(museIdentityName(source, ctx)).toBe(source);
+  });
+
+  it("marked dest citing the source is reserved (alias, not a second source)", () => {
+    const ctx = { sources: new Set([source]), destText: marked };
+    expect(markerSource(marked)).toBe(source);
+    expect(isReservedMuseDest(dest, ctx)).toBe(true);
+    expect(museIdentityName(dest, ctx)).toBe(source);
   });
 });
