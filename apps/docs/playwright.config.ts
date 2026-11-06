@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { playwrightCiInt } from "./scripts/playwright-ci-env.mjs";
 
 const ci = Boolean(process.env.CI);
 const shardCurrent = Number(process.env.DOCS_E2E_SHARD ?? "");
@@ -27,8 +28,11 @@ const projects = projectNames.map((name) => {
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
-  workers: ci ? 2 : 1,
-  retries: ci ? 1 : 0,
+  // Extra args after `pnpm run smoke --` land after the script's file list
+  // (and a literal `--`), so Playwright never sees --workers/--retries.
+  // Same env pattern as DOCS_E2E_SHARD.
+  workers: playwrightCiInt("DOCS_E2E_WORKERS", 1, ci ? 2 : 1),
+  retries: playwrightCiInt("DOCS_E2E_RETRIES", 0, ci ? 1 : 0),
   reporter: "list",
   // pnpm extra-args were not reaching Playwright (`--shard` ran all 308 tests
   // on every matrix job). Shard via env instead.

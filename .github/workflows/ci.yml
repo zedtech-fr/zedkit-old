@@ -701,15 +701,13 @@ jobs:
           curl -sf -o /dev/null http://127.0.0.1:3100/robots.txt
           curl -sf -o /dev/null http://127.0.0.1:3100/sitemap.xml
           curl -sf -o /dev/null http://127.0.0.1:3100/llms.txt
-          if [ "${RUNNER_ENVIRONMENT}" = "self-hosted" ]; then
-            pnpm --filter @zedtech/zedkit-docs run smoke -- --workers=1 --retries=2
-          else
-            pnpm --filter @zedtech/zedkit-docs run smoke
-          fi
+          pnpm --filter @zedtech/zedkit-docs run smoke
           kill "$(cat /tmp/docs.pid)"
         env:
           DOCS_E2E_PROJECT: chromium
           DOCS_E2E_EXPECT_TIMEOUT: ${{ runner.environment == 'self-hosted' && '30000' || '' }}
+          DOCS_E2E_WORKERS: ${{ runner.environment == 'self-hosted' && '1' || '' }}
+          DOCS_E2E_RETRIES: ${{ runner.environment == 'self-hosted' && '2' || '' }}
       - uses: actions/upload-artifact@v7
         if: success()
         with:
