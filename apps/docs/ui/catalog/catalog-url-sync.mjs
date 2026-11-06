@@ -1,4 +1,4 @@
-/* global URLSearchParams */
+/* global URLSearchParams, URL */
 
 /** Query string for catalog filters. Empty means the bare /catalog path. */
 export function catalogFilterQuery({ area = "all", status = "all", q = "" } = {}) {
@@ -7,6 +7,21 @@ export function catalogFilterQuery({ area = "all", status = "all", q = "" } = {}
   if (status !== "all") params.set("status", status);
   if (q) params.set("q", q);
   return params.toString();
+}
+
+function pathnameKey(pathname) {
+  return pathname.replace(/\/$/, "") || "/";
+}
+
+/**
+ * Same-document catalog navigation (chip, clear, shared result link).
+ * Modified clicks and other paths are left to the browser.
+ */
+export function catalogClickIsSamePageNavigation(href, pageUrl, { target = "", modifiedClick = false } = {}) {
+  if (modifiedClick || (target && target !== "_self")) return false;
+  const current = new URL(pageUrl);
+  const next = new URL(href, current);
+  return next.origin === current.origin && pathnameKey(next.pathname) === pathnameKey(current.pathname);
 }
 
 /**
@@ -19,11 +34,19 @@ export function catalogUrlIsOwnReplace(incomingQuery, lastPushedQuery, recentPus
   return recentPushedQueries.includes(incomingQuery);
 }
 
-/** Apply URL filters on first load, history, and foreign links; ignore our own replace echoes. */
+/**
+ * Apply URL filters on first load, history, and user same-page navigation.
+ * Ignore our own replace echoes so typed letters are not overwritten.
+ */
 export function shouldApplyCatalogUrl(
   incomingQuery,
-  { lastPushedQuery = null, recentPushedQueries = [], fromHistory = false } = {},
+  {
+    lastPushedQuery = null,
+    recentPushedQueries = [],
+    fromHistory = false,
+    fromUserNavigation = false,
+  } = {},
 ) {
-  if (fromHistory || lastPushedQuery === null) return true;
+  if (fromHistory || fromUserNavigation || lastPushedQuery === null) return true;
   return !catalogUrlIsOwnReplace(incomingQuery, lastPushedQuery, recentPushedQueries);
 }

@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { catalogFilterQuery, catalogUrlIsOwnReplace, shouldApplyCatalogUrl } from "../ui/catalog/catalog-url-sync.mjs";
+import {
+  catalogClickIsSamePageNavigation,
+  catalogFilterQuery,
+  catalogUrlIsOwnReplace,
+  shouldApplyCatalogUrl,
+} from "../ui/catalog/catalog-url-sync.mjs";
 
 test("serialize omits defaults and keeps q", () => {
   assert.equal(catalogFilterQuery({}), "");
@@ -23,22 +28,65 @@ test("own replace echoes are ignored so typing is not overwritten", () => {
   );
 });
 
-test("back-forward and shared links are applied", () => {
-  const recent = ["q=dialog"];
-  assert.equal(catalogUrlIsOwnReplace("q=button", "q=dialog", recent), false);
-  assert.equal(catalogUrlIsOwnReplace("", "q=dialog", recent), false);
-  assert.equal(catalogUrlIsOwnReplace("area=ui", "", []), false);
-  assert.equal(
-    shouldApplyCatalogUrl("q=button", { lastPushedQuery: "q=dialog", recentPushedQueries: recent }),
-    true,
-  );
-  assert.equal(shouldApplyCatalogUrl("q=dialog", { lastPushedQuery: null, recentPushedQueries: [] }), true);
+test("back-forward applies even when the query is still in the own-replace list", () => {
+  const recent = ["q=dialog", "q=di"];
   assert.equal(
     shouldApplyCatalogUrl("q=di", {
       lastPushedQuery: "q=dialog",
       recentPushedQueries: recent,
       fromHistory: true,
     }),
+    true,
+  );
+  assert.equal(
+    shouldApplyCatalogUrl("", {
+      lastPushedQuery: "q=dialog",
+      recentPushedQueries: ["", "q=dialog"],
+      fromHistory: true,
+    }),
+    true,
+  );
+});
+
+test("same-page shared query after self-navigation still applies", () => {
+  const page = "https://zedkit.app/catalog?q=dialog";
+  const recent = ["", "q=di", "q=button", "q=dialog"];
+  assert.equal(catalogClickIsSamePageNavigation("/catalog?q=dialog", page), true);
+  assert.equal(catalogClickIsSamePageNavigation("/catalog?q=button", page), true);
+  assert.equal(catalogClickIsSamePageNavigation("/catalog", page), true);
+  assert.equal(catalogClickIsSamePageNavigation("/docs", page), false);
+  assert.equal(catalogClickIsSamePageNavigation("/catalog?q=button", page, { target: "_blank" }), false);
+  assert.equal(catalogClickIsSamePageNavigation("/catalog?q=button", page, { modifiedClick: true }), false);
+  assert.equal(
+    shouldApplyCatalogUrl("q=dialog", {
+      lastPushedQuery: "q=dialog",
+      recentPushedQueries: recent,
+      fromUserNavigation: true,
+    }),
+    true,
+  );
+  assert.equal(
+    shouldApplyCatalogUrl("q=button", {
+      lastPushedQuery: "q=dialog",
+      recentPushedQueries: recent,
+      fromUserNavigation: true,
+    }),
+    true,
+  );
+  assert.equal(
+    shouldApplyCatalogUrl("", {
+      lastPushedQuery: "q=dialog",
+      recentPushedQueries: recent,
+      fromUserNavigation: true,
+    }),
+    true,
+  );
+});
+
+test("first load and foreign queries still apply without a click", () => {
+  assert.equal(shouldApplyCatalogUrl("q=dialog", { lastPushedQuery: null, recentPushedQueries: [] }), true);
+  assert.equal(
+    shouldApplyCatalogUrl("q=button", { lastPushedQuery: "q=dialog", recentPushedQueries: ["q=dialog"] }),
     true,
   );
 });

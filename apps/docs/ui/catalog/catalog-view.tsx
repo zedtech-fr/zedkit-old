@@ -9,7 +9,11 @@ import type { CatalogArea, CatalogIndexEntry } from "@/content/catalog-index";
 import { AREAS } from "@/ui/catalog/catalog-filter-constants";
 import { CatalogFiltersToolbar, catalogResultsStatusLine } from "@/ui/catalog/catalog-filters";
 import { catalogCopy } from "@/ui/catalog/i18n/catalog-copy";
-import { catalogFilterQuery, shouldApplyCatalogUrl } from "@/ui/catalog/catalog-url-sync.mjs";
+import {
+  catalogClickIsSamePageNavigation,
+  catalogFilterQuery,
+  shouldApplyCatalogUrl,
+} from "@/ui/catalog/catalog-url-sync.mjs";
 
 const CatalogResultsBodyLazy = dynamic(
   () => import("@/ui/catalog/catalog-results").then((mod) => ({ default: mod.CatalogResultsBody })),
@@ -113,25 +117,47 @@ export function CatalogViewFromUrl({ entries }: { entries: CatalogIndexEntry[] }
   const lastPushedQueryRef = useRef<string | null>(null);
   const recentPushedRef = useRef<string[]>([]);
   const fromHistoryRef = useRef(false);
+  const fromUserNavigationRef = useRef(false);
 
   useEffect(() => {
     const onPopState = () => {
       fromHistoryRef.current = true;
     };
+    const onClick = (event: MouseEvent) => {
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const anchor = target.closest("a");
+      if (!(anchor instanceof HTMLAnchorElement) || !anchor.href) return;
+      if (
+        catalogClickIsSamePageNavigation(anchor.href, window.location.href, {
+          target: anchor.target,
+        })
+      ) {
+        fromUserNavigationRef.current = true;
+      }
+    };
     window.addEventListener("popstate", onPopState);
-    return () => window.removeEventListener("popstate", onPopState);
+    document.addEventListener("click", onClick, true);
+    return () => {
+      window.removeEventListener("popstate", onPopState);
+      document.removeEventListener("click", onClick, true);
+    };
   }, []);
 
   useEffect(() => {
     const next = readFilter(new URLSearchParams(searchParams.toString()), entries);
     const incoming = catalogFilterQuery(next);
     const fromHistory = fromHistoryRef.current;
+    const fromUserNavigation = fromUserNavigationRef.current;
     fromHistoryRef.current = false;
+    fromUserNavigationRef.current = false;
     if (
       !shouldApplyCatalogUrl(incoming, {
         lastPushedQuery: lastPushedQueryRef.current,
         recentPushedQueries: recentPushedRef.current,
         fromHistory,
+        fromUserNavigation,
       })
     ) {
       return;
@@ -148,6 +174,8 @@ export function CatalogViewFromUrl({ entries }: { entries: CatalogIndexEntry[] }
 
   function pushFilterUrl(parsed: ReturnType<typeof readFilter>) {
     const query = catalogFilterQuery(parsed);
+    fromHistoryRef.current = false;
+    fromUserNavigationRef.current = false;
     lastPushedQueryRef.current = query;
     recentPushedRef.current = [...recentPushedRef.current, query].slice(-8);
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
