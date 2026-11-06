@@ -46,25 +46,23 @@ describe("orchestrator agent", () => {
     expect(core).toContain("orchestrate");
   });
 
-  it("installs orchestrator files for starter, core, and full presets (cursor and claude)", () => {
-    const manifest = readManifest();
-    if (!manifest.ok) throw manifest.error;
-    for (const preset of ["starter", "core", "full"] as const) {
-      for (const providers of [["cursor"] as const, ["claude"] as const]) {
-        const dest = tempDir();
-        install(dest, { preset, providers: [...providers] });
-        expect(existsSync(join(dest, ".agents/agents/orchestrator.md"))).toBe(true);
-        if (preset === "starter") {
-          expect(existsSync(join(dest, ".agents/commands/orchestrate.md"))).toBe(false);
-        } else {
-          expect(existsSync(join(dest, ".agents/commands/orchestrate.md"))).toBe(true);
-        }
-        for (const provider of providers) {
-          expect(existsSync(join(dest, `.${provider}/agents/orchestrator.md`))).toBe(true);
-        }
-        expect(validateKit(join(dest, ".agents"))).toEqual([]);
-      }
-    }
+  // One install+validate is 4–8 s on CI (see vitest.config.ts). Six of those
+  // in a single `it` exceed the 20 s testTimeout and abort before the
+  // validateKit assertion prints. Keep the timeout; split the matrix.
+  it.each([
+    ["starter", "cursor", false],
+    ["starter", "claude", false],
+    ["core", "cursor", true],
+    ["core", "claude", true],
+    ["full", "cursor", true],
+    ["full", "claude", true],
+  ] as const)("installs orchestrator files for %s + %s", (preset, provider, hasOrchestrate) => {
+    const dest = tempDir();
+    install(dest, { preset, providers: [provider] });
+    expect(existsSync(join(dest, ".agents/agents/orchestrator.md"))).toBe(true);
+    expect(existsSync(join(dest, ".agents/commands/orchestrate.md"))).toBe(hasOrchestrate);
+    expect(existsSync(join(dest, `.${provider}/agents/orchestrator.md`))).toBe(true);
+    expect(validateKit(join(dest, ".agents"))).toEqual([]);
   });
 
   it("ships frontmatter guards on the orchestrator agent", () => {
