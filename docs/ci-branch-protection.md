@@ -8,20 +8,22 @@ pull request and green required checks.
 ## Required status checks (CI workflow)
 
 [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) ends with a job
-named **`ci-required`**. It `needs` the jobs below and fails if any one
-failed or was cancelled; a job that was skipped passes (same `if: always()`
-pattern as `docs-e2e`). Once the ruleset lists only that name, adding or
-renaming a leaf job does not need a settings change.
+named **`ci-required`**. It `needs` the jobs below. Selected jobs must
+succeed; skipped is allowed only when the detector excluded that job
+(same `if: always()` pattern as `docs-e2e`). Once the ruleset lists only
+that name, adding or renaming a leaf job does not need a settings change.
 
 **Full CI runs only for pushes and PRs targeting `main`.** A PR into `dev`
 (lockfile, root config and workflow changes included) takes the
 affected-only path: turbo runs typecheck, lint and tests for the changed
 packages and their dependents, the docs and registry jobs run only when
 `scripts/ci-affected.mjs` finds a relevant path, and the workspace-wide
-coverage run is skipped. Skipped jobs are what `ci-required` accepts.
+coverage run is skipped. `ci-required` accepts a skipped job only when
+the detector excluded it; a selected job that skipped, failed or cancelled
+is not green.
 
 **Same-repo PRs into `dev`** run the heavy jobs (`checks`, `registry-smoke`,
-`quickstart-smoke`, `adoption-smoke`, `docs-e2e-shard`, `docs-e2e-routes`,
+`quickstart-smoke`, `adoption-smoke`, `docs-build`, `docs-e2e-shard`, `docs-e2e-routes`,
 `docs-smoke`) on the Dedibox self-hosted runner (`[self-hosted, dedibox]`),
 with persistent `/runner-cache` (pnpm store, turbo, tsbuildinfo, eslint) and
 Playwright from the runner image. Job **names** stay neutral (`checks`, not
@@ -31,10 +33,11 @@ workflow `ci-dedibox-trial.yml` was removed once this path landed in `ci.yml`.
 
 | Check | Role |
 | --- | --- |
-| `ci-required` | Aggregate gate: hygiene + checks + registry-smoke + docs-e2e + docs-smoke |
+| `ci-required` | Aggregate gate: hygiene + checks + registry-smoke + docs-build + docs-e2e + docs-smoke |
 | `hygiene` | Artifact, tone, private-refs, dependabot, changeset, PR lenses |
 | `checks` | typecheck, lint, build, tests, catalog, pack, API reports, ui smoke |
 | `registry-smoke` | Registry build + smoke |
+| `docs-build` | One docs static export, shared with Playwright |
 | `docs-smoke` | Docs Playwright smoke subset |
 | `docs-e2e` | Aggregate gate over the three docs e2e shards |
 
