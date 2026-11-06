@@ -146,4 +146,30 @@ describe("t2534u default Muse drift", () => {
     if (!repaired.ok) throw repaired.error;
     expect(readFileSync(musePath, "utf8")).not.toContain("mutated-policy-model");
   });
+
+  it("implicit --check and bare sync repair a generated Muse file that dropped only bash", () => {
+    const root = project();
+    put(root, ".agents/agents/explorer.md", readFileSync(join(kitDir(), "agents/explorer.md"), "utf8"));
+    sync(root, { providers: ["cursor", "muse"] });
+    const musePath = join(root, ".agents/agents/explorer.md");
+    const generated = readFileSync(musePath, "utf8");
+    expect(hasMarker(generated)).toBe(true);
+    expect(generated).toMatch(/^disallowedTools: write_file, edit_file, bash$/m);
+    writeFileSync(musePath, generated.replace(/, bash$/m, ""));
+    const stripped = readFileSync(musePath, "utf8");
+    expect(stripped).toMatch(/^disallowedTools: write_file, edit_file$/m);
+    expect(hasMarker(stripped)).toBe(true);
+
+    const implied = syncKit({ dest: root, check: true });
+    if (!implied.ok) throw implied.error;
+    expect(inSync(implied.value)).toBe(false);
+    expect(implied.value.some((a) => a.path === ".agents/agents/explorer.md" && a.kind !== "skip")).toBe(true);
+
+    const issues = checkDrift(root, join(root, ".agents"));
+    expect(issues.some((i) => i.path.includes("explorer"))).toBe(true);
+
+    const repaired = syncKit({ dest: root });
+    if (!repaired.ok) throw repaired.error;
+    expect(readFileSync(musePath, "utf8")).toMatch(/^disallowedTools: write_file, edit_file, bash$/m);
+  });
 });

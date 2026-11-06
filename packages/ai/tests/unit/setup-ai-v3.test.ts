@@ -48,6 +48,9 @@ describe("setup-ai v3: read the code first", () => {
     expect(raw).toMatch(/Cite the gap id with each question/u);
     expect(raw).toMatch(/found in code — confirm\?/u);
     expect(raw).toMatch(/at most eight questions/iu);
+    expect(raw).toMatch(/Never invent owner choices/u);
+    expect(raw).toMatch(/harness auto-skip is not an owner answer/u);
+    expect(raw).toMatch(/return the exact question text and options to the parent/u);
     expect(raw).toMatch(/Read before asking/u);
   });
 
@@ -135,6 +138,10 @@ describe("setup-ai v3: tokenomics", () => {
     for (const word of ["kind", "stakes", "cursor", "claude", "codex", "muse"]) expect(m, word).toContain(word);
     expect(m).toMatch(/Pass the model on every spawn/u);
     expect(m).toMatch(/Never pin an id you did not see listed/u);
+    expect(m).toMatch(/parent session's listed id/u);
+    expect(m).toMatch(/--provider <running>/u);
+    expect(m).toMatch(/CLI `--model` flag pins only the parent/u);
+    expect(m).toMatch(/cheapest-fast is not a substitute/u);
     expect(m).toMatch(/\.agents\/tokenomics\.md/u);
     expect(m).toMatch(/zedkit-ai sync/u);
     expect(raw).toMatch(/explorer.*check/su);
