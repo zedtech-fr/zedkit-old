@@ -101,14 +101,25 @@ function infer(dest: string): string[] {
   return found;
 }
 
+const MARKER_SOURCE = /\.agents\/agents\/([^./]+)\.md/;
+
 function sourceNames(agentsDir: string): string[] | undefined {
-  const entries = tryCatch(() => readdirSync(join(agentsDir, "agents")));
+  const dir = join(agentsDir, "agents");
+  const entries = tryCatch(() => readdirSync(dir));
   if (!entries.ok) return undefined;
-  return entries.value
-    .filter((f) => f.endsWith(".md") && !f.endsWith(KIT_SUFFIX))
-    .map((f) => f.slice(0, -3))
-    .filter((name) => !MUSE_ALIAS_DEST.has(name))
-    .sort();
+  const names = new Set<string>();
+  for (const file of entries.value) {
+    if (!file.endsWith(".md") || file.endsWith(KIT_SUFFIX)) continue;
+    const stem = file.slice(0, -3);
+    if (MUSE_ALIAS_DEST.has(stem)) {
+      const text = readText(join(dir, file));
+      const from = text !== undefined ? MARKER_SOURCE.exec(text.split("\n", 3)[1] ?? "") : undefined;
+      if (from?.[1] !== undefined) names.add(from[1]);
+      continue;
+    }
+    names.add(stem);
+  }
+  return [...names].sort();
 }
 
 function withConditionals(text: string, avail: Availability | undefined): string {
@@ -459,6 +470,9 @@ export function syncAgents(input: AgentSync, actions: Action[]): void {
         made.value.notes,
         provider !== "muse",
       );
+      if (provider === "muse" && fileName !== name && lstatOf(join(ctx.dest, join(dirRel, `${name}.md`))) === undefined && source !== "") {
+        put(ctx, "write", join(dirRel, `${name}.md`), "unmarked source beside Muse alias", source);
+      }
     }
     if (input.noPrune !== true) pruneOrphans(ctx, dirRel, known, false);
     skip(ctx, dirRel, keys.note);

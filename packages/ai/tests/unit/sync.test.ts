@@ -485,8 +485,11 @@ describe("syncKit: muse native files", () => {
     expect(hasMarker(read(root, ".agents/agents/explorer.md"))).toBe(true);
     expect(hasMarker(read(root, ".agents/agents/accessibility-auditor.md"))).toBe(true);
     expect(read(root, ".agents/agents/accessibility-auditor.md")).toContain("name: accessibility-auditor\n");
+    expect(existsSync(join(root, ".agents/agents/a11y-auditor.md"))).toBe(true);
+    expect(hasMarker(read(root, ".agents/agents/a11y-auditor.md"))).toBe(false);
     expect(existsSync(join(kitAgents, "a11y-auditor.md"))).toBe(true);
     expect(readFileSync(join(kitAgents, "a11y-auditor.md"), "utf8")).toContain("name: a11y-auditor\n");
+    expect(changes(sync(root, { providers: ["muse"] }))).toEqual([]);
   });
 
   it("skips Muse writes when a leftover symlink sits in .agents/agents", () => {
