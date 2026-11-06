@@ -36,7 +36,7 @@ When `/setup-ai` starts (or the user asks to set up AI), say this in plain langu
 | ----- | --------------- | ------------------------------------------------------------------------------------------------------------------- |
 | **A** | Audit           | Inventory, parallel explore, gap list (provider-neutral)                                                            |
 | **B** | Discovery       | **Read the code** with parallel read-only readers; mine docs; **one batched interview** (≤ 8 questions) on the gaps |
-| **C** | Build           | Domain, identity, nested `AGENTS.md`, tokenomics from the installed stub (evidence + owner answers)                   |
+| **C** | Build           | Domain, identity, nested `AGENTS.md`, tokenomics from the installed stub (evidence + owner answers)                 |
 | **D** | Skills          | Propose repo skills from the kit **catalog**; tier the plan (must / should / could)                                 |
 | **—** | Write           | Shared source, provider layers, verify, report                                                                      |
 | **E** | Score and learn | Self-score against the rubric, setup-log retro, kit-issue drafts, re-audit cadence                                  |
@@ -59,11 +59,11 @@ One shared source, then thin provider layers. Phases **A–D** are provider-neut
 
 **Always record** the value table below in the **plan table appendix** and in **every setup-log entry** (even when the user pre-selected providers or the run is headless). Wire every provider the owner names (several allowed). Only the **selection question** ("which providers to wire?") is conditional — when names are already known, skip the question but **still paste the table**.
 
-| Provider | Value                                                      |
-| -------- | ---------------------------------------------------------- |
-| `cursor` | Rules, skills, agents and commands inside the IDE          |
-| `claude` | The same setup for Claude Code sessions, linked not copied |
-| `codex`  | Reads the shared source directly; nothing extra to install |
+| Provider | Value                                                                       |
+| -------- | --------------------------------------------------------------------------- |
+| `cursor` | Rules, skills, agents and commands inside the IDE                           |
+| `claude` | The same setup for Claude Code sessions, linked not copied                  |
+| `codex`  | Reads the shared source directly; nothing extra to install                  |
 | `muse`   | Native marked files in `.agents/agents`; kit/unmarked files stay the source |
 
 Add a **Wired:** line listing the providers you actually installed for this repo.

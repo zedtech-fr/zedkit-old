@@ -110,5 +110,6 @@ do it (`pnpm exec turbo run test --filter=<pkg>`). Docs browser tests:
 - Tokenomics: [.agents/tokenomics.md](.agents/tokenomics.md). Source agents
   never name a model; the kind × stakes cell does.
 - Design / identity: [.agents/design.md](.agents/design.md)
+- Documented, not enforced: A-07, S-09, H-06, H-07, P-05.
 - Docs UI look: [VISUAL-CONTRACT.md](apps/docs/VISUAL-CONTRACT.md) and
   [signature.md](docs/design/signature.md)

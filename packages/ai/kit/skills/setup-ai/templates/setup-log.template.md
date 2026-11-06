@@ -10,11 +10,11 @@ Append one entry per `/setup-ai` run, newest first. Each entry records what the 
 - **What hurt:** the main gate needs a database; ran the read-only checks and marked the gate `UNVERIFIED`.
 - **Providers (always paste the full value table):**
 
-| Provider | Value                                                      |
-| -------- | ---------------------------------------------------------- |
-| `cursor` | Rules, skills, agents and commands inside the IDE          |
-| `claude` | The same setup for Claude Code sessions, linked not copied |
-| `codex`  | Reads the shared source directly; nothing extra to install |
+| Provider | Value                                                                       |
+| -------- | --------------------------------------------------------------------------- |
+| `cursor` | Rules, skills, agents and commands inside the IDE                           |
+| `claude` | The same setup for Claude Code sessions, linked not copied                  |
+| `codex`  | Reads the shared source directly; nothing extra to install                  |
 | `muse`   | Native marked files in `.agents/agents`; kit/unmarked files stay the source |
 
 - **Wired:** cursor, claude (example)
