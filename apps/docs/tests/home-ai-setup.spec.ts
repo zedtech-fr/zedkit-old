@@ -44,7 +44,7 @@ test.describe("home AI setup section", () => {
     const response = await page.goto("/docs/ai/setup", { waitUntil: "networkidle" });
     expect(response?.status()).toBe(200);
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Set up zedkit AI in");
-    await expect(page.locator('h1 [data-word-roll]')).toBeVisible();
+    await expect(page.locator("h1 [data-slot='word-roll']")).toBeVisible();
     await expect(page.getByText("Give your coding agent one prompt to set up ZedKit AI in your project.")).toBeVisible();
     await expect(page.locator("[data-slot='text'] p")).toHaveCount(0);
   });
