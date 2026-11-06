@@ -5,7 +5,7 @@ import { tryCatch } from "@zedtech/zedkit-core";
 import type { Action } from "./install.js";
 import { hasMarker } from "./generate.js";
 import { loadPolicy } from "./route.js";
-import { availabilityOf, resolvedAgentText, syncAgents } from "./sync.js";
+import { availabilityOf, resolvedAgentText, sourceNames, syncAgents } from "./sync.js";
 import { adoptRel, kitDir, kitUniverse, readManifest } from "./kit.js";
 import { parseFrontmatter } from "./frontmatter.js";
 import { HEADER_KEYS, KIT_HEADERS, SIDECAR, parseAgentHeader, readSidecar } from "./agent-header.js";
@@ -514,7 +514,9 @@ function checkGenerated(projectRoot: string, source: string, issues: Issue[]): v
   const actions: Action[] = [];
   const names = (dir: string): string[] =>
     isRealDir(join(source, dir)) ? mdFiles(join(source, dir)).map((f) => f.slice(0, -3)) : [];
-  const agentNames = names("agents");
+  // readdir follows a kit dir-symlink; isRealDir does not, and empty names
+  // make every generated Cursor file look like "source agent removed".
+  const agentNames = sourceNames(source) ?? names("agents");
   const avail = availabilityOf(source, agentNames);
   syncAgents(
     {

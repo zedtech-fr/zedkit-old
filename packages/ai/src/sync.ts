@@ -103,7 +103,7 @@ function infer(dest: string): string[] {
 
 const MARKER_SOURCE = /\.agents\/agents\/([^./]+)\.md/;
 
-function sourceNames(agentsDir: string): string[] | undefined {
+export function sourceNames(agentsDir: string): string[] | undefined {
   const dir = join(agentsDir, "agents");
   const entries = tryCatch(() => readdirSync(dir));
   if (!entries.ok) return undefined;

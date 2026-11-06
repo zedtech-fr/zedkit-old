@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, symlinkSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, symlinkSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { installKit } from "#install.js";
@@ -426,6 +426,19 @@ describe("validateKit", () => {
     const root = tempDir();
     put(root, "agents/beta.md", '---\nname: beta\ndescription: "Use when: needed"\n---\n');
     expect(validateKit(root)).toEqual([]);
+  });
+
+  it("does not treat a kit dir-symlink as missing sources for generated Cursor files", () => {
+    const dest = tempDir();
+    const installed = installKit({ dest, preset: "starter", providers: ["cursor"] });
+    if (!installed.ok) throw installed.error;
+    const agents = join(dest, ".agents", "agents");
+    rmSync(agents, { recursive: true, force: true });
+    symlinkSync(join(kitDir(), "agents"), agents);
+    const synced = syncKit({ dest, providers: ["cursor"] });
+    if (!synced.ok) throw synced.error;
+    const found = checkDrift(dest, join(dest, ".agents")).map((i) => i.message);
+    expect(found.filter((m) => m.includes("source agent removed"))).toEqual([]);
   });
 
   it("reports missing and drifted provider copies", () => {
