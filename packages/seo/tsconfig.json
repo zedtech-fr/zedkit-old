@@ -4,6 +4,7 @@
     "lib": ["ES2022", "DOM"],
     "outDir": "dist",
     "rootDir": "src",
+    "tsBuildInfoFile": "dist/.tsbuildinfo",
     "composite": true
   },
   "include": ["src"]
