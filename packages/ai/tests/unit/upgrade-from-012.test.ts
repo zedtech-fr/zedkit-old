@@ -78,6 +78,7 @@ describe("Upgrading from 0.12 (README contract)", () => {
     expect(readFileSync(join(dest, ".agents/personas.kit.md"), "utf8")).toContain("# Project personas (v2)");
 
     expect(existsSync(join(dest, ".agents/skills/zk-review/SKILL.md"))).toBe(true);
+    expect(readFileSync(join(dest, ".agents/skills/zk-review/SKILL.md"), "utf8")).toContain("\nname: zk-review\n");
     expect(readFileSync(join(dest, ".agents/skills/review/SKILL.md"), "utf8")).toBe(before[".agents/skills/review/SKILL.md"]);
 
     expect(existsSync(join(dest, ".cursor/agents/explorer.kit.md"))).toBe(true);
