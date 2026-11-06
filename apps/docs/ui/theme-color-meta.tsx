@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 import { useTheme } from "next-themes";
 
 /** The colour people actually see behind the page (docs shell or kit background). */
@@ -18,7 +18,7 @@ function readThemeColor(): string {
 export function ThemeColorMeta() {
   const { resolvedTheme } = useTheme();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = document.documentElement;
     function sync() {
       const color = readThemeColor();

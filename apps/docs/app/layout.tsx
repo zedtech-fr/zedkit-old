@@ -5,6 +5,7 @@ import { rootLayoutCopy } from "@/app/i18n/root-layout-copy";
 import { docsPageMetadata } from "@/lib/docs-metadata";
 import { docsSite, homePage } from "@/lib/site";
 import { DEFAULT_IDENTITY } from "@/lib/default-identity";
+import { DOCS_THEME_COLOR_DARK, DOCS_THEME_COLOR_LIGHT } from "@/lib/docs-theme-color";
 import {
   DOCS_SITE_IDENTITY_OPT_IN_KEY,
   DOCS_SITE_IDENTITY_STORAGE_KEY,
@@ -49,6 +50,8 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" data-docs-shell suppressHydrationWarning>
       <head>
+        <meta name="theme-color" media="(prefers-color-scheme: light)" content={DOCS_THEME_COLOR_LIGHT} />
+        <meta name="theme-color" media="(prefers-color-scheme: dark)" content={DOCS_THEME_COLOR_DARK} />
         <IdentityScript
           defaultIdentity={DEFAULT_IDENTITY}
           storageKey={DOCS_SITE_IDENTITY_STORAGE_KEY}

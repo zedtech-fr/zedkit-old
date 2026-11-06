@@ -70,6 +70,14 @@ export function checkLlmsFull(text) {
   return errors;
 }
 
+export function checkThemeColor(html, label) {
+  const errors = [];
+  if (!/name=["']theme-color["']/.test(html)) {
+    errors.push(`${label}: missing theme-color meta`);
+  }
+  return errors;
+}
+
 export function checkMeta(html, label, canonicalHref, base, { requireJsonLd = true } = {}) {
   const errors = [];
   if (!html.includes('rel="canonical"')) {
@@ -210,6 +218,7 @@ function main() {
   if (homePath) {
     const html = readFileSync(homePath, "utf8");
     errors.push(...checkMeta(html, "index.html", `${base}/`, base));
+    errors.push(...checkThemeColor(html, "index.html"));
     errors.push(...checkSiteShell(html, "index.html", footerSpecs));
   }
 

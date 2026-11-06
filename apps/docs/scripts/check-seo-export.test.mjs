@@ -11,6 +11,7 @@ import {
   checkRobots,
   checkSitemap,
   checkSiteShell,
+  checkThemeColor,
   missingRegistryExports,
 } from "./check-seo-export.mjs";
 
@@ -112,6 +113,11 @@ test("checkNotFound requires noindex and forbids JSON-LD", () => {
   assert.deepEqual(checkNotFound('content="noindex"><script type="application/ld+json">'), [
     "404.html: must not ship indexable JSON-LD",
   ]);
+});
+
+test("checkThemeColor requires a static theme-color meta", () => {
+  assert.deepEqual(checkThemeColor('<meta name="theme-color" content="#f5f5f5">', "index.html"), []);
+  assert.deepEqual(checkThemeColor("<html></html>", "index.html"), ["index.html: missing theme-color meta"]);
 });
 
 test("checkSiteShell is silent when footer text, footer hrefs and /docs are present", () => {

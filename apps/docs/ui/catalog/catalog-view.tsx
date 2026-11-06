@@ -9,6 +9,7 @@ import type { CatalogArea, CatalogIndexEntry } from "@/content/catalog-index";
 import { AREAS } from "@/ui/catalog/catalog-filter-constants";
 import { CatalogFiltersToolbar, catalogResultsStatusLine } from "@/ui/catalog/catalog-filters";
 import { catalogCopy } from "@/ui/catalog/i18n/catalog-copy";
+import { catalogFilterQuery, shouldApplyCatalogUrl } from "@/ui/catalog/catalog-url-sync.mjs";
 
 const CatalogResultsBodyLazy = dynamic(
   () => import("@/ui/catalog/catalog-results").then((mod) => ({ default: mod.CatalogResultsBody })),
@@ -109,19 +110,46 @@ export function CatalogViewFromUrl({ entries }: { entries: CatalogIndexEntry[] }
   const filtersRef = useRef(filters);
   filtersRef.current = filters;
   const qDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastPushedQueryRef = useRef<string | null>(null);
+  const recentPushedRef = useRef<string[]>([]);
+  const fromHistoryRef = useRef(false);
+
+  useEffect(() => {
+    const onPopState = () => {
+      fromHistoryRef.current = true;
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   useEffect(() => {
     const next = readFilter(new URLSearchParams(searchParams.toString()), entries);
+    const incoming = catalogFilterQuery(next);
+    const fromHistory = fromHistoryRef.current;
+    fromHistoryRef.current = false;
+    if (
+      !shouldApplyCatalogUrl(incoming, {
+        lastPushedQuery: lastPushedQueryRef.current,
+        recentPushedQueries: recentPushedRef.current,
+        fromHistory,
+      })
+    ) {
+      return;
+    }
+    if (qDebounceRef.current) {
+      clearTimeout(qDebounceRef.current);
+      qDebounceRef.current = null;
+    }
+    lastPushedQueryRef.current = incoming;
+    recentPushedRef.current = [incoming];
     filtersRef.current = next;
     setFilterState(next);
   }, [entries, searchParams]);
 
   function pushFilterUrl(parsed: ReturnType<typeof readFilter>) {
-    const params = new URLSearchParams();
-    if (parsed.area !== "all") params.set("area", parsed.area);
-    if (parsed.status !== "all") params.set("status", parsed.status);
-    if (parsed.q) params.set("q", parsed.q);
-    const query = params.toString();
+    const query = catalogFilterQuery(parsed);
+    lastPushedQueryRef.current = query;
+    recentPushedRef.current = [...recentPushedRef.current, query].slice(-8);
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }
 
