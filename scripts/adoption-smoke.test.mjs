@@ -4,7 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
-import { localizeCommand, packedTarball, pinVersion, runLocalized } from "./adoption-smoke.mjs";
+import { commandsFromPlan, shownInstallCommands } from "../apps/docs/lib/adoption-shown-commands.mjs";
+import { CASES, localizeCommand, packedTarball, pinVersion, runLocalized } from "./adoption-smoke.mjs";
 
 const MARKER = "pwned-adoption-smoke";
 const HOSTILE = `reg with spaces'" ; touch ${MARKER}; echo $(touch ${MARKER}-cmd)`;
@@ -31,6 +32,31 @@ test("pinVersion accepts a version or dist-tag and rejects shell metacharacters"
   for (const raw of ["4.22.1; rm -rf /", "$(touch x)", "4.22.1 rc", `4.22.1"$(id)"`, "1.0.0+build", ""]) {
     assert.throws(() => pinVersion(raw, "SHADCN_VERSION"), /version or dist-tag/);
   }
+});
+
+test("localizeCommand tokenizes every current shown command and rejects shell lists", () => {
+  const root = join(import.meta.dirname, "..");
+  const commands = new Set(shownInstallCommands(root));
+  for (const spec of Object.values(CASES)) {
+    if (spec.plan && spec.mode) {
+      for (const command of commandsFromPlan(spec.plan(), spec.mode)) commands.add(command);
+    }
+  }
+  assert.ok(commands.size > 0);
+  for (const command of commands) {
+    const tokens = localizeCommand(command);
+    const original = command.trim().split(/\s+/);
+    assert.equal(tokens[0], original[0], command);
+    assert.equal(tokens.length >= original.length, true, command);
+    for (let i = 0; i < original.length; i += 1) {
+      if (original[i].startsWith("shadcn@latest")) continue;
+      if (original[i].includes("https://zedkit.app/r/")) continue;
+      assert.equal(tokens[i], original[i], `${command} token ${i}`);
+    }
+  }
+  assert.throws(() => localizeCommand("pnpm add @zedtech/zedkit-ui && rm -rf /"), /shell syntax/);
+  assert.throws(() => localizeCommand("pnpm add foo | tee"), /shell syntax/);
+  assert.throws(() => localizeCommand("pnpm add 'foo bar'"), /shell syntax/);
 });
 
 test("localizeCommand keeps a registry path with spaces, quotes and metacharacters as one argv element", () => {

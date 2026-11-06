@@ -167,7 +167,13 @@ export function packedTarball(dir) {
 export function localizeCommand(commandText, { registryDir, shadcnVersion } = {}) {
   const dir = registryDir ?? REGISTRY_DIR;
   const pinned = pinVersion(shadcnVersion ?? SHADCN, "SHADCN_VERSION");
-  const tokens = commandText.trim().split(/\s+/).map((token) => {
+  const trimmed = commandText.trim();
+  // Whitespace split is not a shell: pipes, quotes and substitution would be silently
+  // passed as arguments. Current shown commands have none of these.
+  if (/[|&;<>()`'"\\*?\n]/.test(trimmed) || trimmed.includes("$")) {
+    throw new Error(`shown command uses shell syntax that argv cannot run: ${JSON.stringify(commandText)}`);
+  }
+  const tokens = trimmed.split(/\s+/).filter(Boolean).map((token) => {
     if (token.includes(SITE_REGISTRY)) return token.replaceAll(SITE_REGISTRY, `${dir}/`);
     if (token.startsWith("shadcn@latest")) return `shadcn@${pinned}${token.slice("shadcn@latest".length)}`;
     return token;
