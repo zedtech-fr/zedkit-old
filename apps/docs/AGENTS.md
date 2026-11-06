@@ -63,7 +63,9 @@ reject dead `/r/<name>.json` links.
   pnpm --filter @zedtech/zedkit-docs run smoke              # or run e2e
   ```
 
-  CI splits `e2e` in three (`DOCS_E2E_SHARD=1..3`, `DOCS_E2E_SHARD_TOTAL=3`).
+  CI builds that export once (`docs-build`) and Playwright jobs download
+  `apps/docs/out`. It splits `e2e` in three (`DOCS_E2E_SHARD=1..3`,
+  `DOCS_E2E_SHARD_TOTAL=3`).
   A new spec must be listed in the `smoke` or `e2e` script
   (`scripts/check-e2e-registered.sh`). Screenshots land in `test-results/`.
 - Done = gates green + manifest/check in sync + examined screenshots
