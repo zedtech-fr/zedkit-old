@@ -2,6 +2,9 @@
 import { existsSync, lstatSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative, sep } from "node:path";
 import { tryCatch } from "@zedtech/zedkit-core";
+import type { Action } from "./install.js";
+import { loadPolicy } from "./route.js";
+import { syncAgents } from "./sync.js";
 import { adoptRel, kitDir, kitUniverse, readManifest } from "./kit.js";
 import { parseFrontmatter } from "./frontmatter.js";
 import { HEADER_KEYS, KIT_HEADERS, SIDECAR, parseAgentHeader, readSidecar } from "./agent-header.js";
@@ -474,9 +477,63 @@ function layerWired(projectRoot: string, layer: string): boolean {
   return ["skills", "agents", "commands"].some((kind) => linkState(join(projectRoot, layer, kind)) !== "missing");
 }
 
+// Agents (both tools) and Cursor commands are written by `syncAgents`, so the
+// check is a dry run of it: whatever it would change is drift. Nothing it
+// reports asks to overwrite a user file; a file that is not ours stays and
+// only its generated sidecar can be missing.
+const SYNC_HINT = "run: npx zedkit-ai sync";
+
+function driftMessage(action: Action): string {
+  const note = action.note ?? "";
+  if (action.kind === "generate" || action.kind === "link") {
+    if (note.includes("replaces a copy of the kit")) return `stale copy of the kit, ${SYNC_HINT}`;
+    if (note.includes("replaces a link to the source")) return `link to the source, ${SYNC_HINT} to generate the file`;
+    if (note.includes("kit version beside your")) return `user file kept; ${SYNC_HINT} to write the kit version beside it`;
+    if (note.includes("regenerated")) return `out of date, ${SYNC_HINT}`;
+    return `missing, ${SYNC_HINT}`;
+  }
+  if (action.kind === "convert") return `link to .agents/agents, ${SYNC_HINT} to generate the files`;
+  return `${note || "generated file with no source"}, ${SYNC_HINT}`;
+}
+
+function checkGenerated(projectRoot: string, source: string, issues: Issue[]): void {
+  const providers = [".cursor", ".claude"]
+    .filter((layer) => layerWired(projectRoot, layer))
+    .map((layer) => layer.slice(1));
+  if (providers.length === 0) return;
+  // A policy that does not parse is reported by the policy check, not here.
+  const policy = loadPolicy(source);
+  if (!policy.ok) return;
+  const actions: Action[] = [];
+  const names = (dir: string): string[] =>
+    isRealDir(join(source, dir)) ? mdFiles(join(source, dir)).map((f) => f.slice(0, -3)) : [];
+  syncAgents(
+    {
+      dest: projectRoot,
+      write: false,
+      providers,
+      policy: policy.value,
+      agentsDir: source,
+      names: names("agents"),
+      commands: {
+        names: names("commands"),
+        source: (name) => {
+          const text = tryCatch(() => read(join(source, "commands", `${name}.md`)));
+          return text.ok ? text.value : undefined;
+        },
+      },
+      source: (name) => read(join(source, "agents", `${name}.md`)),
+    },
+    actions,
+  );
+  for (const action of actions.filter((a) => a.kind !== "skip")) {
+    issues.push({ path: action.path, message: driftMessage(action) });
+  }
+}
+
 function checkClaudeLayer(projectRoot: string, source: string, issues: Issue[]): void {
   if (!existsSync(join(projectRoot, ".claude")) || !layerWired(projectRoot, ".claude")) return;
-  for (const kind of ["skills", "agents", "commands"]) {
+  for (const kind of ["skills", "commands"]) {
     const entry = join(projectRoot, ".claude", kind);
     if (linkState(entry) === "missing") {
       issues.push({
@@ -487,7 +544,7 @@ function checkClaudeLayer(projectRoot: string, source: string, issues: Issue[]):
       checkDanglingLink(projectRoot, entry, issues);
     }
   }
-  checkLayerCopies(projectRoot, source, ".claude", "agents", issues);
+  checkDanglingLink(projectRoot, join(projectRoot, ".claude", "agents"), issues);
   checkLayerCopies(projectRoot, source, ".claude", "commands", issues);
   checkLayerSkills(projectRoot, source, ".claude", issues);
   const pointer = join(projectRoot, "CLAUDE.md");
@@ -521,8 +578,7 @@ function checkClaudeLayer(projectRoot: string, source: string, issues: Issue[]):
 export function checkDrift(projectRoot: string, source: string): Issue[] {
   const run = tryCatch(() => {
     const issues: Issue[] = [];
-    checkLayerCopies(projectRoot, source, ".cursor", "agents", issues);
-    checkLayerCopies(projectRoot, source, ".cursor", "commands", issues);
+    checkGenerated(projectRoot, source, issues);
     checkDanglingLink(projectRoot, join(projectRoot, ".cursor", "skills"), issues);
     checkLayerSkills(projectRoot, source, ".cursor", issues);
     checkClaudeLayer(projectRoot, source, issues);

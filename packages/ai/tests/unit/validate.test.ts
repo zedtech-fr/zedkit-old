@@ -2,6 +2,7 @@ import { mkdirSync, readFileSync, symlinkSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { installKit } from "#install.js";
+import { syncKit } from "#sync.js";
 import { checkDrift, checkKitDocs, checkPlaceholders, validateKit } from "#validate.js";
 import { kitDir } from "#kit.js";
 import { AGENT, COMMAND, put, SKILL, tempDir } from "./helpers.js";
@@ -435,10 +436,8 @@ describe("validateKit", () => {
     put(root, ".cursor/commands/run.md", COMMAND("alpha", "Edited."));
     put(root, ".cursor/agents/mine.md", "mine\n");
     const found = checkDrift(root, join(root, ".agents")).map((i) => `${i.path}: ${i.message}`);
-    expect(found).toContainEqual(expect.stringContaining("copy missing"));
-    expect(found.some((m) => m.includes("copy missing") && m.includes("beta.md"))).toBe(true);
-    expect(found).toContainEqual(expect.stringContaining("differs from"));
-    expect(found.some((m) => m.includes("differs from") && m.includes("run.md"))).toBe(true);
+    expect(found.some((m) => m.includes(".cursor/agents/beta.md") && m.includes("missing, run: npx zedkit-ai sync"))).toBe(true);
+    expect(found.some((m) => m.includes("run.kit.md") && m.includes("user file kept") && m.includes("npx zedkit-ai sync"))).toBe(true);
     expect(found.some((m) => m.includes("copy it over"))).toBe(false);
     expect(found.some((m) => m.includes("mine.md"))).toBe(false);
   });
@@ -461,7 +460,12 @@ describe("validateKit", () => {
     const root = tempDir();
     put(root, ".agents/agents/beta.md", AGENT("beta"));
     put(root, ".cursor/agents/beta.md", "mine\n");
-    put(root, ".cursor/agents/beta.kit.md", AGENT("beta"));
+    expect(checkDrift(root, join(root, ".agents")).map((i) => i.message)).toEqual([
+      expect.stringContaining("user file kept; run: npx zedkit-ai sync"),
+    ]);
+    const synced = syncKit({ dest: root, providers: ["cursor"] });
+    if (!synced.ok) throw synced.error;
+    expect(readFileSync(join(root, ".cursor/agents/beta.md"), "utf8")).toBe("mine\n");
     expect(checkDrift(root, join(root, ".agents"))).toEqual([]);
   });
 
@@ -555,8 +559,7 @@ describe("validateKit", () => {
     put(root, ".agents/agents/beta.md", AGENT("beta"));
     put(root, ".claude/agents/beta.md", "edited\n");
     const found = checkDrift(root, agents).map((i) => `${i.path}: ${i.message}`);
-    expect(found).toContainEqual(expect.stringContaining("differs from"));
-    expect(found).toContainEqual(expect.stringContaining("user copy kept"));
+    expect(found).toContainEqual(expect.stringContaining("user file kept; run: npx zedkit-ai sync"));
     expect(found.some((m) => /copy it over|overwrite/i.test(m))).toBe(false);
   });
 

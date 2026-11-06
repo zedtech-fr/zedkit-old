@@ -6,16 +6,19 @@ import {
   readFileSync,
   readlinkSync,
   rmSync,
+  symlinkSync,
   unlinkSync,
   writeFileSync,
 } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { err, ok, tryCatch, type Result } from "@zedtech/zedkit-core";
 import { generateAgent, hasMarker } from "./generate.js";
 import { ALL_PROVIDERS, type Action } from "./install.js";
 import { adoptRel } from "./kit.js";
+import { isKitCopy } from "./legacy.js";
 import { isGenerated, PROVIDER_KEYS } from "./provider-keys.js";
 import { loadAgent, loadPolicy, resolveRoute } from "./route.js";
+import type { Tokenomics } from "./tokenomics.js";
 
 export type SyncOptions = {
   /** Project directory (the one that holds `.agents/`). */
@@ -75,6 +78,12 @@ function sourceNames(agentsDir: string): string[] | undefined {
     .sort();
 }
 
+function commandNames(agentsDir: string): string[] {
+  const entries = tryCatch(() => readdirSync(join(agentsDir, "commands")));
+  if (!entries.ok) return [];
+  return entries.value.filter((f) => f.endsWith(".md") && !f.endsWith(KIT_SUFFIX)).map((f) => f.slice(0, -3)).sort();
+}
+
 function put(ctx: Ctx, kind: Action["kind"], rel: string, note?: string, text?: string): void {
   ctx.actions.push({ kind, path: rel, ...(note !== undefined && { note }) });
   if (!ctx.write || text === undefined) return;
@@ -111,8 +120,8 @@ function syncFile(ctx: Ctx, rel: string, name: string, source: string, text: str
     else put(ctx, "generate", rel, `regenerated${suffix}`, text);
     return;
   }
-  if (current !== undefined && current.replace(/\r\n/g, "\n") === source.replace(/\r\n/g, "\n")) {
-    put(ctx, "generate", rel, `replaces a copy of the source${suffix}`, text);
+  if (current !== undefined && isKitCopy("agents", name, current, source)) {
+    put(ctx, "generate", rel, `replaces a copy of the kit${suffix}`, text);
     return;
   }
   // A file the user owns: keep it, offer the generated version beside it.
@@ -140,6 +149,17 @@ function pruneOrphans(ctx: Ctx, dirRel: string, names: ReadonlySet<string>, allM
   }
 }
 
+// A provider layer that is a link (`.cursor -> .agents` in a repo that keeps
+// one source) would make a write land in the source itself; a file in its
+// place cannot hold anything. Either way, leave it.
+function layerBlocked(ctx: Ctx, dirRel: string): boolean {
+  const layer = dirname(dirRel);
+  const stat = lstatOf(join(ctx.dest, layer));
+  if (stat === undefined || (stat.isDirectory() && !stat.isSymbolicLink())) return false;
+  skip(ctx, layer, stat.isSymbolicLink() ? "link left alone: writing through it would change its target" : "not a directory");
+  return true;
+}
+
 // The directory a provider's agents go in. A link the kit made earlier
 // (`.claude/agents -> ../.agents/agents`) becomes a real directory; any other
 // link is not ours to touch.
@@ -164,13 +184,142 @@ function prepareDir(ctx: Ctx, dirRel: string): "ready" | "blocked" {
   return "ready";
 }
 
+function makeLink(ctx: Ctx, rel: string, target: string, note: string): void {
+  ctx.actions.push({ kind: "link", path: rel, note: `${target}; ${note}` });
+  if (!ctx.write) return;
+  const full = join(ctx.dest, rel);
+  mkdirSync(join(full, ".."), { recursive: true });
+  if (lstatOf(full)) unlinkSync(full);
+  symlinkSync(target, full);
+}
+
+const COMMAND_LINK = /^\.\.\/\.\.\/\.agents\/commands\/(.+)\.md$/;
+
+// Cursor reads commands as plain files, so each one is a link to the source:
+// the same bytes, nothing to go stale. A copy of the kit becomes the link, a
+// file of the user's stays and the link goes beside it as `<name>.kit.md`,
+// and a link to a command that no longer exists is removed.
+function syncCommands(ctx: Ctx, names: readonly string[], source: (name: string) => string | undefined, noPrune: boolean): void {
+  const dirRel = join(".cursor", "commands");
+  if (layerBlocked(ctx, dirRel)) return;
+  const dir = lstatOf(join(ctx.dest, dirRel));
+  if (dir !== undefined && (dir.isSymbolicLink() || !dir.isDirectory())) {
+    skip(ctx, dirRel, dir.isSymbolicLink() ? "directory link left alone" : "not a directory");
+    return;
+  }
+  const known = new Set(names);
+  for (const name of names) {
+    const rel = join(dirRel, `${name}.md`);
+    const target = `../../.agents/commands/${name}.md`;
+    const full = join(ctx.dest, rel);
+    const stat = lstatOf(full);
+    if (stat === undefined) {
+      makeLink(ctx, rel, target, "new");
+    } else if (stat.isSymbolicLink()) {
+      const now = tryCatch(() => readlinkSync(full));
+      if (now.ok && now.value === target) skip(ctx, rel, "up to date");
+      else skip(ctx, rel, `user link kept (${now.ok ? now.value : "?"})`);
+    } else if (stat.isFile()) {
+      const text = readText(full) ?? "";
+      if (isKitCopy("commands", name, text, source(name))) {
+        makeLink(ctx, rel, target, "replaces a copy of the kit");
+      } else {
+        const beside = adoptRel(rel);
+        skip(ctx, rel, `kept user file; link -> ${beside}`);
+        if (lstatOf(join(ctx.dest, beside)) === undefined) makeLink(ctx, beside, target, `kit version beside your ${rel}`);
+        else skip(ctx, beside, "up to date");
+      }
+    } else {
+      skip(ctx, rel, "not a file");
+    }
+  }
+  if (noPrune || dir === undefined) return;
+  const entries = tryCatch(() => readdirSync(join(ctx.dest, dirRel)));
+  for (const file of entries.ok ? entries.value.sort() : []) {
+    const full = join(ctx.dest, dirRel, file);
+    if (!lstatOf(full)?.isSymbolicLink()) continue;
+    const now = tryCatch(() => readlinkSync(full));
+    const base = now.ok ? COMMAND_LINK.exec(now.value)?.[1] : undefined;
+    if (base === undefined || known.has(base) || file !== `${base}.md` && file !== `${base}.kit.md`) continue;
+    if (ctx.write) unlinkSync(full);
+    ctx.actions.push({ kind: "prune", path: join(dirRel, file), note: "source command removed" });
+  }
+}
+
+/** What `syncAgents` works from; `installKit` and `syncKit` both fill it in. */
+export type AgentSync = {
+  dest: string;
+  /** False reports the actions and writes nothing. */
+  write: boolean;
+  providers: readonly string[];
+  policy: Tokenomics;
+  /** The project's `.agents` directory (for the agent headers in `agents.meta.json`). */
+  agentsDir: string;
+  /** Agent names, without `.md`. */
+  names: readonly string[];
+  /** The source text of an agent as the project holds it (or will hold it). */
+  source: (name: string) => string | undefined;
+  /** Command names and sources, for the Cursor links; omitted: commands are left alone. */
+  commands?: { names: readonly string[]; source: (name: string) => string | undefined } | undefined;
+  /** Throw on a source that cannot be generated from instead of skipping it with a note. */
+  strict?: boolean | undefined;
+  prune?: boolean | undefined;
+  noPrune?: boolean | undefined;
+};
+
+/** The generating half of `syncKit`: appends what it did (or would do) to `actions`. Throws on a source it cannot generate from. */
+export function syncAgents(input: AgentSync, actions: Action[]): void {
+  const ctx: Ctx = { dest: input.dest, write: input.write, actions };
+  const known = new Set(input.names);
+  for (const provider of input.providers) {
+    const keys = PROVIDER_KEYS[provider];
+    if (!isGenerated(provider) || keys?.agentsDir === undefined) {
+      skip(ctx, `.agents/agents`, keys?.note ?? `${provider}: nothing to generate`);
+      continue;
+    }
+    const dirRel = keys.agentsDir;
+    if (layerBlocked(ctx, dirRel) || prepareDir(ctx, dirRel) === "blocked") continue;
+    for (const name of input.names) {
+      const agent = loadAgent(input.agentsDir, name);
+      if (!agent.ok) {
+        skip(ctx, join(dirRel, `${name}.md`), `not synced: ${agent.error.message}`);
+        continue;
+      }
+      const route = resolveRoute(input.policy, { stakes: "standard", agent: agent.value, provider });
+      if (!route.ok) throw new Error(`${name}: ${route.error.message}`);
+      const source = input.source(name) ?? "";
+      const made = generateAgent({ name, source, model: route.value.model });
+      if (!made.ok) {
+        if (input.strict === true) throw made.error;
+        skip(ctx, join(dirRel, `${name}.md`), `not synced: ${made.error.message}`);
+        continue;
+      }
+      syncFile(ctx, join(dirRel, `${name}.md`), name, source, made.value.text, made.value.notes);
+    }
+    if (input.noPrune !== true) pruneOrphans(ctx, dirRel, known, false);
+    skip(ctx, dirRel, keys.note);
+    if (provider === "cursor" && input.commands !== undefined) {
+      syncCommands(ctx, input.commands.names, input.commands.source, input.noPrune === true);
+    }
+  }
+  if (input.providers.includes("cursor") && input.providers.includes("claude")) {
+    skip(ctx, ".claude/agents", "cursor reads .cursor/agents before .claude/agents and lists a name once (checked 2026-11-05)");
+  }
+  if (input.prune === true) {
+    for (const provider of ["cursor", "claude"]) {
+      const dirRel = PROVIDER_KEYS[provider]?.agentsDir;
+      if (dirRel !== undefined && !input.providers.includes(provider)) pruneOrphans(ctx, dirRel, known, true);
+    }
+  }
+}
+
 /**
  * Write each tool's agent files from `.agents/agents` and `.agents/tokenomics.md`.
  * Cursor and Claude get a generated copy per agent with `model` set from the
  * route of the agent's default kind at `standard` stakes (a call with another
  * kind or needs routes at spawn time); Codex and Muse read `.agents/agents`
  * directly and get a note. A file that carries the marker is regenerated, a
- * copy of the source is replaced, anything else is kept and the generated
+ * copy of the kit is replaced, anything else is kept and the generated
  * version goes beside it as `<name>.kit.md`. Returns what happened (or, with
  * `check` or `dryRun`, what would). A second run reports only `skip`.
  */
@@ -187,46 +336,29 @@ export function syncKit(options: SyncOptions): Result<Action[]> {
   if (unknown !== undefined) return err(new Error(`unknown provider "${unknown}" (cursor, claude, codex, muse, all)`));
   const policy = loadPolicy(agentsDir);
   if (!policy.ok) return err(policy.error);
-
-  const ctx: Ctx = { dest: options.dest, write: options.check !== true && options.dryRun !== true, actions: [] };
-  const run = tryCatch(() => {
-    const known = new Set(names);
-    for (const provider of providers) {
-      const keys = PROVIDER_KEYS[provider];
-      if (!isGenerated(provider) || keys?.agentsDir === undefined) {
-        skip(ctx, `.agents/agents`, keys?.note ?? `${provider}: nothing to generate`);
-        continue;
-      }
-      const dirRel = keys.agentsDir;
-      if (prepareDir(ctx, dirRel) === "blocked") continue;
-      for (const name of names) {
-        const agent = loadAgent(agentsDir, name);
-        if (!agent.ok) {
-          skip(ctx, join(dirRel, `${name}.md`), `not synced: ${agent.error.message}`);
-          continue;
-        }
-        const route = resolveRoute(policy.value, { stakes: "standard", agent: agent.value, provider });
-        if (!route.ok) throw new Error(`${name}: ${route.error.message}`);
-        const source = readText(join(agentsDir, "agents", `${name}.md`)) ?? "";
-        const made = generateAgent({ name, source, model: route.value.model });
-        if (!made.ok) throw made.error;
-        syncFile(ctx, join(dirRel, `${name}.md`), name, source, made.value.text, made.value.notes);
-      }
-      if (options.noPrune !== true) pruneOrphans(ctx, dirRel, known, false);
-      skip(ctx, dirRel, keys.note);
-    }
-    if (providers.includes("cursor") && providers.includes("claude")) {
-      skip(ctx, ".claude/agents", "cursor reads .cursor/agents before .claude/agents and lists a name once (checked 2026-11-05)");
-    }
-    if (options.prune === true) {
-      for (const provider of ["cursor", "claude"]) {
-        const dirRel = PROVIDER_KEYS[provider]?.agentsDir;
-        if (dirRel !== undefined && !providers.includes(provider)) pruneOrphans(ctx, dirRel, known, true);
-      }
-    }
-  });
-  if (!run.ok) return err(run.error);
-  return ok(ctx.actions);
+  const actions: Action[] = [];
+  const run = tryCatch(() =>
+    syncAgents(
+      {
+        dest: options.dest,
+        write: options.check !== true && options.dryRun !== true,
+        providers,
+        policy: policy.value,
+        agentsDir,
+        names,
+        source: (name) => readText(join(agentsDir, "agents", `${name}.md`)),
+        commands: {
+          names: commandNames(agentsDir),
+          source: (name) => readText(join(agentsDir, "commands", `${name}.md`)),
+        },
+        strict: true,
+        prune: options.prune,
+        noPrune: options.noPrune,
+      },
+      actions,
+    ),
+  );
+  return run.ok ? ok(actions) : err(run.error);
 }
 
 /** True when `syncKit` found nothing to change: every action is a `skip`. */

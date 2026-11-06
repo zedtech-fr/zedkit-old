@@ -153,7 +153,7 @@ describe("syncKit: never overwrite user work", () => {
     const root = project();
     put(root, ".cursor/agents/plain.md", read(root, ".agents/agents/plain.md"));
     const actions = sync(root, { providers: ["cursor"] });
-    expect(actions.find((a) => a.path === ".cursor/agents/plain.md")).toMatchObject({ kind: "generate", note: "replaces a copy of the source" });
+    expect(actions.find((a) => a.path === ".cursor/agents/plain.md")).toMatchObject({ kind: "generate", note: "replaces a copy of the kit" });
     expect(hasMarker(read(root, ".cursor/agents/plain.md"))).toBe(true);
   });
 

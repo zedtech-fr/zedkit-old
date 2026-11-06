@@ -169,8 +169,8 @@ One shared source (`.agents/`), then a thin layer per provider:
 
 | Provider | Layer | Reads |
 |---|---|---|
-| `cursor` | `.cursor/rules/project.mdc`, `.cursor/skills` link (or per-skill links if that path is already a real directory), agents and commands as real-file copies | its `.cursor/` layer |
-| `claude` | `CLAUDE.md` link, `.claude/{skills,agents,commands}` links (per-skill links and file copies when those paths are already real directories) | its `.claude/` layer |
+| `cursor` | `.cursor/rules/project.mdc`, `.cursor/skills` link (or per-skill links if that path is already a real directory), generated agent files, one link per command | its `.cursor/` layer |
+| `claude` | `CLAUDE.md` link, `.claude/{skills,commands}` links (per-skill links and file copies when those paths are already real directories), generated agent files in a real `.claude/agents` | its `.claude/` layer |
 | `codex` | none | `AGENTS.md` and `.agents/skills` directly |
 | `muse` | none | `.agents/` directly |
 
@@ -179,10 +179,19 @@ clean, re-run a no-op, drift clean.
 
 Other provider ids with no install layer behave like `codex` (see `zedkit-ai init --help`).
 
-Cursor gets copies because a symlinked folder shows up empty there. Copies
-can drift when `.agents/` changes: `zedkit-ai validate` reports each missing
-or differing copy and never tells you to overwrite a user file. Re-run
-`init --adopt` to install a kit sidecar next to the user copy.
+Agents are written, not copied: each tool gets a generated file per agent
+with the `model` from `.agents/tokenomics.md` (see Tokenomics), and a marker
+on line 2. `init` and `setup` run the same code as `zedkit-ai sync`, so
+`sync` after a policy edit is the whole refresh. Cursor shows a symlinked
+folder as empty, so its commands are one link per file to
+`.agents/commands/<name>.md` (same bytes, nothing to go stale). A provider
+folder that is itself a link (for example `.cursor -> .agents`) is left
+alone, so a write never lands in the source. `zedkit-ai validate` reports
+each generated file that is missing or out of date, an old copy of a kit
+file (`stale copy of the kit, run: npx zedkit-ai sync`), and a user file
+that is kept while its generated version is not beside it yet; it never
+asks you to overwrite a user file. Moving from 0.x:
+[migration note](../../docs/migrations/zedkit-ai-tokenomics.md).
 `setup-ai` takes provider names (`setup-ai cursor claude`) and asks once
 which providers to wire when it cannot tell.
 
@@ -196,7 +205,7 @@ The kit ships the full policy (every `model` is `inherit`) and reads it from the
 
 Stakes ride on the task, not the agent. A ticket, plan or PR body carries `Stakes: trivial|standard|sensitive|critical` (a frontmatter key works too; `standard` when absent), optionally `Kind:` (how an agent is used in that step) and `Needs: reasoning=high, context=large`. Stakes only go up: `zedkit-ai stakes <file> --base <ref>` fails when the value is lower than at the ref, or higher without a `Stakes raised: a -> b: <reason>` line. `sensitive` makes a recorded review mandatory and runs the full lens set; `critical` also needs a second independent review and a `Human validation:` line, which `stakes` checks on a PR body file. The workflow skills `plan`, `implement`, `review`, `orchestrate`, `parallel-work` and `definition-of-done` set the stakes, route every spawn through `zedkit-ai route`, and apply the gate. A `check` call is read-only: the caller records `git status --porcelain` before and after and fails the step if it changed, which detects a write but does not prevent one. Checked 2026-11-05: Cursor lets a spawn override a named agent's model only with a slug from its own short list; the other tool tested ignores extra spawn arguments; neither restricts tools per call. Where the tool cannot override the model, stakes drive the gates only.
 
-`zedkit-ai sync` turns `.agents/agents` and `.agents/tokenomics.md` into each tool's own agent files, so the model lives in one place. `.cursor/agents` and `.claude/agents` get one generated copy per agent: the source with the header keys removed, `model` set to the route of the agent's `default_kind` at `standard` stakes (a call with another kind or `Needs:` routes at spawn time, where the tool allows an override), and a marker comment on line 2. `sync` regenerates a file that has the marker, replaces a plain copy of the source, and keeps any other file: the generated version goes beside it as `<name>.kit.md`. A source that pins a `model` other than `inherit` keeps it. A generated file whose source is gone is removed unless you pass `--no-prune`; `--prune` with `--provider` also removes the generated files of a provider you left out. `--check` writes nothing and exits 1 when a file is out of date (for CI), `--dry-run` prints the plan, `--quiet` prints only the changes, and a second run prints only `skip` lines. A `.claude/agents` link to `.agents/agents` made by `init` becomes a real directory; any other link is left alone. Effort is not written: neither tool has a per-agent effort key that was seen to work, and `sync` says so. Codex and Muse read `.agents/agents` directly, so nothing is generated for them. Checked 2026-11-05: Cursor reads `.cursor/agents` before `.claude/agents` and lists a name once, so selecting both gives no duplicates; it ignores a quoted `model` (sync writes it plain) and falls back to the session model for an unknown id without an error, so check the ids in `tokenomics.md` against your tool's model list; `readonly: true` is enforced but also blocks commands that write, so it is not generated. Muse rejects an agent at spawn when its `disallowedTools` names Claude tools, and one symlink anywhere in `.agents/agents` empties its whole agent list, so the kit's read-only agents do not load there yet. `init` and `setup` still wire the providers the old way; they move to `sync` in a later release.
+`zedkit-ai sync` turns `.agents/agents` and `.agents/tokenomics.md` into each tool's own agent files, so the model lives in one place. `.cursor/agents` and `.claude/agents` get one generated copy per agent: the source with the header keys removed, `model` set to the route of the agent's `default_kind` at `standard` stakes (a call with another kind or `Needs:` routes at spawn time, where the tool allows an override), and a marker comment on line 2. `sync` regenerates a file that has the marker, replaces a plain copy of the source, and keeps any other file: the generated version goes beside it as `<name>.kit.md`. A source that pins a `model` other than `inherit` keeps it. A generated file whose source is gone is removed unless you pass `--no-prune`; `--prune` with `--provider` also removes the generated files of a provider you left out. `--check` writes nothing and exits 1 when a file is out of date (for CI), `--dry-run` prints the plan, `--quiet` prints only the changes, and a second run prints only `skip` lines. A `.claude/agents` link to `.agents/agents` made by `init` becomes a real directory; any other link is left alone. Effort is not written: neither tool has a per-agent effort key that was seen to work, and `sync` says so. Codex and Muse read `.agents/agents` directly, so nothing is generated for them. Checked 2026-11-05: Cursor reads `.cursor/agents` before `.claude/agents` and lists a name once, so selecting both gives no duplicates; it ignores a quoted `model` (sync writes it plain) and falls back to the session model for an unknown id without an error, so check the ids in `tokenomics.md` against your tool's model list; `readonly: true` is enforced but also blocks commands that write, so it is not generated. Muse rejects an agent at spawn when its `disallowedTools` names Claude tools, and one symlink anywhere in `.agents/agents` empties its whole agent list, so the kit's read-only agents do not load there yet. `init` and `setup` call the same code, so a fresh install is already synced.
 
 Each agent's role, default needs (`reasoning` and `context`, which a call may override) and optional `kinds` allowlist and `default_kind` hint live in `agents.meta.json`: the kit ships one for its agents, yours goes next to `tokenomics.md` and wins per agent. They are never in agent frontmatter, because some tools silently skip an agent with a key they do not know; `validate` rejects those keys in an agent file, and rejects `needs` or `kind` in an entry (`kind` is per call, never an agent property). A kit agent without an entry uses the shipped table, so existing installs need no refresh.
 
@@ -208,9 +217,10 @@ CLAUDE.md -> AGENTS.md
 .agents/skills/            workflows (the Agent Skills layout)
 .agents/agents/            subagents
 .agents/commands/          one-keystroke commands (thin: each runs a skill)
-.claude/{skills,agents,commands}  symlinks to .agents/
+.claude/{skills,commands}  symlinks to .agents/
+.claude/agents, .cursor/agents  generated from .agents/agents + tokenomics.md
 .cursor/skills             symlink to .agents/skills (or per-skill links)
-.cursor/{agents,commands}  real-file copies (a link shows up empty)
+.cursor/commands/*.md      one link per command to .agents/commands/
 .cursor/rules/project.mdc  one always-on rule pointing at AGENTS.md
 .agents/tokenomics.md      model and effort per kind x stakes (yours to edit)
 ```
@@ -287,7 +297,7 @@ of the context window and shortens descriptions past it). With `starter`,
   rejects it.
 - Cursor reads `.cursor/agents`, `.claude/agents` and `.codex/agents`
   ([docs](https://cursor.com/docs/subagents), checked 2026-10-24); the installer
-  copies into `.cursor/agents` anyway so a Cursor-only repo needs nothing else.
+  generated files go into `.cursor/agents` anyway so a Cursor-only repo needs nothing else.
 - Codex reads `.agents/skills` (it follows symlinks) and `AGENTS.md`
   ([docs](https://developers.openai.com/codex/skills), checked 2026-10-24), so
   it needs no adapter. The subagent files are not wired for Codex.

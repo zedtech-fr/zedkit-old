@@ -198,7 +198,9 @@ size_budget ui 10200 marketing
 # cli.ts); PR measured 43241.
 # Raised to 48300 on 6 Nov 2026: provider file generation and `sync`
 # (generate.ts, provider-keys.ts, sync.ts, cli.ts); PR measured 47785.
-size_budget ai 48300
+# Raised to 50800 on 6 Nov 2026: `init`, `setup` and `validate` run through
+# `sync` (legacy.ts, sync.ts command links, validate.ts); PR measured 50273.
+size_budget ai 50800
 
 if [ -f apps/docs/out/index.html ]; then
   if ! node apps/docs/scripts/check-first-load-budget.mjs; then
