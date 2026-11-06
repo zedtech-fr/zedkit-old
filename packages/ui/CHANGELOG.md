@@ -1,5 +1,15 @@
 # @zedtech/zedkit-ui
 
+## 1.10.0
+
+### Minor Changes
+
+- cd538d6: Glass look: a clearer fill with a slanted sheen, a lit rim (bright top-left edge, soft bottom-right edge, inner glow) carried by `--zk-glass-highlight` and so by every `--zk-shadow-*` consumer, blur lifted by `saturate` and a new `--zk-glass-brightness`, and stronger colour halos behind the glass. New tokens: `--zk-glass-sheen`, `--zk-glass-brightness`. `--zk-glass-alpha` is lower (0.54 light, 0.5 dark) and still overridable; reduced transparency, no `backdrop-filter` and forced colors stay solid. Cards that bring their own wash keep it.
+
+### Patch Changes
+
+- cd538d6: Add `WordRoll` for inline vertical word cycling with `data-animate="fade-up"` enter and `data-word-roll` exit (`zk-word-roll-exit-up` in `motion.css`). `IdentityScript` emits its bootstrap only during SSR/hydration so Next.js 16 no longer warns about a client-created `<script>`.
+
 ## 1.9.1
 
 ### Patch Changes
