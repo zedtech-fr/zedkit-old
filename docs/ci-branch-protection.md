@@ -10,7 +10,7 @@ pull request and green required checks.
 [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) ends with a job
 named **`ci-required`**. It `needs` the jobs below. Selected jobs must
 succeed; skipped is allowed only when the detector excluded that job
-(same `if: always()` pattern as `docs-e2e`). Once the ruleset lists only
+(same `if: always()` pattern as `docs-smoke`). Once the ruleset lists only
 that name, adding or renaming a leaf job does not need a settings change.
 
 **Full CI runs only for pushes and PRs targeting `main`.** A PR into `dev`
@@ -23,28 +23,27 @@ the detector excluded it; a selected job that skipped, failed or cancelled
 is not green.
 
 **Same-repo PRs into `dev`** run the heavy jobs (`checks`, `registry-smoke`,
-`quickstart-smoke`, `adoption-smoke`, `docs-build`, `docs-e2e-shard`, `docs-e2e-routes`,
-`docs-smoke`) on the Dedibox self-hosted runner (`[self-hosted, dedibox]`),
-with persistent `/runner-cache` (pnpm store, turbo, tsbuildinfo, eslint) and
-Playwright from the runner image. Job **names** stay neutral (`checks`, not
-`checks-dedibox`) so `ci-required` and the ruleset do not change. Fork PRs,
-PRs into `main`, and pushes stay on `ubuntu-latest`. The former trial
-workflow `ci-dedibox-trial.yml` was removed once this path landed in `ci.yml`.
+`quickstart-smoke`, `adoption-smoke`, `docs-build`) on the Dedibox
+self-hosted runner (`[self-hosted, zedkit]`), with persistent `/runner-cache`
+(pnpm store, turbo, tsbuildinfo, eslint). Docs Playwright smoke always runs
+on `ubuntu-latest` against the `docs-out` artifact. Job **names** stay
+neutral (`checks`, not `checks-dedibox`) so `ci-required` and the ruleset
+do not change. Fork PRs, PRs into `main`, and pushes stay on `ubuntu-latest`.
+The former trial workflow `ci-dedibox-trial.yml` was removed once this path
+landed in `ci.yml`.
 
 | Check | Role |
 | --- | --- |
-| `ci-required` | Aggregate gate: hygiene + checks + registry-smoke + docs-build + docs-e2e + docs-smoke |
+| `ci-required` | Aggregate gate: hygiene + checks + registry-smoke + docs-build + docs-smoke |
 | `hygiene` | Artifact, tone, private-refs, dependabot, changeset, PR lenses |
 | `checks` | typecheck, lint, build, tests, catalog, pack, API reports, ui smoke |
 | `registry-smoke` | Registry build + smoke |
-| `docs-build` | One docs static export, shared with Playwright |
-| `docs-smoke` | Docs Playwright smoke subset |
-| `docs-e2e` | Aggregate gate over the three docs e2e shards |
+| `docs-build` | One docs static export, shared with Playwright smoke |
+| `docs-smoke` | Critical docs journeys (home, search, catalog, a component page) |
+| `docs-e2e` | Alias: succeeds when `docs-smoke` succeeded (older rulesets) |
 
-The matrix jobs `docs-e2e-shard (1/3)` … `(3/3)` run in parallel; `docs-e2e`
-fails unless every shard succeeded. `ci-required` then fails unless
-`docs-e2e` succeeded. The live ruleset may still list the leaf names and
-shard names until an admin applies the settings issue (#950).
+`docs-e2e` fails unless `docs-smoke` succeeded. The live ruleset may still
+list leaf names until an admin applies the settings issue (#950).
 
 `deploy-docs` and `release` run on `main` after merge; they are **not**
 required for merging PRs.
