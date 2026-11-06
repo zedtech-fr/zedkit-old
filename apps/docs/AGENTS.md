@@ -138,7 +138,7 @@ must match a kit primitive's own look.
 - Site styling stays distinct from specimen identities. Each styling
   decision has one owner layer (contract table); fix at the shared layer.
 - One surface role per job.
-- Color from tokens; no decorative gradients.
+- Color from tokens; no decorative gradients (the Glass material is the one exception, see signature.md).
 - One focal specimen per section, not a uniform rounded-card grid.
 - Mobile composes by priority, not by stacking.
 

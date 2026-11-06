@@ -57,6 +57,7 @@ Sizes are the implemented tokens (`packages/ui/src/shared-type-scale.css`, appli
 - Shadow only on overlays and genuinely raised controls. Sections, fields, code wells and cards in a grid are flat.
 - Radius: controls 8, specimens and overlays 12, pills only for compact status/selection.
 - Color: one action accent, explicit success/warning/danger. Active text 4.5:1, large 3:1. Dark is a paired hierarchy, not an inversion.
+- Glass (the default look) may carry decorative colour halos and a lit rim: it is a material, defined in [signature.md](../../docs/design/signature.md#glass-material). No other look and no other surface gets decorative gradients.
 
 ## Controls and hierarchy
 
