@@ -32,17 +32,6 @@ function useIntro(): boolean {
   return intro;
 }
 
-/** Colour behind the window and the cards over its edges: glass has nothing to refract without it. Glass only (CSS). */
-function HeroShapes() {
-  return (
-    <span aria-hidden="true" data-hero-shapes="" className="pointer-events-none absolute inset-0 -z-10">
-      <span data-shape="1" />
-      <span data-shape="2" />
-      <span data-shape="3" />
-    </span>
-  );
-}
-
 /** The Display row under the window and, when there is a tour to control, its Pause / Play button. */
 function HeroPreviewFooter({
   look,
@@ -119,7 +108,6 @@ export function HomeHeroPreview() {
         "relative flex max-w-full min-w-0 scroll-mt-24 flex-col rounded-xl border border-border bg-card",
       )}
     >
-      <HeroShapes />
       <ThemeScope
         ref={scope}
         identity={look}

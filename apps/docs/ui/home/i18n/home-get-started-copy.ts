@@ -1,7 +1,7 @@
 export const homeGetStartedCopy = {
   section: {
     title: "Start your way",
-    description: "Add it to your app, or copy the source. Prefer your agent, or no code? Those are below.",
+    description: "Add it to your app or copy the source. Your agent or no code? See the other ways in.",
   },
   quickStart: {
     fullSteps: "Full install steps in the docs",

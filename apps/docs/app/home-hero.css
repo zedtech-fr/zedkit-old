@@ -116,7 +116,8 @@
 
 /*
  * Colour behind the window. Only the Glass look has glass to refract it, so the other looks keep a plain page.
- * Three soft discs inside the frame's own width (nothing widens the page); the blur is ink, not layout.
+ * Three soft discs inside the hero band's own box (nothing grows, nothing scrolls); the blur is ink, not layout.
+ * On lg and up the window is the right column, so the discs sit there; below it they follow the stacked layout.
  */
 #home-page [data-hero-shapes] {
   display: none;
@@ -129,30 +130,28 @@
 #home-page [data-hero-shapes] > span {
   position: absolute;
   border-radius: 9999px;
+  aspect-ratio: 1;
   filter: blur(56px);
 }
 
 #home-page [data-hero-shapes] > [data-shape="1"] {
-  top: -3rem;
-  left: 12%;
-  width: 18rem;
-  height: 18rem;
+  top: 4%;
+  right: 38%;
+  width: min(18rem, 70%);
   background: hsl(var(--primary) / 0.45);
 }
 
 #home-page [data-hero-shapes] > [data-shape="2"] {
-  right: 6%;
-  bottom: -4rem;
-  width: 16rem;
-  height: 16rem;
+  right: 2%;
+  bottom: 2%;
+  width: min(16rem, 66%);
   background: hsl(var(--accent) / 0.6);
 }
 
 #home-page [data-hero-shapes] > [data-shape="3"] {
-  top: 38%;
-  left: 0;
-  width: 11rem;
-  height: 11rem;
+  top: 36%;
+  left: 38%;
+  width: min(11rem, 40%);
   background: hsl(var(--ring) / 0.35);
 }
 

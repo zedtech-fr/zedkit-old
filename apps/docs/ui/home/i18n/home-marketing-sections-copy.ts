@@ -1,7 +1,7 @@
 export const homeSecondaryCopy = {
   section: {
     title: "More in the kit",
-    description: "Server helpers, SEO and agent setup. One start page each.",
+    description: "One start page per area.",
   },
   identitySpecimen: {
     heading: "Visual example",
