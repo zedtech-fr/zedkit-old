@@ -136,12 +136,14 @@ describe("generateMuseAgent", () => {
     expect(out.value.text).not.toContain("disallowedTools");
   });
 
-  it("closes the project-path bash write, not only /tmp: write_file,edit_file alone is the unsafe skip", () => {
+  it("emits fail-closed bash deny, not the unsafe write_file,edit_file skip", () => {
     expect([...MUSE_WRITE_TOOLS]).toEqual(["write_file", "edit_file", "bash"]);
     const source = "---\nname: explorer\ndescription: d\nmodel: inherit\ndisallowedTools: Write, Edit, NotebookEdit\n---\nBody\n";
     const out = generateMuseAgent({ name: "explorer", source, model: "inherit" });
     if (!out.ok) throw out.error;
     const denied = out.value.text.split("\n").find((line) => line.startsWith("disallowedTools:")) ?? "";
+    // Native 1010: write_file,edit_file,bash → NEW project sentinel absent, shell=no-tool.
+    // write_file,edit_file alone (P8 zk-w-a) still wrote ./probe-zk-w-a-shell.txt.
     expect(denied).toBe("disallowedTools: write_file, edit_file, bash");
     expect(denied).not.toBe("disallowedTools: write_file, edit_file");
   });
