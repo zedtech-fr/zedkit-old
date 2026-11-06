@@ -72,13 +72,15 @@ for dir in packages/*/; do
   [ "$(manifest_field "$pkg" "exports['.']")" != "null" ] || { echo "$name: package.json lacks exports['.']"; fail=1; }
 
   # Tarball holds the manifest, licence, readme, and every promised path.
+  # Here-strings, not `echo | grep -q`: with pipefail, grep exiting at the first match
+  # can SIGPIPE echo on a large listing and report a path as missing.
   for required in package/package.json package/LICENSE package/README.md; do
-    echo "$listing" | grep -qxF "$required" || { echo "$name: tarball lacks $required"; fail=1; }
+    grep -qxF "$required" <<< "$listing" || { echo "$name: tarball lacks $required"; fail=1; }
   done
   while IFS= read -r target; do
     [ -n "$target" ] || continue
     clean="${target#./}"
-    echo "$listing" | grep -qE "^package/$clean(/|$)" || { echo "$name: tarball lacks promised path $target"; fail=1; }
+    grep -qE "^package/$clean(/|$)" <<< "$listing" || { echo "$name: tarball lacks promised path $target"; fail=1; }
   done <<< "$(manifest_targets "$pkg")"
 
   # No private terms in the packed contents; report files, never matched lines.
