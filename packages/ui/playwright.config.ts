@@ -21,5 +21,7 @@ export default defineConfig({
     command: "pnpm preview",
     port: 4123,
     reuseExistingServer: !process.env.CI,
+    stdout: "pipe",
+    stderr: "pipe",
   },
 });
