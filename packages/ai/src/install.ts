@@ -21,6 +21,7 @@ import { danglingKitRefs, skillRefFiles } from "./skill-refs.js";
 import { resolveConditionals, type Availability } from "./conditional.js";
 import { loadPolicy } from "./route.js";
 import { resolveAgentSource, syncAgents } from "./sync.js";
+import { applyTestPolicyToAgentsMd } from "./test-policy.js";
 import { loadDefaults } from "./tokenomics.js";
 
 /** Providers that get an installer layer or shared-source wiring. */
@@ -314,6 +315,27 @@ function ladderSection(kit: string, avail: Availability): string | undefined {
   return resolveIfNeeded(section, avail);
 }
 
+function readDestScripts(dest: string): Record<string, string> | undefined {
+  const raw = tryCatch(() => JSON.parse(readFileSync(join(dest, "package.json"), "utf8")) as unknown);
+  if (!raw.ok || raw.value === null || typeof raw.value !== "object") return undefined;
+  const scripts = (raw.value as { scripts?: unknown }).scripts;
+  if (scripts === null || typeof scripts !== "object") return undefined;
+  const out: Record<string, string> = {};
+  for (const [name, command] of Object.entries(scripts)) {
+    if (typeof command === "string") out[name] = command;
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
+function fillAgentsCommands(ctx: Ctx): void {
+  if (ctx.dryRun) return;
+  const dest = join(ctx.dest, "AGENTS.md");
+  const md = tryCatch(() => readFileSync(dest, "utf8"));
+  if (!md.ok) return;
+  const next = applyTestPolicyToAgentsMd(md.value, readDestScripts(ctx.dest));
+  if (next !== md.value) writeFileSync(dest, next);
+}
+
 // Fresh projects get the whole template; an existing AGENTS.md is never
 // overwritten, but when it lacks the ladder the section is appended (and
 // reported as `append`, so dry runs agree with real ones).
@@ -321,6 +343,7 @@ function installAgentsMd(ctx: Ctx): void {
   const blocked = obstacle(ctx, "AGENTS.md");
   if (blocked === undefined) {
     copyFile(ctx, join(ctx.kit, "AGENTS.template.md"), "AGENTS.md");
+    fillAgentsCommands(ctx);
     return;
   }
   const current = tryCatch(() => readFileSync(join(ctx.dest, "AGENTS.md"), "utf8"));

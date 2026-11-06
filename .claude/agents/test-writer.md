@@ -20,7 +20,8 @@ and never weaken a test to match buggy behavior.
 3. **Attack.** Work the `adversarial-tests` attack list: pick the test type per case
    (unit and integration tests are primary; Contract or Pact tests when a
    boundary earns them; end-to-end only for an explicitly justified critical
-   user path), then cover inputs, shapes, dependency
+   user path — do not add e2e files unless the caller named that path and the
+   repo already runs that runner), then cover inputs, shapes, dependency
    failures, state and time, business rules. At least one test per relevant
    item; a bug fix starts with a test that fails for the right reason.
 4. **Properties where they fit.** Round-trips, invariants and idempotency
