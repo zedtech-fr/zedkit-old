@@ -36,7 +36,7 @@ test("maison exports its two font packages, install line and imports", () => {
   );
 });
 
-test("every preset maps to the showcase font set, each family once", () => {
+test("every preset maps to the docs-site font set, each family once", () => {
   assert.deepEqual(identityExportFonts(identityPresets.press)?.packages, [
     "@fontsource-variable/space-grotesk",
     "@fontsource-variable/newsreader",
@@ -72,16 +72,16 @@ test("every preset stack names a mapped family, so kit stack edits cannot silent
   }
 });
 
-test("derived font packages are exactly what the showcase loads", () => {
-  const showcase = ["app/fonts.ts", "app/fonts-identity.ts"]
+test("derived font packages are exactly what the docs site loads", () => {
+  const docsSite = ["app/fonts.ts", "app/fonts-identity.ts"]
     .flatMap((rel) => [
       ...readFileSync(join(HERE, "..", rel), "utf8").matchAll(/import\s+(?:from\s+)?"(@fontsource-variable\/[^"]+)"/g),
     ])
     .map((match) => match[1]);
-  assert.ok(showcase.length > 0, "showcase font modules import fontsource packages");
+  assert.ok(docsSite.length > 0, "docs-site font modules import fontsource packages");
   for (const tokens of Object.values(identityPresets)) {
     for (const pkg of (identityExportFonts(tokens)?.packages ?? [])) {
-      assert.ok(showcase.includes(pkg), `${pkg} is loaded by the showcase`);
+      assert.ok(docsSite.includes(pkg), `${pkg} is loaded by the docs site`);
       assert.doesNotThrow(() => import.meta.resolve(pkg), `${pkg} resolves to an installed package`);
     }
   }

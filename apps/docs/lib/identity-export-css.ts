@@ -15,7 +15,7 @@ export const IDENTITY_UI_INSTALL_COMMAND = "pnpm add @zedtech/zedkit-ui";
 export const IDENTITY_KIT_STYLES_CSS =
   '@import "@zedtech/zedkit-ui/styles.css";\n@source "../../node_modules/@zedtech/zedkit-ui/src/**/*.{ts,tsx}";\n';
 
-/** Fontsource families the showcase loads (app/fonts.ts, app/fonts-identity.ts): stack marker to package. */
+/** Fontsource families the docs site loads (app/fonts.ts, app/fonts-identity.ts): stack marker to package. */
 const IDENTITY_FONT_PACKAGES: ReadonlyArray<readonly [marker: string, pkg: string]> = [
   ['"Inter Variable"', "@fontsource-variable/inter"],
   ['"Geist Variable"', "@fontsource-variable/geist"],
@@ -31,7 +31,7 @@ export type IdentityExportFonts = { packages: string[]; imports: string };
  * Font loading for an accepted identity, derived from its stacks: the
  * fontsource packages to install plus their side-effect imports, in
  * first-appearance order across the sans then display stack. Null when
- * neither stack names a showcase family (system stacks travel with the CSS).
+ * neither stack names a docs-site family (system stacks travel with the CSS).
  */
 export function identityExportFonts(tokens: IdentityTokens): IdentityExportFonts | null {
   const seen = new Set<string>();
