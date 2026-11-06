@@ -10,6 +10,15 @@ import { kitDir, readManifest } from "./kit.js";
 import { loadAgent, loadPolicy, resolveRoute, type Route } from "./route.js";
 import { scanRepo } from "./scan.js";
 import {
+  checkCriticalLines,
+  checkStakesChange,
+  gatesFor,
+  parseKind,
+  parseNeeds,
+  parseStakes,
+  readAtRef,
+} from "./stakes.js";
+import {
   CONTEXT_SIZES,
   KINDS,
   POLICY_PROVIDERS,
@@ -55,13 +64,21 @@ const ROUTE_OPTIONS = {
   json: { type: "boolean" },
 } as const;
 
+const STAKES_OPTIONS = {
+  base: { type: "string" },
+  dir: { type: "string" },
+  provider: { type: "string" },
+  json: { type: "boolean" },
+} as const;
+
 function parse(
   args: string[],
   options:
     | Record<string, never>
     | typeof OPTIONS
     | typeof VALIDATE_OPTIONS
-    | typeof ROUTE_OPTIONS,
+    | typeof ROUTE_OPTIONS
+    | typeof STAKES_OPTIONS,
   maxPositionals: number,
 ): Result<Parsed> {
   const parsed = tryCatch(() => parseArgs({ args, allowPositionals: true, options }));
@@ -253,6 +270,77 @@ function runRoute(args: string[], sinks: Sinks): number {
   return 0;
 }
 
+function runStakes(args: string[], sinks: Sinks): number {
+  const parsed = parse(args, STAKES_OPTIONS, 1);
+  if (!parsed.ok) return fail(parsed.error.message, sinks);
+  const { values, positionals } = parsed.value;
+  const target = positionals[0];
+  if (target === undefined)
+    return fail("stakes needs a file (zedkit-ai stakes <file> [--base <ref>])", sinks);
+  const file = resolve(target);
+  const read = tryCatch(() => readFileSync(file, "utf8"));
+  if (!read.ok) return fail(`cannot read ${target}: ${read.error.message}`, sinks);
+  const text = read.value;
+  const provider = oneOf(POLICY_PROVIDERS, values.provider, "--provider");
+  if (!provider.ok) return fail(provider.error.message, sinks);
+  const stakes = parseStakes(text);
+  const kind = parseKind(text);
+  const needs = parseNeeds(text);
+  for (const field of [stakes, kind, needs])
+    if (!field.ok) return fail(`${target}: ${field.error.message}`, sinks);
+  if (!stakes.ok || !kind.ok || !needs.ok) return 2;
+  const agentsDir = join(
+    resolve(typeof values.dir === "string" ? values.dir : "."),
+    ".agents",
+  );
+  const policy = loadPolicy(agentsDir);
+  if (!policy.ok) return fail(policy.error.message, sinks);
+  const level = stakes.value ?? "standard";
+  const notes: string[] = [];
+  if (stakes.value === undefined)
+    notes.push("stakes not set: standard (default); write it explicitly");
+  const issues: string[] = [];
+  if (typeof values.base === "string") {
+    const before = readAtRef(file, values.base);
+    if (!before.ok) return fail(before.error.message, sinks);
+    if (before.value === undefined) {
+      notes.push(`not in ${values.base}: nothing to compare`);
+    } else {
+      const prev = parseStakes(before.value);
+      if (!prev.ok) return fail(`${values.base}: ${prev.error.message}`, sinks);
+      issues.push(...checkStakesChange(prev.value, level, text));
+    }
+  }
+  if (level === "critical") issues.push(...checkCriticalLines(text));
+  const gates = gatesFor(policy.value, level, provider.value);
+  if (gates.secondReview?.warning !== undefined)
+    notes.push(gates.secondReview.warning);
+  if (values.json === true) {
+    sinks.out(
+      JSON.stringify(
+        { file: target, stakes: level, kind: kind.value, needs: needs.value, gates: gates.gate, secondReview: gates.secondReview, issues, notes },
+        null,
+        2,
+      ),
+    );
+  } else {
+    sinks.out(`stakes: ${level}`);
+    if (kind.value !== undefined) sinks.out(`kind: ${kind.value}`);
+    const given = Object.entries(needs.value).map(([k, v]) => `${k}=${v}`);
+    if (given.length > 0) sinks.out(`needs: ${given.join(", ")}`);
+    const g = gates.gate;
+    sinks.out(
+      `gates: review=${g.review}` +
+        (g.second_review !== undefined ? `, second_review=${g.second_review}` : "") +
+        (g.distinct_model === true ? ", distinct_model" : "") +
+        (g.human !== undefined ? `, human=${g.human}` : ""),
+    );
+    for (const note of notes) sinks.out(`note: ${note}`);
+    for (const issue of issues) sinks.out(`${target}: ${issue}`);
+  }
+  return issues.length === 0 ? 0 : 1;
+}
+
 function runScan(args: string[], sinks: Sinks): number {
   const parsed = parse(args, {}, 1);
   if (!parsed.ok) return fail(parsed.error.message, sinks);
@@ -287,6 +375,7 @@ export function main(argv: string[], sinks: Sinks): number {
   if (command === "validate") return runValidate(rest, sinks);
   if (command === "scan") return runScan(rest, sinks);
   if (command === "route") return runRoute(rest, sinks);
+  if (command === "stakes") return runStakes(rest, sinks);
   if (command === "list") return runList(rest, sinks);
   const help = command === undefined || command === "--help" || command === "-h";
   (help ? sinks.out : sinks.err)(usage());

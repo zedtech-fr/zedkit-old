@@ -34,6 +34,14 @@ zedkit-ai <command>
       the gates of the stakes, read-only for check, and the second review
       route for critical. Exit 2 on a bad flag, an unknown agent or an
       invalid tokenomics.md.
+  stakes <file> [--base <ref>] [--dir <project>] [--provider cursor|claude|codex|muse] [--json]
+      Read the stakes, kind and needs of a ticket, plan or PR body (a
+      frontmatter key or a `Stakes:`, `Kind:`, `Needs:` line) and print the
+      gates for those stakes. A file with no stakes is standard. Stakes only
+      go up: with --base, a lower value than at <ref> fails, and a higher one
+      needs a `Stakes raised: a -> b: <reason>` line. A critical file also
+      needs `Second review:` and `Human validation:` lines. Exit 1 on
+      problems, 2 on a bad flag, an unreadable file or a bad ref.
   gate <log> [--] <command...>
       Run one gate command and persist it as a setup-log gate log: CMD:,
       START:, output, END:, CAUSE: when killed or out of memory, and

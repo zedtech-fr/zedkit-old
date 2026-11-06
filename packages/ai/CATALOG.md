@@ -113,3 +113,5 @@ console.log(route.value.model, route.value.effort, route.value.gates.review);
 ```
 
 CLI equivalent: `zedkit-ai route verifier --kind check --stakes sensitive --provider cursor --json`.
+
+The stakes come from the task file: `zedkit-ai stakes PLAN.md --base origin/main` reads `Stakes:`, `Kind:` and `Needs:`, prints the gates, and fails when stakes were lowered, raised without a reason, or `critical` lacks its second-review and human-validation lines.
