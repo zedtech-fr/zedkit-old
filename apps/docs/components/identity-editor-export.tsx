@@ -14,7 +14,12 @@ import {
   type IdentityTokens,
 } from "@zedtech/zedkit-ui";
 import { identityEditorCopy } from "@/components/i18n/identity-editor-copy";
-import { identityExportCss } from "@/lib/identity-export-css";
+import {
+  IDENTITY_KIT_STYLES_CSS,
+  identityExportCss,
+  identityExportFonts,
+  identityExportInstall,
+} from "@/lib/identity-export-css";
 import { parseRecipe, serializeRecipe } from "@/lib/identity-recipe";
 
 function copyText(value: string, onDone: () => void) {
@@ -104,6 +109,55 @@ function RecipeImport({ onLoad }: { onLoad: (tokens: IdentityTokens, darkKept: r
   );
 }
 
+function IdentityEditorSetupFields({
+  tokens,
+  onCopied,
+}: {
+  tokens: IdentityTokens;
+  onCopied: (kind: "install" | "fonts" | "styles") => void;
+}) {
+  const install = identityExportInstall(tokens);
+  const fonts = identityExportFonts(tokens);
+  return (
+    <>
+      <Field>
+        <FieldLabel htmlFor="identity-editor-install">{identityEditorCopy.export.install}</FieldLabel>
+        <Textarea id="identity-editor-install" readOnly value={install} className="font-mono" />
+      </Field>
+      <CopyButton
+        label={identityEditorCopy.export.copyInstall}
+        value={install}
+        blocked={false}
+        onCopied={() => onCopied("install")}
+      />
+      {fonts ? (
+        <Field>
+          <FieldLabel htmlFor="identity-editor-fonts">{identityEditorCopy.export.fontImports}</FieldLabel>
+          <Textarea id="identity-editor-fonts" readOnly value={fonts.imports} className="font-mono" />
+        </Field>
+      ) : null}
+      {fonts ? (
+        <CopyButton
+          label={identityEditorCopy.export.copyFontImports}
+          value={fonts.imports}
+          blocked={false}
+          onCopied={() => onCopied("fonts")}
+        />
+      ) : null}
+      <Field>
+        <FieldLabel htmlFor="identity-editor-styles">{identityEditorCopy.export.kitStyles}</FieldLabel>
+        <Textarea id="identity-editor-styles" readOnly value={IDENTITY_KIT_STYLES_CSS} className="font-mono" />
+      </Field>
+      <CopyButton
+        label={identityEditorCopy.export.copyKitStyles}
+        value={IDENTITY_KIT_STYLES_CSS}
+        blocked={false}
+        onCopied={() => onCopied("styles")}
+      />
+    </>
+  );
+}
+
 function IdentityEditorExport({
   tokens,
   onLoad,
@@ -113,10 +167,10 @@ function IdentityEditorExport({
 }) {
   const css = identityExportCss(tokens);
   const json = serializeRecipe(tokens);
-  const [copied, setCopied] = useState<"css" | "json" | null>(null);
+  const [copied, setCopied] = useState<"css" | "json" | "install" | "fonts" | "styles" | null>(null);
   const blocked = identityContrastWarnings(tokens).length > 0;
 
-  function mark(kind: "css" | "json") {
+  function mark(kind: "css" | "json" | "install" | "fonts" | "styles") {
     setCopied(kind);
   }
 
@@ -131,6 +185,7 @@ function IdentityEditorExport({
           {identityEditorCopy.export.blocked}
         </Text>
       ) : null}
+      <IdentityEditorSetupFields tokens={tokens} onCopied={mark} />
       <Field>
         <FieldLabel htmlFor="identity-editor-css">{identityEditorCopy.export.css}</FieldLabel>
         <Textarea id="identity-editor-css" readOnly value={css} className="font-mono" />
