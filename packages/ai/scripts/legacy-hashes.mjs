@@ -60,5 +60,10 @@ for (const kind of ["agents", "commands"]) {
     result[kind][name] = hashesOf(kind, name);
   }
 }
-writeFileSync(join(kit, "legacy-hashes.json"), `${JSON.stringify(result, null, 1)}\n`);
+const hashesPath = join(kit, "legacy-hashes.json");
+writeFileSync(hashesPath, `${JSON.stringify(result, null, 1)}\n`);
+// kit:md is `prettier --check kit`; JSON.stringify indent 1 is not that format.
+execFileSync(process.execPath, [fileURLToPath(import.meta.resolve("prettier/bin/prettier.cjs")), "--write", hashesPath], {
+  cwd: root,
+});
 process.stdout.write(`legacy-hashes.json: ${Object.values(result.agents).flat().length + Object.values(result.commands).flat().length} hashes\n`);
