@@ -72,6 +72,7 @@ alwaysApply: true
 ---
 
 Read and follow /AGENTS.md at the repo root, and use the skills in .agents/skills.
+Multi-step or multi-lens work goes through the orchestrate skill; atomic fixes stay inline with their check.
 `;
 
 type Ctx = {
@@ -566,6 +567,48 @@ function generateAgents(ctx: Ctx, content: ReturnType<typeof plan>, providers: r
   );
 }
 
+const SCRATCH_IGNORE = ".scratch/";
+
+// Working plans default to `.scratch/` when no tracker is configured; keep
+// them out of git. Owner content is never touched: only the exact missing
+// line is appended, links are never written through, and a second run is a
+// skip.
+function ensureScratchIgnored(ctx: Ctx): void {
+  const rel = ".gitignore";
+  const entry = lstatOf(join(ctx.dest, rel));
+  if (entry === undefined) {
+    place(
+      ctx,
+      "write",
+      rel,
+      (destRel) => writeFileSync(join(ctx.dest, destRel), `# Local working plans and tickets (zedkit-ai)\n${SCRATCH_IGNORE}\n`),
+      "ignores .scratch/",
+    );
+    return;
+  }
+  if (entry.isSymbolicLink()) {
+    ctx.actions.push({ kind: "skip", path: rel, note: "link left alone; add .scratch/ inside its target to keep working plans local" });
+    return;
+  }
+  if (!entry.isFile()) {
+    ctx.actions.push({ kind: "skip", path: rel, note: "not a file, left untouched" });
+    return;
+  }
+  const current = tryCatch(() => readFileSync(join(ctx.dest, rel), "utf8"));
+  if (!current.ok) {
+    ctx.actions.push({ kind: "skip", path: rel, note: "unreadable, left untouched" });
+    return;
+  }
+  if (current.value.split("\n").some((line) => line.trim() === SCRATCH_IGNORE)) {
+    ctx.actions.push({ kind: "skip", path: rel, note: "already ignores .scratch/" });
+    return;
+  }
+  ctx.actions.push({ kind: "append", path: rel, note: "ignores .scratch/" });
+  if (ctx.dryRun) return;
+  const gap = current.value === "" || current.value.endsWith("\n") ? "" : "\n";
+  writeFileSync(join(ctx.dest, rel), `${current.value}${gap}${SCRATCH_IGNORE}\n`);
+}
+
 /**
  * Install the kit into a project. The shared source (skills, subagents,
  * commands, AGENTS.md) is copied into `.agents/` (the project owns it from
@@ -575,7 +618,8 @@ function generateAgents(ctx: Ctx, content: ReturnType<typeof plan>, providers: r
  * AGENTS.md missing the ladder, which gets the ladder section appended
  * (reported as `append`). With `adopt`, a colliding skill/agent/command
  * keeps the user file and the kit version is written beside it. A bad
- * preset or kit fails before anything is written.
+ * preset or kit fails before anything is written. `.gitignore` gains the
+ * `.scratch/` line for git-ignored local working plans.
  */
 export function installKit(options: InstallOptions): Result<Action[]> {
   const kit = options.kit ?? kitDir();
@@ -602,6 +646,7 @@ export function installKit(options: InstallOptions): Result<Action[]> {
       wireProvider(ctx, provider, content, skillDest);
     }
     generateAgents(ctx, content, chosen);
+    ensureScratchIgnored(ctx);
   });
   return run.ok ? ok(ctx.actions) : err(run.error);
 }

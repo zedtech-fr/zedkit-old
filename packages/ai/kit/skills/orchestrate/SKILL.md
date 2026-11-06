@@ -10,6 +10,8 @@ state you already know, success criteria, and the task's `Stakes:` (and any
 orchestrator itself as `decide`, planners as `design`, implementers as `build`,
 reviewers as `check`.
 
-If subagents are unavailable, follow the same eight steps yourself in this
-conversation (the steps live in `agents/orchestrator.md` only — do not copy
-them here).
+If subagents are unavailable, return ready-to-run briefs (`dispatch plan`)
+when a capable caller can run them; otherwise follow the same steps yourself
+in this conversation (the steps live in `agents/orchestrator.md` only — do not
+copy them here) and open your report with
+`Mode: inline fallback (<observed cause>)`.

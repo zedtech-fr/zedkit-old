@@ -248,6 +248,10 @@ jobs:
           pnpm exec turbo run test ${FILTER:+"$FILTER"} "${extra[@]}"
       - name: Kit markdown prettier
         run: pnpm --filter @zedtech/zedkit-ai run kit:md
+      - name: AI generated drift (built CLI)
+        run: |
+          pnpm exec turbo run build --filter=@zedtech/zedkit-ai
+          node packages/ai/dist/bin.js sync --check
       # Workspace-wide thresholds, and it reruns every test: full path only.
       - name: Coverage (vitest v8)
         if: env.FULL == 'true'

@@ -52,6 +52,14 @@ describe("preset closure", () => {
       "parallel-work",
       "tdd",
       "adversarial-tests",
+      "plan",
+      "implement",
+      "challenge",
+      "to-spec",
+      "to-tickets",
+      "wayfinder",
+      "codebase-design",
+      "research",
     ]);
     expect(agentsForPreset(manifest.value, "setup")).toEqual([
       "explorer",
@@ -60,8 +68,24 @@ describe("preset closure", () => {
       "product-director",
       "ui-designer",
       "copywriter",
+      "skeptic",
+      "researcher",
     ]);
-    expect(commandsForPreset(manifest.value, "setup")).toEqual(["setup-ai", "review"]);
+    expect(commandsForPreset(manifest.value, "setup")).toEqual(["setup-ai", "review", "plan", "implement", "orchestrate"]);
+  });
+
+  it("every preset with the orchestrate skill ships the plan and implement playbooks, except documented-lean starter", () => {
+    const manifest = readManifest();
+    if (!manifest.ok) throw manifest.error;
+    for (const [preset, skills] of Object.entries(manifest.value.presets)) {
+      const list = skills === "*" ? [...skillDirs()] : skills;
+      if (!list.includes("orchestrate")) continue;
+      if (preset === "starter") continue;
+      expect(list, `${preset} ships plan`).toContain("plan");
+      expect(list, `${preset} ships implement`).toContain("implement");
+    }
+    const starter = manifest.value.presets.starter;
+    expect(starter === "*" ? [] : starter).not.toContain("plan");
   });
 
   it("every shipped preset installs closed: validate green, no dangling refs, lenses.md matches the installed set", () => {
@@ -277,13 +301,13 @@ describe("preset closure", () => {
     expect(found).toContain('skills/review/SKILL.md: references command "plan", which this preset does not install');
   });
 
-  it("flags /orchestrate on setup where the skill but not the command is installed", () => {
+  it("flags /audit on setup where the command is not installed", () => {
     const dest = tempDir();
     install(dest, "setup");
-    appendFileSync(join(dest, ".agents/skills/review/SKILL.md"), "\nPoint big tasks at `/orchestrate`.\n");
+    appendFileSync(join(dest, ".agents/skills/review/SKILL.md"), "\nPoint audits at `/audit`.\n");
     const found = validateKit(join(dest, ".agents")).map((issue) => `${issue.path}: ${issue.message}`);
     expect(found).toContain(
-      'skills/review/SKILL.md: references command "orchestrate", which this preset does not install',
+      'skills/review/SKILL.md: references command "audit", which this preset does not install',
     );
   });
 

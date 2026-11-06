@@ -39,11 +39,13 @@ Install `@zedtech/zedkit-ai`, wire Cursor with adopt mode, run `/setup-ai` to ta
    npx zedkit-ai validate
    ```
 
-   **Done when** exit code is `0` and stdout is exactly:
+   **Statically valid when** exit code is `0` and stdout is exactly:
 
    ```text
    ok
    ```
+
+   That proves the install is coherent on disk. It does not prove the provider lists the agents, honors `model:`, or discovers the skills — confirm those natively.
 
    Fix every reported path until validate is clean. If the repo uses Prettier, add the kit paths from the CLI **`prettier:`** hint to `.prettierignore` (or approve that row in the setup-ai plan) so `prettier --check .` stays green.
 

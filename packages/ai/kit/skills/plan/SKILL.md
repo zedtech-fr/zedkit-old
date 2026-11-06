@@ -17,6 +17,11 @@ assumed.
 Small task: a short spec via `to-spec`. Multi-step work: `to-spec`, then
 `to-tickets` for the ticket list with blocking edges. Work bigger than one
 session: map it with `wayfinder` and resolve the decision tickets first.
+Plan may self-invoke; `implement`, `to-spec` and `to-tickets` never do — the
+user or the orchestrator calls them explicitly (`/implement`, or the skill by
+name). Default home: the configured tracker; with none configured and nobody
+to ask, write the spec to `.scratch/<feature-slug>/spec.md` and tickets under
+`.scratch/<feature-slug>/issues/` — git-ignored local files, never `docs/`.
 
 ## 3. Ladder per planned piece (mandatory)
 

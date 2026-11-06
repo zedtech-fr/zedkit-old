@@ -41,3 +41,6 @@ apps/docs/out/
 deploy/suggest.env
 deploy/suggest-dev.env
 apps/docs/.tmp-complete-examples/
+
+# local working plans and tickets (zedkit-ai; the installer keeps this line)
+.scratch/

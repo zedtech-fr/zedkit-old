@@ -20,7 +20,15 @@ export const AI_SETUP_KIT = {
     "writing-for-agents",
     "parallel-work",
     "tdd",
-    "adversarial-tests"
+    "adversarial-tests",
+    "plan",
+    "implement",
+    "challenge",
+    "to-spec",
+    "to-tickets",
+    "wayfinder",
+    "codebase-design",
+    "research"
   ],
   "agents": [
     "explorer",
@@ -28,11 +36,16 @@ export const AI_SETUP_KIT = {
     "orchestrator",
     "product-director",
     "ui-designer",
-    "copywriter"
+    "copywriter",
+    "skeptic",
+    "researcher"
   ],
   "commands": [
     "setup-ai",
-    "review"
+    "review",
+    "plan",
+    "implement",
+    "orchestrate"
   ],
   "installed": [
     {
@@ -108,7 +121,39 @@ export const AI_SETUP_KIT = {
       "kind": "dir"
     },
     {
-      "text": "│  │  └─ adversarial-tests/",
+      "text": "│  │  ├─ adversarial-tests/",
+      "kind": "dir"
+    },
+    {
+      "text": "│  │  ├─ plan/",
+      "kind": "dir"
+    },
+    {
+      "text": "│  │  ├─ implement/",
+      "kind": "dir"
+    },
+    {
+      "text": "│  │  ├─ challenge/",
+      "kind": "dir"
+    },
+    {
+      "text": "│  │  ├─ to-spec/",
+      "kind": "dir"
+    },
+    {
+      "text": "│  │  ├─ to-tickets/",
+      "kind": "dir"
+    },
+    {
+      "text": "│  │  ├─ wayfinder/",
+      "kind": "dir"
+    },
+    {
+      "text": "│  │  ├─ codebase-design/",
+      "kind": "dir"
+    },
+    {
+      "text": "│  │  └─ research/",
       "kind": "dir"
     },
     {
@@ -136,7 +181,15 @@ export const AI_SETUP_KIT = {
       "kind": "file"
     },
     {
-      "text": "│  │  └─ copywriter.md",
+      "text": "│  │  ├─ copywriter.md",
+      "kind": "file"
+    },
+    {
+      "text": "│  │  ├─ skeptic.md",
+      "kind": "file"
+    },
+    {
+      "text": "│  │  └─ researcher.md",
       "kind": "file"
     },
     {
@@ -148,7 +201,19 @@ export const AI_SETUP_KIT = {
       "kind": "file"
     },
     {
-      "text": "│  │  └─ review.md",
+      "text": "│  │  ├─ review.md",
+      "kind": "file"
+    },
+    {
+      "text": "│  │  ├─ plan.md",
+      "kind": "file"
+    },
+    {
+      "text": "│  │  ├─ implement.md",
+      "kind": "file"
+    },
+    {
+      "text": "│  │  └─ orchestrate.md",
       "kind": "file"
     },
     {

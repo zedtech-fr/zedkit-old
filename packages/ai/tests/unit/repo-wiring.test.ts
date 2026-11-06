@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { hasMarker, MUSE_NAME_ALIAS } from "#generate.js";
 import { kitDir } from "#kit.js";
-import { validateKit } from "#validate.js";
+import { checkDrift, validateKit } from "#validate.js";
 
 const root = fileURLToPath(new URL("../../../../", import.meta.url));
 const real = (rel: string): string => realpathSync(join(root, rel));
@@ -58,5 +58,28 @@ describe("this repo's own provider wiring", () => {
 
   it("validates the repo's .agents folder", () => {
     expect(validateKit(join(root, ".agents"))).toEqual([]);
+  });
+
+  it("dogfood commands match the kit bytes", () => {
+    const kit = readdirSync(join(kitDir(), "commands")).sort();
+    expect(kit.length).toBeGreaterThan(0);
+    expect(readdirSync(join(root, ".agents/commands")).sort()).toEqual(kit);
+    for (const file of kit) {
+      expect(readFileSync(join(root, ".agents/commands", file), "utf8"), file).toBe(
+        readFileSync(join(kitDir(), "commands", file), "utf8"),
+      );
+    }
+  });
+
+  it("cursor commands link to the shared .agents commands", () => {
+    for (const file of readdirSync(join(root, ".agents/commands"))) {
+      const link = join(root, ".cursor/commands", file);
+      expect(lstatSync(link).isSymbolicLink(), file).toBe(true);
+      expect(real(join(".cursor/commands", file)), file).toBe(real(join(".agents/commands", file)));
+    }
+  });
+
+  it("generated layers have no drift against .agents", () => {
+    expect(checkDrift(root, join(root, ".agents"))).toEqual([]);
   });
 });
