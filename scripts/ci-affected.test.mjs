@@ -129,12 +129,29 @@ const requiredOk = {
   hygiene: "success",
   workflow_lint: "skipped",
   checks: "success",
+  ui_smoke: "skipped",
   registry: "skipped",
   docs_build: "skipped",
   docs_e2e: "skipped",
   docs_smoke: "skipped",
 };
-const packOnly = { workflows: false, docs: false, registry: false, workflow_only: false };
+const packOnly = { workflows: false, docs: false, registry: false, ui: false, workflow_only: false };
+
+test("selected ui gallery smoke must succeed", () => {
+  assert.ok(
+    requiredJobsPass({
+      results: requiredOk,
+      selected: { ...packOnly, ui: true },
+    }).some((e) => e.includes("ui_smoke")),
+  );
+  assert.deepEqual(
+    requiredJobsPass({
+      results: { ...requiredOk, ui_smoke: "success" },
+      selected: { ...packOnly, ui: true },
+    }),
+    [],
+  );
+});
 
 test("impact-excluded docs jobs may skip; selected docs jobs must succeed", () => {
   assert.deepEqual(requiredJobsPass({ results: requiredOk, selected: packOnly }), []);
@@ -187,14 +204,14 @@ test("workflow-only requires the lint job and skips checks and docs", () => {
         docs_e2e: "skipped",
         docs_smoke: "skipped",
       },
-      selected: { workflows: true, docs: false, registry: false, workflow_only: true },
+      selected: { workflows: true, docs: false, registry: false, ui: false, workflow_only: true },
     }),
     [],
   );
   assert.ok(
     requiredJobsPass({
       results: { ...requiredOk, workflow_lint: "skipped", checks: "skipped" },
-      selected: { workflows: true, docs: false, registry: false, workflow_only: true },
+      selected: { workflows: true, docs: false, registry: false, ui: false, workflow_only: true },
     }).some((e) => e.includes("workflow_lint")),
   );
 });
