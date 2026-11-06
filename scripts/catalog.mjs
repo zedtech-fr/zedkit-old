@@ -110,8 +110,8 @@ function readIfExists(path) {
 // Parse `## <need>` sections: Import / Wraps / Status fields + first ts example.
 const STATUSES = ["planned", "alpha", "beta", "stable", "deprecated"];
 
-/** Expected live need counts — Option B catalog (133 needs). */
-export const CATALOG_MATURITY_TARGETS = { stable: 65, beta: 40, alpha: 31 };
+/** Expected live need counts — Option B catalog (134 needs). */
+export const CATALOG_MATURITY_TARGETS = { stable: 65, beta: 40, alpha: 32 };
 
 /** Maturity definitions — keep aligned with docs/catalog/README.md#maturity. */
 export const MATURITY_DEFINITIONS = {

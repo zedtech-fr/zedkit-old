@@ -3028,6 +3028,42 @@
           ]
         },
         {
+          "need": "Cycle a word in a clipped slot",
+          "import": "`@zedtech/zedkit-ui` — `WordRoll`, `WordRollProps`",
+          "wraps": "`(none)` — composes with `data-animate=\"fade-up\"` on the incoming span (mount `AnimateObserver` / `observeAnimate` once for appear)",
+          "status": "alpha",
+          "shortName": "Word roll",
+          "audience": "Headlines or inline labels that rotate a single word without remount-only fades.",
+          "purpose": "Stable-height clipped slot with padded block axis so descenders and underline stay visible; outgoing glides up (`zk-word-roll-exit-up`), incoming uses the standard appear contract (`fade-up` from below).",
+          "whenToUse": "Cycling provider names, emphasis words, or short tokens next to static copy.",
+          "whenNotToUse": "Full sentences or list carousels — use content-specific layout. For scroll reveal only, use `data-reveal` / `data-animate` without WordRoll.",
+          "derivedFrom": null,
+          "example": "import { Heading, WordRoll } from \"@zedtech/zedkit-ui\";\n\nconst words = [\"Cursor\", \"Muse\", \"Claude\"] as const;\n\n<Heading level={1} typeRole=\"title\" aria-label={`Set up in ${words.join(\", \")}`}>\n  Set up in{\" \"}\n  <WordRoll words={words} value={words[0]} dwellMs={300} aria-hidden />\n</Heading>",
+          "examples": [
+            {
+              "title": "Inline in a heading",
+              "code": "import { Heading, WordRoll } from \"@zedtech/zedkit-ui\";\n\nconst words = [\"Cursor\", \"Muse\", \"Claude\"] as const;\n\n<Heading level={1} typeRole=\"title\" aria-label={`Set up in ${words.join(\", \")}`}>\n  Set up in{\" \"}\n  <WordRoll words={words} value={words[0]} dwellMs={300} aria-hidden />\n</Heading>"
+            }
+          ],
+          "adoption": {
+            "kind": "js",
+            "modules": [
+              {
+                "from": "@zedtech/zedkit-ui",
+                "exports": [
+                  "WordRoll",
+                  "WordRollProps"
+                ]
+              }
+            ]
+          },
+          "a11y": "Treat the roll as decorative when the full phrase is provided via `aria-label` on the heading; set `aria-hidden` on `WordRoll`. Under reduced motion, prefer a static inclusive string instead of cycling.",
+          "troubleshooting": "Incoming stays invisible — ensure `observeAnimate()` runs (same as any `data-animate` appear). Exit does not move — check `prefers-reduced-motion` and `data-motion=\"reduce\"`.",
+          "seeAlso": [
+            "Reveal and react with motion on any element"
+          ]
+        },
+        {
           "need": "Trigger actions with buttons",
           "import": "`@zedtech/zedkit-ui` — `Button`, `buttonVariants`, `ButtonProps`",
           "wraps": "`@radix-ui/react-slot`, `class-variance-authority`",

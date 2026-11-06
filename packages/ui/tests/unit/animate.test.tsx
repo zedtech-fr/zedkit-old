@@ -86,6 +86,7 @@ describe("animate CSS", () => {
     expect(motionCss).toContain("@media (prefers-reduced-motion: reduce)");
     expect(motionCss).toContain("[data-animate]");
     expect(motionCss).toContain("translate");
+    expect(motionCss).toContain("zk-word-roll-exit-up");
     expect(motionCss).not.toMatch(/\[data-animate[^\]]*\{[^}]*\b(top|height|width)\s*:/);
   });
 });

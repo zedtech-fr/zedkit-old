@@ -1,7 +1,5 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import type { ReactElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { act, render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
@@ -40,35 +38,39 @@ afterEach(() => {
   for (const sheet of document.querySelectorAll('style[data-slot="identity-custom-sheet"]')) sheet.remove();
 });
 
+function ssrScript(element: ReactElement): HTMLScriptElement {
+  const html = renderToStaticMarkup(element);
+  const template = document.createElement("template");
+  template.innerHTML = html;
+  const script = template.content.querySelector('script[data-slot="identity-script"]');
+  if (!(script instanceof HTMLScriptElement)) {
+    throw new Error(`IdentityScript SSR produced no script: ${html}`);
+  }
+  return script;
+}
+
 function runScript(element: ReactElement) {
-  const { container, unmount } = render(element);
-  const script = container.querySelector('script[data-slot="identity-script"]') as HTMLScriptElement;
-  const code = script.innerHTML;
+  const script = ssrScript(element);
   Object.defineProperty(document, "currentScript", { value: script, configurable: true });
-  new Function(code)();
-  unmount();
+  new Function(script.textContent ?? "")();
 }
 
 describe("IdentityScript", () => {
-  it("is not a client module, so a server layout can render it without hydrating", () => {
-    const src = readFileSync(
-      join(dirname(fileURLToPath(import.meta.url)), "../../src/identity-script.tsx"),
-      "utf8",
-    );
-    expect(src).not.toMatch(/^["']use client["']/m);
+  it("does not emit a script tag on a client render", () => {
+    const { container, unmount } = render(<IdentityScript />);
+    expect(container.querySelector("script")).toBeNull();
+    unmount();
   });
 
   it("keeps a fixed bootstrap body and passes props only through data attributes", () => {
-    const { container, unmount } = render(
+    const script = ssrScript(
       <IdentityScript ids={['a","b']} storageKey={'key"with'} defaultIdentity="calm" />,
     );
-    const script = container.querySelector('script[data-slot="identity-script"]') as HTMLScriptElement;
-    expect(script.innerHTML).toBe(IDENTITY_BOOTSTRAP_SOURCE);
+    expect(script.textContent).toBe(IDENTITY_BOOTSTRAP_SOURCE);
     expect(script.getAttribute("data-ids")).toBe(JSON.stringify(['a","b']));
     expect(script.getAttribute("data-storage-key")).toBe('key"with');
     expect(script.getAttribute("data-custom-key")).toBe('key"with-custom');
     expect(script.getAttribute("data-default")).toBe("calm");
-    unmount();
   });
 
   it("leaves the stock look when nothing is stored and there is no default", () => {

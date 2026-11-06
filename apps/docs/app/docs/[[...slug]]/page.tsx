@@ -69,7 +69,7 @@ export default async function Page({ params }: { params: Promise<{ slug?: string
         }}
       >
         {hidePageTitle ? null : <DocsTitle>{page.data.title}</DocsTitle>}
-        {page.data.componentPage ? null : <DocsDescription>{page.data.description}</DocsDescription>}
+        {page.data.componentPage || hidePageTitle ? null : <DocsDescription>{page.data.description}</DocsDescription>}
         {page.data.componentPage ? (
           // Component pages are composed from kit components; the `prose` reset DocsBody adds would restyle them.
           <Stack className="flex-1">
