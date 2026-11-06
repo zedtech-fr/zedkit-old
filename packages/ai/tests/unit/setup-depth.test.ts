@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { main } from "#cli.js";
 import { kitDir } from "#kit.js";
 import { checkDepth } from "#setup-depth.js";
-import { put, tempDir } from "./helpers.js";
+import { put, tempDir, TOKENOMICS_D4 } from "./helpers.js";
 
 /** The meaning check a second reader writes: one verdict per sequencing rule, none left open. */
 const MEANING = "\n## Meaning check\n\n| ID | Verdict | Code does | Resolution |\n| -- | ------- | --------- | ---------- |\n| R1-1 | match | caps the refund | |\n";
@@ -22,10 +22,10 @@ const ROUTING = "**Provider running this setup:** cursor\n\n| Tier | Jobs |\n| *
 function deep(root: string): void {
   put(root, "src/refund.ts", "x\n");
   put(root, "src/AGENTS.md", "# src rules\n\nDomain: ../.agents/domain/billing.md\n");
-  put(root, "AGENTS.md", "# Root\n\n## Model routing\n\nSee `.agents/model-routing.md`.\n");
+  put(root, "AGENTS.md", "# Root\n\n## Tokenomics\n\nSee `.agents/tokenomics.md`.\n");
   put(root, ".agents/setup-log/reading.md", READING);
   put(root, ".agents/domain/billing.md", "| B-01 | current | Refunds capped | `src/refund.ts:31` |\n");
-  put(root, ".agents/model-routing.md", ROUTING);
+  put(root, ".agents/tokenomics.md", TOKENOMICS_D4);
 }
 
 /** A v2-style setup: product, plan, setup-log, root AGENTS.md, nothing deeper. */
@@ -101,7 +101,7 @@ describe("checkDepth", () => {
     deep(root);
     put(root, ".agents/domain/billing.md", "| B-01 | current (documented, not enforced) | No web token reuse | `src/auth/token.ts:12` |\n");
     expect(checkDepth(root).map((i) => i.message)).toEqual([expect.stringContaining("B-01")]);
-    put(root, "AGENTS.md", "# Root\n\n## Model routing\n\nSee `.agents/model-routing.md`.\n\n## Unenforced rules\n\n| B-01 | add token-reuse lint | `src/auth/token.ts:12` |\n");
+    put(root, "AGENTS.md", "# Root\n\n## Tokenomics\n\nSee `.agents/tokenomics.md`.\n\n## Unenforced rules\n\n| B-01 | add token-reuse lint | `src/auth/token.ts:12` |\n");
     expect(checkDepth(root)).toEqual([]);
   });
 
@@ -235,9 +235,36 @@ describe("checkDepth", () => {
     expect(checkDepth(root)).toEqual([]);
   });
 
-  it("D4: routing must name the provider, both tiers, and be pointed at from AGENTS.md", () => {
+  it("D4: filled tokenomics cells must be pointed at from AGENTS.md", () => {
     const root = tempDir();
     deep(root);
+    put(root, "AGENTS.md", "# Root\n");
+    expect(checkDepth(root).map((i) => i.message)).toEqual([expect.stringContaining("root AGENTS.md does not point at .agents/tokenomics.md")]);
+  });
+
+  it("D4: inherit-only tokenomics is not enough", () => {
+    const root = tempDir();
+    deep(root);
+    put(root, ".agents/tokenomics.md", "---\nschema: 1\nproviders:\n  cursor:\n    build:\n      standard: { model: inherit, effort: medium }\n---\n");
+    expect(checkDepth(root).map((i) => i.message)).toEqual([expect.stringContaining("real model (not inherit)")]);
+  });
+
+  it("D4: a valid leftover model-routing.md still passes, with a deprecation warning", () => {
+    const root = tempDir();
+    deep(root);
+    put(root, ".agents/tokenomics.md", "---\nschema: 1\n---\n");
+    put(root, ".agents/model-routing.md", ROUTING);
+    put(root, "AGENTS.md", "# Root\n\nSee `.agents/model-routing.md`.\n");
+    expect(checkDepth(root).map((i) => i.message)).toEqual([expect.stringContaining("deprecated")]);
+  });
+
+  it("D4: legacy routing must name the provider, both tiers, and be pointed at from AGENTS.md", () => {
+    const root = tempDir();
+    v2Style(root);
+    put(root, "src/AGENTS.md", "# src rules\n\nDomain: ../.agents/domain/billing.md\n");
+    put(root, ".agents/setup-log/reading.md", READING);
+    put(root, ".agents/domain/billing.md", "| B-01 | current | Refunds capped | `src/refund.ts:31` |\n");
+    put(root, "AGENTS.md", "# Root\n\nSee `.agents/model-routing.md`.\n");
     put(root, ".agents/model-routing.md", "Provider: unknown\n| scout | lead |\n");
     expect(checkDepth(root).map((i) => i.message)).toEqual([expect.stringContaining("name the provider")]);
     put(root, ".agents/model-routing.md", "Provider: claude\nonly scout here\n");
@@ -261,7 +288,7 @@ describe("validate --setup depth", () => {
     expect(run("validate", root).code).toBe(0);
     const setup = run("validate", root, "--setup");
     expect(setup.code).toBe(1);
-    for (const tag of ["D1 code reading", "D2 domain rules", "D3 nested rules", "D4 model routing"]) {
+    for (const tag of ["D1 code reading", "D2 domain rules", "D3 nested rules", "D4 tokenomics"]) {
       expect(setup.text).toContain(tag);
     }
   });

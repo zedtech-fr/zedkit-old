@@ -16,6 +16,7 @@ import {
   type Stakes,
   type Tokenomics,
 } from "#tokenomics.js";
+import { markerLine } from "#generate.js";
 import { AGENT, put, tempDir } from "./helpers.js";
 
 /** Defaults with a distinct model per cell, so a lookup names the cell it read. */
@@ -616,6 +617,66 @@ describe("loadPolicy and loadAgent", () => {
     expect(result.ok ? "" : result.error.message).toContain(
       "tokenomics.md: tiers: unknown key",
     );
+  });
+
+  it("maps a provenanced Muse dest to the kit source CHECK header", () => {
+    const dir = tempDir();
+    put(dir, "agents/a11y-auditor.md", AGENT("a11y-auditor"));
+    put(
+      dir,
+      "agents/accessibility-auditor.md",
+      `---\n${markerLine("a11y-auditor")}\nname: accessibility-auditor\ndescription: d\nmodel: inherit\n---\nBody\n`,
+    );
+    const dest = loadAgent(dir, "accessibility-auditor");
+    const source = loadAgent(dir, "a11y-auditor");
+    expect(source).toMatchObject({
+      ok: true,
+      value: { name: "a11y-auditor", header: KIT_HEADERS["a11y-auditor"] },
+    });
+    expect(dest).toMatchObject({
+      ok: true,
+      value: { name: "accessibility-auditor", header: KIT_HEADERS["a11y-auditor"] },
+    });
+    expect(dest.ok && dest.value.header.default_kind).toBe("check");
+    const routed = route(policy(), { stakes: "standard", agent: dest.ok ? dest.value : { name: "x", header: KIT_HEADERS["a11y-auditor"] } });
+    expect(routed).toMatchObject({ kind: "check", kindSource: "hint" });
+    expect(routed.notes).toContain("kind not given, using check (hint)");
+  });
+
+  it("an unmarked dest without a11y-auditor is a user agent, not CHECK", () => {
+    const dir = tempDir();
+    put(dir, "agents/accessibility-auditor.md", AGENT("accessibility-auditor") + "MINE\n");
+    const dest = loadAgent(dir, "accessibility-auditor");
+    expect(dest.ok && dest.value.header.default_kind).toBeUndefined();
+    expect(dest.ok && dest.value.note).toContain("using the default");
+    const routed = route(policy(), { stakes: "standard", agent: dest.ok ? dest.value : { name: "x", header: { role: "custom agent", default_needs: { reasoning: "medium", context: "medium" } } } });
+    expect(routed).toMatchObject({ kind: "build", kindSource: "default" });
+  });
+
+  it("collision: unmarked dest keeps its own identity while a11y-auditor stays CHECK", () => {
+    const dir = tempDir();
+    put(dir, "agents/a11y-auditor.md", AGENT("a11y-auditor"));
+    put(dir, "agents/accessibility-auditor.md", AGENT("accessibility-auditor") + "MINE\n");
+    const dest = loadAgent(dir, "accessibility-auditor");
+    const source = loadAgent(dir, "a11y-auditor");
+    expect(source.ok && source.value.header.default_kind).toBe("check");
+    expect(dest.ok && dest.value.header.default_kind).toBeUndefined();
+    expect(dest.ok && dest.value.note).toContain("using the default");
+  });
+
+  it("native dest name with unmarked source and no dest file still selects CHECK", () => {
+    const dir = tempDir();
+    put(dir, "agents/a11y-auditor.md", AGENT("a11y-auditor"));
+    const dest = loadAgent(dir, "accessibility-auditor");
+    expect(dest).toMatchObject({
+      ok: true,
+      value: { name: "accessibility-auditor", header: KIT_HEADERS["a11y-auditor"] },
+    });
+  });
+
+  it("native dest name without source or dest is unknown, not a kit-table steal", () => {
+    const dir = tempDir();
+    expect(loadAgent(dir, "accessibility-auditor").ok).toBe(false);
   });
 
   it("reads the header from agents.meta.json, falls back to the table silently, rejects unknown names", () => {

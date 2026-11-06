@@ -19,6 +19,14 @@ commands/audit.md: names no installed skill (a command runs a `skill` by name)
 2 problems
 ```
 
+Generated agent files are checked with `zedkit-ai sync --check` (exit 1 when
+they lag `.agents/agents` or `.agents/tokenomics.md`):
+
+```text
+.cursor/agents/verifier.md: out of date, run: npx zedkit-ai sync
+1 out of date
+```
+
 `validate` accepts a project root (drifts against its `.agents/`) or an
 `.agents/` dir directly (drifts against its parent). The same checks are
 available programmatically via `validateKit` + `checkDrift`, which return
@@ -31,16 +39,24 @@ text covers every git-changed path and that each
 `EXIT:<code>`. It also checks the setup went deep: a reading log with
 enough reader rows for the repo size and `file:line` evidence (D1), domain
 rules with evidence (D2), a nested `AGENTS.md` linking the setup rules, or a stated reason (D3), and
-`.agents/model-routing.md` linked from `AGENTS.md` (D4). Plain `validate` does
-not run those checks. `zedkit-ai scan [dir]` prints the repo size, the reader
+`.agents/tokenomics.md` with a real model (not `inherit`) on
+`build.standard` and `decide.sensitive`, pointed at from `AGENTS.md` (D4).
+Plain `validate` does not run those checks. It does scan for model names
+written outside `tokenomics.md` (`path:line`, one per file and name; keep a
+name with `<!-- zk:model-ok -->` or `hardcode.allow_paths`). `zedkit-ai scan [dir]` prints the repo size, the reader
 count and one slice per reader.
 
 ## Troubleshooting
 
-- `differs from …; user copy kept` — a provider copy (Cursor keeps real-file
-  copies) no longer matches `.agents/`. The user file is left as-is. Re-run
+- `out of date, run: npx zedkit-ai sync` — a generated `.cursor/agents` or
+  `.claude/agents` file lags `.agents/agents` or `.agents/tokenomics.md`. Run
+  `zedkit-ai sync` (add `--check` in CI).
+- `differs from …; user copy kept` — a provider file `sync` did not write no
+  longer matches `.agents/`. The user file is left as-is. Re-run
   `zedkit-ai init --adopt` to write a kit sidecar (`*.kit.md`) next to a
   user file that differs from the kit (identical kit copies are left as-is).
+- `model name "…" outside tokenomics.md` — move the name into
+  `.agents/tokenomics.md`, or mark the line with `<!-- zk:model-ok -->`.
 - `copy missing: copy it from … or re-run init` — a provider file was
   deleted. Either restore that one file or re-run `init`.
 - `link missing … re-run init` — a provider link (`.claude/…`, `CLAUDE.md`,

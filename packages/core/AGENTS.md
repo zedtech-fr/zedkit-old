@@ -17,3 +17,9 @@
    (`pnpm catalog:build` from the root).
 8. Definition of done: `pnpm --filter @zedtech/zedkit-core typecheck && pnpm --filter @zedtech/zedkit-core lint && pnpm --filter @zedtech/zedkit-core build && pnpm --filter @zedtech/zedkit-core test`
    green (each command separately), `pnpm catalog:check` green.
+
+## Domain and identity
+
+- Public hygiene (`tryCatch`, no secrets): [public-hygiene.md](../../.agents/domain/public-hygiene.md)
+- Cursor pointer: [packages-core.mdc](../../.cursor/rules/packages-core.mdc) only
+  names this file.

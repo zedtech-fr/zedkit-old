@@ -14,7 +14,7 @@ const PROSE = [
 // --help works but lives outside the USAGE text (see cli.test.ts).
 const HELP = new Set(["--help"]);
 // Bare prose words, not references.
-const GENERIC = new Set(["ok", "name", "description", "skill", "html"]);
+const GENERIC = new Set(["ok", "name", "description", "skill", "html", "inherit"]);
 
 function lensNames(): Set<string> {
   return new Set(lensTableRows().map((cells) => cells[1] ?? ""));

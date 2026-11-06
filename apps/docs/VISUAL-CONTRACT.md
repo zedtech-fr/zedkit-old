@@ -30,7 +30,7 @@ Choosing the shared fix: (1) name the owner of the *value* that is wrong; (2) lo
 The three owners of a render, in order of precedence:
 
 - **Specimens** (`ThemeScope`, the nearest scope wins, also for a nested dark section): their own identity and mode. Nothing in the shell restyles them (headings, spacing and text sizes included), and they never restyle the shell. A site rule that must not reach a specimen says so: `:not([data-identity-scope] *)`.
-- **Selected identity** (default Tide, or the visitor's opt-in choice): what the site's own chrome wears for the variables above. It never changes a size in the table below.
+- **Selected identity** (default Glass, or the visitor's opt-in choice): what the site's own chrome wears for the variables above. It never changes a size in the table below. Runtime default is `DEFAULT_IDENTITY` in `apps/docs/lib/default-identity.ts`.
 - **Site shell** (pinned in `app/docs-shell-tokens.css` and `docs-typography.css`): sizes and weights below, reading widths, section rhythm, gutters, nav density, the contrast overrides for chrome.
 
 ## Roles

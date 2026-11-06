@@ -19,7 +19,7 @@ zedkit-ai <command>
       on problems. --setup (off by default) also checks that the PLAN
       covers every git-changed path, that setup-log gate logs are
       well-formed, and that the setup went deep: a reading log, domain
-      rules, nested AGENTS.md and model routing (the v3 depth axes).
+      rules, nested AGENTS.md and tokenomics (the v3 depth axes).
   scan [dir]
       Size the repo and cut it into slices, one per read-only reader:
       1-5 readers on a small repo, 6-10 medium, 11-20 large. Run it
@@ -42,6 +42,21 @@ zedkit-ai <command>
       needs a `Stakes raised: a -> b: <reason>` line. A critical file also
       needs `Second review:` and `Human validation:` lines. Exit 1 on
       problems, 2 on a bad flag, an unreadable file or a bad ref.
+  sync [dir] [--provider cursor,claude,codex,muse,all] [--check] [--dry-run] [--prune] [--no-prune] [--quiet]
+      Write each tool's agent files from .agents/agents and
+      .agents/tokenomics.md: .cursor/agents and .claude/agents get one
+      generated copy per agent, and Muse writes native marked files in
+      .agents/agents (unmarked/kit stay the source), with `model` from the
+      route of the agent's default kind at standard stakes and a marker on
+      line 2. A file with the marker is regenerated, a kit-equal unmarked
+      copy is replaced, any other file is kept (Muse does not write a
+      sidecar). Generated files whose source agent is gone are removed
+      (--no-prune keeps them); --prune with --provider also removes those of
+      a provider left out. --check writes nothing and exits 1 when anything
+      is out of date. Without --provider the layers are inferred from
+      non-empty .cursor/ and .claude/ and from Muse-native marked files in
+      .agents/agents; none found is exit 2. A second run prints only skip
+      lines.
   gate <log> [--] <command...>
       Run one gate command and persist it as a setup-log gate log: CMD:,
       START:, output, END:, CAUSE: when killed or out of memory, and

@@ -17,7 +17,7 @@ Done is a claim. This list is the evidence. If one box cannot be ticked, say whi
 
 ## Tests
 
-- [ ] Every changed behavior has a test. Bug fix: a regression test that fails without the fix. Use `tdd`; for edge cases use `adversarial-tests`.
+- [ ] Every changed behavior has a test. Bug fix: a regression test that fails without the fix. Use `tdd`; for edge cases use `adversarial-tests`. **Layer:** unit and integration tests are primary. Contract or Pact tests when a boundary earns them. End-to-end or browser tests only for an explicitly justified critical user path — not a default battery or an arbitrary count. Do not delete or change existing CI unless the owner asked.
 - [ ] **No test deleted, skipped or weakened to make the change pass.** If one had to change, list each (name, why) in the PR description. A test edited to match new behavior proves nothing unless the old behavior was verified wrong.
 - [ ] Tests assert behavior through the public interface, not internals.
 

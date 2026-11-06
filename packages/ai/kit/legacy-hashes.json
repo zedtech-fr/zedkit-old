@@ -1,0 +1,142 @@
+{
+ "schema": 1,
+ "agents": {
+  "a11y-auditor": [
+   "4463f52e65857b23"
+  ],
+  "architect": [
+   "2fd74ea50b55e177",
+   "ce1684657bce839e",
+   "ecd377805f9cad79"
+  ],
+  "console-architecture": [
+   "49a5f8c6d3439e29"
+  ],
+  "copywriter": [
+   "38e560fd5395ec5b",
+   "591013a229573f48",
+   "a4554a51a4a00afe",
+   "ca3eef75340e1bcf"
+  ],
+  "dependency-auditor": [
+   "1c27a8178cc5f181"
+  ],
+  "docs-writer": [
+   "4aa2017dd3acc7f5",
+   "f4059d1a6e4eab8b"
+  ],
+  "explorer": [
+   "922fc759cbb28a2f"
+  ],
+  "improver": [
+   "f439e153f6554810"
+  ],
+  "orchestrator": [
+   "10ddc0351f002789",
+   "1cb19d9599901fbd",
+   "264fca73065b9948",
+   "3d7cef2c99aeef75",
+   "504e497cae3a3217",
+   "5ec76c8fcb3cb204",
+   "76b8c2398cf50536",
+   "8c37f6e9158cf3a7",
+   "970f2919b8edd3aa",
+   "adf18a426d07595a",
+   "ba65a42646a8ac3c",
+   "e3ae3cf229016c3d",
+   "eeaca9748a7f8572",
+   "fd17a213125a8ba2"
+  ],
+  "product-director": [
+   "3707ba4b4037570a"
+  ],
+  "release-manager": [
+   "0483a7b2eb980b11",
+   "990c819c9ff7c7e9"
+  ],
+  "researcher": [
+   "3f0a4fadbf6ce3ee"
+  ],
+  "security-reviewer": [
+   "30706404f382e2e6",
+   "a9a11c1eed63a2ed"
+  ],
+  "seo-auditor": [
+   "a2355f4e8f010028"
+  ],
+  "skeptic": [
+   "73a1c07804fb44a2",
+   "9ba769cd5d0a5eea"
+  ],
+  "test-writer": [
+   "64e4e024bbc5c141",
+   "ad0c68e16cb58ce5",
+   "e7f23492128d4b66"
+  ],
+  "ui-designer": [
+   "0669fe56e3bc0824",
+   "08e6283ee78a92a5",
+   "100c0e744e183c56",
+   "35b0593227335d02",
+   "5c2768dc5ceeb832",
+   "5fba8044f8969ed0",
+   "604fc1cc13b4e435",
+   "705e5d484e8fd882",
+   "7d92c3dd1aa7f8f6",
+   "a7ae6ed3d8c19590",
+   "b84fd6093a080f9f",
+   "b8dd6b1544ce86cd",
+   "b963c724a2bb3f2e",
+   "d0b9eae217b76315",
+   "d0ead18319839063",
+   "d36425b38b356bcb",
+   "e30caf684acfdbef"
+  ],
+  "verifier": [
+   "306d31748a3b9e59",
+   "321f7fc740c8a452",
+   "34989ea5a1a5e9ca",
+   "7a638b4dca343f79",
+   "7bf242da54dcebfe",
+   "a6456fae90a917a0",
+   "c793c1ff89083015",
+   "cab10c777e44194e",
+   "f02af4e20c099f7d"
+  ]
+ },
+ "commands": {
+  "audit": [
+   "776962bba5762b2d"
+  ],
+  "challenge": [
+   "78678d90cb21efaf"
+  ],
+  "handoff": [
+   "180e9c73144e95f1"
+  ],
+  "implement": [
+   "18049215ee7e3a87"
+  ],
+  "orchestrate": [
+   "1658b9197368c0e0"
+  ],
+  "plan": [
+   "73c627959c42b71f"
+  ],
+  "pr": [
+   "d8dade4df42c2c8c"
+  ],
+  "research": [
+   "005e853098338cf0"
+  ],
+  "review": [
+   "5ec37c04f8aba0c7"
+  ],
+  "setup-ai": [
+   "60dc4ca969f5ad6a",
+   "6ac1c4523627d059",
+   "9054c62f58aef11a",
+   "d4eee016d5aea5cc"
+  ]
+ }
+}

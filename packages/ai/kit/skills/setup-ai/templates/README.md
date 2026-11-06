@@ -2,15 +2,15 @@
 
 These files ship in **this skill folder** at `.agents/skills/setup-ai/templates/`. During phase C/D, read them here and copy customized output into `.agents/` (or repo glossary path). Fictional **Acme Bookings** examples appear only in these templates.
 
-| Template                               | Install path                                                                              |
-| -------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `templates/product.template.md`        | `.agents/product.md`                                                                      |
-| `templates/domain/booking.template.md` | `.agents/domain/<area>.md` (rename `<area>`)                                              |
-| `templates/personas-v2.template.md`    | `.agents/personas.md` (v2; `setup` init installs this file — phase C edits it in place)   |
-| `templates/design.template.md`         | `.agents/design.md`                                                                       |
-| `templates/glossary.template.md`       | `GLOSSARY.md` or `.agents/glossary.md`                                                    |
-| `templates/nested-agents.template.md`  | `<folder>/AGENTS.md` for each folder whose rules differ from the root                     |
-| `templates/model-routing.template.md`  | `.agents/model-routing.md` (provider, scout/worker/lead tiers, how a spawn picks a model) |
+| Template                               | Install path                                                                                                   |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `templates/product.template.md`        | `.agents/product.md`                                                                                           |
+| `templates/domain/booking.template.md` | `.agents/domain/<area>.md` (rename `<area>`)                                                                   |
+| `templates/personas-v2.template.md`    | `.agents/personas.md` (v2; `setup` init installs this file — phase C edits it in place)                        |
+| `templates/design.template.md`         | `.agents/design.md`                                                                                            |
+| `templates/glossary.template.md`       | `GLOSSARY.md` or `.agents/glossary.md`                                                                         |
+| `templates/nested-agents.template.md`  | `<folder>/AGENTS.md` for each folder whose rules differ from the root                                          |
+| kit `tokenomics.template.md`           | `.agents/tokenomics.md` (already installed; fill `providers.<p>.<kind>.<stakes>.model`, then `zedkit-ai sync`) |
 
 ## Read the code first (phase B)
 

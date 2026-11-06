@@ -110,12 +110,12 @@ Four more axes, scored 0-3 like the others, each measurable from files. **Every 
 - 2: Nested `AGENTS.md` (or an equivalent folder rule) in each folder that differs (features, ui, design, api, db), only what differs, with `file:line`, and linking the matching `.agents/domain` and `.agents/design` files; existing nested files were extended in place, not left alone as stubs; or `nested-agents: none|kept — <reason>` in the setup-log with a reason that holds.
 - 3: As 2, plus the reading log's **Rule map** accounts for every provider-scoped rule file (kept as owner, mirrored by a pointer, or not a rule; none copied), links to domain and design files instead of copies, about 60 lines or fewer, every link resolves, and the Cursor rule (when wired) only points at the nested file.
 
-### D4. Model routing
+### D4. Tokenomics
 
 - 0: Nothing; every spawn inherits the session model.
 - 1: A sentence in chat or in the setup-log, not written into the repo.
-- 2: `.agents/model-routing.md` names the provider the run executed on (from the tool, not the repo folders), the model list it read, and the scout / worker / lead tiers; root `AGENTS.md` points at it; reading spawns passed the scout model.
-- 3: As 2, plus the repo's own subagents are mapped to tiers (**Roles in this repo**), the setup-log records the tier and model of each fan-out, a provider that cannot route per spawn is stated plainly instead of papered over, and kit subagent files still say `model` omitted or `inherit`. A small repo with zero fan-out (the lead read inline, no reader spawns) reaches 3 when the setup-log states that plainly (`no fan-out: lead read inline`, which satisfies the fan-out record) and the rest holds.
+- 2: `.agents/tokenomics.md` has a real model (from the tool's listing, not `inherit`) on at least `providers.<p>.build.standard` and `providers.<p>.decide.sensitive`; root `AGENTS.md` points at it; `zedkit-ai sync` was run; reading spawns used `route --kind check`.
+- 3: As 2, plus the setup-log records the cell (`kind`, `stakes`, model) of each fan-out, a provider that cannot route per spawn is stated plainly instead of papered over, and kit subagent files still say `model` omitted or `inherit`. A small repo with zero fan-out (the lead read inline, no reader spawns) reaches 3 when the setup-log states that plainly (`no fan-out: lead read inline`, which satisfies the fan-out record) and the rest holds.
 
 ## Hard gates (binary, any failure fails the run)
 

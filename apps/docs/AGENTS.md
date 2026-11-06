@@ -154,6 +154,9 @@ must match a kit primitive's own look.
 - Root [AGENTS.md](../../AGENTS.md), kit [CATALOG.md](../../packages/ui/CATALOG.md).
 - Visual contract: [VISUAL-CONTRACT.md](./VISUAL-CONTRACT.md).
 - Signature: [docs/design/signature.md](../../docs/design/signature.md).
+- Domain: [identity-suggest.md](../../.agents/domain/identity-suggest.md),
+  [public-hygiene.md](../../.agents/domain/public-hygiene.md).
+- Design / identity: [design.md](../../.agents/design.md).
 - Lens registry: `packages/ai/kit/skills/review/lenses.md`
   (Frontend rules: the authoritative demo rules).
 - Page layouts: [PAGE-TEMPLATE.md](./PAGE-TEMPLATE.md),

@@ -8,7 +8,7 @@ import { Result } from '@zedtech/zedkit-core';
 
 // @public (undocumented)
 export type Action = {
-    kind: "copy" | "link" | "write" | "append" | "skip";
+    kind: "copy" | "link" | "write" | "append" | "skip" | "generate" | "convert" | "prune";
     path: string;
     note?: string;
 };
@@ -99,6 +99,9 @@ export type InstallOptions = {
     adopt?: boolean;
     kit?: string;
 };
+
+// @public
+export function inSync(actions: readonly Action[]): boolean;
 
 // @public (undocumented)
 export type Issue = {
@@ -199,6 +202,19 @@ export const STAKES: readonly ["trivial", "standard", "sensitive", "critical"];
 
 // @public (undocumented)
 export type Stakes = (typeof STAKES)[number];
+
+// @public
+export function syncKit(options: SyncOptions): Result<Action[]>;
+
+// @public (undocumented)
+export type SyncOptions = {
+    dest: string;
+    providers?: readonly string[];
+    check?: boolean;
+    dryRun?: boolean;
+    prune?: boolean;
+    noPrune?: boolean;
+};
 
 // @public @deprecated (undocumented)
 export type Target = Provider;

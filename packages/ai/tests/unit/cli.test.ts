@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, symlinkSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { main } from "#cli.js";
@@ -246,14 +246,16 @@ describe("cli", () => {
     const root = tempDir();
     put(root, ".agents/skills/alpha/SKILL.md", SKILL("alpha"));
     put(root, ".agents/commands/run.md", COMMAND("alpha"));
-    put(root, ".cursor/commands/run.md", COMMAND("alpha"));
+    mkdirSync(join(root, ".cursor/commands"), { recursive: true });
+    symlinkSync("../../.agents/commands/run.md", join(root, ".cursor/commands/run.md"));
     expect(run("validate", root)).toEqual({ code: 0, text: "ok", errors: "" });
+    unlinkSync(join(root, ".cursor/commands/run.md"));
     put(root, ".cursor/commands/run.md", COMMAND("alpha", "Edited."));
     for (const dir of [root, join(root, ".agents")]) {
       const result = run("validate", dir);
       expect(result.code, dir).toBe(1);
-      expect(result.text, dir).toContain("differs from");
-      expect(result.text, dir).not.toContain("copy it over");
+      expect(result.text, dir).toContain("user file kept");
+      expect(result.text, dir).toContain("npx zedkit-ai sync");
     }
   });
 

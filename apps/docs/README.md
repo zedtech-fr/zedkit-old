@@ -3,7 +3,8 @@
 Public documentation site for the kit ([zedkit.app](https://zedkit.app)).
 Next.js + Fumadocs; catalog pages are generated from
 `docs/catalog/catalog.json`, with live `@zedtech/zedkit-ui` previews,
-props tables, and CI coverage checks.
+props tables, and CI coverage checks. First paint uses Glass
+(`DEFAULT_IDENTITY` in `lib/default-identity.ts`); Tide is an opt-in look.
 
 ## Local dev
 

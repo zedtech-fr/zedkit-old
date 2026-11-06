@@ -10,16 +10,16 @@ Append one entry per `/setup-ai` run, newest first. Each entry records what the 
 - **What hurt:** the main gate needs a database; ran the read-only checks and marked the gate `UNVERIFIED`.
 - **Providers (always paste the full value table):**
 
-| Provider | Value                                                      |
-| -------- | ---------------------------------------------------------- |
-| `cursor` | Rules, skills, agents and commands inside the IDE          |
-| `claude` | The same setup for Claude Code sessions, linked not copied |
-| `codex`  | Reads the shared source directly; nothing extra to install |
-| `muse`   | Reads the shared source directly; nothing extra to install |
+| Provider | Value                                                                       |
+| -------- | --------------------------------------------------------------------------- |
+| `cursor` | Rules, skills, agents and commands inside the IDE                           |
+| `claude` | The same setup for Claude Code sessions, linked not copied                  |
+| `codex`  | Reads the shared source directly; nothing extra to install                  |
+| `muse`   | Native marked files in `.agents/agents`; kit/unmarked files stay the source |
 
 - **Wired:** cursor, claude (example)
-- **Reading:** medium repo, 8 readers on the scout tier from `npx zedkit-ai scan`; 61 rules merged, 4 dropped after spot-checks; log at `.agents/setup-log/reading.md`; interview cut to 5 questions because the code answered the rest.
-- **Routing:** provider cursor; scout = {cheap fast model}, worker = {mid}, lead = inherit; readers passed the scout model on every spawn; file at `.agents/model-routing.md`.
+- **Reading:** medium repo, 8 readers as `check`/`standard` from `npx zedkit-ai scan`; 61 rules merged, 4 dropped after spot-checks; log at `.agents/setup-log/reading.md`; interview cut to 5 questions because the code answered the rest.
+- **Routing:** provider cursor; `check.standard` = {cheap fast model}, `build.standard` = {mid}, `decide.sensitive` = inherit; readers passed `zedkit-ai route explorer --kind check --stakes standard`; file at `.agents/tokenomics.md`; `zedkit-ai sync` run.
 - **Nested:** extended `apps/web/AGENTS.md` and `packages/billing/AGENTS.md` in place, linked to `.agents/domain/` (log it as `nested-agents: extended — <files>`, `none — <reason>` or `kept — <reason>`)
 - **Plan gaps:** paths changed after the plan table but missing rows (or: none — reconciled with `git diff --name-only` and **`npx zedkit-ai validate --setup`** clean; use **`--plan <file>`** when the plan is not **`PLAN.md`** at the repo root or **`.agents/setup-log/plan.md`**)
 - **Unenforced rules:** (architecture score 3 — or: none; cite the domain rule ID for domain rules, e.g. `B-01`)

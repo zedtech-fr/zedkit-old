@@ -3,6 +3,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { tryCatch } from "@zedtech/zedkit-core";
 import { listRepoFiles, minReaders, scanRepo } from "./scan.js";
+import { parseTokenomics, POLICY_PROVIDERS } from "./tokenomics.js";
 import type { Issue } from "./validate.js";
 
 // A cited line: path/to/file.ext:42
@@ -128,7 +129,7 @@ function rules(root: string, issues: Issue[]): void {
 /** D3: nested AGENTS.md wired to the setup's rules (links `.agents/`), or a stated `nested-agents:` decision in the setup-log. */
 function nested(root: string, issues: Issue[]): void {
   const files = listRepoFiles(root).filter((p) => p.includes("/") && p.endsWith("/AGENTS.md"));
-  if (files.some((f) => /\.agents\/(domain|design|product|model-routing)/u.test(text(join(root, f)) ?? ""))) return;
+  if (files.some((f) => /\.agents\/(domain|design|product|model-routing|tokenomics)/u.test(text(join(root, f)) ?? ""))) return;
   const log = text(join(root, ".agents/setup-log.md")) ?? "";
   if (/^\s*[-*]?\s*nested-agents:\s*\S/imu.test(log)) return;
   const message =
@@ -155,23 +156,85 @@ function ruleMap(root: string, issues: Issue[]): void {
   issues.push({ path, message: `D3 nested rules: the reading log's Rule map misses ${missing.length} provider rule file(s): ${shown}${more} (each is mirrored by a nested AGENTS.md pointer, kept as the owner, or marked not a rule)` });
 }
 
-/** D4: model routing is written down, names its provider and tiers, and the root AGENTS.md points at it. */
+const asObj = (value: unknown): Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+
+function cellModel(data: Record<string, unknown>, provider: string, kind: string, stakes: string): unknown {
+  return asObj(asObj(asObj(asObj(data.providers)[provider])[kind])[stakes]).model;
+}
+
+const isRealModel = (value: unknown): boolean => typeof value === "string" && value !== "" && value !== "inherit";
+
+/** True when any provider has a real (not `inherit`) model on the two D4 cells. */
+function hasFilledCells(data: Record<string, unknown>): boolean {
+  return POLICY_PROVIDERS.some(
+    (provider) =>
+      isRealModel(cellModel(data, provider, "build", "standard")) && isRealModel(cellModel(data, provider, "decide", "sensitive")),
+  );
+}
+
+const LEGACY_NOTE =
+  "warning: D4 tokenomics: .agents/model-routing.md is deprecated; copy its rows into .agents/tokenomics.md, delete it, and point AGENTS.md at the new file. Removed two minors after this release.";
+
+/**
+ * D4: `.agents/tokenomics.md` has a real model on at least `build.standard`
+ * and `decide.sensitive` for one provider, and root AGENTS.md points at it.
+ * A leftover `.agents/model-routing.md` still passes, with a deprecation note,
+ * until that file is dropped two minors later.
+ */
 function routing(root: string, issues: Issue[]): void {
-  const path = join(root, ".agents/model-routing.md");
-  const body = text(path);
-  if (body === undefined) {
-    issues.push({ path, message: "D4 model routing: no .agents/model-routing.md (provider, scout/worker/lead tiers, how each spawn picks its model)" });
+  const policyPath = join(root, ".agents/tokenomics.md");
+  const legacyPath = join(root, ".agents/model-routing.md");
+  const agentsPath = join(root, "AGENTS.md");
+  const agents = text(agentsPath) ?? "";
+  const policyText = text(policyPath);
+  const parsed = policyText !== undefined ? parseTokenomics(policyText) : undefined;
+  if (parsed?.ok === true && hasFilledCells(parsed.value)) {
+    if (!/tokenomics/iu.test(agents)) {
+      issues.push({ path: agentsPath, message: "D4 tokenomics: root AGENTS.md does not point at .agents/tokenomics.md" });
+    }
     return;
   }
-  if (!/provider[^\n]*\b(cursor|claude|codex|muse)\b/iu.test(body)) {
-    issues.push({ path, message: "D4 model routing: name the provider this runs on (cursor, claude, codex or muse)" });
+  const legacy = text(legacyPath);
+  if (legacy !== undefined) {
+    const legacyIssues: Issue[] = [];
+    if (!/provider[^\n]*\b(cursor|claude|codex|muse)\b/iu.test(legacy)) {
+      legacyIssues.push({ path: legacyPath, message: "D4 tokenomics: name the provider this runs on (cursor, claude, codex or muse)" });
+    }
+    if (!/\bscout\b/iu.test(legacy) || !/\blead\b/iu.test(legacy)) {
+      legacyIssues.push({ path: legacyPath, message: "D4 tokenomics: define at least the scout (cheap reading) and lead (synthesis) tiers" });
+    }
+    if (!/model[- ]routing|tokenomics/iu.test(agents)) {
+      legacyIssues.push({
+        path: agentsPath,
+        message: "D4 tokenomics: root AGENTS.md does not point at .agents/tokenomics.md (legacy .agents/model-routing.md is accepted with a deprecation note)",
+      });
+    }
+    if (legacyIssues.length === 0) {
+      issues.push({ path: legacyPath, message: LEGACY_NOTE });
+      return;
+    }
+    if (policyText === undefined) {
+      issues.push(...legacyIssues);
+      return;
+    }
   }
-  if (!/\bscout\b/iu.test(body) || !/\blead\b/iu.test(body)) {
-    issues.push({ path, message: "D4 model routing: define at least the scout (cheap reading) and lead (synthesis) tiers" });
+  if (policyText !== undefined) {
+    issues.push({
+      path: policyPath,
+      message:
+        "D4 tokenomics: .agents/tokenomics.md must set a real model (not inherit) on providers.<provider>.build.standard and providers.<provider>.decide.sensitive",
+    });
+    if (!/tokenomics/iu.test(agents)) {
+      issues.push({ path: agentsPath, message: "D4 tokenomics: root AGENTS.md does not point at .agents/tokenomics.md" });
+    }
+    return;
   }
-  if (!/model[- ]routing/iu.test(text(join(root, "AGENTS.md")) ?? "")) {
-    issues.push({ path: join(root, "AGENTS.md"), message: "D4 model routing: root AGENTS.md does not point at .agents/model-routing.md" });
-  }
+  issues.push({
+    path: policyPath,
+    message:
+      "D4 tokenomics: no .agents/tokenomics.md (fill providers.<provider>.build.standard and providers.<provider>.decide.sensitive from the tool's model list, then point root AGENTS.md at it)",
+  });
 }
 
 /** Opt-in (`validate --setup`): the four v3 depth axes, as issues a v2-style setup fails. */

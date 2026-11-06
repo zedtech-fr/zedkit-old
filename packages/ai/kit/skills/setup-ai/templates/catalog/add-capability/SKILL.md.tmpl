@@ -17,13 +17,13 @@ One journey, end to end, smallest diff. Facts come from this repo, never from me
 
 1. **Spec the slice.** One journey, acceptance criteria, non-goals. Three lines is enough; write them in the PR body.
 2. **Rule check.** List the domain rules the slice touches. If it changes a rule, update the domain doc in the same PR.
-3. **Test first at the edge.** Write the failing test at the outermost layer the repo already tests (route, handler, or UI), then the unit tests the new rules need.
+3. **Test first.** Unit and integration tests are primary. Contract or Pact tests when a boundary earns them. Write the failing test at the seam this repo already uses. End-to-end or browser tests only for an explicitly justified critical user path this slice owns — not a default battery or count.
 4. **Build inward.** Route or UI, then API, then data. Follow the boundaries in `AGENTS.md`; no new layer, no new dependency without a reason in the PR.
 5. **Prove.** Run every gate from `AGENTS.md` and paste the result. A gate you could not run is listed as skipped, with the reason.
 6. **Review** with the repo's review workflow before opening the PR.
 
 ## Done when
 
-- The journey works end to end and the acceptance criteria each have a test or a recorded manual check.
+- The journey works; acceptance criteria have a unit or integration test (E2E only if that path is an explicitly justified critical user path).
 - Gates are green, or skipped with a reason in the PR.
 - No file outside the slice changed.

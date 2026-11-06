@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { kitDir } from "#kit.js";
 import { checkDepth } from "#setup-depth.js";
-import { put, tempDir } from "./helpers.js";
+import { put, tempDir, TOKENOMICS_D4 } from "./helpers.js";
 
 /** A fictional brand: cream page, mauve surface, one saturated pine accent; serif display, sans body, mono data. */
 const TOKENS = [
@@ -47,7 +47,7 @@ function repo(design: string, css = TOKENS): string {
   put(
     root,
     "AGENTS.md",
-    "# Root\n\n## Model routing\n\nSee `.agents/model-routing.md`.\n",
+    "# Root\n\n## Tokenomics\n\nSee `.agents/tokenomics.md`.\n",
   );
   put(
     root,
@@ -61,8 +61,8 @@ function repo(design: string, css = TOKENS): string {
   );
   put(
     root,
-    ".agents/model-routing.md",
-    "**Provider running this setup:** cursor\n\n| **scout** | read |\n| **lead** | decide |\n",
+    ".agents/tokenomics.md",
+    TOKENOMICS_D4,
   );
   put(root, ".agents/design.md", design);
   return root;
