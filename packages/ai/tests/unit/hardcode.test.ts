@@ -338,6 +338,22 @@ describe("legacy model-routing.md", () => {
       expect.stringContaining("AGENTS.md:1: model name \"gpt-5\""),
     ]);
   });
+
+  it("still warns when the legacy file is a symlink whose realpath sits outside .agents", () => {
+    const root = project();
+    put(root, "hop/model-routing.md", "gpt-5\n");
+    symlinkSync(join(root, "hop/model-routing.md"), join(root, ".agents/model-routing.md"));
+    const found = scan(root);
+    expect(found).toEqual([expect.stringContaining(".agents/model-routing.md:1: warning:")]);
+  });
+
+  it("still warns when agentsDir is a symlink (canonical path, not relative-to-alias)", () => {
+    const root = project({ ".agents/model-routing.md": "gpt-5\n" });
+    const alias = tempDir();
+    symlinkSync(join(root, ".agents"), join(alias, ".agents"));
+    const found = checkHardcodedModels(root, join(alias, ".agents")).map((i) => `${i.path}: ${i.message}`);
+    expect(found.some((line) => line.includes("warning:") && line.includes("legacy .agents/model-routing.md"))).toBe(true);
+  });
 });
 
 describe("shipped kit text", () => {

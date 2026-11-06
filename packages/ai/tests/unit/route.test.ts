@@ -618,6 +618,24 @@ describe("loadPolicy and loadAgent", () => {
     );
   });
 
+  it("maps the Muse dest alias to the kit source CHECK header", () => {
+    const dir = tempDir();
+    const dest = loadAgent(dir, "accessibility-auditor");
+    const source = loadAgent(dir, "a11y-auditor");
+    expect(source).toMatchObject({
+      ok: true,
+      value: { name: "a11y-auditor", header: KIT_HEADERS["a11y-auditor"] },
+    });
+    expect(dest).toMatchObject({
+      ok: true,
+      value: { name: "accessibility-auditor", header: KIT_HEADERS["a11y-auditor"] },
+    });
+    expect(dest.ok && dest.value.header.default_kind).toBe("check");
+    const routed = route(policy(), { stakes: "standard", agent: dest.ok ? dest.value : { name: "x", header: KIT_HEADERS["a11y-auditor"]! } });
+    expect(routed).toMatchObject({ kind: "check", kindSource: "hint" });
+    expect(routed.notes).toContain("kind not given, using check (hint)");
+  });
+
   it("reads the header from agents.meta.json, falls back to the table silently, rejects unknown names", () => {
     const dir = tempDir();
     put(dir, "agents/mine.md", AGENT("mine"));

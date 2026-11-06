@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { generateAgent, generateMuseAgent, hasMarker, markerLine, MARKER_PREFIX, museNativeName, MUSE_NAME_ALIAS } from "#generate.js";
+import { generateAgent, generateMuseAgent, hasMarker, markerLine, MARKER_PREFIX, museNativeName, museSourceName, MUSE_NAME_ALIAS } from "#generate.js";
 import { parseFrontmatter } from "#frontmatter.js";
 
 const fixture = (name: string): string =>
@@ -178,5 +178,12 @@ describe("museNativeName", () => {
     expect(MUSE_NAME_ALIAS["a11y-auditor"]).toBe("accessibility-auditor");
     expect(museNativeName("my_agent")).toBeUndefined();
     expect(museNativeName("A11y")).toBeUndefined();
+  });
+
+  it("museSourceName reverses dest aliases and leaves kit names unchanged", () => {
+    expect(museSourceName("accessibility-auditor")).toBe("a11y-auditor");
+    expect(museSourceName("a11y-auditor")).toBe("a11y-auditor");
+    expect(museSourceName("explorer")).toBe("explorer");
+    expect(museNativeName(museSourceName("accessibility-auditor"))).toBe("accessibility-auditor");
   });
 });

@@ -9,6 +9,7 @@ import {
   readSidecar,
   type AgentHeader,
 } from "./agent-header.js";
+import { museSourceName } from "./generate.js";
 import {
   checkTokenomics,
   loadDefaults,
@@ -263,9 +264,10 @@ export function loadPolicy(agentsDir: string): Result<Tokenomics> {
 /**
  * The agent to route: its name and header, read from the `agents.meta.json`
  * entry of `agentsDir` when it has one (see `readAgentHeader`). A kit agent
- * routes from the shipped table when the project has no entry; a name that
- * is neither installed, nor a kit agent, nor in the sidecar is an error. The
- * note says when the default header was used.
+ * routes from the shipped table when the project has no entry; a Muse dest
+ * alias (`accessibility-auditor`) shares the kit source identity. A name that
+ * is neither installed, nor a kit agent, nor an alias, nor in the sidecar is
+ * an error. The note says when the default header was used.
  */
 export function loadAgent(
   agentsDir: string,
@@ -275,11 +277,19 @@ export function loadAgent(
     return err(new Error(`invalid agent name "${name}"`));
   const sidecar = readSidecar(agentsDir);
   if (!sidecar.ok) return err(sidecar.error);
+  const sourceName = museSourceName(name);
   const file = join(agentsDir, "agents", `${name}.md`);
-  const entry = sidecar.value[name];
-  if (!existsSync(file) && entry === undefined && KIT_HEADERS[name] === undefined)
+  const sourceFile = join(agentsDir, "agents", `${sourceName}.md`);
+  const entry = sidecar.value[name] ?? sidecar.value[sourceName];
+  if (
+    !existsSync(file) &&
+    !existsSync(sourceFile) &&
+    entry === undefined &&
+    KIT_HEADERS[name] === undefined &&
+    KIT_HEADERS[sourceName] === undefined
+  )
     return err(new Error(`unknown agent "${name}" (no ${file})`));
-  const read = readAgentHeader(name, entry);
+  const read = readAgentHeader(sourceName, entry);
   return ok({
     name,
     header: read.header,

@@ -17,6 +17,14 @@ export const MODEL_OK_MARKER = "zk:model-ok";
  */
 export const LEGACY_WARN = ["model-routing.md"] as const;
 
+/** True when `fileReal` is the project's `.agents/model-routing.md`, even via symlink. */
+function isLegacyRoutingFile(fileReal: string, agentsDir: string): boolean {
+  return LEGACY_WARN.some((legacy) => {
+    const named = tryCatch(() => realpathSync(join(agentsDir, legacy)));
+    return named.ok && named.value === fileReal;
+  });
+}
+
 /**
  * Kit skills that name a model in benchmark text. They are shipped verbatim,
  * so a consumer with the `full` preset must not have to allow them by hand.
@@ -174,6 +182,7 @@ export function checkHardcodedModels(projectRoot: string, agentsDir: string): Is
       if (allow.some((entry) => (entry.base === "any" && entry.regex.test(rootRel)) || entry.regex.test(agentsRel))) continue;
       const lines = readFileSync(file, "utf8").split(/\r?\n/);
       if (GENERATED.test(lines[0] ?? "") || GENERATED.test(lines[1] ?? "")) continue;
+      const warn = isLegacyRoutingFile(real, agentsDir);
       const names = new Set<string>();
       lines.forEach((line, index) => {
         if (line.includes(MODEL_OK_MARKER) || (lines[index - 1] ?? "").includes(MODEL_OK_MARKER)) return;
@@ -182,7 +191,6 @@ export function checkHardcodedModels(projectRoot: string, agentsDir: string): Is
             const name = trim(match[0]);
             if (name === "" || names.has(name.toLowerCase())) continue;
             names.add(name.toLowerCase());
-            const warn = LEGACY_WARN.some((legacy) => legacy === basename(real) && posix(relative(agentsDir, real)) === legacy);
             issues.push({
               path: `${rootRel}:${index + 1}`,
               message: warn

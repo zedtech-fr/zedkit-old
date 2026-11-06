@@ -119,6 +119,18 @@ export function museNativeName(name: string): string | undefined {
   return MUSE_NAME_ALIAS[name];
 }
 
+const MUSE_DEST_SOURCE: Readonly<Record<string, string>> = Object.fromEntries(
+  Object.entries(MUSE_NAME_ALIAS).map(([source, dest]) => [dest, source]),
+);
+
+/**
+ * Kit source name for a Muse dest (or any legal name). Router/`loadAgent`
+ * uses this so `accessibility-auditor` shares `a11y-auditor` CHECK rights.
+ */
+export function museSourceName(name: string): string {
+  return MUSE_DEST_SOURCE[name] ?? name;
+}
+
 const MUSE_KEYS = new Set(["name", "description", "model", "disallowedTools"]);
 const MUSE_DENIED: Readonly<Record<string, string>> = {
   Write: "write_file",
