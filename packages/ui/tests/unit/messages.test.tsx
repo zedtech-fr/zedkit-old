@@ -121,7 +121,7 @@ describe("kit chrome messages", () => {
     await user.click(screen.getByRole("button", { name: "Delete" }));
     expect(screen.getByRole("button", { name: "Confirmer" })).not.toBeNull();
     expect(screen.getByRole("button", { name: "Annuler" })).not.toBeNull();
-  }, 15_000);
+  });
 
   it("keeps English when no provider wraps the tree", () => {
     render(
