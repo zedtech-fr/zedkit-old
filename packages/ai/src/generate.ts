@@ -178,7 +178,10 @@ const MUSE_DENIED: Readonly<Record<string, string>> = {
 
 /**
  * Muse write-capable tools `disallowedTools` actually enforces (P8, Muse 1.4.14).
- * `write_file, edit_file` alone still lets children write via `bash`.
+ * orch-88 observed /tmp bash writes; P8 also wrote a project-relative
+ * `./probe-zk-w-a-shell.txt` with default sandbox ON. That is a tool-restriction
+ * hole, not a sandbox-allowed temp write. `write_file, edit_file` alone is
+ * unsafe; adding `bash` closed the project write. Keep `read_file`/`search`.
  */
 export const MUSE_WRITE_TOOLS = ["write_file", "edit_file", "bash"] as const;
 

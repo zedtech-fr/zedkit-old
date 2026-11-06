@@ -136,7 +136,7 @@ describe("generateMuseAgent", () => {
     expect(out.value.text).not.toContain("disallowedTools");
   });
 
-  it("closes the bash write escape when the source denies writes", () => {
+  it("closes the project-path bash write, not only /tmp: write_file,edit_file alone is the unsafe skip", () => {
     expect([...MUSE_WRITE_TOOLS]).toEqual(["write_file", "edit_file", "bash"]);
     const source = "---\nname: explorer\ndescription: d\nmodel: inherit\ndisallowedTools: Write, Edit, NotebookEdit\n---\nBody\n";
     const out = generateMuseAgent({ name: "explorer", source, model: "inherit" });
