@@ -53,6 +53,7 @@ export default async function Page({ params }: { params: Promise<{ slug?: string
     breadcrumb,
   });
   const MDX = page.data.body;
+  const hidePageTitle = page.data.hidePageTitle === true;
   return (
     <>
       <JsonLd data={jsonLd} />
@@ -67,7 +68,7 @@ export default async function Page({ params }: { params: Promise<{ slug?: string
           },
         }}
       >
-        <DocsTitle>{page.data.title}</DocsTitle>
+        {hidePageTitle ? null : <DocsTitle>{page.data.title}</DocsTitle>}
         {page.data.componentPage ? null : <DocsDescription>{page.data.description}</DocsDescription>}
         {page.data.componentPage ? (
           // Component pages are composed from kit components; the `prose` reset DocsBody adds would restyle them.

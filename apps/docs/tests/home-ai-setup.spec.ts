@@ -43,7 +43,15 @@ test.describe("home AI setup section", () => {
   test("the guide route exists", async ({ page }) => {
     const response = await page.goto("/docs/ai/setup", { waitUntil: "networkidle" });
     expect(response?.status()).toBe(200);
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Set up zedkit AI");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Set up zedkit AI in");
+    await expect(page.locator("h1 [data-animate='fade-in']")).toBeVisible();
+  });
+
+  test("the guide H1 is static inclusive text under reduced motion", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/docs/ai/setup", { waitUntil: "networkidle" });
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Cursor, Muse, Claude, or your choice");
+    await expect(page.locator("h1 [data-animate]")).toHaveCount(0);
   });
 
   test("terminal region is keyboard reachable and wide screens show it beside the prompt", async ({ page }) => {

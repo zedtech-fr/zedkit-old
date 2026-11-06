@@ -1,10 +1,10 @@
-# Set up zedkit AI in this repository (Cursor)
+# Set up zedkit AI in this repository
 
-Agent-executable onboarding. Follow these steps in order in the **current repo root**. Do not ask how to begin.
+Agent-executable onboarding. Follow these steps in order in the **current repo root**. Do not ask how to begin. Canonical human walkthrough: [https://zedkit.app/docs/ai/setup](https://zedkit.app/docs/ai/setup). This file: [https://zedkit.app/ai/setup.md](https://zedkit.app/ai/setup.md).
 
 ## Goal
 
-Install `@zedtech/zedkit-ai`, wire Cursor with adopt mode, run `/setup-ai` to tailor `AGENTS.md` to this repo, then validate.
+Install `@zedtech/zedkit-ai`, wire your coding agent tool with adopt mode, run `/setup-ai` to tailor `AGENTS.md` to this repo, then validate.
 
 ## Steps
 
@@ -24,14 +24,19 @@ Install `@zedtech/zedkit-ai`, wire Cursor with adopt mode, run `/setup-ai` to ta
    npx zedkit-ai setup --provider cursor
    ```
 
-   Use another provider name if the user specified one (`claude`, `codex`, `muse`, or comma-separated).
+   **`--provider`** accepts `cursor`, `muse`, `claude`, `codex`, or comma-separated names (`cursor,muse`). Use `all` to wire every supported runtime. Match the tool the user asked for.
 
 3. **Run setup-ai** (repo audit, discovery interview, plan, and tailored instructions):
 
-   - In Cursor: run **`/setup-ai`** (or ask the agent to run the `setup-ai` skill). Read the skill, then print its intro first — before any repo reads, inventory, or writes — and **continue in the same turn** straight into phase A without waiting for a reply. The only stop points are the phase B batched interview, plan approval before writes, and the final report.
-   - Follow the skill through **verify**: run the gate commands it lists, apply the approved plan, finish the report.
-   - Phase **B** starts by **reading the code**, not by asking: the agent runs `npx zedkit-ai scan`, then spawns read-only subagents on a cheap, fast model (1–5 on a small repo, 10–20 on a big one) that report the rules already in place with `file:line` evidence. It writes them to domain rules, nested `AGENTS.md` files and `.agents/tokenomics.md`, then runs `zedkit-ai sync`, so later agent work in the repo keeps the same cheap-reads, strong-decides split.
-   - Then **answer or delegate the batched discovery interview** (at most 8 questions in one batch, only what the code could not answer); do not skip the interview or substitute guesses for owner answers.
+   - **Cursor:** In Cursor, run **`/setup-ai`** (or ask the agent to run the `setup-ai` skill). Read the skill, then print its intro first — before any repo reads, inventory, or writes — and **continue in the same turn** straight into phase A without waiting for a reply. The only stop points are the phase B batched interview, plan approval before writes, and the final report.
+   - **Muse:** Open Muse for this repo and paste a message that runs the `setup-ai` skill end to end (same phases as above).
+   - **Claude Code / Codex / other agent:** Paste the same intent: run the `setup-ai` skill from the kit through verify, following its intro and phases (no skipping the batched interview).
+
+   Follow the skill through **verify**: run the gate commands it lists, apply the approved plan, finish the report.
+
+   Phase **B** starts by **reading the code**, not by asking: the agent runs `npx zedkit-ai scan`, then spawns read-only subagents on a cheap, fast model (1–5 on a small repo, 10–20 on a big one) that report the rules already in place with `file:line` evidence. It writes them to domain rules, nested `AGENTS.md` files and `.agents/tokenomics.md`, then runs `zedkit-ai sync`, so later agent work in the repo keeps the same cheap-reads, strong-decides split.
+
+   Then **answer or delegate the batched discovery interview** (at most 8 questions in one batch, only what the code could not answer); do not skip the interview or substitute guesses for owner answers.
 
 4. **Validate**:
 
@@ -45,7 +50,7 @@ Install `@zedtech/zedkit-ai`, wire Cursor with adopt mode, run `/setup-ai` to ta
    ok
    ```
 
-   That proves the install is coherent on disk. It does not prove the provider lists the agents, honors `model:`, or discovers the skills — confirm those natively.
+   That proves the install is coherent on disk. It does not prove your provider lists the agents, honors `model:`, or discovers the skills — confirm those in your tool.
 
    Fix every reported path until validate is clean. If the repo uses Prettier, add the kit paths from the CLI **`prettier:`** hint to `.prettierignore` (or approve that row in the setup-ai plan) so `prettier --check .` stays green.
 

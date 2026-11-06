@@ -1,15 +1,18 @@
 ---
-title: "Set up zedkit AI in Cursor"
-description: "One paste prompt for Cursor: install the kit with adopt mode, run /setup-ai, validate. Agent-executable steps and raw markdown for fetch."
+title: "Set up zedkit AI"
+description: "One paste prompt for your coding agent: install the kit with adopt mode, run /setup-ai, validate. Agent-executable steps and raw markdown for fetch."
+hidePageTitle: true
 ---
+
+<AiSetupPageTitle />
 
 Every command on this page is run in a scratch directory by automated checks (install + `setup` + `validate`).
 
 ## Who this is for
 
-You use **Cursor** on a git repo (empty or already with team rules) and want one paste to hand the agent — no back-and-forth on how to start.
+You use a **coding agent** (Cursor, Muse, Claude Code, Codex, or similar) on a git repo (empty or already with team rules) and want one paste to hand the agent — no back-and-forth on how to start.
 
-## Cursor prompt (copy)
+## Agent prompt (copy)
 
 <AiSetupPrompt />
 
@@ -18,7 +21,7 @@ Agents should read the raw steps at [https://zedkit.app/ai/setup.md](https://zed
 ## What the agent will do
 
 1. Add `@zedtech/zedkit-ai` if missing (`pnpm add -D -w` at a pnpm workspace root when `pnpm-workspace.yaml` exists).
-2. Run `npx zedkit-ai setup --provider cursor` (**`setup` preset by default**, adopt mode — keeps your files on collision; override with `--preset starter|setup|core|full` if needed).
+2. Run `npx zedkit-ai setup --provider cursor` (**`setup` preset by default**, adopt mode — keeps your files on collision; override with `--preset starter|setup|core|full` if needed). Use `--provider muse`, `claude`, `codex`, comma-separated names, or `all` to match your tool.
 3. Run **`/setup-ai`** — phases A–E (audit, **batched discovery interview** — answer or delegate, do not skip — build `product.md`, domain rules, personas, `design.md` when relevant, repo skills, score and learn), then verify and report.
 4. Run `npx zedkit-ai validate` until stdout is `ok`.
 
@@ -38,7 +41,7 @@ pnpm add -D @zedtech/zedkit-ai   # workspace root: pnpm add -D -w @zedtech/zedki
 npx zedkit-ai setup --provider cursor
 ```
 
-Then **`/setup-ai`** in Cursor, then:
+Then **`/setup-ai`** in your agent, then:
 
 ```sh
 npx zedkit-ai validate
@@ -62,7 +65,7 @@ Full notes: the package README `Upgrading from 0.12` section.
 | --- | --- |
 | `validate` not `ok` | Run from repo root; fix each `path: message` line or re-run `setup` after resolving collisions. |
 | Agent skips `/setup-ai` | Paste the prompt again; mechanical install alone is not done. |
-| Unknown provider | Use `cursor`, `claude`, `codex`, `muse`, or comma-separated names only. |
+| Unknown provider | Use `cursor`, `claude`, `codex`, `muse`, `all`, or comma-separated names only. |
 
 ## Next steps
 
