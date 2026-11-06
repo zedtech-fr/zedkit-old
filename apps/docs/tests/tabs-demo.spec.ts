@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const URL = "http://127.0.0.1:3100/docs/ui/switch-between-tabbed-panels";
+const URL = "/docs/ui/switch-between-tabbed-panels";
 const IDENTITIES = ["mist", "press", "tide", "volt", "maison", "glass"] as const;
 
 test.describe("tabs page shows a live preview for each example", () => {

@@ -1,10 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-const BASE = "http://127.0.0.1:3100";
-
 test.describe("docs dialog and drawer previews show realistic screens", () => {
   test("dialog: an order sheet with a status, not a stub", async ({ page }) => {
-    await page.goto(`${BASE}/docs/ui/open-modal-dialogs`, { waitUntil: "networkidle" });
+    await page.goto("/docs/ui/open-modal-dialogs", { waitUntil: "networkidle" });
     await page.getByRole("button", { name: "Open dialog" }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByRole("heading", { name: "Order details" })).toBeVisible();
@@ -15,14 +13,14 @@ test.describe("docs dialog and drawer previews show realistic screens", () => {
   });
 
   test("dialog: props table lists the root props (#1061)", async ({ page }) => {
-    await page.goto(`${BASE}/docs/ui/open-modal-dialogs`, { waitUntil: "networkidle" });
+    await page.goto("/docs/ui/open-modal-dialogs", { waitUntil: "networkidle" });
     await expect(page.getByRole("heading", { name: "Props" })).toBeVisible();
     await expect(page.getByText("onOpenChange?", { exact: true })).toBeVisible();
     await expect(page.getByText("modal?", { exact: true })).toBeVisible();
   });
 
   test("confirm: the delete flow ends in a visible result", async ({ page }) => {
-    await page.goto(`${BASE}/docs/ui/confirm-destructive-actions`, { waitUntil: "networkidle" });
+    await page.goto("/docs/ui/confirm-destructive-actions", { waitUntil: "networkidle" });
     await expect(page.getByText("Website relaunch").first()).toBeVisible();
     await page.getByRole("button", { name: "Delete item" }).click();
     const dialog = page.getByRole("dialog");
@@ -37,7 +35,7 @@ test.describe("docs dialog and drawer previews show realistic screens", () => {
   });
 
   test("confirm: custom labels preview keeps access when cancelled, revokes when confirmed", async ({ page }) => {
-    await page.goto(`${BASE}/docs/ui/confirm-destructive-actions`, { waitUntil: "networkidle" });
+    await page.goto("/docs/ui/confirm-destructive-actions", { waitUntil: "networkidle" });
     await expect(page.getByRole("heading", { name: "Custom button labels", exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Revoke", exact: true }).click();
     const dialog = page.getByRole("dialog");
@@ -54,7 +52,7 @@ test.describe("docs dialog and drawer previews show realistic screens", () => {
   });
 
   test("drawer: a task sheet with details and activity", async ({ page }) => {
-    await page.goto(`${BASE}/docs/ui/slide-in-a-drawer-panel`, { waitUntil: "networkidle" });
+    await page.goto("/docs/ui/slide-in-a-drawer-panel", { waitUntil: "networkidle" });
     await page.getByRole("button", { name: "Open drawer" }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByRole("heading", { name: "Task details" })).toBeVisible();
@@ -65,7 +63,7 @@ test.describe("docs dialog and drawer previews show realistic screens", () => {
   });
 
   test("drawer: filters bottom sheet and side menu previews open", async ({ page }) => {
-    await page.goto(`${BASE}/docs/ui/slide-in-a-drawer-panel`, { waitUntil: "networkidle" });
+    await page.goto("/docs/ui/slide-in-a-drawer-panel", { waitUntil: "networkidle" });
     await page.getByRole("button", { name: "Filters", exact: true }).click();
     const sheet = page.getByRole("dialog");
     await expect(sheet.getByRole("heading", { name: "Filters" })).toBeVisible();
@@ -84,7 +82,7 @@ test.describe("docs dialog and drawer previews show realistic screens", () => {
   });
 
   test("route modal: an order detail opens over the list and closes", async ({ page }) => {
-    await page.goto(`${BASE}/docs/ui/render-a-route-as-a-modal-over-the-list`, { waitUntil: "networkidle" });
+    await page.goto("/docs/ui/render-a-route-as-a-modal-over-the-list", { waitUntil: "networkidle" });
     await page.getByRole("button", { name: "Open route modal" }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByRole("heading", { name: "Order #1042" })).toBeVisible();

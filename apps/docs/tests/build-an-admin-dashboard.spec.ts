@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const PAGE = "http://127.0.0.1:3100/docs/build-an-admin-dashboard";
+const PAGE = "/docs/build-an-admin-dashboard";
 
 test("admin dashboard tutorial lists shell, table, drawer, and troubleshooting", async ({ page }) => {
   await page.goto(PAGE, { waitUntil: "networkidle" });

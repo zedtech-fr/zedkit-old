@@ -1,7 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const BASE = "http://127.0.0.1:3100";
-
 const ROUTES = [
   "/docs",
   "/docs/getting-started",
@@ -53,7 +51,7 @@ test.describe("docs code blocks (#395)", () => {
 
   for (const path of ROUTES) {
     test(`${path} renders fenced code as one block`, async ({ page }) => {
-      await page.goto(`${BASE}${path}`, { waitUntil: "networkidle" });
+      await page.goto(path, { waitUntil: "networkidle" });
       await assertCodeBlocksHealthy(page, path !== "/docs");
     });
   }
