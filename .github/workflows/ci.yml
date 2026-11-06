@@ -139,8 +139,8 @@ jobs:
             echo "RUNNER_TOOL_CACHE=/tmp/runner-tool-cache"
             echo "XDG_CACHE_HOME=/runner-cache/xdg"
             echo "TURBO_CONCURRENCY=4"
-            echo "VITEST_MAX_WORKERS=4"
-            echo "VITEST_MAX_FORKS=4"
+            echo "VITEST_MAX_WORKERS=2"
+            echo "VITEST_MAX_FORKS=2"
           } >> "$GITHUB_ENV"
       - uses: actions/checkout@v7
         with:
@@ -571,7 +571,7 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec playwright install chromium
       - run: |
           pnpm dlx serve@14.2.6 apps/docs/out -l 3100 >/tmp/docs-start.log 2>&1 &
           echo $! > /tmp/docs.pid
