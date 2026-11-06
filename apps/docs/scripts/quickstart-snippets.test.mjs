@@ -30,4 +30,6 @@ test("quickstart smoke script uses the canonical snippet directory", () => {
   for (const name of ["install.sh", "npm-globals.css", "npm-page.tsx", "registry-theme-add.sh", "registry-add.sh", "registry-page.tsx"]) {
     assert.match(smoke, new RegExp(name.replace(".", "\\.")));
   }
+  assert.match(smoke, /\(run_npm_path\) &/);
+  assert.match(smoke, /\(run_registry_path\) &/);
 });

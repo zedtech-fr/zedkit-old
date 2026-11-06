@@ -14,6 +14,7 @@
 //          theme-package, motion-package, drawer-manual-incomplete, getting-started-packages
 //   `drawer-manual-incomplete` is the negative control: it replays the Drawer recipe as it was before the
 //   registry graph fed it (one file, no companions, no packages) and passes only if the build fails.
+//   ADOPTION_SMOKE_JOBS (default 3) caps how many cases run at once.
 // Needs network (create-next-app, npm) and Chromium (pnpm exec playwright install chromium).
 /* global document, getComputedStyle -- page.evaluate callbacks run in the browser. */
 import { execFileSync, spawn } from "node:child_process";
@@ -123,20 +124,31 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+function spawnInherit(file, args, cwd, env = {}) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(file, args, {
+      cwd,
+      stdio: "inherit",
+      env: { ...process.env, CI: "1", NEXT_TELEMETRY_DISABLED: "1", ...env },
+    });
+    child.on("error", reject);
+    child.on("exit", (code, signal) => {
+      if (code === 0) resolve();
+      else reject(new Error(`${[file, ...args].join(" ")} exited ${code ?? signal}`));
+    });
+  });
+}
+
 /** A fixed program with arguments: nothing is parsed by a shell, so a path with a space or a quote stays one argument. */
 function run(file, args, cwd, env = {}) {
   console.log(`\n$ ${[file, ...args].join(" ")}`);
-  execFileSync(file, args, { cwd, stdio: "inherit", env: { ...process.env, CI: "1", NEXT_TELEMETRY_DISABLED: "1", ...env } });
+  return spawnInherit(file, args, cwd, env);
 }
 
 /** A command exactly as the page shows it to a person: a shell line, because that is what is being tested. */
 function sh(command, cwd, env = {}) {
   console.log(`\n$ ${command}`);
-  execFileSync("bash", ["-c", command], {
-    cwd,
-    stdio: "inherit",
-    env: { ...process.env, CI: "1", NEXT_TELEMETRY_DISABLED: "1", ...env },
-  });
+  return spawnInherit("bash", ["-c", command], cwd, env);
 }
 
 /** What differs from a person's terminal, applied to a displayed command. */
@@ -176,11 +188,11 @@ function applyFile(project, block) {
   console.log(`\n# ${block.action} ${block.path} (${block.code.split("\n").length} lines)`);
 }
 
-function runMode(project, mode) {
+async function runMode(project, mode) {
   for (const step of mode.steps) {
     console.log(`\n== ${step.id}: ${step.title}`);
     for (const block of step.blocks) {
-      if (block.kind === "command") sh(localize(block.commands.pnpm), project);
+      if (block.kind === "command") await sh(localize(block.commands.pnpm), project);
       else if (block.kind === "file") applyFile(project, block);
       else throw new Error(`step ${step.id} has a ${block.kind} block, which has no place to be run`);
     }
@@ -218,21 +230,21 @@ async function runShownPackageAdds() {
   writeFileSync(join(project, "package.json"), `${JSON.stringify({ name: "shown-installs", private: true }, null, 2)}\n`);
   if (PACKAGE_SOURCE === "local") {
     const names = [...new Set(adds.flatMap(packagesNamedInAdd))];
-    run("pnpm", ["exec", "turbo", "run", "build", ...names.map((name) => `--filter=${name}`)], ROOT);
+    await run("pnpm", ["exec", "turbo", "run", "build", ...names.map((name) => `--filter=${name}`)], ROOT);
     const tarballs = {};
     for (const name of names) {
       const dest = join(work, "pack", name.replace("@zedtech/", ""));
       mkdirSync(dest, { recursive: true });
       const dir = workspacePackageDir(name, ROOT);
       assert(dir, `no packages/* folder for ${name}`);
-      run("pnpm", ["pack", "--pack-destination", dest], dir);
+      await run("pnpm", ["pack", "--pack-destination", dest], dir);
       tarballs[name] = execFileSync("bash", ["-c", `ls ${dest}/*.tgz`], { encoding: "utf8" }).trim();
     }
     overridePackages(project, tarballs);
   }
-  sh("pnpm install", project);
+  await sh("pnpm install", project);
   for (const command of adds) {
-    sh(command, project);
+    await sh(command, project);
     for (const name of packagesNamedInAdd(command)) {
       const installed = JSON.parse(readFileSync(join(project, "node_modules", name, "package.json"), "utf8"));
       assert(installed.name === name, `${command} did not install ${name}`);
@@ -247,6 +259,7 @@ async function runShownPackageAdds() {
 }
 
 async function runCase(name, template, tarball, chromium) {
+  console.log(`\n======== ${name} ========`);
   const spec = CASES[name];
   if (spec.kind === "shown-package-adds") {
     await runShownPackageAdds();
@@ -276,17 +289,17 @@ function runCaseOnce(name, spec, template, tarball, chromium) {
 async function buildAndCheck(name, spec, project, template, tarball, chromium) {
   cpSync(template, project, { recursive: true });
   if (tarball) overridePackage(project, tarball);
-  sh("pnpm install", project);
+  await sh("pnpm install", project);
   const built = spec.plan();
   const mode = built.modes.find((item) => item.id === spec.mode);
   if (!mode) throw new Error(`${name}: the plan has no ${spec.mode} mode`);
-  runMode(project, mode);
+  await runMode(project, mode);
   if (tarball && mode.id === "package") {
     const installed = JSON.parse(readFileSync(join(project, "node_modules/@zedtech/zedkit-ui/package.json"), "utf8")).version;
     const local = JSON.parse(readFileSync(join(ROOT, "packages/ui/package.json"), "utf8")).version;
     assert(installed === local, `the kit resolved to ${installed}, not this checkout's ${local}`);
   }
-  sh("pnpm exec next build", project);
+  await sh("pnpm exec next build", project);
   const server = await serve(project);
   const browser = await chromium.launch();
   const inBrowser = async () => {
@@ -321,27 +334,46 @@ async function main() {
   let chromium = null;
   if (appCases.length > 0) {
     if (PACKAGE_SOURCE === "local") {
-      run("pnpm", ["exec", "turbo", "run", "build", "--filter=@zedtech/zedkit-ui"], ROOT);
-      run("pnpm", ["pack", "--pack-destination", work], join(ROOT, "packages/ui"));
+      await run("pnpm", ["exec", "turbo", "run", "build", "--filter=@zedtech/zedkit-ui"], ROOT);
+      await run("pnpm", ["pack", "--pack-destination", work], join(ROOT, "packages/ui"));
       tarball = execFileSync("bash", ["-c", `ls ${work}/*.tgz`], { encoding: "utf8" }).trim();
     }
-    run("pnpm", ["dlx", `create-next-app@${NEXT_APP}`, "app", "--ts", "--tailwind", "--eslint", "--app", "--src-dir", "--import-alias", "@/*", "--use-pnpm", "--skip-install", "--yes"], work);
+    await run("pnpm", ["dlx", `create-next-app@${NEXT_APP}`, "app", "--ts", "--tailwind", "--eslint", "--app", "--src-dir", "--import-alias", "@/*", "--use-pnpm", "--skip-install", "--yes"], work);
     ({ chromium } = await import("@playwright/test"));
   }
 
   const failures = [];
-  for (const name of names) {
+  await eachPool(names, smokeJobs(), async (name) => {
     await runCase(name, template, tarball, chromium).catch((error) => {
       failures.push(`${name}: ${error.message}`);
       console.error(`\nadoption-smoke: ${name} FAILED: ${error.message}`);
     });
-  }
+  });
   rmSync(work, { recursive: true, force: true });
   if (failures.length > 0) {
     console.error(`\nadoption-smoke: ${failures.length} failed\n${failures.join("\n")}`);
     process.exit(1);
   }
   console.log(`\nadoption-smoke: ok (${names.join(", ")})`);
+}
+
+function smokeJobs() {
+  const raw = process.env.ADOPTION_SMOKE_JOBS ?? "3";
+  const n = Number(raw);
+  assert(Number.isInteger(n) && n >= 1, `ADOPTION_SMOKE_JOBS must be a positive integer, got ${raw}`);
+  return n;
+}
+
+async function eachPool(items, limit, fn) {
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, async () => {
+    for (;;) {
+      const i = next;
+      next += 1;
+      if (i >= items.length) return;
+      await fn(items[i]);
+    }
+  }));
 }
 
 const isMain = process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url);

@@ -39,7 +39,7 @@ registry:build` (root) rewrites `packages/ui` imports into committed
 `registry/ui/`, runs `shadcn build`, and writes gitignored JSON under
 `public/r/`. Docs `prebuild` runs that step; `registry:check` asserts
 sources on disk, rewritten imports, and `shadcn registry validate`. CI job
-`registry-smoke` runs `pnpm registry:smoke` (fresh Next + `shadcn add`).
+`registry-smoke` runs the two Next smokes in parallel (`pnpm registry:smoke` locally: fresh Next + `shadcn add`).
 GitHub shorthand: `npx shadcn@latest add zedtech-fr/zedkit/<brick>`.
 Home install copy comes from `registry.json` via `content/registry-site.ts`
 (`docs:generate`). `check-registry-urls.mjs` and `check-seo-export.mjs`
@@ -51,21 +51,24 @@ reject dead `/r/<name>.json` links.
 - Gates: `typecheck`, `lint`, `build` on the filter, then root
   `pnpm catalog:check` (`docs: ok (N pages cover N needs)`; needs built
   sibling packages, see the root Commands).
-- Browser tests run against the static export, as CI does. Many specs
-  hard-code `http://127.0.0.1:3100`, so stop `pnpm dev` first: `serve` moves
-  to another port without failing when 3100 is taken (read its
+- Browser proof in CI is `smoke` only (home, search, catalog, a component
+  page, getting-started). Unit tests, `catalog:check`, the SEO export check
+  and the first-load budget cover the rest. Many specs hard-code
+  `http://127.0.0.1:3100`, so stop `pnpm dev` first: `serve` moves to
+  another port without failing when 3100 is taken (read its
   "Accepting connections" line):
 
   ```sh
   pnpm exec turbo run build --filter=@zedtech/zedkit-docs   # writes apps/docs/out
   pnpm dlx serve@14.2.6 apps/docs/out -l 3100 &
   pnpm exec playwright install chromium
-  pnpm --filter @zedtech/zedkit-docs run smoke              # or run e2e
+  pnpm --filter @zedtech/zedkit-docs run smoke
   ```
 
-  CI splits `e2e` in three (`DOCS_E2E_SHARD=1..3`, `DOCS_E2E_SHARD_TOTAL=3`).
-  A new spec must be listed in the `smoke` or `e2e` script
-  (`scripts/check-e2e-registered.sh`). Screenshots land in `test-results/`.
+  CI builds that export once (`docs-build`) and the smoke job downloads
+  `apps/docs/out`. A new spec must be listed in the `smoke` or `e2e`
+  script (`scripts/check-e2e-registered.sh`). `pnpm e2e` is local-only.
+  Screenshots land in `test-results/`.
 - Done = gates green + manifest/check in sync + examined screenshots
   for visual changes + a rendered-page critique (strongest remaining
   weaknesses) + demo rules respected. Lint/types/axe/screenshot diffs
