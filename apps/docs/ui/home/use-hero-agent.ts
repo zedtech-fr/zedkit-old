@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { AI_SETUP_MINI_PROMPT } from "@/lib/ai-setup-onboarding.generated";
 
 export type HeroAgentStatus = "idle" | "running" | "done";
 
@@ -49,6 +50,8 @@ export function useHeroAgent() {
 
   const toggle = () => {
     if (!open && status === "done") reset();
+    // One tap to run: the composer opens with the prompt already in it (never over what the visitor typed).
+    if (!open && (status === "done" || draft.trim() === "")) setDraft(AI_SETUP_MINI_PROMPT);
     setOpen((value) => !value);
   };
 

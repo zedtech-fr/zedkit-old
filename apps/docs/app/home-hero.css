@@ -227,20 +227,6 @@
     animation: zk-home-ring 460ms ease-out;
   }
 
-  /* The arrow after "Play with it yourself." leans toward the example, a few times, then rests. */
-  #home-page [data-hero-play-arrow] {
-    --nudge-x: 0;
-    --nudge-y: 0.25rem;
-    animation: zk-home-nudge 1.4s ease-in-out 1.2s 4;
-  }
-
-  @media (min-width: 64rem) {
-    #home-page [data-hero-play-arrow] {
-      --nudge-x: 0.25rem;
-      --nudge-y: 0;
-    }
-  }
-
   /* 3. Pointer: the outer layer follows the pointer a few pixels (depth is signed: some cards lean away). */
   #home-page [data-hero-satellite] {
     translate: calc(var(--zk-px, 0) * var(--depth, 0) * 1px) calc(var(--zk-py, 0) * var(--depth, 0) * 1px);
@@ -316,12 +302,6 @@
   from {
     opacity: 0;
     scale: 0.9;
-  }
-}
-
-@keyframes zk-home-nudge {
-  50% {
-    translate: var(--nudge-x) var(--nudge-y);
   }
 }
 

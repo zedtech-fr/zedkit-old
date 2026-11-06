@@ -227,7 +227,17 @@ test("on load the lead rises block by block and the window assembles, then every
     .toEqual(Array(5).fill("1 none"));
 });
 
+const agentPanel = (page: Page) => page.locator("#demo [data-hero-agent-panel]");
+const AGENT_PROMPT = "Set up zedkit AI on this repo following https://zedkit.app/ai/setup.md";
+
+/** The tour opens with the agent: it appears, runs and closes before any page is visited. About 10s in all. */
+async function agentPlaysFirst(page: Page) {
+  await expect(agentPanel(page)).toBeVisible({ timeout: 8000 });
+  await expect(agentPanel(page)).toHaveCount(0, { timeout: 20_000 });
+}
+
 test("a guided cursor tours the pages by itself, and stops the moment the visitor touches the example", async ({ page }) => {
+  test.setTimeout(60_000);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(BASE, { waitUntil: "networkidle" });
   const current = () => nav(page).locator("[aria-current='page']").innerText();
@@ -235,8 +245,10 @@ test("a guided cursor tours the pages by itself, and stops the moment the visito
   // The cursor sets off while the first page is still assembling: nothing waits on screen for seconds.
   await expect(windowOf(page)).toHaveAttribute("data-tour", "on", { timeout: 2500 });
   await expect(page.locator("#demo [data-hero-cursor]")).toBeVisible();
-  // Nobody touched anything, and the example moves on to its second page by itself, using the real sidebar entry.
-  await expect.poll(current, { timeout: 3500 }).toBe("Apps");
+  // The one prompt comes first, on Overview; only then does the example move to its second page by itself.
+  await agentPlaysFirst(page);
+  expect(await current()).toBe("Overview");
+  await expect.poll(current, { timeout: 8000 }).toBe("Apps");
   // On the table it sorts by name: every row moves, and nothing opens over the page.
   const firstRow = () => section(page, "apps").locator("tbody tr").first().innerText();
   await expect.poll(firstRow, { timeout: 4000 }).toContain("billing");
@@ -250,21 +262,19 @@ test("a guided cursor tours the pages by itself, and stops the moment the visito
   await expect(page.locator("#demo [data-hero-cursor]")).toHaveCSS("opacity", "0");
 });
 
-const agentPanel = (page: Page) => page.locator("#demo [data-hero-agent-panel]");
-const AGENT_PROMPT = "Set up zedkit AI on this repo following https://zedkit.app/ai/setup.md";
-
-test("the tour ends its lap in the Agent panel: it pastes the one prompt, runs the scripted phases, closes, and loops", async ({ page }) => {
-  test.setTimeout(150_000);
+test("the tour starts with the Agent panel: it pastes the one prompt, runs the scripted phases, closes, then tours the pages", async ({ page }) => {
+  test.setTimeout(90_000);
   await page.setViewportSize({ width: 1440, height: 900 });
   const requests: string[] = [];
   await page.goto(BASE, { waitUntil: "networkidle" });
   page.on("request", (request) => requests.push(request.url()));
   await expect(windowOf(page)).toHaveAttribute("data-tour", "on", { timeout: 2500 });
-  await expect(agentPanel(page)).toHaveCount(0);
 
-  await expect(agentPanel(page)).toBeVisible({ timeout: 90_000 });
+  // Before any page change, within the first seconds: the panel, the prompt, the run.
+  await expect(agentPanel(page)).toBeVisible({ timeout: 8000 });
+  await expect(nav(page).locator("[aria-current='page']")).toHaveText("Overview");
   await expect(agentPanel(page).getByRole("textbox", { name: "Message to the agent" })).toHaveValue(AGENT_PROMPT);
-  await expect(agentPanel(page)).toHaveAttribute("data-status", "running");
+  await expect(agentPanel(page)).toHaveAttribute("data-status", "running", { timeout: 6000 });
   await expect(agentPanel(page).locator("[data-phase='read']")).toHaveAttribute("data-state", "running");
   await expect(agentPanel(page)).toHaveAttribute("data-status", "done", { timeout: 12_000 });
   await expect(agentPanel(page).locator("li[data-state='done']")).toHaveCount(4);
@@ -273,21 +283,22 @@ test("the tour ends its lap in the Agent panel: it pastes the one prompt, runs t
   // The run is scripted: nothing was fetched while it played (the panel's own chunk was loaded ahead of it).
   expect(requests.filter((url) => !/\/_next\/static\//.test(url) && !url.startsWith("data:"))).toEqual([]);
 
-  // Then the panel closes and the tour carries on from the first page.
+  // Then the panel closes and the tour carries on with the pages, without opening the panel again.
   await expect(agentPanel(page)).toHaveCount(0, { timeout: 8000 });
-  await expect.poll(() => nav(page).locator("[aria-current='page']").innerText(), { timeout: 8000 }).toBe("Overview");
+  await expect.poll(() => nav(page).locator("[aria-current='page']").innerText(), { timeout: 10_000 }).toBe("Apps");
+  await expect(agentPanel(page)).toHaveCount(0);
 });
 
-test("the Agent panel also works for the visitor, and using it ends the tour", async ({ page }) => {
+test("the Agent button opens the panel with the prompt in place, one tap runs it, and using it ends the tour", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(BASE, { waitUntil: "networkidle" });
   const open = page.locator("#demo").getByRole("button", { name: "Agent", exact: true });
   await open.click();
   await expect(windowOf(page)).toHaveAttribute("data-tour", "off");
   await expect(open).toHaveAttribute("aria-expanded", "true");
+  await expect(agentPanel(page).getByRole("textbox", { name: "Message to the agent" })).toHaveValue(AGENT_PROMPT);
   const send = agentPanel(page).getByRole("button", { name: "Send to the agent" });
-  await expect(send).toBeDisabled();
-  await agentPanel(page).getByRole("textbox", { name: "Message to the agent" }).fill(AGENT_PROMPT);
+  await expect(send).toBeEnabled();
   await send.click();
   await expect(agentPanel(page)).toHaveAttribute("data-status", "done", { timeout: 12_000 });
   await agentPanel(page).getByRole("button", { name: "Close agent" }).click();
@@ -295,8 +306,20 @@ test("the Agent panel also works for the visitor, and using it ends the tour", a
   await expect(open).toHaveAttribute("aria-expanded", "false");
 });
 
+test("what the visitor typed in the Agent panel is kept when it is opened again", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(BASE, { waitUntil: "networkidle" });
+  const open = page.locator("#demo").getByRole("button", { name: "Agent", exact: true });
+  await open.click();
+  const field = agentPanel(page).getByRole("textbox", { name: "Message to the agent" });
+  await field.fill("Another prompt");
+  await agentPanel(page).getByRole("button", { name: "Close agent" }).click();
+  await open.click();
+  await expect(field).toHaveValue("Another prompt");
+});
+
 test("the tour also changes the look in the Display row, and a look the visitor leaves in place stays", async ({ page }) => {
-  test.setTimeout(45_000);
+  test.setTimeout(90_000);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(BASE, { waitUntil: "networkidle" });
   const select = page.locator("#demo [data-hero-look-select]");
@@ -306,7 +329,7 @@ test("the tour also changes the look in the Display row, and a look the visitor 
   await expect(select).toHaveText(label(DEFAULT_IDENTITY));
 
   // Nobody touches anything: the cursor presses the select and the whole example, cards included, changes look.
-  await expect(select).toHaveText(label(TOUR_LOOK), { timeout: 12_000 });
+  await expect(select).toHaveText(label(TOUR_LOOK), { timeout: 40_000 });
   await expect(scope).toHaveAttribute("data-identity", TOUR_LOOK);
   expect(before).not.toBe(TOUR_LOOK);
   // The site around the example keeps its own look.
@@ -323,14 +346,15 @@ test("the tour also changes the look in the Display row, and a look the visitor 
 const tourControl = (page: Page) => page.locator("#demo").getByRole("button", { name: /^(Pause|Play) tour$/ });
 
 test("the tour has a visible Pause control; paused it stays put, and Play starts again from the first page", async ({ page }) => {
-  test.setTimeout(45_000);
+  test.setTimeout(90_000);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(BASE, { waitUntil: "networkidle" });
   const current = () => nav(page).locator("[aria-current='page']").innerText();
 
   await expect(windowOf(page)).toHaveAttribute("data-tour", "on", { timeout: 2500 });
   await expect(tourControl(page)).toHaveText("Pause tour");
-  await expect.poll(current, { timeout: 5000 }).toBe("Apps");
+  await agentPlaysFirst(page);
+  await expect.poll(current, { timeout: 8000 }).toBe("Apps");
 
   // Pausing is not taking over: the label flips and the cursor stops, with the example where it was.
   await tourControl(page).click();
@@ -340,12 +364,13 @@ test("the tour has a visible Pause control; paused it stays put, and Play starts
   await page.waitForTimeout(6000);
   expect(await current()).toBe(parked);
 
-  // Play is deliberate. The tour begins again at Overview and goes on from there.
+  // Play is deliberate. The tour begins again with the agent on Overview and goes on from there.
   await tourControl(page).click();
   await expect(tourControl(page)).toHaveText("Pause tour");
   await expect(windowOf(page)).toHaveAttribute("data-tour", "on");
-  await expect.poll(current, { timeout: 4000 }).toBe("Overview");
-  await expect.poll(current, { timeout: 6000 }).toBe("Apps");
+  // ...with the one prompt again, then the pages.
+  await agentPlaysFirst(page);
+  await expect.poll(current, { timeout: 8000 }).toBe("Apps");
 });
 
 test("touching the example takes it over, and the tour never restarts by itself", async ({ page }) => {
@@ -393,6 +418,7 @@ test("with no tour to control (reduced motion, a phone), there is no tour button
 });
 
 test("the guided tour waits while the example is off screen and carries on when it is back", async ({ page }) => {
+  test.setTimeout(60_000);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(BASE, { waitUntil: "networkidle" });
   const current = () => nav(page).locator("[aria-current='page']").innerText();
@@ -402,7 +428,7 @@ test("the guided tour waits while the example is off screen and carries on when 
   await page.waitForTimeout(5000);
   expect(await current()).toBe(parked);
   await page.evaluate(() => window.scrollTo(0, 0));
-  await expect.poll(current, { timeout: 8000 }).not.toBe(parked);
+  await expect.poll(current, { timeout: 30_000 }).not.toBe(parked);
 });
 
 test("the cards over the window's edge follow the pointer, and are out of reach of keyboard and screen readers", async ({ page }) => {
