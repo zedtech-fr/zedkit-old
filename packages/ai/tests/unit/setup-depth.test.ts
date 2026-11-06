@@ -264,6 +264,7 @@ describe("checkDepth", () => {
     put(root, "src/AGENTS.md", "# src rules\n\nDomain: ../.agents/domain/billing.md\n");
     put(root, ".agents/setup-log/reading.md", READING);
     put(root, ".agents/domain/billing.md", "| B-01 | current | Refunds capped | `src/refund.ts:31` |\n");
+    put(root, "AGENTS.md", "# Root\n\nSee `.agents/model-routing.md`.\n");
     put(root, ".agents/model-routing.md", "Provider: unknown\n| scout | lead |\n");
     expect(checkDepth(root).map((i) => i.message)).toEqual([expect.stringContaining("name the provider")]);
     put(root, ".agents/model-routing.md", "Provider: claude\nonly scout here\n");
