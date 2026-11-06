@@ -108,7 +108,12 @@ export const MUSE_NAME_ALIAS: Readonly<Record<string, string>> = {
   "a11y-auditor": "accessibility-auditor",
 };
 
-/** Muse dest name, or undefined when the source name is illegal and unmapped (limitation, not a skip-as-complete). */
+/**
+ * Frozen Muse dest name. Installer: `const dest = museNativeName(sourceName)`; then
+ * `generateMuseAgent({ name: dest, sourceName, source, model })`. `undefined` means the
+ * name is illegal on Muse 1.4.14 and has no map row: label a limitation, do not call
+ * the Muse kit complete. Cursor/Claude keep generating from `sourceName`.
+ */
 export function museNativeName(name: string): string | undefined {
   if (MUSE_AGENT_NAME.test(name)) return name;
   return MUSE_NAME_ALIAS[name];

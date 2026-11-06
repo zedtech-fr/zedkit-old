@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { generateAgent, generateMuseAgent, hasMarker, markerLine, MARKER_PREFIX } from "#generate.js";
+import { generateAgent, generateMuseAgent, hasMarker, markerLine, MARKER_PREFIX, museNativeName, MUSE_NAME_ALIAS } from "#generate.js";
 import { parseFrontmatter } from "#frontmatter.js";
 
 const fixture = (name: string): string =>
@@ -148,5 +148,35 @@ describe("generateMuseAgent", () => {
     expect(out.value.text).toContain("name: accessibility-auditor\n");
     expect(out.value.text).not.toContain("name: a11y-auditor\n");
     expect(out.value.text.split("\n")[1]).toContain(".agents/agents/a11y-auditor.md");
+  });
+
+  it("does not emit readonly even when the caller passes it", () => {
+    const source = "---\nname: explorer\ndescription: d\nmodel: inherit\n---\nBody\n";
+    const out = generateMuseAgent({ name: "explorer", source, model: "inherit", readonly: true });
+    if (!out.ok) throw out.error;
+    expect(out.value.text).not.toContain("readonly");
+  });
+
+  it("copies the body byte for byte, including the word Write", () => {
+    const source = "---\nname: skeptic\ndescription: d\nmodel: inherit\ndisallowedTools: Write, Edit, NotebookEdit\n---\nWrite the stories.\n";
+    const frozen = source;
+    const out = generateMuseAgent({ name: "skeptic", source, model: "inherit" });
+    if (!out.ok) throw out.error;
+    expect(source).toBe(frozen);
+    expect(out.value.text.endsWith("Write the stories.\n")).toBe(true);
+    const close = out.value.text.indexOf("\n---\n", 3);
+    expect(out.value.text.slice(0, close)).toContain("write_file, edit_file");
+    expect(out.value.text.slice(0, close)).not.toMatch(/\bWrite\b/);
+  });
+});
+
+describe("museNativeName", () => {
+  it("keeps legal names, maps a11y-auditor, and returns undefined for unmapped illegal names", () => {
+    expect(museNativeName("explorer")).toBe("explorer");
+    expect(museNativeName("verifier")).toBe("verifier");
+    expect(museNativeName("a11y-auditor")).toBe("accessibility-auditor");
+    expect(MUSE_NAME_ALIAS["a11y-auditor"]).toBe("accessibility-auditor");
+    expect(museNativeName("my_agent")).toBeUndefined();
+    expect(museNativeName("A11y")).toBeUndefined();
   });
 });
